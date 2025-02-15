@@ -1,4 +1,3 @@
-
 // Set your birthday here (month is 0-indexed: 0 = January, 11 = December)
 const birthdayMonth = 11;  // Tháng 1
 const birthdayDay = 25;   // Ngày 15
@@ -38,11 +37,16 @@ function updateCountdown() {
 
         showBirthdayContent();
     } else {
-        // Update the countdown
-        document.getElementById('days').textContent = days;
-        document.getElementById('hours').textContent = hours;
-        document.getElementById('minutes').textContent = minutes;
-        document.getElementById('seconds').textContent = seconds;
+        // Update the countdown with "ĐẾM NGƯỢC" text
+        countdownElement.innerHTML = `
+            <h1>ĐẾM NGƯỢC</h1>
+            <div class="time">
+                <span id="days">${days}</span> ngày
+                <span id="hours">${hours}</span> giờ
+                <span id="minutes">${minutes}</span> phút
+                <span id="seconds">${seconds}</span> giây
+            </div>
+        `;
     }
 }
 
@@ -153,6 +157,9 @@ function createBalloons() {
     }
 }
 
+let blowProgress = 0;
+let audioContext, analyser, microphone, javascriptNode;
+
 // Event listener for microphone permission button
 document.getElementById('micPermissionBtn').addEventListener('click', function() {
     setupAudioAnalysis();
@@ -161,9 +168,6 @@ document.getElementById('micPermissionBtn').addEventListener('click', function()
     document.getElementById('audioFeedback').style.display = 'block';
     document.getElementById('progressContainer').style.display = 'block';
 });
-
-let blowProgress = 0;
-let audioContext, analyser, microphone, javascriptNode;
 
 // Audio analysis for blowing detection
 function setupAudioAnalysis() {
@@ -391,22 +395,31 @@ window.onload = function() {
     if (now.getMonth() === birthdayMonth && now.getDate() === birthdayDay) {
         showBirthdayContent();
     }
+    // Start the countdown timer
+    setInterval(updateCountdown, 1000);
 };
 
 // Photo Album
 function initPhotoAlbum() {
     const albumBtn = document.getElementById('openAlbum');
     const memoryWall = document.getElementById('memoryWall');
-    const gallery = document.getElementById('photoGallery');
+    let isOpen = false;
 
     albumBtn.addEventListener('click', () => {
-        memoryWall.style.display = 'block';
-        loadSamplePhotos();
+        if (!isOpen) {
+            memoryWall.style.display = 'block';
+            loadSamplePhotos();
+            isOpen = true;
+        } else {
+            memoryWall.style.display = 'none';
+            isOpen = false;
+        }
     });
 
     memoryWall.addEventListener('click', (e) => {
         if (e.target === memoryWall) {
             memoryWall.style.display = 'none';
+            isOpen = false;
         }
     });
 }
