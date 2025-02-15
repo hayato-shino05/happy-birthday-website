@@ -39,6 +39,7 @@ function updateCountdown() {
     } else {
         // Update the countdown with "ĐẾM NGƯỢC" text
         countdownElement.innerHTML = `
+            <h1>Đếm Ngược</h1>
             <div class="time">
                 <span id="days">${days}</span> ngày
                 <span id="hours">${hours}</span> giờ
