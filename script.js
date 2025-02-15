@@ -1,4 +1,3 @@
-// script.js
 
 // Set your birthday here (month is 0-indexed: 0 = January, 11 = December)
 const birthdayMonth = 11;  // Tháng 1
