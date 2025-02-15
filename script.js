@@ -82,6 +82,12 @@ function showBirthdayContent() {
     document.getElementById('birthdayMessage').style.opacity = 1;
     document.getElementById('birthdayMessage').style.transform = 'translateY(0)';
     document.getElementById('micPermissionBtn').style.display = 'inline-block';
+    document.querySelector('.countdown-container').style.display = 'none';
+    document.querySelector('.cake-container').style.display = 'block';
+    document.querySelector('.birthday-message').style.display = 'block';
+    function onCountdownEnd() {
+        showBirthdayContent();
+    }
 
     // Change background style for birthday mode
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
