@@ -500,41 +500,72 @@
         const birthdayDay = 25;   // Ngày 15
         
         function updateCountdown() {
-            const now = new Date();
-            let birthday = new Date(now.getFullYear(), birthdayMonth, birthdayDay);
+        const now = new Date();
+        let birthday = new Date(now.getFullYear(), birthdayMonth, birthdayDay);
+        
+        // If birthday has passed this year, calculate for next year
+        if (now > birthday) {
+            birthday = new Date(now.getFullYear() + 1, birthdayMonth, birthdayDay);
+        }
+        
+        // Calculate time difference
+        const diff = birthday - now;
+        
+        // Calculate days, hours, minutes, seconds
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        const countdownElement = document.getElementById('countdown');
+        
+        // Check if it's birthday
+        if (now.getMonth() === birthdayMonth && now.getDate() === birthdayDay) {
+            // Replace countdown with birthday message using animation
+            countdownElement.style.transform = 'scale(0)';
+            countdownElement.style.opacity = '0';
+            countdownElement.style.transition = 'all 1s ease-in-out';
             
-            // If birthday has passed this year, calculate for next year
-            if (now > birthday) {
-                birthday = new Date(now.getFullYear() + 1, birthdayMonth, birthdayDay);
-            }
+            setTimeout(() => {
+                countdownElement.innerHTML = '<h1 class="birthday-title">🎉 Chúc Mừng Sinh Nhật! 🎉</h1>';
+                countdownElement.style.transform = 'scale(1)';
+                countdownElement.style.opacity = '1';
+            }, 1000);
             
-            // Calculate time difference
-            const diff = birthday - now;
-            
-            // Calculate days, hours, minutes, seconds
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            
+            showBirthdayContent();
+        } else {
             // Update the countdown
             document.getElementById('days').textContent = days;
             document.getElementById('hours').textContent = hours;
             document.getElementById('minutes').textContent = minutes;
             document.getElementById('seconds').textContent = seconds;
-            
-            // Check if it's birthday
-            if (now.getMonth() === birthdayMonth && now.getDate() === birthdayDay) {
-                showBirthdayContent();
-            }
+        }
+    }
+
+    // Add this CSS to your existing styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .countdown {
+            transition: all 1s ease-in-out;
         }
         
-        // For testing/preview purposes - uncomment to show birthday content immediately
-        // setTimeout(showBirthdayContent, 1000);
+        .birthday-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5em;
+            color: #ff6b81;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+            margin: 0;
+            padding: 20px;
+            animation: birthdayPop 1.5s ease-out;
+        }
         
-        // Update the countdown every second
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
+        @keyframes birthdayPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
         
         function showBirthdayContent() {
             document.getElementById('countdown').classList.add('hidden');
