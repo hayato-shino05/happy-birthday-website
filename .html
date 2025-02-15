@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Mừng Sinh Nhật!</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Photo Album Button -->
+    <button class="feature-button" id="openAlbum">
+        📸 Xem Album Kỷ niệm
+    </button>
+
+    <!-- Games Section -->
+    <div class="games-container">
+        <button class="game-button" id="startMemoryGame">🎮 Trò chơi Trí nhớ</button>
+        <button class="game-button" id="startPuzzleGame">🧩 Ghép hình</button>
+    </div>
+
+    <!-- Social Share -->
+    <div class="social-share">
+        <button class="share-button" data-platform="facebook">📱</button>
+        <button class="share-button" data-platform="twitter">🐦</button>
+        <button class="share-button" data-platform="instagram">📸</button>
+    </div>
+
+    <!-- Music Player -->
+    <div class="music-player">
+        <button class="music-control" id="playMusic">▶️</button>
+        <span class="song-title">Happy Birthday Song</span>
+    </div>
+
+    <!-- Memory Wall Modal -->
+    <div class="memory-wall" id="memoryWall">
+        <div class="photo-gallery" id="photoGallery"></div>
+    </div>
+    <div class="balloon-container" id="balloonContainer">
+        <!-- Balloons will be added here by JavaScript -->
+    </div>
+    
+    <div class="container">
+        <h1>Chúc Mừng Sinh Nhật!</h1>
+        
+        <div class="countdown" id="countdown">
+            <p>Còn <span id="days">0</span> ngày, <span id="hours">0</span> giờ, <span id="minutes">0</span> phút, <span id="seconds">0</span> giây nữa là đến sinh nhật!</p>
+        </div>
+        
+        <div id="birthdayContent" class="hidden">
+            <div class="cake-container">
+                <!-- SVG cake with better appearance -->
+                <svg class="cake" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Cake plate -->
+                    <ellipse cx="100" cy="95" rx="90" ry="5" fill="#d1d1d1" />
+                    
+                    <!-- Bottom layer -->
+                    <path d="M30,95 C30,75 170,75 170,95" fill="#f9a4cb" />
+                    
+                    <!-- Middle layer -->
+                    <path d="M45,75 C45,58 155,58 155,75" fill="#feb8da" />
+                    
+                    <!-- Top layer -->
+                    <path d="M60,58 C60,45 140,45 140,58" fill="#ffcce5" />
+                    
+                    <!-- Frosting decorations -->
+                    <path d="M30,95 C30,89 170,89 170,95" fill="#ffffff" />
+                    <path d="M45,75 C45,70 155,70 155,75" fill="#ffffff" />
+                    <path d="M60,58 C60,54 140,54 140,58" fill="#ffffff" />
+                    
+                    <!-- Small decorations -->
+                    <circle cx="50" cy="82" r="3" fill="#ff6666" />
+                    <circle cx="80" cy="82" r="3" fill="#66ff66" />
+                    <circle cx="110" cy="82" r="3" fill="#6666ff" />
+                    <circle cx="140" cy="82" r="3" fill="#ffff66" />
+                    
+                    <circle cx="65" cy="65" r="3" fill="#ff6666" />
+                    <circle cx="95" cy="65" r="3" fill="#66ff66" />
+                    <circle cx="125" cy="65" r="3" fill="#6666ff" />
+                </svg>
+                
+                <div class="candle" id="candle"></div>
+                <div class="flame" id="flame"></div>
+            </div>
+            
+            <button id="micPermissionBtn">Cho phép sử dụng microphone</button>
+            <button id="blowButton">Thổi nến!</button>
+            <canvas id="audioFeedback"></canvas>
+            
+            <div class="progress-container" id="progressContainer">
+                <div id="blowProgress">0%</div>
+            </div>
+            
+            <p class="message" id="birthdayMessage">
+                Chúc mừng sinh nhật bạn! Hy vọng ngày hôm nay của bạn tràn đầy niềm vui và hạnh phúc!
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
