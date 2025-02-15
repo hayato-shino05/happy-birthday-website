@@ -41,7 +41,7 @@ function updateCountdown() {
         countdownElement.innerHTML = `
             <h1>Đếm Ngược</h1>
             <div class="time">
-                <span id="days">${days}</span> ngày
+                <span id="daysa">${days}</span> ngày
                 <span id="hours">${hours}</span> giờ
                 <span id="minutes">${minutes}</span> phút
                 <span id="seconds">${seconds}</span> giây
