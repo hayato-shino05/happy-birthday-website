@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Mừng Sinh Nhật!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            text-align: center;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            transition: background 2s;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4.5em;
+            margin-bottom: 20px;
+            color: #ff6b81;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
+            position: relative;
+            z-index: 20;
+        }
+        
+        @keyframes pulse {
+            0% {transform: scale(1);}
+            50% {transform: scale(1.05);}
+            100% {transform: scale(1);}
+        }
+        
+        .countdown {
+            font-size: 1.5em;
+            margin: 40px 0;
+            background-color: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 20;
+        }
+        
+        .countdown span {
+            font-weight: bold;
+            color: #ff6b81;
+            font-size: 1.3em;
+        }
+        
+        .cake-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 60px auto 30px;
+            z-index: 20;
+        }
+        
+        .cake {
+            width: 100%;
+            display: block;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+        }
+        
+        .candle {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 30px;
+            background: linear-gradient(to right, #fdcb6e, #ff7675);
+            border-radius: 5px;
+            z-index: 25;
+        }
+        
+        .flame {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 35px;
+            background: radial-gradient(ellipse at center, #ffff00 0%, #ff6600 60%, #ff0000 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            filter: blur(1px);
+            animation: flicker 0.5s infinite alternate;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 26;
+        }
+        
+        #blowButton {
+            padding: 12px 25px;
+            font-size: 1.2em;
+            background: linear-gradient(45deg, #ff6b81, #ff8e9e);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            display: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255,107,129,0.3);
+            position: relative;
+            z-index: 20;
+        }
+        
+        #blowButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(255,107,129,0.4);
+        }
+        
+        #blowButton:active {
+            transform: translateY(1px);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #f2d74e;
+            opacity: 0;
+            z-index: 5;
+        }
+        
+        .message {
+            font-size: 1.5em;
+            line-height: 1.6;
+            margin-top: 30px;
+            opacity: 0;
+            transition: opacity 1s, transform 1s;
+            transform: translateY(20px);
+            position: relative;
+            z-index: 20;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        @keyframes flicker {
+            0% {transform: translateX(-50%) scale(0.9); opacity: 0.8;}
+            100% {transform: translateX(-50%) scale(1.1); opacity: 1;}
+        }
+        
+        @keyframes confettiFall {
+            0% {transform: translateY(0) rotate(0deg); opacity: 1;}
+            100% {transform: translateY(100vh) rotate(720deg); opacity: 0;}
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #audioFeedback {
+            width: 300px;
+            height: 60px;
+            margin: 30px auto;
+            display: none;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 20;
+        }
+        
+        #micPermissionBtn {
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            display: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(76,175,80,0.3);
+            font-weight: 600;
+            position: relative;
+            z-index: 20;
+        }
+        
+        #micPermissionBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(76,175,80,0.4);
+        }
+        
+        .progress-container {
+            width: 80%;
+            max-width: 500px;
+            margin: 20px auto;
+            background-color: #f1f1f1;
+            border-radius: 50px;
+            padding: 3px;
+            display: none;
+            position: relative;
+            z-index: 20;
+        }
+        
+        #blowProgress {
+            width: 0%;
+            height: 25px;
+            background: linear-gradient(45deg, #ff6b81, #fd79a8);
+            border-radius: 50px;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        /* Animations for birthday mode */
+        @keyframes float {
+            0% {transform: translateY(0px);}
+            50% {transform: translateY(-20px);}
+            100% {transform: translateY(0px);}
+        }
+        
+        /* Background balloons for birthday mode */
+        .balloon {
+            position: absolute;
+            width: 70px;
+            height: 85px;
+            background-color: transparent;
+            opacity: 0;
+            z-index: 1;
+        }
+        
+        .balloon-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        #birthdayContent {
+            position: relative;
+        }
+        /* Thêm vào phần style hiện có */
+
+    /* Album và Timeline */
+    .memory-wall {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        height: 80%;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 20px;
+        display: none;
+        z-index: 2000;
+        overflow-y: auto;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+    }
+
+    .photo-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .photo-item {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+
+    .photo-item:hover {
+        transform: scale(1.05);
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Game Container */
+    .games-container {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000;
+    }
+
+    .game-button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(45deg, #ff6b81, #ff92a3);
+        color: white;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+
+    .game-button:hover {
+        transform: scale(1.1);
+    }
+
+    /* Social Share */
+    .social-share {
+        position: fixed;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 1000;
+    }
+
+    .share-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+
+    .share-button:hover {
+        transform: scale(1.1);
+    }
+
+    /* Music Player */
+    .music-player {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border-radius: 30px;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    .music-control {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(45deg, #ff6b81, #ff92a3);
+        color: white;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+
+    .music-control:hover {
+        transform: scale(1.1);
+    }
+
+    /* Feature Buttons */
+    .feature-button {
+        padding: 12px 25px;
+        margin: 10px;
+        border: none;
+        border-radius: 50px;
+        background: linear-gradient(45deg, #ff6b81, #ff92a3);
+        color: white;
+        cursor: pointer;
+        transition: transform 0.3s;
+        font-size: 1.1em;
+        box-shadow: 0 4px 15px rgba(255,107,129,0.3);
+    }
+
+    .feature-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 7px 20px rgba(255,107,129,0.4);
+    }
+    </style>
+</head>
+<body>
+        <!-- Thêm sau phần cake-container -->
+
+    <!-- Photo Album Button -->
+    <button class="feature-button" id="openAlbum">
+        📸 Xem Album Kỷ niệm
+    </button>
+
+    <!-- Games Section -->
+    <div class="games-container">
+        <button class="game-button" id="startMemoryGame">🎮 Trò chơi Trí nhớ</button>
+        <button class="game-button" id="startPuzzleGame">🧩 Ghép hình</button>
+    </div>
+
+    <!-- Social Share -->
+    <div class="social-share">
+        <button class="share-button" data-platform="facebook">📱</button>
+        <button class="share-button" data-platform="twitter">🐦</button>
+        <button class="share-button" data-platform="instagram">📸</button>
+    </div>
+
+    <!-- Music Player -->
+    <div class="music-player">
+        <button class="music-control" id="playMusic">▶️</button>
+        <span class="song-title">Happy Birthday Song</span>
+    </div>
+
+    <!-- Memory Wall Modal -->
+    <div class="memory-wall" id="memoryWall">
+        <div class="photo-gallery" id="photoGallery"></div>
+    </div>
+    <div class="balloon-container" id="balloonContainer">
+        <!-- Balloons will be added here by JavaScript -->
+    </div>
+    
+    <div class="container">
+        <h1>Chúc Mừng Sinh Nhật!</h1>
+        
+        <div class="countdown" id="countdown">
+            <p>Còn <span id="days">0</span> ngày, <span id="hours">0</span> giờ, <span id="minutes">0</span> phút, <span id="seconds">0</span> giây nữa là đến sinh nhật!</p>
+        </div>
+        
+        <div id="birthdayContent" class="hidden">
+            <div class="cake-container">
+                <!-- SVG cake with better appearance -->
+                <svg class="cake" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Cake plate -->
+                    <ellipse cx="100" cy="95" rx="90" ry="5" fill="#d1d1d1" />
+                    
+                    <!-- Bottom layer -->
+                    <path d="M30,95 C30,75 170,75 170,95" fill="#f9a4cb" />
+                    
+                    <!-- Middle layer -->
+                    <path d="M45,75 C45,58 155,58 155,75" fill="#feb8da" />
+                    
+                    <!-- Top layer -->
+                    <path d="M60,58 C60,45 140,45 140,58" fill="#ffcce5" />
+                    
+                    <!-- Frosting decorations -->
+                    <path d="M30,95 C30,89 170,89 170,95" fill="#ffffff" />
+                    <path d="M45,75 C45,70 155,70 155,75" fill="#ffffff" />
+                    <path d="M60,58 C60,54 140,54 140,58" fill="#ffffff" />
+                    
+                    <!-- Small decorations -->
+                    <circle cx="50" cy="82" r="3" fill="#ff6666" />
+                    <circle cx="80" cy="82" r="3" fill="#66ff66" />
+                    <circle cx="110" cy="82" r="3" fill="#6666ff" />
+                    <circle cx="140" cy="82" r="3" fill="#ffff66" />
+                    
+                    <circle cx="65" cy="65" r="3" fill="#ff6666" />
+                    <circle cx="95" cy="65" r="3" fill="#66ff66" />
+                    <circle cx="125" cy="65" r="3" fill="#6666ff" />
+                </svg>
+                
+                <div class="candle" id="candle"></div>
+                <div class="flame" id="flame"></div>
+            </div>
+            
+            <button id="micPermissionBtn">Cho phép sử dụng microphone</button>
+            <button id="blowButton">Thổi nến!</button>
+            <canvas id="audioFeedback"></canvas>
+            
+            <div class="progress-container" id="progressContainer">
+                <div id="blowProgress">0%</div>
+            </div>
+            
+            <p class="message" id="birthdayMessage">
+                Chúc mừng sinh nhật bạn! Hy vọng ngày hôm nay của bạn tràn đầy niềm vui và hạnh phúc!
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Set your birthday here (month is 0-indexed: 0 = January, 11 = December)
+        const birthdayMonth = 11;  // Tháng 1
+        const birthdayDay = 25;   // Ngày 15
+        
+        function updateCountdown() {
+            const now = new Date();
+            let birthday = new Date(now.getFullYear(), birthdayMonth, birthdayDay);
+            
+            // If birthday has passed this year, calculate for next year
+            if (now > birthday) {
+                birthday = new Date(now.getFullYear() + 1, birthdayMonth, birthdayDay);
+            }
+            
+            // Calculate time difference
+            const diff = birthday - now;
+            
+            // Calculate days, hours, minutes, seconds
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            // Update the countdown
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+            
+            // Check if it's birthday
+            if (now.getMonth() === birthdayMonth && now.getDate() === birthdayDay) {
+                showBirthdayContent();
+            }
+        }
+        
+        // For testing/preview purposes - uncomment to show birthday content immediately
+        // setTimeout(showBirthdayContent, 1000);
+        
+        // Update the countdown every second
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+        
+        function showBirthdayContent() {
+            document.getElementById('countdown').classList.add('hidden');
+            document.getElementById('birthdayContent').classList.remove('hidden');
+            document.getElementById('flame').style.opacity = 1;
+            document.getElementById('birthdayMessage').style.opacity = 1;
+            document.getElementById('birthdayMessage').style.transform = 'translateY(0)';
+            document.getElementById('micPermissionBtn').style.display = 'inline-block';
+            
+            // Change background style for birthday mode
+            document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
+            
+            // Add floating balloons
+            createBalloons();
+            
+            // Add confetti
+            createConfetti();
+        }
+        
+        function createBalloons() {
+            const colors = ['#ff6b6b', '#7dd3fc', '#ffd166', '#a5d8ff', '#ffd3da', '#c2f0c2'];
+            const balloonContainer = document.getElementById('balloonContainer');
+            
+            // Clear any existing balloons
+            balloonContainer.innerHTML = '';
+            
+            const positions = [
+                {left: '5%', top: '10%'},      // Top left
+                {left: '12%', top: '25%'},     // Left side
+                {left: '8%', top: '60%'},      // Bottom left
+                {left: '20%', top: '80%'},     // Bottom left
+                {left: '85%', top: '15%'},     // Top right
+                {left: '92%', top: '30%'},     // Right side
+                {left: '88%', top: '65%'},     // Bottom right
+                {left: '78%', top: '75%'},     // Bottom right
+                {left: '30%', top: '5%'},      // Top
+                {left: '70%', top: '8%'},      // Top
+                {left: '10%', top: '40%'},     // Left middle
+                {left: '90%', top: '45%'}      // Right middle
+            ];
+            
+            for (let i = 0; i < positions.length; i++) {
+                const balloon = document.createElement('div');
+                balloon.className = 'balloon';
+                
+                // Create balloon SVG
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('viewBox', '0 0 50 60');
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M25,1 C13,1 5,12 5,25 C5,38 13,47 25,47 C37,47 45,38 45,25 C45,12 37,1 25,1 Z');
+                path.setAttribute('fill', colors[i % colors.length]);
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                line.setAttribute('d', 'M25,47 C26,55 24,55 25,60');
+                line.setAttribute('stroke', '#888');
+                line.setAttribute('stroke-width', '1.5');
+                line.setAttribute('fill', 'none');
+                
+                svg.appendChild(path);
+                svg.appendChild(line);
+                balloon.appendChild(svg);
+                
+                balloonContainer.appendChild(balloon);
+                
+                // Position based on predefined positions
+                balloon.style.left = positions[i].left;
+                balloon.style.top = positions[i].top;
+                
+                // Randomize size slightly
+                const size = 70 + Math.random() * 30;
+                balloon.style.width = size + 'px';
+                balloon.style.height = Math.floor(size * 1.2) + 'px';
+                
+                // Animate with delay
+                balloon.style.opacity = 0.8;
+                balloon.style.animation = `float ${Math.random() * 2 + 4}s ease-in-out infinite`;
+                balloon.style.animationDelay = Math.random() * 5 + 's';
+            }
+        }
+        
+        // Event listener for microphone permission button
+        document.getElementById('micPermissionBtn').addEventListener('click', function() {
+            setupAudioAnalysis();
+            this.style.display = 'none';
+            document.getElementById('blowButton').style.display = 'inline-block';
+            document.getElementById('audioFeedback').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'block';
+        });
+        
+        let blowProgress = 0;
+        let audioContext, analyser, microphone, javascriptNode;
+        
+        // Audio analysis for blowing detection
+        function setupAudioAnalysis() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Trình duyệt của bạn không hỗ trợ thu âm!');
+                return;
+            }
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    microphone = audioContext.createMediaStreamSource(stream);
+                    javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+                    
+                    analyser.smoothingTimeConstant = 0.8;
+                    analyser.fftSize = 1024;
+                    
+                    microphone.connect(analyser);
+                    analyser.connect(javascriptNode);
+                    javascriptNode.connect(audioContext.destination);
+                    
+                    // Canvas setup for visualization
+                    const canvas = document.getElementById('audioFeedback');
+                    const canvasContext = canvas.getContext('2d');
+                    canvas.width = 300;
+                    canvas.height = 60;
+                    
+                    javascriptNode.onaudioprocess = function() {
+                        const array = new Uint8Array(analyser.frequencyBinCount);
+                        analyser.getByteFrequencyData(array);
+                        
+                        // Get average volume
+                        let average = 0;
+                        for (let i = 0; i < array.length; i++) {
+                            average += array[i];
+                        }
+                        average = average / array.length;
+                        
+                        // Visualization
+                        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Gradient background
+                        const gradient = canvasContext.createLinearGradient(0, 0, canvas.width, 0);
+                        gradient.addColorStop(0, '#74ebd5');
+                        gradient.addColorStop(1, '#9face6');
+                        canvasContext.fillStyle = gradient;
+                        canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Volume bars
+                        const barWidth = 3;
+                        const barSpacing = 1;
+                        const totalBars = Math.floor(canvas.width / (barWidth + barSpacing));
+                        
+                        for (let i = 0; i < totalBars; i++) {
+                            const barHeight = (array[i] || 0) / 256 * canvas.height;
+                            
+                            // Bar gradient
+                            const barGradient = canvasContext.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+                            barGradient.addColorStop(0, '#ff6b81');
+                            barGradient.addColorStop(1, '#ff92a3');
+                            
+                            canvasContext.fillStyle = barGradient;
+                            canvasContext.fillRect(
+                                i * (barWidth + barSpacing),
+                                canvas.height - barHeight,
+                                barWidth,
+                                barHeight
+                            );
+                        }
+                        
+                        // If loud enough, consider it as blowing and increase progress
+                        if (average > 15) {
+                            blowProgress += (average / 100);
+                            blowProgress = Math.min(blowProgress, 100);
+                            
+                            updateBlowProgress();
+                            
+                            if (blowProgress >= 100) {
+                                blowOutCandle();
+                                disconnectAudio();
+                            }
+                        } else {
+                            // Slowly decrease progress if not blowing
+                            blowProgress -= 0.5;
+                            blowProgress = Math.max(blowProgress, 0);
+                            updateBlowProgress();
+                        }
+                    };
+                })
+                .catch(function(err) {
+                    console.error('Không thể truy cập microphone: ', err);
+                    alert('Không thể truy cập microphone. Hãy thử lại.');
+                });
+        }
+        
+        function updateBlowProgress() {
+            const progressBar = document.getElementById('blowProgress');
+            progressBar.style.width = blowProgress + '%';
+            progressBar.textContent = Math.round(blowProgress) + '%';
+        }
+        
+        function disconnectAudio() {
+            if (javascriptNode) {
+                javascriptNode.disconnect();
+            }
+            if (analyser) {
+                analyser.disconnect();
+            }
+            if (microphone) {
+                microphone.disconnect();
+            }
+            if (audioContext && audioContext.state !== 'closed') {
+                audioContext.close();
+            }
+        }
+        
+        // Manual blow button (now requires 5 clicks)
+        let buttonClickCount = 0;
+        document.getElementById('blowButton').addEventListener('click', function() {
+            buttonClickCount++;
+            blowProgress += 20;
+            updateBlowProgress();
+            
+            if (buttonClickCount >= 5) {
+                blowOutCandle();
+                disconnectAudio();
+            } else {
+                this.textContent = `Thổi mạnh hơn! (${buttonClickCount}/5)`;
+            }
+        });
+        
+        function blowOutCandle() {
+            const flame = document.getElementById('flame');
+            flame.style.opacity = 0;
+            
+            document.getElementById('blowButton').style.display = 'none';
+            document.getElementById('audioFeedback').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+            
+            playSound();
+            createMoreConfetti();
+            
+            // New celebration message with animation
+            const message = document.getElementById('birthdayMessage');
+            message.innerHTML = 'Chúc mừng sinh nhật! 🎉<br>Bạn đã thổi tắt nến thành công!<br>Hy vọng mọi điều ước của bạn sẽ thành hiện thực!';
+            message.style.fontSize = '1.8em';
+            message.style.color = '#ff4081';
+            
+            // Animate the message
+            message.style.animation = 'pulse 2s infinite';
+        }
+        
+        function createConfetti() {
+            const container = document.querySelector('.container');
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = getRandomColor();
+                    confetti.style.opacity = 1;
+                    
+                    // Different shapes
+                    if (i % 4 === 0) {
+                        confetti.style.borderRadius = '50%';
+                    } else if (i % 4 === 1) {
+                        confetti.style.width = '7px';
+                        confetti.style.height = '14px';
+                    } else if (i % 4 === 2) {
+                        confetti.style.width = '10px';
+                        confetti.style.height = '10px';
+                        confetti.style.transform = 'rotate(45deg)';
+                    }
+                    
+                    // Set animation
+                    const animationDuration = Math.random() * 3 + 2;
+                    confetti.style.animation = `confettiFall ${animationDuration}s linear forwards`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    // Remove after animation completes
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, animationDuration * 1000);
+                }, i * 50);
+            }
+        }
+        
+        function createMoreConfetti() {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(createConfetti, i * 300);
+            }
+        }
+        
+        function getRandomColor() {
+            const colors = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b', '#577590', '#ff99c8', '#9b5de5', '#00bbf9'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        function playSound() {
+            try {
+                // Create audio element for party sound - using simple beep sounds for now
+                const audio = new Audio();
+                audio.src = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18A';
+                
+                // Play a short melody
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const note = new Audio();
+                        note.src = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18A';
+                        note.play().catch(e => console.log("Auto-play prevented: ", e));
+                    }, i * 200);
+                }
+            } catch (e) {
+                console.log("Sound play error: ", e);
+            }
+        }
+        
+        // Check if it's birthday when page loads
+        window.onload = function() {
+            updateCountdown();
+            const now = new Date();
+            if (now.getMonth() === birthdayMonth && now.getDate() === birthdayDay) {
+                showBirthdayContent();
+            }
+        };
+        // Photo Album
+function initPhotoAlbum() {
+    const albumBtn = document.getElementById('openAlbum');
+    const memoryWall = document.getElementById('memoryWall');
+    const gallery = document.getElementById('photoGallery');
+
+    albumBtn.addEventListener('click', () => {
+        memoryWall.style.display = 'block';
+        loadSamplePhotos();
+    });
+
+    memoryWall.addEventListener('click', (e) => {
+        if (e.target === memoryWall) {
+            memoryWall.style.display = 'none';
+        }
+    });
+}
+
+function loadSamplePhotos() {
+    const gallery = document.getElementById('photoGallery');
+    gallery.innerHTML = ''; // Clear existing photos
+    
+    for (let i = 0; i < 12; i++) {
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-item';
+        photoItem.innerHTML = `
+            <img src="/api/placeholder/200/200" alt="Birthday memory ${i + 1}">
+        `;
+        gallery.appendChild(photoItem);
+    }
+}
+
+// Games
+function initGames() {
+    const memoryGameBtn = document.getElementById('startMemoryGame');
+    const puzzleGameBtn = document.getElementById('startPuzzleGame');
+
+    memoryGameBtn.addEventListener('click', startMemoryGame);
+    puzzleGameBtn.addEventListener('click', startPuzzleGame);
+}
+
+function startMemoryGame() {
+    alert('Trò chơi trí nhớ sẽ bắt đầu!');
+    // Implement game logic here
+}
+
+function startPuzzleGame() {
+    alert('Trò chơi ghép hình sẽ bắt đầu!');
+    // Implement game logic here
+}
+
+// Social Share
+function initSocialShare() {
+    const shareButtons = document.querySelectorAll('.share-button');
+    shareButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const platform = button.dataset.platform;
+            shareOnSocialMedia(platform);
+        });
+    });
+}
+
+function shareOnSocialMedia(platform) {
+    const url = window.location.href;
+    const text = 'Chúc mừng sinh nhật!';
+    
+    const shareUrls = {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+        twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+        instagram: `https://instagram.com`
+    };
+
+    window.open(shareUrls[platform], '_blank');
+}
+
+// Music Player
+function initMusicPlayer() {
+    const playButton = document.getElementById('playMusic');
+    let isPlaying = false;
+    let audio = new Audio('happy-birthday.mp3');
+
+    playButton.addEventListener('click', () => {
+        if (isPlaying) {
+            audio.pause();
+            playButton.textContent = '▶️';
+        } else {
+            audio.play().catch(e => console.log('Audio play failed:', e));
+            playButton.textContent = '⏸️';
+        }
+        isPlaying = !isPlaying;
+    });
+}
+
+// Initialize all features
+document.addEventListener('DOMContentLoaded', function() {
+    initPhotoAlbum();
+    initGames();
+    initSocialShare();
+    initMusicPlayer();
+});
+    </script>
+</body>
+</html>
