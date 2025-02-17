@@ -1,5 +1,5 @@
 // Set your birthday here (month is 0-indexed: 0 = January, 11 = December)
-const birthdayMonth = 12;  
+const birthdayMonth = 11;  
 const birthdayDay = 7;   
 
 function updateCountdown() {
