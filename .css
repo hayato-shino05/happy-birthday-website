@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;600&display=swap');
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-    background: #f2f2f7;
+    font-family: 'Montserrat', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     text-align: center;
-    color: #000;
+    color: #333;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -21,16 +21,14 @@ body {
 }
 
 h1 {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-    font-size: 34px;
-    font-weight: 600;
+    font-family: 'Dancing Script', cursive;
+    font-size: 4.5em;
     margin-bottom: 20px;
-    color: #000;
-    text-shadow: none;
+    color: #ff6b81;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
     animation: pulse 2s infinite;
     position: relative;
     z-index: 20;
-    letter-spacing: -0.5px;
 }
 
 @keyframes pulse {
@@ -40,22 +38,20 @@ h1 {
 }
 
 .countdown {
-    font-size: 17px;
+    font-size: 1.5em;
     margin: 40px 0;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 16px;
+    background-color: white;
+    border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     position: relative;
     z-index: 20;
 }
 
 .countdown span {
-    font-weight: 600;
-    color: #007AFF;
-    font-size: 20px;
+    font-weight: bold;
+    color: #ff6b81;
+    font-size: 1.3em;
 }
 
 .cake-container {
@@ -79,7 +75,7 @@ h1 {
     transform: translateX(-50%);
     width: 10px;
     height: 30px;
-    background: linear-gradient(to right, #FFD60A, #FF9500);
+    background: linear-gradient(to right, #fdcb6e, #ff7675);
     border-radius: 5px;
     z-index: 25;
 }
@@ -91,7 +87,7 @@ h1 {
     transform: translateX(-50%);
     width: 20px;
     height: 35px;
-    background: radial-gradient(ellipse at center, #FFD60A 0%, #FF9500 60%, #FF3B30 100%);
+    background: radial-gradient(ellipse at center, #ffff00 0%, #ff6600 60%, #ff0000 100%);
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
     filter: blur(1px);
     animation: flicker 0.5s infinite alternate;
@@ -101,25 +97,28 @@ h1 {
 }
 
 #blowButton {
-    padding: 12px 24px;
-    font-size: 17px;
-    background: #007AFF;
+    padding: 12px 25px;
+    font-size: 1.2em;
+    background: linear-gradient(45deg, #ff6b81, #ff8e9e);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 50px;
     cursor: pointer;
     margin-top: 30px;
     display: none;
-    transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(255,107,129,0.3);
     position: relative;
     z-index: 20;
-    font-weight: 500;
+}
+
+#blowButton:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(255,107,129,0.4);
 }
 
 #blowButton:active {
-    transform: scale(0.96);
-    background: #0066CC;
+    transform: translateY(1px);
 }
 
 .confetti {
@@ -132,20 +131,18 @@ h1 {
 }
 
 .message {
-    font-size: 17px;
-    line-height: 1.4;
+    font-size: 1.5em;
+    line-height: 1.6;
     margin-top: 30px;
     opacity: 0;
     transition: opacity 1s, transform 1s;
     transform: translateY(20px);
     position: relative;
     z-index: 20;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background-color: rgba(255, 255, 255, 0.8);
     padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 @keyframes flicker {
@@ -167,41 +164,40 @@ h1 {
     height: 60px;
     margin: 30px auto;
     display: none;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     position: relative;
     z-index: 20;
 }
 
 #micPermissionBtn {
-    padding: 12px 24px;
-    background: #34C759;
+    padding: 12px 25px;
+    background: linear-gradient(45deg, #4CAF50, #8BC34A);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 50px;
     cursor: pointer;
     margin-top: 30px;
     display: none;
-    transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    font-weight: 500;
-    font-size: 17px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(76,175,80,0.3);
+    font-weight: 600;
     position: relative;
     z-index: 20;
 }
 
-#micPermissionBtn:active {
-    transform: scale(0.96);
-    background: #248A3D;
+#micPermissionBtn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(76,175,80,0.4);
 }
 
 .progress-container {
     width: 80%;
     max-width: 500px;
     margin: 20px auto;
-    background: rgba(120, 120, 128, 0.2);
-    border-radius: 12px;
+    background-color: #f1f1f1;
+    border-radius: 50px;
     padding: 3px;
     display: none;
     position: relative;
@@ -211,23 +207,25 @@ h1 {
 #blowProgress {
     width: 0%;
     height: 25px;
-    background: #007AFF;
-    border-radius: 10px;
+    background: linear-gradient(45deg, #ff6b81, #fd79a8);
+    border-radius: 50px;
     transition: width 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: bold;
 }
 
+/* Animations for birthday mode */
 @keyframes float {
     0% {transform: translateY(0px);}
     50% {transform: translateY(-20px);}
     100% {transform: translateY(0px);}
 }
 
+/* Background balloons for birthday mode */
 .balloon {
     position: absolute;
     width: 70px;
@@ -252,6 +250,9 @@ h1 {
     position: relative;
 }
 
+/* Thêm vào phần style hiện có */
+
+/* Album và Timeline */
 .memory-wall {
     position: fixed;
     top: 50%;
@@ -259,15 +260,13 @@ h1 {
     transform: translate(-50%, -50%);
     width: 80%;
     height: 80%;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     padding: 20px;
     display: none;
     z-index: 2000;
     overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.2);
 }
 
 .photo-gallery {
@@ -281,8 +280,8 @@ h1 {
     position: relative;
     aspect-ratio: 1;
     overflow: hidden;
-    border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     transition: transform 0.3s;
 }
 
@@ -296,6 +295,7 @@ h1 {
     object-fit: cover;
 }
 
+/* Game Container */
 .games-container {
     position: fixed;
     bottom: 20px;
@@ -304,23 +304,21 @@ h1 {
 }
 
 .game-button {
-    padding: 8px 16px;
+    padding: 10px 20px;
     margin: 5px;
     border: none;
-    border-radius: 12px;
-    background: #007AFF;
+    border-radius: 20px;
+    background: linear-gradient(45deg, #ff6b81, #ff92a3);
     color: white;
     cursor: pointer;
-    transition: transform 0.2s;
-    font-size: 15px;
-    font-weight: 500;
+    transition: transform 0.3s;
 }
 
-.game-button:active {
-    transform: scale(0.96);
-    background: #0066CC;
+.game-button:hover {
+    transform: scale(1.1);
 }
 
+/* Social Share */
 .social-share {
     position: fixed;
     right: 20px;
@@ -333,70 +331,66 @@ h1 {
 }
 
 .share-button {
-    width: 44px;
-    height: 44px;
-    border-radius: 22px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     border: none;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.3s;
 }
 
-.share-button:active {
-    transform: scale(0.96);
+.share-button:hover {
+    transform: scale(1.1);
 }
 
+/* Music Player */
 .music-player {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 12px 24px;
+    background: white;
+    border-radius: 30px;
+    padding: 10px 20px;
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     z-index: 1000;
 }
 
 .music-control {
-    width: 36px;
-    height: 36px;
-    border-radius: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     border: none;
-    background: #007AFF;
+    background: linear-gradient(45deg, #ff6b81, #ff92a3);
     color: white;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.3s;
 }
 
-.music-control:active {
-    transform: scale(0.96);
-    background: #0066CC;
+.music-control:hover {
+    transform: scale(1.1);
 }
 
+/* Feature Buttons */
 .feature-button {
-    padding: 12px 24px;
+    padding: 12px 25px;
     margin: 10px;
     border: none;
-    border-radius: 12px;
-    background: #007AFF;
+    border-radius: 50px;
+    background: linear-gradient(45deg, #ff6b81, #ff92a3);
     color: white;
     cursor: pointer;
-    transition: transform 0.2s;
-    font-size: 17px;
-    font-weight: 500;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    font-size: 1.1em;
+    box-shadow: 0 4px 15px rgba(255,107,129,0.3);
 }
 
-.feature-button:active {
-    transform: scale(0.96);
-    background: #0066CC;
+.feature-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(255,107,129,0.4);
 }
