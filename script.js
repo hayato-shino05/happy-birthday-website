@@ -1,6 +1,6 @@
 // Set your birthday here (month is 0-indexed: 0 = January, 11 = December)
-const birthdayMonth = 11;  
-const birthdayDay = 7;   
+const birthdayMonth = 1;  
+const birthdayDay = 17;   
 
 function updateCountdown() {
     const now = new Date();
@@ -101,6 +101,23 @@ function showBirthdayContent() {
 
     // Thay đổi background
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
+
+    // Tự động phát nhạc sinh nhật
+    const audio = new Audio('happy-birthday.mp3');
+    audio.play().catch(e => {
+        console.log('Auto-play prevented:', e);
+        // Cập nhật trạng thái nút play để người dùng biết nhạc chưa phát
+        const playButton = document.getElementById('playMusic');
+        if (playButton) {
+            playButton.textContent = '▶️';
+        }
+    });
+    
+    // Cập nhật trạng thái nút play
+    const playButton = document.getElementById('playMusic');
+    if (playButton) {
+        playButton.textContent = '⏸️';
+    }
 
     // Tạo hiệu ứng
     createBalloons();
