@@ -76,7 +76,20 @@ style.textContent = `
 document.head.appendChild(style);
 
 function showBirthdayContent() {
+    // Ẩn phần countdown
     document.getElementById('countdown').classList.add('hidden');
+    
+    // Hiện và animate tiêu đề sinh nhật
+    const birthdayTitle = document.getElementById('birthdayTitle');
+    birthdayTitle.style.display = 'block';
+    birthdayTitle.style.opacity = '0';
+    
+    setTimeout(() => {
+        birthdayTitle.style.transition = 'opacity 1s ease-in-out';
+        birthdayTitle.style.opacity = '1';
+    }, 100);
+
+    // Hiện nội dung sinh nhật
     document.getElementById('birthdayContent').classList.remove('hidden');
     document.getElementById('flame').style.opacity = 1;
     document.getElementById('birthdayMessage').style.opacity = 1;
@@ -85,17 +98,12 @@ function showBirthdayContent() {
     document.querySelector('.countdown-container').style.display = 'none';
     document.querySelector('.cake-container').style.display = 'block';
     document.querySelector('.birthday-message').style.display = 'block';
-    function onCountdownEnd() {
-        showBirthdayContent();
-    }
 
-    // Change background style for birthday mode
+    // Thay đổi background
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
 
-    // Add floating balloons
+    // Tạo hiệu ứng
     createBalloons();
-
-    // Add confetti
     createConfetti();
 }
 
