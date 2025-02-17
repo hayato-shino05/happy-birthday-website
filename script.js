@@ -1,6 +1,6 @@
 // Set your birthday here (month is 0-indexed: 0 = January, 11 = December)
-const birthdayMonth = 1;  // Tháng 1
-const birthdayDay = 17;   // Ngày 15
+const birthdayMonth = 12;  
+const birthdayDay = 7;   
 
 function updateCountdown() {
     const now = new Date();
