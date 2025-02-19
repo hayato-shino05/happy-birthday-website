@@ -416,3 +416,95 @@ h1 {
     transform: translate(-2px, -2px);
     box-shadow: 6px 6px 0 #D4B08C;
 }
+/* Existing styles remain the same */
+
+/* Mobile Optimizations */
+@media screen and (max-width: 768px) {
+    h1 {
+        font-size: 2.5em; /* Smaller heading for mobile */
+    }
+
+    .container {
+        padding: 20px 10px;
+    }
+
+    .countdown {
+        font-size: 1.2em;
+        padding: 15px;
+        margin: 20px 0;
+    }
+
+    .cake-container {
+        width: 180px;
+        height: 180px;
+        margin: 30px auto 20px;
+    }
+
+    .photo-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .memory-wall {
+        width: 95%;
+        height: 90%;
+    }
+
+    /* Adjust game container for mobile */
+    .games-container {
+        position: fixed;
+        bottom: 70px; /* Move up to avoid overlap with music player */
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .game-button {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+
+    /* Adjust social share buttons */
+    .social-share {
+        right: 10px;
+        top: auto;
+        bottom: 70px;
+        transform: none;
+    }
+
+    /* Adjust music player */
+    .music-player {
+        padding: 5px 10px;
+    }
+
+    .music-control {
+        width: 30px;
+        height: 30px;
+    }
+
+    /* Feature buttons adjustments */
+    .feature-button {
+        padding: 8px 15px;
+        margin: 5px;
+        font-size: 0.9em;
+    }
+}
+
+/* Additional breakpoint for very small screens */
+@media screen and (max-width: 320px) {
+    h1 {
+        font-size: 2em;
+    }
+
+    .countdown {
+        font-size: 1em;
+    }
+
+    .cake-container {
+        width: 150px;
+        height: 150px;
+    }
+}
