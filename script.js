@@ -87,19 +87,23 @@ function updateCountdown() {
 
     // Kiểm tra sinh nhật và tìm ngày gần nhất
     for (const person of birthdays) {
-        let birthday = new Date(now.getFullYear(), person.month - 1, person.day);
+        // Tạo ngày sinh nhật cho năm hiện tại
+        let birthday = new Date(now.getFullYear(), person.month - 1, person.day); // Sửa lỗi tháng (trừ 1 vì tháng trong JS bắt đầu từ 0)
         
+        // Nếu sinh nhật năm nay đã qua, tính cho năm sau
         if (now > birthday) {
             birthday = new Date(now.getFullYear() + 1, person.month - 1, person.day);
         }
 
         const diff = birthday - now;
 
+        // Kiểm tra nếu hôm nay là sinh nhật
         if (now.getMonth() === person.month - 1 && now.getDate() === person.day) {
             birthdayPerson = person;
             break;
         }
 
+        // Tìm sinh nhật gần nhất
         if (diff < smallestDiff) {
             smallestDiff = diff;
             nextBirthday = birthday;
@@ -133,24 +137,15 @@ function updateCountdown() {
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
         if (countdownElement) {
-            // Kiểm tra xem cấu trúc HTML đã được tạo chưa
-            if (!countdownElement.querySelector('.time')) {
-                countdownElement.innerHTML = `
-                    <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
-                    <div class="time">
-                        <span id="countdown-days">${days}</span> ngày
-                        <span id="countdown-hours">${hours}</span> giờ
-                        <span id="countdown-minutes">${minutes}</span> phút
-                        <span id="countdown-seconds">${seconds}</span> giây
-                    </div>
-                `;
-            } else {
-                // Chỉ cập nhật các giá trị số
-                document.getElementById('countdown-days').textContent = days;
-                document.getElementById('countdown-hours').textContent = hours;
-                document.getElementById('countdown-minutes').textContent = minutes;
-                document.getElementById('countdown-seconds').textContent = seconds;
-            }
+            countdownElement.innerHTML = `
+                <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
+                <div class="time">
+                    <span id="days">${days}</span> ngày
+                    <span id="hours">${hours}</span> giờ
+                    <span id="minutes">${minutes}</span> phút
+                    <span id="seconds">${seconds}</span> giây
+                </div>
+            `;
         }
     }
 }
