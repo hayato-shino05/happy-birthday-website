@@ -132,60 +132,18 @@ function updateCountdown() {
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-        // Chỉ cập nhật nếu element tồn tại
         if (countdownElement) {
             // Kiểm tra xem cấu trúc HTML đã được tạo chưa
             if (!countdownElement.querySelector('.time')) {
-                // Tạo cấu trúc HTML ban đầu
                 countdownElement.innerHTML = `
                     <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
                     <div class="time">
-                        <div class="time-section">
-                            <span class="time-value" id="countdown-days">${days}</span>
-                            <span class="time-label">ngày</span>
-                        </div>
-                        <div class="time-section">
-                            <span class="time-value" id="countdown-hours">${hours}</span>
-                            <span class="time-label">giờ</span>
-                        </div>
-                        <div class="time-section">
-                            <span class="time-value" id="countdown-minutes">${minutes}</span>
-                            <span class="time-label">phút</span>
-                        </div>
-                        <div class="time-section">
-                            <span class="time-value" id="countdown-seconds">${seconds}</span>
-                            <span class="time-label">giây</span>
-                        </div>
+                        <span id="countdown-days">${days}</span> ngày
+                        <span id="countdown-hours">${hours}</span> giờ
+                        <span id="countdown-minutes">${minutes}</span> phút
+                        <span id="countdown-seconds">${seconds}</span> giây
                     </div>
                 `;
-
-                // Thêm CSS inline để giữ layout ổn định
-                const style = document.createElement('style');
-                style.textContent = `
-                    .time {
-                        display: flex;
-                        justify-content: center;
-                        gap: 20px;
-                        margin-top: 20px;
-                    }
-                    .time-section {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        min-width: 80px;
-                    }
-                    .time-value {
-                        font-size: 2em;
-                        font-weight: bold;
-                        min-width: 2ch;
-                        text-align: center;
-                    }
-                    .time-label {
-                        font-size: 1em;
-                        margin-top: 5px;
-                    }
-                `;
-                document.head.appendChild(style);
             } else {
                 // Chỉ cập nhật các giá trị số
                 document.getElementById('countdown-days').textContent = days;
