@@ -87,19 +87,23 @@ function updateCountdown() {
 
     // Kiểm tra sinh nhật và tìm ngày gần nhất
     for (const person of birthdays) {
-        let birthday = new Date(now.getFullYear(), person.month, person.day);
+        // Tạo ngày sinh nhật cho năm hiện tại
+        let birthday = new Date(now.getFullYear(), person.month - 1, person.day); // Sửa lỗi tháng (trừ 1 vì tháng trong JS bắt đầu từ 0)
         
+        // Nếu sinh nhật năm nay đã qua, tính cho năm sau
         if (now > birthday) {
-            birthday = new Date(now.getFullYear() + 1, person.month, person.day);
+            birthday = new Date(now.getFullYear() + 1, person.month - 1, person.day);
         }
 
         const diff = birthday - now;
 
-        if (now.getMonth() === person.month && now.getDate() === person.day) {
+        // Kiểm tra nếu hôm nay là sinh nhật
+        if (now.getMonth() === person.month - 1 && now.getDate() === person.day) {
             birthdayPerson = person;
             break;
         }
 
+        // Tìm sinh nhật gần nhất
         if (diff < smallestDiff) {
             smallestDiff = diff;
             nextBirthday = birthday;
@@ -107,7 +111,8 @@ function updateCountdown() {
         }
     }
 
-    if (birthdayPerson && now.getMonth() === birthdayPerson.month && now.getDate() === birthdayPerson.day) {
+    if (birthdayPerson && now.getMonth() === birthdayPerson.month - 1 && now.getDate() === birthdayPerson.day) {
+        // Xử lý hiển thị khi đến ngày sinh nhật
         countdownElement.style.transform = 'scale(0)';
         countdownElement.style.opacity = '0';
         countdownElement.style.transition = 'all 1s ease-in-out';
@@ -124,28 +129,35 @@ function updateCountdown() {
             showBirthdayContent(birthdayPerson.name);
         }, 1000);
     } else {
+        // Hiển thị đếm ngược
         const diff = nextBirthday - now;
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-        countdownElement.innerHTML = `
-            <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
-            <div class="time">
-                <span id="days">${days}</span> ngày
-                <span id="hours">${hours}</span> giờ
-                <span id="minutes">${minutes}</span> phút
-                <span id="seconds">${seconds}</span> giây
-            </div>
-        `;
+        if (countdownElement) {
+            countdownElement.innerHTML = `
+                <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
+                <div class="time">
+                    <span id="days">${days}</span> ngày
+                    <span id="hours">${hours}</span> giờ
+                    <span id="minutes">${minutes}</span> phút
+                    <span id="seconds">${seconds}</span> giây
+                </div>
+            `;
+        }
     }
 }
-window.onload = function() {
+
+// Khởi tạo và cập nhật đồng hồ đếm ngược
+/*window.onload = function() {
+    // Chạy lần đầu
     updateCountdown();
     
+    // Cập nhật mỗi giây
     setInterval(updateCountdown, 1000);
-};
+};*/
 
 // Add this CSS to your existing styles
 const style = document.createElement('style');
@@ -550,7 +562,7 @@ function playSound() {
 }
 
 // Check if it's birthday when page loads
-window.onload = function() {
+/*window.onload = function() {
     updateCountdown();
     const now = new Date();
     if (now.getMonth() === birthdayMonth && now.getDate() === birthdayDay) {
@@ -558,7 +570,7 @@ window.onload = function() {
     }
     // Start the countdown timer
     setInterval(updateCountdown, 1000);
-};
+};*/
 
 // Photo Album
 function initPhotoAlbum() {
@@ -733,6 +745,29 @@ function initMusicPlayer() {
 
 // Initialize all features
 document.addEventListener('DOMContentLoaded', function() {
+    initPhotoAlbum();
+    initGames();
+    initSocialShare();
+    initMusicPlayer();
+});
+
+
+// Thay thế tất cả các window.onload bằng một hàm init duy nhất
+document.addEventListener('DOMContentLoaded', function() {
+    // Khởi tạo đồng hồ đếm ngược
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+    
+    // Kiểm tra sinh nhật khi tải trang
+    const now = new Date();
+    for (const person of birthdays) {
+        if (now.getMonth() === person.month - 1 && now.getDate() === person.day) {
+            showBirthdayContent(person.name);
+            break;
+        }
+    }
+
+    // Khởi tạo các tính năng khác
     initPhotoAlbum();
     initGames();
     initSocialShare();
