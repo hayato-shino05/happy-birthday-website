@@ -99,6 +99,7 @@ function updateCountdownTime() {
     for (const person of birthdays) {
         let birthday = new Date(now.getFullYear(), person.month - 1, person.day);
         
+        // Nếu sinh nhật năm nay đã qua, tính cho năm sau
         if (now > birthday) {
             birthday = new Date(now.getFullYear() + 1, person.month - 1, person.day);
         }
@@ -110,9 +111,21 @@ function updateCountdownTime() {
             nextBirthday = birthday;
             birthdayPerson = person;
         }
+
+        // Kiểm tra nếu hôm nay là sinh nhật
+        if (now.getMonth() === person.month - 1 && now.getDate() === person.day) {
+            // Dừng đếm ngược
+            clearInterval(countdownInterval);
+            // Hiển thị nội dung sinh nhật
+            showBirthdayContent(person.name);
+            // Lấy random message từ mảng messages của người đó
+            const message = getRandomMessage(person.messages);
+            document.getElementById('birthdayMessage').textContent = message;
+            return; // Thoát khỏi hàm vì đã là sinh nhật
+        }
     }
 
-    // Tính thời gian còn lại
+    // Nếu không phải ngày sinh nhật, tiếp tục đếm ngược
     const diff = nextBirthday - now;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -131,6 +144,14 @@ function updateCountdownTime() {
         `;
     }
 }
+
+// Khởi tạo interval và lưu vào biến để có thể clear
+const countdownInterval = setInterval(updateCountdownTime, 1000);
+
+// Chạy lần đầu khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCountdownTime();
+});
 
 // Khởi tạo và cập nhật đồng hồ đếm ngược
 /*window.onload = function() {
