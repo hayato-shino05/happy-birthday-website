@@ -140,12 +140,12 @@ function updateCountdown() {
             </div>
         `;
     }
-    window.onload = function() {
-        updateCountdown();
-        
-        setInterval(updateCountdown, 1000);
-    };
 }
+window.onload = function() {
+    updateCountdown();
+    
+    setInterval(updateCountdown, 1000);
+};
 
 // Add this CSS to your existing styles
 const style = document.createElement('style');
