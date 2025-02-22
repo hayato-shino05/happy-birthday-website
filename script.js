@@ -581,30 +581,28 @@ function initPhotoAlbum() {
 
 function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
-    gallery.innerHTML = ''; 
+    gallery.innerHTML = '';
     
-    const driveBaseUrl = 'https://drive.google.com/uc?export=view&id=';
-    // Thay YOUR_FOLDER_ID bằng ID thư mục của bạn
-    const folderUrl = '1KRyS9GnqpiN8DkinEI6gg0S4eOeNAcI7';
-    
-    const totalImages = 14; // Số lượng ảnh của bạn
+    const totalImages = 14; // Số lượng ảnh trong thư mục memory
 
     for (let i = 1; i <= totalImages; i++) {
         const photoItem = document.createElement('div');
         photoItem.className = 'photo-item';
         
-        // Tạo URL cho từng ảnh
-        const imageUrl = `${driveBaseUrl}${folderUrl}/${i}.jpg`;
+        const img = document.createElement('img');
+        img.className = 'memory-photo';
+        img.src = `memory/${i}.jpg`;
+        img.alt = `Birthday memory ${i}`;
         
-        photoItem.innerHTML = `
-            <img src="${imageUrl}" 
-                 alt="Birthday memory ${i}"
-                 onerror="this.src='/api/placeholder/200/200'"
-            >
-        `;
+        img.onerror = function() {
+            this.src = '/api/placeholder/200/200';
+        };
 
+        photoItem.appendChild(img);
+        
+        // Click để xem ảnh full size
         photoItem.addEventListener('click', () => {
-            openFullSizeImage(imageUrl, i);
+            openFullSizeImage(`memory/${i}.jpg`, i);
         });
 
         gallery.appendChild(photoItem);
