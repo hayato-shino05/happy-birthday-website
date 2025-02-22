@@ -583,51 +583,26 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = ''; 
     
-    // Số lượng ảnh
-    const totalImages = 14;
+    const driveBaseUrl = 'https://drive.google.com/uc?export=view&id=';
+    // Thay YOUR_FOLDER_ID bằng ID thư mục của bạn
+    const folderUrl = '1KRyS9GnqpiN8DkinEI6gg0S4eOeNAcI7';
     
-    // Container grid
-    gallery.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 20px;
-        padding: 20px;
-    `;
+    const totalImages = 14; // Số lượng ảnh của bạn
 
     for (let i = 1; i <= totalImages; i++) {
         const photoItem = document.createElement('div');
         photoItem.className = 'photo-item';
         
-        // Style cho container ảnh
-        photoItem.style.cssText = `
-            aspect-ratio: 1;
-            overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        `;
-        
-        // Tạo đường dẫn ảnh
-        const imageUrl = `/api/placeholder/200/200`; // Tạm thời dùng placeholder
+        // Tạo URL cho từng ảnh
+        const imageUrl = `${driveBaseUrl}${folderUrl}/${i}.jpg`;
         
         photoItem.innerHTML = `
             <img src="${imageUrl}" 
                  alt="Birthday memory ${i}"
-                 style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;"
+                 onerror="this.src='/api/placeholder/200/200'"
             >
         `;
-        
-        // Hover effect
-        photoItem.addEventListener('mouseover', () => {
-            photoItem.style.transform = 'scale(1.05)';
-        });
-        
-        photoItem.addEventListener('mouseout', () => {
-            photoItem.style.transform = 'scale(1)';
-        });
 
-        // Click event để mở ảnh
         photoItem.addEventListener('click', () => {
             openFullSizeImage(imageUrl, i);
         });
@@ -637,87 +612,57 @@ function loadSamplePhotos() {
 }
 
 function openFullSizeImage(imageUrl, imageNumber) {
-    // Tạo overlay container
     const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0,0,0,0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    `;
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.9)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '9999';
 
-    // Tạo container cho ảnh để thêm controls
-    const imageContainer = document.createElement('div');
-    imageContainer.style.cssText = `
-        position: relative;
-        max-width: 90vw;
-        max-height: 90vh;
-    `;
-
-    // Cấu hình ảnh
     const img = document.createElement('img');
     img.src = imageUrl;
-    img.style.cssText = `
-        max-width: 100%;
-        max-height: 90vh;
-        object-fit: contain;
-        display: block;
-    `;
+    img.style.maxWidth = '90%';
+    img.style.maxHeight = '90vh';
+    img.style.objectFit = 'contain';
 
-    // Thêm nút đóng
-    const closeButton = document.createElement('button');
-    closeButton.innerHTML = '×';
-    closeButton.style.cssText = `
-        position: absolute;
-        top: -40px;
-        right: 0;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 30px;
-        cursor: pointer;
-        padding: 5px;
-        line-height: 1;
-    `;
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '20px';
+    closeBtn.style.right = '20px';
+    closeBtn.style.fontSize = '30px';
+    closeBtn.style.color = 'white';
+    closeBtn.style.background = 'none';
+    closeBtn.style.border = 'none';
+    closeBtn.style.cursor = 'pointer';
 
-    // Caption
     const caption = document.createElement('div');
     caption.textContent = `Hình ${imageNumber}`;
-    caption.style.cssText = `
-        position: absolute;
-        bottom: -40px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: white;
-        font-size: 18px;
-        background: rgba(0,0,0,0.5);
-        padding: 5px 15px;
-        border-radius: 20px;
-    `;
+    caption.style.position = 'absolute';
+    caption.style.bottom = '20px';
+    caption.style.color = 'white';
+    caption.style.fontSize = '18px';
+    caption.style.background = 'rgba(0,0,0,0.5)';
+    caption.style.padding = '5px 15px';
+    caption.style.borderRadius = '20px';
 
-    // Thêm event listeners
-    closeButton.addEventListener('click', (e) => {
-        e.stopPropagation();
+    modal.appendChild(img);
+    modal.appendChild(closeBtn);
+    modal.appendChild(caption);
+
+    modal.addEventListener('click', () => {
         modal.remove();
     });
 
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
+    img.addEventListener('click', (e) => {
+        e.stopPropagation();
     });
 
-    // Ghép các elements
-    imageContainer.appendChild(img);
-    imageContainer.appendChild(closeButton);
-    imageContainer.appendChild(caption);
-    modal.appendChild(imageContainer);
     document.body.appendChild(modal);
 }
 
