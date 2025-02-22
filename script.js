@@ -87,23 +87,19 @@ function updateCountdown() {
 
     // Kiểm tra sinh nhật và tìm ngày gần nhất
     for (const person of birthdays) {
-        // Tạo ngày sinh nhật cho năm hiện tại
-        let birthday = new Date(now.getFullYear(), person.month - 1, person.day); // Sửa lỗi tháng (trừ 1 vì tháng trong JS bắt đầu từ 0)
+        let birthday = new Date(now.getFullYear(), person.month - 1, person.day);
         
-        // Nếu sinh nhật năm nay đã qua, tính cho năm sau
         if (now > birthday) {
             birthday = new Date(now.getFullYear() + 1, person.month - 1, person.day);
         }
 
         const diff = birthday - now;
 
-        // Kiểm tra nếu hôm nay là sinh nhật
         if (now.getMonth() === person.month - 1 && now.getDate() === person.day) {
             birthdayPerson = person;
             break;
         }
 
-        // Tìm sinh nhật gần nhất
         if (diff < smallestDiff) {
             smallestDiff = diff;
             nextBirthday = birthday;
@@ -136,16 +132,67 @@ function updateCountdown() {
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+        // Chỉ cập nhật nếu element tồn tại
         if (countdownElement) {
-            countdownElement.innerHTML = `
-                <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
-                <div class="time">
-                    <span id="days">${days}</span> ngày
-                    <span id="hours">${hours}</span> giờ
-                    <span id="minutes">${minutes}</span> phút
-                    <span id="seconds">${seconds}</span> giây
-                </div>
-            `;
+            // Kiểm tra xem cấu trúc HTML đã được tạo chưa
+            if (!countdownElement.querySelector('.time')) {
+                // Tạo cấu trúc HTML ban đầu
+                countdownElement.innerHTML = `
+                    <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
+                    <div class="time">
+                        <div class="time-section">
+                            <span class="time-value" id="countdown-days">${days}</span>
+                            <span class="time-label">ngày</span>
+                        </div>
+                        <div class="time-section">
+                            <span class="time-value" id="countdown-hours">${hours}</span>
+                            <span class="time-label">giờ</span>
+                        </div>
+                        <div class="time-section">
+                            <span class="time-value" id="countdown-minutes">${minutes}</span>
+                            <span class="time-label">phút</span>
+                        </div>
+                        <div class="time-section">
+                            <span class="time-value" id="countdown-seconds">${seconds}</span>
+                            <span class="time-label">giây</span>
+                        </div>
+                    </div>
+                `;
+
+                // Thêm CSS inline để giữ layout ổn định
+                const style = document.createElement('style');
+                style.textContent = `
+                    .time {
+                        display: flex;
+                        justify-content: center;
+                        gap: 20px;
+                        margin-top: 20px;
+                    }
+                    .time-section {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        min-width: 80px;
+                    }
+                    .time-value {
+                        font-size: 2em;
+                        font-weight: bold;
+                        min-width: 2ch;
+                        text-align: center;
+                    }
+                    .time-label {
+                        font-size: 1em;
+                        margin-top: 5px;
+                    }
+                `;
+                document.head.appendChild(style);
+            } else {
+                // Chỉ cập nhật các giá trị số
+                document.getElementById('countdown-days').textContent = days;
+                document.getElementById('countdown-hours').textContent = hours;
+                document.getElementById('countdown-minutes').textContent = minutes;
+                document.getElementById('countdown-seconds').textContent = seconds;
+            }
         }
     }
 }
