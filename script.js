@@ -164,28 +164,6 @@ style.textContent = `
         50% { transform: scale(1.2); }
         100% { transform: scale(1); opacity: 1; }
     }
-        .memory-wall {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.8);
-    z-index: 9998;
-    display: none;
-}
-
-.photo-gallery {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-/* Đảm bảo ảnh không bị vỡ layout */
-img {
-    max-width: 100%;
-    height: auto;
-}
 `;
 document.head.appendChild(style);
 
