@@ -1,7 +1,7 @@
 const birthdays = [
     {
         name: "Dũng",
-        month: 11,
+        month: 12,
         day: 7,
         messages: [
             "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉",
@@ -11,7 +11,7 @@ const birthdays = [
     },
     {
         name: "Thành",
-        month: 1,
+        month: 2,
         day: 27,
         messages: [
             "🎂 Chúc mừng sinh nhật nha cu 🎂",
@@ -21,7 +21,7 @@ const birthdays = [
     },
     {
         name: "Đức",
-        month: 7,
+        month: 8,
         day: 19,
         messages: [
             "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈",
@@ -31,7 +31,7 @@ const birthdays = [
     },
     {
         name: "Tiển",
-        month: 6,
+        month: 7,
         day: 26,
         messages: [
             "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉",
@@ -41,7 +41,7 @@ const birthdays = [
     },
     {
         name: "Diệu",
-        month: 7,
+        month: 8,
         day: 5,
         messages: [
             "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂",
@@ -51,7 +51,7 @@ const birthdays = [
     },
     {
         name: "Hiền",
-        month: 11,
+        month: 12,
         day: 30,
         messages: [
             "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈",
@@ -61,10 +61,20 @@ const birthdays = [
     },
     {
         name: "Uyên",
-        month: 11, 
+        month: 12, 
         day: 29,  
         messages: [
             "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
+            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
+            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
+        ]
+    },
+    {
+        name: "Như",
+        month: 12, 
+        day: 12,  
+        messages: [
+            "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
             "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
             "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
         ]
