@@ -12,7 +12,7 @@ const birthdays = [
     {
         name: "Thành",
         month: 2,
-        day: 22,
+        day: 27,
         messages: [
             "🎂 Chúc mừng sinh nhật nha cu 🎂",
             "",
@@ -88,54 +88,53 @@ function getRandomMessage(messages) {
 }
 
 
-// Kiểm tra xem có phải ngày sinh nhật không
-function checkIfBirthday(date) {
-    return birthdays.find(person => 
-        date.getMonth() === person.month - 1 && 
-        date.getDate() === person.day
-    );
-}
-
-// Tìm sinh nhật tiếp theo
-function findNextBirthday(currentDate) {
-    let nearestPerson = null;
-    let nearestDate = null;
+function updateCountdownTime() {
+    const now = new Date();
+    const countdownElement = document.getElementById('countdown');
+    let birthdayPerson = null;
+    let nextBirthday = null;
     let smallestDiff = Infinity;
 
+    // Tìm sinh nhật gần nhất
     for (const person of birthdays) {
-        let birthday = new Date(currentDate.getFullYear(), person.month - 1, person.day);
+        let birthday = new Date(now.getFullYear(), person.month - 1, person.day);
         
         // Nếu sinh nhật năm nay đã qua, tính cho năm sau
-        if (currentDate > birthday) {
-            birthday = new Date(currentDate.getFullYear() + 1, person.month - 1, person.day);
+        if (now > birthday) {
+            birthday = new Date(now.getFullYear() + 1, person.month - 1, person.day);
         }
 
-        const diff = birthday - currentDate;
+        const diff = birthday - now;
+
         if (diff < smallestDiff) {
             smallestDiff = diff;
-            nearestDate = birthday;
-            nearestPerson = person;
+            nextBirthday = birthday;
+            birthdayPerson = person;
+        }
+
+        // Kiểm tra nếu hôm nay là sinh nhật
+        if (now.getMonth() === person.month - 1 && now.getDate() === person.day) {
+            // Dừng đếm ngược
+            clearInterval(countdownInterval);
+            // Hiển thị nội dung sinh nhật
+            showBirthdayContent(person.name);
+            // Lấy random message từ mảng messages của người đó
+            const message = getRandomMessage(person.messages);
+            document.getElementById('birthdayMessage').textContent = message;
+            return; // Thoát khỏi hàm vì đã là sinh nhật
         }
     }
 
-    return { person: nearestPerson, date: nearestDate };
-}
-
-// Hiển thị đếm ngược
-function displayCountdown(targetDate, person) {
-    const now = new Date();
-    const diff = targetDate - now;
-    
+    // Nếu không phải ngày sinh nhật, tiếp tục đếm ngược
+    const diff = nextBirthday - now;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    const countdownElement = document.getElementById('countdown');
     if (countdownElement) {
-        countdownElement.classList.remove('hidden');
         countdownElement.innerHTML = `
-            <h1>Đếm Ngược Đến Sinh Nhật ${person.name}</h1>
+            <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
             <div class="time">
                 <span id="days">${days}</span> ngày
                 <span id="hours">${hours}</span> giờ
@@ -146,39 +145,23 @@ function displayCountdown(targetDate, person) {
     }
 }
 
-function updateCountdownTime() {
-    const now = new Date();
-    const birthdayPerson = checkIfBirthday(now);
+// Khởi tạo interval và lưu vào biến để có thể clear
+const countdownInterval = setInterval(updateCountdownTime, 1000);
 
-    // Nếu hôm nay là sinh nhật
-    if (birthdayPerson) {
-        const today = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-        const lastShownDate = localStorage.getItem('lastBirthdayShown');
-        
-        // Nếu chưa hiển thị sinh nhật hôm nay hoặc đã hiển thị nhưng là ngày khác
-        if (lastShownDate !== today) {
-            localStorage.setItem('lastBirthdayShown', today);
-            localStorage.setItem('currentBirthday', birthdayPerson.name);
-            showBirthdayContent(birthdayPerson);
-        } else {
-            // Nếu đã hiển thị rồi, kiểm tra xem có phải đang hiển thị đúng người không
-            const currentlyShowing = localStorage.getItem('currentBirthday');
-            if (currentlyShowing === birthdayPerson.name) {
-                showBirthdayContent(birthdayPerson);
-            }
-        }
-    } else {
-        // Xóa dữ liệu sinh nhật cũ nếu không còn là ngày sinh nhật
-        localStorage.removeItem('lastBirthdayShown');
-        localStorage.removeItem('currentBirthday');
-        
-        // Tìm và hiển thị đếm ngược đến sinh nhật tiếp theo
-        const nextBirthday = findNextBirthday(now);
-        if (nextBirthday.person) {
-            displayCountdown(nextBirthday.date, nextBirthday.person);
-        }
-    }
-}
+// Chạy lần đầu khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCountdownTime();
+});
+
+// Khởi tạo và cập nhật đồng hồ đếm ngược
+/*window.onload = function() {
+    // Chạy lần đầu
+    updateCountdown();
+    
+    // Cập nhật mỗi giây
+    setInterval(updateCountdown, 1000);
+};*/
+
 // Add this CSS to your existing styles
 const style = document.createElement('style');
 style.textContent = `
@@ -205,38 +188,25 @@ style.textContent = `
 
 document.head.appendChild(style);
 
-function showBirthdayContent(birthdayPerson) {
-    // Ẩn countdown
-    const countdownElement = document.getElementById('countdown');
-    if (countdownElement) {
-        countdownElement.classList.add('hidden');
-    }
-
-    // Hiển thị nội dung sinh nhật
-    const birthdayContent = document.getElementById('birthdayContent');
-    if (birthdayContent) {
-        birthdayContent.classList.remove('hidden');
-    }
-
-    // Hiển thị và animate tiêu đề
+function showBirthdayContent(name) {
+    // Ẩn phần countdown
+    document.getElementById('countdown').classList.add('hidden');
+    
+    // Hiện và animate tiêu đề sinh nhật
     const birthdayTitle = document.getElementById('birthdayTitle');
-    if (birthdayTitle) {
-        birthdayTitle.style.display = 'block';
+    birthdayTitle.style.display = 'block';
+    birthdayTitle.style.opacity = '0';
+    
+    setTimeout(() => {
+        birthdayTitle.style.transition = 'opacity 1s ease-in-out';
         birthdayTitle.style.opacity = '1';
-    }
+    }, 100);
 
-    // Hiển thị message
-    const message = getRandomMessage(birthdayPerson.messages);
-    const birthdayMessage = document.getElementById('birthdayMessage');
-    if (birthdayMessage) {
-        birthdayMessage.textContent = message;
-        birthdayMessage.style.display = 'block';
-        birthdayMessage.style.opacity = '1';
-        birthdayMessage.style.transform = 'translateY(0)';
-    }
-
-    // Hiển thị các phần tử khác
-    document.getElementById('flame').style.opacity = '1';
+    // Hiện nội dung sinh nhật
+    document.getElementById('birthdayContent').classList.remove('hidden');
+    document.getElementById('flame').style.opacity = 1;
+    document.getElementById('birthdayMessage').style.opacity = 1;
+    document.getElementById('birthdayMessage').style.transform = 'translateY(0)';
     document.getElementById('micPermissionBtn').style.display = 'inline-block';
     document.querySelector('.countdown-container').style.display = 'none';
     document.querySelector('.cake-container').style.display = 'block';
@@ -245,39 +215,59 @@ function showBirthdayContent(birthdayPerson) {
     // Thay đổi background
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
 
-    // Tạo hiệu ứng
-    createBalloons();
-    createConfetti();
-
-    // Phát nhạc
-    playBirthdayMusic();
-}
-
-function playBirthdayMusic() {
+    // Tự động phát nhạc sinh nhật
     const audio = new Audio('happy-birthday.mp3');
     audio.play().catch(e => {
         console.log('Auto-play prevented:', e);
+        // Cập nhật trạng thái nút play để người dùng biết nhạc chưa phát
         const playButton = document.getElementById('playMusic');
         if (playButton) {
             playButton.textContent = '▶️';
         }
     });
-}
+    
+    // Cập nhật trạng thái nút play
+    const playButton = document.getElementById('playMusic');
+    if (playButton) {
+        playButton.textContent = '⏸️';
+    }
+    const birthdayContentElement = document.getElementById('birthdayContent');
+    if (birthdayContentElement) {
+        switch(name) {
+            case "An":
+                birthdayContentElement.innerHTML = `
+                    <div class="special-wishes">
+                        <h2>🎈 Chúc An 🎈</h2>
+                        <p>Mỗi ngày đều tràn ngập niềm vui</p>
+                        <p>Sức khỏe dồi dào</p>
+                        <p>Thành công trong công việc</p>
+                    </div>
+                `;
+                break;
+            case "Bình":
+                birthdayContentElement.innerHTML = `
+                    <div class="special-wishes">
+                        <h2>🌟 Chúc Bình 🌟</h2>
+                        <p>Luôn xinh đẹp và rạng rỡ</p>
+                        <p>Gặp nhiều may mắn</p>
+                        <p>Đạt được mọi ước mơ</p>
+                    </div>
+                `;
+                break;
+            default:
+                birthdayContentElement.innerHTML = `
+                    <div class="special-wishes">
+                        <h2>🎉 Happy Birthday! 🎉</h2>
+                        <p>Chúc một năm mới tuyệt vời!</p>
+                    </div>
+                `;
+        }
+    }
 
-// Khởi tạo khi trang load
-document.addEventListener('DOMContentLoaded', function() {
-    // Khởi tạo đếm ngược
-    updateCountdownTime();
-    
-    // Cập nhật mỗi giây
-    setInterval(updateCountdownTime, 1000);
-    
-    // Khởi tạo các tính năng khác
-    initPhotoAlbum();
-    initGames();
-    initSocialShare();
-    initMusicPlayer();
-});
+    // Tạo hiệu ứng
+    createBalloons();
+    createConfetti();
+}
 
 function createBalloons() {
     const colors = ['#ff6b6b', '#7dd3fc', '#ffd166', '#a5d8ff', '#ffd3da', '#c2f0c2'];
