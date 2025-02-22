@@ -122,9 +122,6 @@ function updateCountdownTime() {
     }
 }
 
-// Chỉ cập nhật thời gian đếm ngược
-setInterval(updateCountdownTime, 1000);
-
 // Khởi tạo và cập nhật đồng hồ đếm ngược
 /*window.onload = function() {
     // Chạy lần đầu
