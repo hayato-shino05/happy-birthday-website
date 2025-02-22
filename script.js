@@ -1,47 +1,139 @@
-// Set your birthday here (month is 0-indexed: 0 = January, 11 = December)
-const birthdayMonth = 11;  
-const birthdayDay = 7;   
+const birthdays = [
+    {
+        name: "Dũng",
+        month: 11,
+        day: 7,
+        messages: [
+            "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉",
+            "Chúc mày tuổi mới kiếm được thật nhiều tiền, yêu thật nhiều gái xinh nha ku!",
+            "HAPPY BIRTHDAY thằng bạn vàng! Lớn thêm tuổi mà bớt khùng lại giùm tao nha!"
+        ]
+    },
+    {
+        name: "Thành",
+        month: 1,
+        day: 27,
+        messages: [
+            "🎂 Chúc mừng sinh nhật nha cu 🎂",
+            "",
+            ""
+        ]
+    },
+    {
+        name: "Đức",
+        month: 7,
+        day: 19,
+        messages: [
+            "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈",
+            "Chúc thằng bạn tao tuổi mới đẹp trai hơn tao, giàu hơn tao chút xíu thôi nha!",
+            "Ê ku, chúc mày sinh nhật vui, bớt cà khịa tao để tao còn sống với!"
+        ]
+    },
+    {
+        name: "Tiển",
+        month: 6,
+        day: 26,
+        messages: [
+            "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉",
+            "Chúc mày tuổi mới bớt lầy, bớt troll tao mà sống tử tế hơn nha!",
+            "Sinh nhật vui nha ku, chúc mày năm nay thoát ế để tao đỡ phải chở mày đi chơi!"
+        ]
+    },
+    {
+        name: "Diệu",
+        month: 7,
+        day: 5,
+        messages: [
+            "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂",
+            "Chúc mày tuổi mới xinh hơn cả hoa hậu, yêu tao nhiều hơn nữa nha!",
+            "Ê nhỏ, sinh nhật vui vẻ, chúc mày bớt đanh đá để tụi tao còn sống nha!"
+        ]
+    },
+    {
+        name: "Hiền",
+        month: 11,
+        day: 30,
+        messages: [
+            "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈",
+            "Chúc nhỏ bạn tao tuổi mới vừa xinh vừa ngoan, bớt chửi tao nha mạy!",
+            "Sinh nhật vui nha nhỏ, chúc mày năm nay kiếm được bồ ngon hơn bồ tao!"
+        ]
+    },
+    {
+        name: "Uyên",
+        month: 11, 
+        day: 29,  
+        messages: [
+            "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
+            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
+            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
+        ]
+    }
+];
+
+
+function getRandomMessage(messages) {
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    return messages[randomIndex];
+}
+
 
 function updateCountdown() {
     const now = new Date();
-    let birthday = new Date(now.getFullYear(), birthdayMonth, birthdayDay);
+    const countdownElement = document.getElementById('countdown');
+    let birthdayPerson = null;
+    let nextBirthday = null;
+    let smallestDiff = Infinity;
 
-    // If birthday has passed this year, calculate for next year
-    if (now > birthday) {
-        birthday = new Date(now.getFullYear() + 1, birthdayMonth, birthdayDay);
+    // Kiểm tra sinh nhật và tìm ngày gần nhất
+    for (const person of birthdays) {
+        let birthday = new Date(now.getFullYear(), person.month, person.day);
+        
+        if (now > birthday) {
+            birthday = new Date(now.getFullYear() + 1, person.month, person.day);
+        }
+
+        const diff = birthday - now;
+
+        if (now.getMonth() === person.month && now.getDate() === person.day) {
+            birthdayPerson = person;
+            break;
+        }
+
+        if (diff < smallestDiff) {
+            smallestDiff = diff;
+            nextBirthday = birthday;
+            birthdayPerson = person;
+        }
     }
 
-    // Calculate time difference
-    const diff = birthday - now;
-
-    // Calculate days, hours, minutes, seconds
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    const countdownElement = document.getElementById('countdown');
-
-    // Check if it's birthday
-    if (now.getMonth() === birthdayMonth && now.getDate() === birthdayDay) {
-        // Replace countdown with birthday message using animation
+    if (birthdayPerson && now.getMonth() === birthdayPerson.month && now.getDate() === birthdayPerson.day) {
         countdownElement.style.transform = 'scale(0)';
         countdownElement.style.opacity = '0';
         countdownElement.style.transition = 'all 1s ease-in-out';
 
         setTimeout(() => {
-            countdownElement.innerHTML = '<h1 class="birthday-title">🎉 Chúc Mừng Sinh Nhật! 🎉</h1>';
+            const randomMessage = getRandomMessage(birthdayPerson.messages);
+            countdownElement.innerHTML = `
+                <h1 class="birthday-title">${randomMessage}</h1>
+                <div class="birthday-name">Chúc mừng sinh nhật ${birthdayPerson.name}!</div>
+            `;
             countdownElement.style.transform = 'scale(1)';
             countdownElement.style.opacity = '1';
+            
+            showBirthdayContent(birthdayPerson.name);
         }, 1000);
-
-        showBirthdayContent();
     } else {
-        // Update the countdown with "ĐẾM NGƯỢC" text
+        const diff = nextBirthday - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
         countdownElement.innerHTML = `
-            <h1>Đếm Ngược</h1>
+            <h1>Đếm Ngược Đến Sinh Nhật ${birthdayPerson.name}</h1>
             <div class="time">
-                <span id="daysa">${days}</span> ngày
+                <span id="days">${days}</span> ngày
                 <span id="hours">${hours}</span> giờ
                 <span id="minutes">${minutes}</span> phút
                 <span id="seconds">${seconds}</span> giây
@@ -75,7 +167,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-function showBirthdayContent() {
+function showBirthdayContent(name) {
     // Ẩn phần countdown
     document.getElementById('countdown').classList.add('hidden');
     
@@ -117,6 +209,38 @@ function showBirthdayContent() {
     const playButton = document.getElementById('playMusic');
     if (playButton) {
         playButton.textContent = '⏸️';
+    }
+    const birthdayContentElement = document.getElementById('birthdayContent');
+    if (birthdayContentElement) {
+        switch(name) {
+            case "An":
+                birthdayContentElement.innerHTML = `
+                    <div class="special-wishes">
+                        <h2>🎈 Chúc An 🎈</h2>
+                        <p>Mỗi ngày đều tràn ngập niềm vui</p>
+                        <p>Sức khỏe dồi dào</p>
+                        <p>Thành công trong công việc</p>
+                    </div>
+                `;
+                break;
+            case "Bình":
+                birthdayContentElement.innerHTML = `
+                    <div class="special-wishes">
+                        <h2>🌟 Chúc Bình 🌟</h2>
+                        <p>Luôn xinh đẹp và rạng rỡ</p>
+                        <p>Gặp nhiều may mắn</p>
+                        <p>Đạt được mọi ước mơ</p>
+                    </div>
+                `;
+                break;
+            default:
+                birthdayContentElement.innerHTML = `
+                    <div class="special-wishes">
+                        <h2>🎉 Happy Birthday! 🎉</h2>
+                        <p>Chúc một năm mới tuyệt vời!</p>
+                    </div>
+                `;
+        }
     }
 
     // Tạo hiệu ứng
@@ -457,16 +581,84 @@ function initPhotoAlbum() {
 
 function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
-    gallery.innerHTML = ''; // Clear existing photos
+    gallery.innerHTML = ''; // Xóa ảnh cũ nếu có
+    
+    const imagePath = 'https://drive.google.com/drive/folders/1KRyS9GnqpiN8DkinEI6gg0S4eOeNAcI7?usp=sharing';
+    
+    const totalImages = 14; 
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 1; i <= totalImages; i++) {
         const photoItem = document.createElement('div');
         photoItem.className = 'photo-item';
+        
+        // Tạo đường dẫn đến ảnh
+        const imageUrl = `${imagePath}${i}.jpg`; // Giả sử định dạng ảnh là .jpg
+        
         photoItem.innerHTML = `
-            <img src="/api/placeholder/200/200" alt="Birthday memory ${i + 1}">
+            <img src="${imageUrl}" alt="Birthday memory ${i}" 
+                 onerror="this.src='/api/placeholder/200/200'"
+                 loading="lazy">
         `;
+        
+        photoItem.style.transition = 'transform 0.3s ease';
+        photoItem.addEventListener('mouseover', () => {
+            photoItem.style.transform = 'scale(1.1)';
+        });
+        photoItem.addEventListener('mouseout', () => {
+            photoItem.style.transform = 'scale(1)';
+        });
+
+        photoItem.addEventListener('click', () => {
+            openFullSizeImage(imageUrl, i);
+        });
+
         gallery.appendChild(photoItem);
     }
+}
+
+function openFullSizeImage(imageUrl, imageNumber) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `;
+
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.cssText = `
+        max-width: 90%;
+        max-height: 90vh;
+        object-fit: contain;
+    `;
+
+    const caption = document.createElement('div');
+    caption.textContent = `Hình ${imageNumber}`;
+    caption.style.cssText = `
+        position: absolute;
+        bottom: 20px;
+        color: white;
+        font-size: 18px;
+        background: rgba(0,0,0,0.5);
+        padding: 5px 15px;
+        border-radius: 20px;
+    `;
+
+    modal.appendChild(img);
+    modal.appendChild(caption);
+
+    modal.addEventListener('click', () => {
+        modal.remove();
+    });
+
+    document.body.appendChild(modal);
 }
 
 // Games
