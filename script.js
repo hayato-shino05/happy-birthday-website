@@ -727,10 +727,13 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// Thay thế tất cả các window.onload bằng một hàm init duy nhất
+// Khởi tạo tất cả các tính năng khi trang được tải
 document.addEventListener('DOMContentLoaded', function() {
-    // Khởi tạo đồng hồ đếm ngược
-    updateCountdown();    
+    // Khởi tạo đồng hồ đếm ngược lần đầu
+    updateCountdownTime();
+    // Bắt đầu cập nhật đếm ngược mỗi giây
+    setInterval(updateCountdownTime, 1000);
+    
     // Kiểm tra sinh nhật khi tải trang
     const now = new Date();
     for (const person of birthdays) {
