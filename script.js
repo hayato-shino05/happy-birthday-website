@@ -140,6 +140,11 @@ function updateCountdown() {
             </div>
         `;
     }
+    window.onload = function() {
+        updateCountdown();
+        
+        setInterval(updateCountdown, 1000);
+    };
 }
 
 // Add this CSS to your existing styles
@@ -165,11 +170,7 @@ style.textContent = `
         100% { transform: scale(1); opacity: 1; }
     }
 `;
-window.onload = function() {
-    updateCountdown();
-    
-    setInterval(updateCountdown, 1000);
-};
+
 document.head.appendChild(style);
 
 function showBirthdayContent(name) {
