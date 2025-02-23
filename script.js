@@ -3,90 +3,51 @@ const birthdays = [
         name: "Dũng",
         month: 12,
         day: 7,
-        messages: [
-            "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉",
-            "Chúc mày tuổi mới kiếm được thật nhiều tiền, yêu thật nhiều gái xinh nha ku!",
-            "HAPPY BIRTHDAY thằng bạn vàng! Lớn thêm tuổi mà bớt khùng lại giùm tao nha!"
-        ]
+        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
     },
     {
         name: "Thành",
         month: 2,
-        day: 22,
-        messages: [
-            "🎂 Chúc mừng sinh nhật nha cu 🎂",
-            "",
-            ""
-        ]
+        day: 27,
+        message: "🎂 Chúc mừng sinh nhật nha cu 🎂"
     },
     {
         name: "Đức",
         month: 8,
         day: 19,
-        messages: [
-            "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈",
-            "Chúc thằng bạn tao tuổi mới đẹp trai hơn tao, giàu hơn tao chút xíu thôi nha!",
-            "Ê ku, chúc mày sinh nhật vui, bớt cà khịa tao để tao còn sống với!"
-        ]
+        message: "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈"
     },
     {
         name: "Tiển",
         month: 7,
         day: 26,
-        messages: [
-            "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉",
-            "Chúc mày tuổi mới bớt lầy, bớt troll tao mà sống tử tế hơn nha!",
-            "Sinh nhật vui nha ku, chúc mày năm nay thoát ế để tao đỡ phải chở mày đi chơi!"
-        ]
+        message: "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉"
     },
     {
         name: "Diệu",
         month: 8,
         day: 5,
-        messages: [
-            "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂",
-            "Chúc mày tuổi mới xinh hơn cả hoa hậu, yêu tao nhiều hơn nữa nha!",
-            "Ê nhỏ, sinh nhật vui vẻ, chúc mày bớt đanh đá để tụi tao còn sống nha!"
-        ]
+        message: "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂"
     },
     {
         name: "Hiền",
         month: 12,
         day: 30,
-        messages: [
-            "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈",
-            "Chúc nhỏ bạn tao tuổi mới vừa xinh vừa ngoan, bớt chửi tao nha mạy!",
-            "Sinh nhật vui nha nhỏ, chúc mày năm nay kiếm được bồ ngon hơn bồ tao!"
-        ]
+        message: "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈"
     },
     {
         name: "Uyên",
-        month: 12, 
-        day: 29,  
-        messages: [
-            "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
-            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
-            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
-        ]
+        month: 12,
+        day: 29,
+        message: "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
     },
     {
         name: "Như",
-        month: 12, 
-        day: 12,  
-        messages: [
-            "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
-            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
-            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
-        ]
+        month: 12,
+        day: 12,
+        message: "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
     }
 ];
-
-
-function getRandomMessage(messages) {
-    const randomIndex = Math.floor(Math.random() * messages.length);
-    return messages[randomIndex];
-}
-
 
 // Kiểm tra xem có phải ngày sinh nhật không
 function checkIfBirthday(date) {
@@ -206,50 +167,41 @@ style.textContent = `
 document.head.appendChild(style);
 
 function showBirthdayContent(birthdayPerson) {
-    // Ẩn countdown
     const countdownElement = document.getElementById('countdown');
     if (countdownElement) {
         countdownElement.classList.add('hidden');
     }
 
-    // Hiển thị nội dung sinh nhật
     const birthdayContent = document.getElementById('birthdayContent');
     if (birthdayContent) {
         birthdayContent.classList.remove('hidden');
     }
 
-    // Hiển thị và animate tiêu đề
     const birthdayTitle = document.getElementById('birthdayTitle');
     if (birthdayTitle) {
         birthdayTitle.style.display = 'block';
         birthdayTitle.style.opacity = '1';
     }
 
-    // Hiển thị message
-    const message = getRandomMessage(birthdayPerson.messages);
     const birthdayMessage = document.getElementById('birthdayMessage');
     if (birthdayMessage) {
-        birthdayMessage.textContent = message;
+        birthdayMessage.textContent = birthdayPerson.message; // Use the single message directly
         birthdayMessage.style.display = 'block';
         birthdayMessage.style.opacity = '1';
         birthdayMessage.style.transform = 'translateY(0)';
     }
 
-    // Hiển thị các phần tử khác
     document.getElementById('flame').style.opacity = '1';
     document.getElementById('micPermissionBtn').style.display = 'inline-block';
     document.querySelector('.countdown-container').style.display = 'none';
     document.querySelector('.cake-container').style.display = 'block';
     document.querySelector('.birthday-message').style.display = 'block';
 
-    // Thay đổi background
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
 
-    // Tạo hiệu ứng
     createBalloons();
     createConfetti();
 
-    // Phát nhạc
     playBirthdayMusic();
 }
 

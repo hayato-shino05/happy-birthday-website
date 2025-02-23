@@ -3,53 +3,92 @@ const birthdays = [
         name: "Dũng",
         month: 12,
         day: 7,
-        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
+        messages: [
+            "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉",
+            "Chúc mày tuổi mới kiếm được thật nhiều tiền, yêu thật nhiều gái xinh nha ku!",
+            "HAPPY BIRTHDAY thằng bạn vàng! Lớn thêm tuổi mà bớt khùng lại giùm tao nha!"
+        ]
     },
     {
         name: "Thành",
         month: 2,
-        day: 23,
-        message: "🎂 Chúc mừng sinh nhật nha cu 🎂"
+        day: 22,
+        messages: [
+            "🎂 Chúc mừng sinh nhật nha cu 🎂",
+            "",
+            ""
+        ]
     },
     {
         name: "Đức",
         month: 8,
         day: 19,
-        message: "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈"
+        messages: [
+            "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈",
+            "Chúc thằng bạn tao tuổi mới đẹp trai hơn tao, giàu hơn tao chút xíu thôi nha!",
+            "Ê ku, chúc mày sinh nhật vui, bớt cà khịa tao để tao còn sống với!"
+        ]
     },
     {
         name: "Tiển",
         month: 7,
         day: 26,
-        message: "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉"
+        messages: [
+            "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉",
+            "Chúc mày tuổi mới bớt lầy, bớt troll tao mà sống tử tế hơn nha!",
+            "Sinh nhật vui nha ku, chúc mày năm nay thoát ế để tao đỡ phải chở mày đi chơi!"
+        ]
     },
     {
         name: "Diệu",
         month: 8,
         day: 5,
-        message: "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂"
+        messages: [
+            "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂",
+            "Chúc mày tuổi mới xinh hơn cả hoa hậu, yêu tao nhiều hơn nữa nha!",
+            "Ê nhỏ, sinh nhật vui vẻ, chúc mày bớt đanh đá để tụi tao còn sống nha!"
+        ]
     },
     {
         name: "Hiền",
         month: 12,
         day: 30,
-        message: "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈"
+        messages: [
+            "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈",
+            "Chúc nhỏ bạn tao tuổi mới vừa xinh vừa ngoan, bớt chửi tao nha mạy!",
+            "Sinh nhật vui nha nhỏ, chúc mày năm nay kiếm được bồ ngon hơn bồ tao!"
+        ]
     },
     {
         name: "Uyên",
-        month: 12,
-        day: 29,
-        message: "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
+        month: 12, 
+        day: 29,  
+        messages: [
+            "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
+            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
+            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
+        ]
     },
     {
         name: "Như",
-        month: 12,
-        day: 12,
-        message: "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
+        month: 12, 
+        day: 12,  
+        messages: [
+            "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
+            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
+            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
+        ]
     }
 ];
 
 
+function getRandomMessage(messages) {
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    return messages[randomIndex];
+}
+
+
+// Kiểm tra xem có phải ngày sinh nhật không
 function checkIfBirthday(date) {
     return birthdays.find(person => 
         date.getMonth() === person.month - 1 && 
@@ -57,6 +96,7 @@ function checkIfBirthday(date) {
     );
 }
 
+// Tìm sinh nhật tiếp theo
 function findNextBirthday(currentDate) {
     let nearestPerson = null;
     let nearestDate = null;
@@ -65,6 +105,7 @@ function findNextBirthday(currentDate) {
     for (const person of birthdays) {
         let birthday = new Date(currentDate.getFullYear(), person.month - 1, person.day);
         
+        // Nếu sinh nhật năm nay đã qua, tính cho năm sau
         if (currentDate > birthday) {
             birthday = new Date(currentDate.getFullYear() + 1, person.month - 1, person.day);
         }
@@ -80,6 +121,7 @@ function findNextBirthday(currentDate) {
     return { person: nearestPerson, date: nearestDate };
 }
 
+// Hiển thị đếm ngược
 function displayCountdown(targetDate, person) {
     const now = new Date();
     const diff = targetDate - now;
@@ -108,67 +150,106 @@ function updateCountdownTime() {
     const now = new Date();
     const birthdayPerson = checkIfBirthday(now);
 
+    // Nếu hôm nay là sinh nhật
     if (birthdayPerson) {
         const today = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
         const lastShownDate = localStorage.getItem('lastBirthdayShown');
         
+        // Nếu chưa hiển thị sinh nhật hôm nay hoặc đã hiển thị nhưng là ngày khác
         if (lastShownDate !== today) {
             localStorage.setItem('lastBirthdayShown', today);
             localStorage.setItem('currentBirthday', birthdayPerson.name);
             showBirthdayContent(birthdayPerson);
         } else {
+            // Nếu đã hiển thị rồi, kiểm tra xem có phải đang hiển thị đúng người không
             const currentlyShowing = localStorage.getItem('currentBirthday');
             if (currentlyShowing === birthdayPerson.name) {
                 showBirthdayContent(birthdayPerson);
             }
         }
     } else {
+        // Xóa dữ liệu sinh nhật cũ nếu không còn là ngày sinh nhật
         localStorage.removeItem('lastBirthdayShown');
         localStorage.removeItem('currentBirthday');
         
+        // Tìm và hiển thị đếm ngược đến sinh nhật tiếp theo
         const nextBirthday = findNextBirthday(now);
         if (nextBirthday.person) {
             displayCountdown(nextBirthday.date, nextBirthday.person);
         }
     }
 }
+// Add this CSS to your existing styles
+const style = document.createElement('style');
+style.textContent = `
+    .countdown {
+        transition: all 1s ease-in-out;
+    }
+    
+    .birthday-title {
+        font-family: 'Dancing Script', cursive;
+        font-size: 3.5em;
+        color: #ff6b81;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+        margin: 0;
+        padding: 20px;
+        animation: birthdayPop 1.5s ease-out;
+    }
+    
+    @keyframes birthdayPop {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+`;
+
+document.head.appendChild(style);
 
 function showBirthdayContent(birthdayPerson) {
+    // Ẩn countdown
     const countdownElement = document.getElementById('countdown');
     if (countdownElement) {
         countdownElement.classList.add('hidden');
     }
 
+    // Hiển thị nội dung sinh nhật
     const birthdayContent = document.getElementById('birthdayContent');
     if (birthdayContent) {
         birthdayContent.classList.remove('hidden');
     }
 
+    // Hiển thị và animate tiêu đề
     const birthdayTitle = document.getElementById('birthdayTitle');
     if (birthdayTitle) {
         birthdayTitle.style.display = 'block';
         birthdayTitle.style.opacity = '1';
     }
 
+    // Hiển thị message
+    const message = getRandomMessage(birthdayPerson.messages);
     const birthdayMessage = document.getElementById('birthdayMessage');
     if (birthdayMessage) {
-        birthdayMessage.textContent = birthdayPerson.message; // Use the single message directly
+        birthdayMessage.textContent = message;
         birthdayMessage.style.display = 'block';
         birthdayMessage.style.opacity = '1';
         birthdayMessage.style.transform = 'translateY(0)';
     }
 
+    // Hiển thị các phần tử khác
     document.getElementById('flame').style.opacity = '1';
     document.getElementById('micPermissionBtn').style.display = 'inline-block';
     document.querySelector('.countdown-container').style.display = 'none';
     document.querySelector('.cake-container').style.display = 'block';
     document.querySelector('.birthday-message').style.display = 'block';
 
+    // Thay đổi background
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
 
+    // Tạo hiệu ứng
     createBalloons();
     createConfetti();
 
+    // Phát nhạc
     playBirthdayMusic();
 }
 
@@ -183,15 +264,15 @@ function playBirthdayMusic() {
     });
 }
 
+// Khởi tạo khi trang load
 document.addEventListener('DOMContentLoaded', function() {
-    // Clear previous birthday storage to ensure a fresh start
-    localStorage.removeItem('lastBirthdayShown');
-    localStorage.removeItem('currentBirthday');
-
-    // Initialize countdown and other features
+    // Khởi tạo đếm ngược
     updateCountdownTime();
+    
+    // Cập nhật mỗi giây
     setInterval(updateCountdownTime, 1000);
-
+    
+    // Khởi tạo các tính năng khác
     initPhotoAlbum();
     initGames();
     initSocialShare();
