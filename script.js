@@ -546,7 +546,9 @@ function initPhotoAlbum() {
     albumBtn.addEventListener('click', () => {
         if (!isOpen) {
             memoryWall.style.display = 'block';
-            loadSamplePhotos();
+            if (!isGalleryLoaded) {
+                loadSamplePhotos(); // Chỉ tải hình ảnh nếu chưa tải
+            }
             isOpen = true;
         } else {
             memoryWall.style.display = 'none';
@@ -562,11 +564,17 @@ function initPhotoAlbum() {
     });
 }
 
+let isGalleryLoaded = false;
+
 function loadSamplePhotos() {
+    if (isGalleryLoaded) {
+        return; // Nếu đã tải gallery rồi, không tải lại
+    }
+    isGalleryLoaded = true;
+
     const gallery = document.getElementById('photoGallery');
-    gallery.innerHTML = '';
+    gallery.innerHTML = ''; // Xóa hết nội dung cũ trong gallery
     
-    let imageCount = 1;
     let loadedImages = 0;
     
     function loadImage(index) {
