@@ -566,30 +566,73 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    const totalImages = 17; // Số lượng ảnh trong thư mục memory
-
-    for (let i = 1; i <= totalImages; i++) {
-        const photoItem = document.createElement('div');
-        photoItem.className = 'photo-item';
-        
-        const img = document.createElement('img');
-        img.className = 'memory-photo';
-        img.src = `memory/${i}.jpg`;
-        img.alt = `Birthday memory ${i}`;
-        
-        img.onerror = function() {
-            this.src = '/api/placeholder/200/200';
-        };
-
-        photoItem.appendChild(img);
-        
-        // Click để xem ảnh full size
-        photoItem.addEventListener('click', () => {
-            openFullSizeImage(`memory/${i}.jpg`, i);
+    // Tạo một Promise để kiểm tra ảnh
+    const checkImage = (url) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
         });
+    };
 
-        gallery.appendChild(photoItem);
+    // Hàm tìm số lượng ảnh có sẵn
+    async function findTotalImages() {
+        let count = 0;
+        let checking = true;
+        const batchSize = 5; // Kiểm tra 5 ảnh cùng lúc để tối ưu hiệu suất
+        
+        while (checking) {
+            const batch = [];
+            for (let i = 0; i < batchSize; i++) {
+                batch.push(checkImage(`memory/${count + i + 1}.jpg`));
+            }
+            
+            const results = await Promise.all(batch);
+            const validInBatch = results.filter(result => result).length;
+            
+            if (validInBatch === 0) {
+                checking = false;
+            } else {
+                count += validInBatch;
+                if (validInBatch < batchSize) {
+                    checking = false;
+                }
+            }
+        }
+        
+        return count;
     }
+
+    // Hàm tạo gallery với số lượng ảnh đã tìm được
+    async function createGallery() {
+        const totalImages = await findTotalImages();
+        console.log(`Tìm thấy ${totalImages} ảnh trong thư mục memory`);
+
+        for (let i = 1; i <= totalImages; i++) {
+            const photoItem = document.createElement('div');
+            photoItem.className = 'photo-item';
+            
+            const img = document.createElement('img');
+            img.className = 'memory-photo';
+            img.src = `memory/${i}.jpg`;
+            img.alt = `Birthday memory ${i}`;
+            
+            photoItem.appendChild(img);
+            
+            // Click để xem ảnh full size
+            photoItem.addEventListener('click', () => {
+                openFullSizeImage(`memory/${i}.jpg`, i);
+            });
+
+            gallery.appendChild(photoItem);
+        }
+    }
+
+    // Khởi chạy tạo gallery
+    createGallery().catch(error => {
+        console.error('Lỗi khi tạo gallery:', error);
+    });
 }
 
 function openFullSizeImage(imageUrl, imageNumber) {
