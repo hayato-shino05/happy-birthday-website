@@ -6,6 +6,12 @@ const birthdays = [
         message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
     },
     {
+        name: "Hiệp",
+        month: 10,
+        day: 2,
+        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
+    },
+    {
         name: "Thành",
         month: 2,
         day: 27,
@@ -31,8 +37,8 @@ const birthdays = [
     },
     {
         name: "Hiền",
-        month: 12,
-        day: 30,
+        month: 5,
+        day: 8,
         message: "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈"
     },
     {
@@ -43,7 +49,7 @@ const birthdays = [
     },
     {
         name: "Như",
-        month: 12,
+        month: 10,
         day: 12,
         message: "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
     }
