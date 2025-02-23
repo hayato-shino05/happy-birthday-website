@@ -566,7 +566,7 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    // Tạo một Promise để kiểm tra ảnh
+    // Hàm kiểm tra ảnh tồn tại
     const checkImage = (url) => {
         return new Promise((resolve) => {
             const img = new Image();
@@ -576,65 +576,45 @@ function loadSamplePhotos() {
         });
     };
 
-    // Hàm tìm số lượng ảnh có sẵn
-    async function findTotalImages() {
-        let count = 0;
-        let checking = true;
-        const batchSize = 5; // Kiểm tra 5 ảnh cùng lúc để tối ưu hiệu suất
-        
-        while (checking) {
-            const batch = [];
-            for (let i = 0; i < batchSize; i++) {
-                batch.push(checkImage(`memory/${count + i + 1}.jpg`));
-            }
-            
-            const results = await Promise.all(batch);
-            const validInBatch = results.filter(result => result).length;
-            
-            if (validInBatch === 0) {
-                checking = false;
-            } else {
-                count += validInBatch;
-                if (validInBatch < batchSize) {
-                    checking = false;
-                }
-            }
-        }
-        
-        return count;
-    }
-
-    // Hàm tạo gallery với số lượng ảnh đã tìm được
+    // Hàm tạo và hiển thị gallery
     async function createGallery() {
-        const totalImages = await findTotalImages();
-        console.log(`Tìm thấy ${totalImages} ảnh trong thư mục memory`);
+        let imageCount = 1;
+        let hasMoreImages = true;
 
-        for (let i = 1; i <= totalImages; i++) {
+        while (hasMoreImages) {
+            const exists = await checkImage(`memory/${imageCount}.jpg`);
+            if (!exists) {
+                hasMoreImages = false;
+                break;
+            }
+
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item';
             
             const img = document.createElement('img');
             img.className = 'memory-photo';
-            img.src = `memory/${i}.jpg`;
-            img.alt = `Birthday memory ${i}`;
+            img.src = `memory/${imageCount}.jpg`;
+            img.alt = `Birthday memory ${imageCount}`;
             
             photoItem.appendChild(img);
             
             // Click để xem ảnh full size
             photoItem.addEventListener('click', () => {
-                openFullSizeImage(`memory/${i}.jpg`, i);
+                openFullSizeImage(`memory/${imageCount}.jpg`, imageCount);
             });
 
             gallery.appendChild(photoItem);
+            imageCount++;
         }
+
+        console.log(`Đã tải ${imageCount - 1} ảnh từ thư mục memory`);
     }
 
-    // Khởi chạy tạo gallery
+    // Khởi chạy gallery
     createGallery().catch(error => {
         console.error('Lỗi khi tạo gallery:', error);
     });
 }
-
 function openFullSizeImage(imageUrl, imageNumber) {
     const modal = document.createElement('div');
     modal.style.position = 'fixed';
