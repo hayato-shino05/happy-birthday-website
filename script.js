@@ -30,6 +30,12 @@ const birthdays = [
         message: "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉"
     },
     {
+        name: "Viện",
+        month: 6,
+        day: 24,
+        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
+    },
+    {
         name: "Diệu",
         month: 8,
         day: 5,
