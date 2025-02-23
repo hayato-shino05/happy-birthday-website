@@ -49,8 +49,8 @@ const birthdays = [
     },
     {
         name: "Uyên",
-        month: 12,
-        day: 29,
+        month: 11,
+        day: 19,
         message: "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
     },
     {
