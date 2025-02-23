@@ -5,6 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hội Mẹ Bầu Đơn Thân</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+<style>
+    .social-share {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+    
+    .share-button {
+        border: none;
+        background: #f0f0f0;
+        padding: 0.8rem;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .share-button:hover {
+        transform: scale(1.1);
+        background: #e0e0e0;
+    }
+    
+    .fa-facebook-f {
+        color: #1877f2;
+    }
+    
+    .fa-x-twitter {
+        color: #000000;
+    }
+    
+    .fa-instagram {
+        color: #e4405f;
+    }
+    </style>
 </head>
 <body>
     <!-- Photo Album Button -->
@@ -20,9 +56,15 @@
 
     <!-- Social Share -->
     <div class="social-share">
-        <button class="share-button" data-platform="facebook">📱</button>
-        <button class="share-button" data-platform="twitter">🐦</button>
-        <button class="share-button" data-platform="instagram">📸</button>
+        <button class="share-button" data-platform="facebook">
+            <i class="fab fa-facebook-f"></i>
+        </button>
+        <button class="share-button" data-platform="x-twitter">
+            <i class="fa-brands fa-x-twitter"></i>
+        </button>
+        <button class="share-button" data-platform="instagram">
+            <i class="fab fa-instagram"></i>
+        </button>
     </div>
 
     <!-- Music Player -->
