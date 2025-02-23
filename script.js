@@ -566,7 +566,7 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    const totalImages = 14; // Số lượng ảnh trong thư mục memory
+    const totalImages = 17; // Số lượng ảnh trong thư mục memory
 
     for (let i = 1; i <= totalImages; i++) {
         const photoItem = document.createElement('div');
