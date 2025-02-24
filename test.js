@@ -3,90 +3,63 @@ const birthdays = [
         name: "Dũng",
         month: 12,
         day: 7,
-        messages: [
-            "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉",
-            "Chúc mày tuổi mới kiếm được thật nhiều tiền, yêu thật nhiều gái xinh nha ku!",
-            "HAPPY BIRTHDAY thằng bạn vàng! Lớn thêm tuổi mà bớt khùng lại giùm tao nha!"
-        ]
+        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
+    },
+    {
+        name: "Hiệp",
+        month: 10,
+        day: 2,
+        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
     },
     {
         name: "Thành",
         month: 2,
-        day: 22,
-        messages: [
-            "🎂 Chúc mừng sinh nhật nha cu 🎂",
-            "",
-            ""
-        ]
+        day: 27,
+        message: "🎂 Chúc mừng sinh nhật nha cu 🎂"
     },
     {
         name: "Đức",
         month: 8,
         day: 19,
-        messages: [
-            "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈",
-            "Chúc thằng bạn tao tuổi mới đẹp trai hơn tao, giàu hơn tao chút xíu thôi nha!",
-            "Ê ku, chúc mày sinh nhật vui, bớt cà khịa tao để tao còn sống với!"
-        ]
+        message: "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈"
     },
     {
         name: "Tiển",
         month: 7,
         day: 26,
-        messages: [
-            "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉",
-            "Chúc mày tuổi mới bớt lầy, bớt troll tao mà sống tử tế hơn nha!",
-            "Sinh nhật vui nha ku, chúc mày năm nay thoát ế để tao đỡ phải chở mày đi chơi!"
-        ]
+        message: "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉"
+    },
+    {
+        name: "Viện",
+        month: 6,
+        day: 24,
+        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
     },
     {
         name: "Diệu",
         month: 8,
         day: 5,
-        messages: [
-            "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂",
-            "Chúc mày tuổi mới xinh hơn cả hoa hậu, yêu tao nhiều hơn nữa nha!",
-            "Ê nhỏ, sinh nhật vui vẻ, chúc mày bớt đanh đá để tụi tao còn sống nha!"
-        ]
+        message: "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂"
     },
     {
         name: "Hiền",
-        month: 12,
-        day: 30,
-        messages: [
-            "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈",
-            "Chúc nhỏ bạn tao tuổi mới vừa xinh vừa ngoan, bớt chửi tao nha mạy!",
-            "Sinh nhật vui nha nhỏ, chúc mày năm nay kiếm được bồ ngon hơn bồ tao!"
-        ]
+        month: 5,
+        day: 8,
+        message: "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈"
     },
     {
         name: "Uyên",
-        month: 12, 
-        day: 29,  
-        messages: [
-            "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
-            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
-            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
-        ]
+        month: 11,
+        day: 19,
+        message: "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
     },
     {
         name: "Như",
-        month: 12, 
-        day: 12,  
-        messages: [
-            "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎉",
-            "Chúc mày tuổi mới xinh như mộng, bớt lầy để tao còn chơi với mày nha!",
-            "Ê nhỏ bạn, sinh nhật vui nha, chúc mày năm nay kiếm được bồ xịn hơn tao!"
-        ]
+        month: 10,
+        day: 12,
+        message: "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
     }
 ];
-
-
-function getRandomMessage(messages) {
-    const randomIndex = Math.floor(Math.random() * messages.length);
-    return messages[randomIndex];
-}
-
 
 // Kiểm tra xem có phải ngày sinh nhật không
 function checkIfBirthday(date) {
@@ -201,55 +174,109 @@ style.textContent = `
         50% { transform: scale(1.2); }
         100% { transform: scale(1); opacity: 1; }
     }
+            .media-item {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 10px;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .memory-media {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .video-thumbnail-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .play-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 48px;
+        color: white;
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .video-thumbnail-container:hover .play-icon {
+        opacity: 1;
+    }
+
+    .media-modal video {
+        max-width: 90vw;
+        max-height: 90vh;
+    }
+
+    .modal-close-btn:hover {
+        color: #ff4081;
+        transform: scale(1.1);
+    }
+
+    .media-item:hover .memory-media {
+        transform: scale(1.1);
+    }
+
+    .photo-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
 `;
 
 document.head.appendChild(style);
 
+
+document.head.appendChild(style);
+
 function showBirthdayContent(birthdayPerson) {
-    // Ẩn countdown
     const countdownElement = document.getElementById('countdown');
     if (countdownElement) {
         countdownElement.classList.add('hidden');
     }
 
-    // Hiển thị nội dung sinh nhật
     const birthdayContent = document.getElementById('birthdayContent');
     if (birthdayContent) {
         birthdayContent.classList.remove('hidden');
     }
 
-    // Hiển thị và animate tiêu đề
     const birthdayTitle = document.getElementById('birthdayTitle');
     if (birthdayTitle) {
         birthdayTitle.style.display = 'block';
         birthdayTitle.style.opacity = '1';
     }
 
-    // Hiển thị message
-    const message = getRandomMessage(birthdayPerson.messages);
     const birthdayMessage = document.getElementById('birthdayMessage');
     if (birthdayMessage) {
-        birthdayMessage.textContent = message;
+        birthdayMessage.textContent = birthdayPerson.message; // Use the single message directly
         birthdayMessage.style.display = 'block';
         birthdayMessage.style.opacity = '1';
         birthdayMessage.style.transform = 'translateY(0)';
     }
 
-    // Hiển thị các phần tử khác
     document.getElementById('flame').style.opacity = '1';
     document.getElementById('micPermissionBtn').style.display = 'inline-block';
     document.querySelector('.countdown-container').style.display = 'none';
     document.querySelector('.cake-container').style.display = 'block';
     document.querySelector('.birthday-message').style.display = 'block';
 
-    // Thay đổi background
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
 
-    // Tạo hiệu ứng
     createBalloons();
     createConfetti();
 
-    // Phát nhạc
     playBirthdayMusic();
 }
 
@@ -614,34 +641,136 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    const totalImages = 14; // Số lượng ảnh trong thư mục memory
-
-    for (let i = 1; i <= totalImages; i++) {
-        const photoItem = document.createElement('div');
-        photoItem.className = 'photo-item';
-        
-        const img = document.createElement('img');
-        img.className = 'memory-photo';
-        img.src = `memory/${i}.jpg`;
-        img.alt = `Birthday memory ${i}`;
-        
-        img.onerror = function() {
-            this.src = '/api/placeholder/200/200';
-        };
-
-        photoItem.appendChild(img);
-        
-        // Click để xem ảnh full size
-        photoItem.addEventListener('click', () => {
-            openFullSizeImage(`memory/${i}.jpg`, i);
+    // Định nghĩa các định dạng file được hỗ trợ
+    const supportedFormats = {
+        images: ['.jpg', '.jpeg', '.png', '.gif'],
+        videos: ['.mp4', '.webm']
+    };
+    
+    const totalFiles = 100; // Số file tối đa sẽ thử
+    let loadedCount = 0;
+    
+    for (let i = 1; i <= totalFiles; i++) {
+        tryLoadMedia(i, supportedFormats, gallery, function(success) {
+            if (success) loadedCount++;
+            
+            // Nếu không có file nào được tải, hiển thị thông báo
+            if (i === totalFiles && loadedCount === 0) {
+                const noFiles = document.createElement('div');
+                noFiles.className = 'no-files-message';
+                noFiles.textContent = 'Không tìm thấy ảnh hoặc video trong album.';
+                noFiles.style.padding = '20px';
+                noFiles.style.textAlign = 'center';
+                gallery.appendChild(noFiles);
+            }
         });
-
-        gallery.appendChild(photoItem);
     }
 }
 
-function openFullSizeImage(imageUrl, imageNumber) {
+function tryLoadMedia(index, formats, gallery, callback) {
+    const mediaItem = document.createElement('div');
+    mediaItem.className = 'media-item';
+    gallery.appendChild(mediaItem);
+    
+    // Tạo danh sách các định dạng cần thử
+    const imageFormats = formats.images.map(ext => `memory/${index}${ext}`);
+    const videoFormats = formats.videos.map(ext => `memory/${index}${ext}`);
+    
+    // Thử tải ảnh trước
+    tryLoadImage(0);
+    
+    function tryLoadImage(imageIndex) {
+        if (imageIndex >= imageFormats.length) {
+            // Nếu không tìm thấy ảnh, thử tải video
+            tryLoadVideo(0);
+            return;
+        }
+        
+        const img = new Image();
+        img.onload = function() {
+            // Ảnh tồn tại, hiển thị nó
+            createImageElement(imageFormats[imageIndex], mediaItem, imageFormats[imageIndex]);
+            callback(true);
+        };
+        
+        img.onerror = function() {
+            // Thử định dạng ảnh tiếp theo
+            tryLoadImage(imageIndex + 1);
+        };
+        
+        img.src = imageFormats[imageIndex];
+    }
+    
+    function tryLoadVideo(videoIndex) {
+        if (videoIndex >= videoFormats.length) {
+            // Không tìm thấy cả ảnh và video, xóa mediaItem
+            mediaItem.remove();
+            callback(false);
+            return;
+        }
+        
+        const video = document.createElement('video');
+        
+        // Chỉ cần set src một lần và bắt sự kiện lỗi
+        video.addEventListener('error', function() {
+            // Thử định dạng video tiếp theo
+            tryLoadVideo(videoIndex + 1);
+        });
+        
+        // Nếu video có thể tải metadata (tồn tại), hiển thị nó
+        video.addEventListener('loadedmetadata', function() {
+            createVideoElement(videoFormats[videoIndex], mediaItem);
+            callback(true);
+        });
+        
+        // Thử tải video
+        video.src = videoFormats[videoIndex];
+        video.preload = 'metadata';
+    }
+}
+
+function createImageElement(src, container, originalPath) {
+    const img = document.createElement('img');
+    img.className = 'memory-media';
+    img.src = src;
+    img.alt = `Memory ${container.children.length + 1}`;
+    
+    img.addEventListener('click', () => {
+        openFullSizeMedia(originalPath, container.children.length + 1, 'image');
+    });
+
+    container.appendChild(img);
+}
+
+function createVideoElement(src, container) {
+    const video = document.createElement('video');
+    video.className = 'memory-media';
+    video.src = src;
+    video.controls = true;
+    video.muted = true; // Cần thiết cho mobile
+    
+    // Thêm preview thumbnail
+    const thumbContainer = document.createElement('div');
+    thumbContainer.className = 'video-thumbnail-container';
+    
+    // Icon play
+    const playIcon = document.createElement('div');
+    playIcon.className = 'play-icon';
+    playIcon.innerHTML = '▶️';
+    
+    thumbContainer.appendChild(video);
+    thumbContainer.appendChild(playIcon);
+    
+    thumbContainer.addEventListener('click', () => {
+        openFullSizeMedia(src, container.children.length + 1, 'video');
+    });
+
+    container.appendChild(thumbContainer);
+}
+
+function openFullSizeMedia(mediaUrl, mediaNumber, type) {
     const modal = document.createElement('div');
+    modal.className = 'media-modal';
     modal.style.position = 'fixed';
     modal.style.top = '0';
     modal.style.left = '0';
@@ -653,14 +782,24 @@ function openFullSizeImage(imageUrl, imageNumber) {
     modal.style.alignItems = 'center';
     modal.style.zIndex = '9999';
 
-    const img = document.createElement('img');
-    img.src = imageUrl;
-    img.style.maxWidth = '90%';
-    img.style.maxHeight = '90vh';
-    img.style.objectFit = 'contain';
+    let mediaElement;
+    
+    if (type === 'video') {
+        mediaElement = document.createElement('video');
+        mediaElement.controls = true;
+        mediaElement.autoplay = true;
+    } else {
+        mediaElement = document.createElement('img');
+    }
+
+    mediaElement.src = mediaUrl;
+    mediaElement.style.maxWidth = '90%';
+    mediaElement.style.maxHeight = '90vh';
+    mediaElement.style.objectFit = 'contain';
 
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '×';
+    closeBtn.className = 'modal-close-btn';
     closeBtn.style.position = 'absolute';
     closeBtn.style.top = '20px';
     closeBtn.style.right = '20px';
@@ -671,7 +810,8 @@ function openFullSizeImage(imageUrl, imageNumber) {
     closeBtn.style.cursor = 'pointer';
 
     const caption = document.createElement('div');
-    caption.textContent = `Hình ${imageNumber}`;
+    caption.textContent = `${type === 'video' ? 'Video' : 'Hình'} ${mediaNumber}`;
+    caption.className = 'modal-caption';
     caption.style.position = 'absolute';
     caption.style.bottom = '20px';
     caption.style.color = 'white';
@@ -680,15 +820,18 @@ function openFullSizeImage(imageUrl, imageNumber) {
     caption.style.padding = '5px 15px';
     caption.style.borderRadius = '20px';
 
-    modal.appendChild(img);
+    modal.appendChild(mediaElement);
     modal.appendChild(closeBtn);
     modal.appendChild(caption);
 
     modal.addEventListener('click', () => {
+        if (type === 'video') {
+            mediaElement.pause();
+        }
         modal.remove();
     });
 
-    img.addEventListener('click', (e) => {
+    mediaElement.addEventListener('click', (e) => {
         e.stopPropagation();
     });
 
