@@ -174,6 +174,31 @@ style.textContent = `
         50% { transform: scale(1.2); }
         100% { transform: scale(1); opacity: 1; }
     }
+    .photo-item {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .photo-item:hover {
+        transform: scale(1.05);
+    }
+    
+    .photo-item:hover .play-icon {
+        opacity: 1;
+    }
+    
+    .play-icon {
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+    
+    video.memory-photo {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+    }
 `;
 
 document.head.appendChild(style);
@@ -578,33 +603,108 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    const totalImages = 100; // Số lượng ảnh trong thư mục memory
-
-    for (let i = 1; i <= totalImages; i++) {
-        const photoItem = document.createElement('div');
-        photoItem.className = 'photo-item';
-        
-        const img = document.createElement('img');
-        img.className = 'memory-photo';
-        img.src = `memory/${i}.jpg`;
-        img.alt = `Birthday memory ${i}`;
-        
-        img.onerror = function() {
-            this.src = '/api/placeholder/200/200';
-        };
-
-        photoItem.appendChild(img);
-        
-        // Click để xem ảnh full size
-        photoItem.addEventListener('click', () => {
-            openFullSizeImage(`memory/${i}.jpg`, i);
-        });
-
-        gallery.appendChild(photoItem);
+    const totalMedia = 100; // Number of media items
+    
+    for (let i = 1; i <= totalMedia; i++) {
+        loadMediaItem(i, gallery);
     }
 }
 
-function openFullSizeImage(imageUrl, imageNumber) {
+function loadMediaItem(index, gallery) {
+    const videoPath = `memory/${index}.mp4`;
+    const imagePath = `memory/${index}.jpg`;
+    
+    // Create container for media item
+    const mediaItem = document.createElement('div');
+    mediaItem.className = 'photo-item';
+    mediaItem.style.position = 'relative';
+    
+    // Add to gallery immediately to preserve order
+    gallery.appendChild(mediaItem);
+
+    // First try to fetch the video to check if it exists
+    fetch(videoPath, { method: 'HEAD' })
+        .then(response => {
+            if (response.ok) {
+                // Video exists, display it
+                const videoElement = document.createElement('video');
+                videoElement.className = 'memory-photo';
+                videoElement.src = videoPath;
+                videoElement.muted = true;
+                
+                const playIcon = document.createElement('div');
+                playIcon.className = 'play-icon';
+                playIcon.innerHTML = '▶️';
+                playIcon.style.position = 'absolute';
+                playIcon.style.top = '50%';
+                playIcon.style.left = '50%';
+                playIcon.style.transform = 'translate(-50%, -50%)';
+                playIcon.style.fontSize = '30px';
+                playIcon.style.color = 'white';
+                playIcon.style.textShadow = '0 0 5px rgba(0,0,0,0.7)';
+                playIcon.style.zIndex = '2';
+                
+                mediaItem.innerHTML = '';
+                mediaItem.appendChild(videoElement);
+                mediaItem.appendChild(playIcon);
+                
+                mediaItem.addEventListener('click', () => {
+                    openFullSizeMedia(videoPath, index, 'video');
+                });
+            } else {
+                // Video doesn't exist, try image
+                tryLoadImage();
+            }
+        })
+        .catch(() => {
+            // Error fetching video, try image
+            tryLoadImage();
+        });
+
+    function tryLoadImage() {
+        // Check if image exists
+        fetch(imagePath, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    // Image exists
+                    const img = document.createElement('img');
+                    img.className = 'memory-photo';
+                    img.src = imagePath;
+                    img.alt = `Memory ${index}`;
+                    
+                    mediaItem.innerHTML = '';
+                    mediaItem.appendChild(img);
+                    
+                    mediaItem.addEventListener('click', () => {
+                        openFullSizeMedia(imagePath, index, 'image');
+                    });
+                } else {
+                    // Image doesn't exist, use placeholder
+                    usePlaceholder();
+                }
+            })
+            .catch(() => {
+                // Error fetching image, use placeholder
+                usePlaceholder();
+            });
+    }
+
+    function usePlaceholder() {
+        const placeholder = document.createElement('img');
+        placeholder.className = 'memory-photo';
+        placeholder.src = '/api/placeholder/200/200';
+        placeholder.alt = `Placeholder ${index}`;
+        
+        mediaItem.innerHTML = '';
+        mediaItem.appendChild(placeholder);
+        
+        mediaItem.addEventListener('click', () => {
+            openFullSizeMedia(placeholder.src, index, 'image');
+        });
+    }
+}
+
+function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
     const modal = document.createElement('div');
     modal.style.position = 'fixed';
     modal.style.top = '0';
@@ -617,11 +717,23 @@ function openFullSizeImage(imageUrl, imageNumber) {
     modal.style.alignItems = 'center';
     modal.style.zIndex = '9999';
 
-    const img = document.createElement('img');
-    img.src = imageUrl;
-    img.style.maxWidth = '90%';
-    img.style.maxHeight = '90vh';
-    img.style.objectFit = 'contain';
+    let mediaElement;
+    
+    if (mediaType === 'video') {
+        mediaElement = document.createElement('video');
+        mediaElement.src = mediaUrl;
+        mediaElement.controls = true;
+        mediaElement.autoplay = true;
+        mediaElement.style.maxWidth = '90%';
+        mediaElement.style.maxHeight = '80vh';
+        mediaElement.style.objectFit = 'contain';
+    } else {
+        mediaElement = document.createElement('img');
+        mediaElement.src = mediaUrl;
+        mediaElement.style.maxWidth = '90%';
+        mediaElement.style.maxHeight = '90vh';
+        mediaElement.style.objectFit = 'contain';
+    }
 
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '×';
@@ -635,7 +747,7 @@ function openFullSizeImage(imageUrl, imageNumber) {
     closeBtn.style.cursor = 'pointer';
 
     const caption = document.createElement('div');
-    caption.textContent = `Hình ${imageNumber}`;
+    caption.textContent = `${mediaType === 'video' ? 'Video' : 'Hình'} ${mediaNumber}`;
     caption.style.position = 'absolute';
     caption.style.bottom = '20px';
     caption.style.color = 'white';
@@ -644,15 +756,19 @@ function openFullSizeImage(imageUrl, imageNumber) {
     caption.style.padding = '5px 15px';
     caption.style.borderRadius = '20px';
 
-    modal.appendChild(img);
+    modal.appendChild(mediaElement);
     modal.appendChild(closeBtn);
     modal.appendChild(caption);
 
     modal.addEventListener('click', () => {
+        // Nếu đang phát video, dừng video trước khi đóng modal
+        if (mediaType === 'video' && !mediaElement.paused) {
+            mediaElement.pause();
+        }
         modal.remove();
     });
 
-    img.addEventListener('click', (e) => {
+    mediaElement.addEventListener('click', (e) => {
         e.stopPropagation();
     });
 

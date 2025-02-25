@@ -174,6 +174,31 @@ style.textContent = `
         50% { transform: scale(1.2); }
         100% { transform: scale(1); opacity: 1; }
     }
+    .photo-item {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .photo-item:hover {
+        transform: scale(1.05);
+    }
+    
+    .photo-item:hover .play-icon {
+        opacity: 1;
+    }
+    
+    .play-icon {
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+    
+    video.memory-photo {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+    }
 `;
 
 document.head.appendChild(style);
@@ -578,134 +603,153 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    // Định nghĩa các định dạng file được hỗ trợ
-    const supportedFormats = {
-        images: ['.jpg', '.jpeg', '.png', '.gif'],
-        videos: ['.mp4', '.webm']
+    const totalMedia = 100;
+    const batchSize = 10; // Process in batches
+    
+    // Function to load batches
+    function loadBatch(startIndex) {
+        const endIndex = Math.min(startIndex + batchSize, totalMedia + 1);
+        
+        for (let i = startIndex; i < endIndex; i++) {
+            // Create and add placeholder immediately
+            const mediaItem = document.createElement('div');
+            mediaItem.className = 'photo-item';
+            mediaItem.style.position = 'relative';
+            mediaItem.dataset.index = i;
+            
+            // Add temporary placeholder
+            const tempPlaceholder = document.createElement('div');
+            tempPlaceholder.className = 'memory-photo placeholder';
+            tempPlaceholder.style.backgroundColor = '#f0f0f0';
+            tempPlaceholder.style.minHeight = '200px';
+            tempPlaceholder.style.display = 'flex';
+            tempPlaceholder.style.alignItems = 'center';
+            tempPlaceholder.style.justifyContent = 'center';
+            tempPlaceholder.innerHTML = '<div style="color:#999">Loading...</div>';
+            
+            mediaItem.appendChild(tempPlaceholder);
+            gallery.appendChild(mediaItem);
+            
+            // Load actual content asynchronously, but only check if it exists
+            checkMediaExists(i, mediaItem);
+        }
+        
+        // Load next batch if needed
+        if (endIndex <= totalMedia) {
+            setTimeout(() => loadBatch(endIndex), 50);
+        }
+    }
+    
+    // Start loading the first batch
+    loadBatch(1);
+}
+
+function checkMediaExists(index, mediaItem) {
+    const videoPath = `memory/${index}.mp4`;
+    const imagePath = `memory/${index}.jpg`;
+    
+    // First check if image exists (faster and more common)
+    const img = new Image();
+    img.onload = function() {
+        // Image exists, load it
+        displayImage(imagePath, index, mediaItem);
     };
     
-    const totalFiles = 100; // Số file tối đa sẽ thử
-    let loadedCount = 0;
+    img.onerror = function() {
+        // Image doesn't exist, try video by doing a HEAD request
+        checkVideoWithoutDownloading(videoPath, index, mediaItem);
+    };
     
-    for (let i = 1; i <= totalFiles; i++) {
-        tryLoadMedia(i, supportedFormats, gallery, function(success) {
-            if (success) loadedCount++;
-            
-            // Nếu không có file nào được tải, hiển thị thông báo
-            if (i === totalFiles && loadedCount === 0) {
-                const noFiles = document.createElement('div');
-                noFiles.className = 'no-files-message';
-                noFiles.textContent = 'Không tìm thấy ảnh hoặc video trong album.';
-                noFiles.style.padding = '20px';
-                noFiles.style.textAlign = 'center';
-                gallery.appendChild(noFiles);
-            }
-        });
-    }
+    // Start checking if image exists
+    img.src = imagePath;
 }
 
-function tryLoadMedia(index, formats, gallery, callback) {
-    const mediaItem = document.createElement('div');
-    mediaItem.className = 'media-item';
-    gallery.appendChild(mediaItem);
+function checkVideoWithoutDownloading(videoPath, index, mediaItem) {
+    // Use XMLHttpRequest with HEAD to check if video exists without downloading
+    const xhr = new XMLHttpRequest();
+    xhr.open('HEAD', videoPath, true);
     
-    // Tạo danh sách các định dạng cần thử
-    const imageFormats = formats.images.map(ext => `memory/${index}${ext}`);
-    const videoFormats = formats.videos.map(ext => `memory/${index}${ext}`);
-    
-    // Thử tải ảnh trước
-    tryLoadImage(0);
-    
-    function tryLoadImage(imageIndex) {
-        if (imageIndex >= imageFormats.length) {
-            // Nếu không tìm thấy ảnh, thử tải video
-            tryLoadVideo(0);
-            return;
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            // Video exists, display video placeholder with play button
+            displayVideoPlaceholder(videoPath, index, mediaItem);
+        } else {
+            // Video doesn't exist, use placeholder
+            displayPlaceholder(index, mediaItem);
         }
-        
-        const img = new Image();
-        img.onload = function() {
-            // Ảnh tồn tại, hiển thị nó
-            createImageElement(imageFormats[imageIndex], mediaItem, imageFormats[imageIndex]);
-            callback(true);
-        };
-        
-        img.onerror = function() {
-            // Thử định dạng ảnh tiếp theo
-            tryLoadImage(imageIndex + 1);
-        };
-        
-        img.src = imageFormats[imageIndex];
-    }
+    };
     
-    function tryLoadVideo(videoIndex) {
-        if (videoIndex >= videoFormats.length) {
-            // Không tìm thấy cả ảnh và video, xóa mediaItem
-            mediaItem.remove();
-            callback(false);
-            return;
-        }
-        
-        const video = document.createElement('video');
-        
-        // Chỉ cần set src một lần và bắt sự kiện lỗi
-        video.addEventListener('error', function() {
-            // Thử định dạng video tiếp theo
-            tryLoadVideo(videoIndex + 1);
-        });
-        
-        // Nếu video có thể tải metadata (tồn tại), hiển thị nó
-        video.addEventListener('loadedmetadata', function() {
-            createVideoElement(videoFormats[videoIndex], mediaItem);
-            callback(true);
-        });
-        
-        // Thử tải video
-        video.src = videoFormats[videoIndex];
-        video.preload = 'metadata';
-    }
+    xhr.onerror = function() {
+        // Error checking video, use placeholder
+        displayPlaceholder(index, mediaItem);
+    };
+    
+    // Set a timeout to abort the request if it takes too long
+    xhr.timeout = 500;
+    xhr.ontimeout = function() {
+        displayPlaceholder(index, mediaItem);
+    };
+    
+    xhr.send();
 }
 
-function createImageElement(src, container, originalPath) {
+function displayImage(imagePath, index, mediaItem) {
     const img = document.createElement('img');
-    img.className = 'memory-media';
-    img.src = src;
-    img.alt = `Memory ${container.children.length + 1}`;
+    img.className = 'memory-photo';
+    img.src = imagePath;
+    img.alt = `Memory ${index}`;
     
-    img.addEventListener('click', () => {
-        openFullSizeMedia(originalPath, container.children.length + 1, 'image');
+    mediaItem.innerHTML = '';
+    mediaItem.appendChild(img);
+    
+    mediaItem.addEventListener('click', () => {
+        openFullSizeMedia(imagePath, index, 'image');
     });
-
-    container.appendChild(img);
 }
 
-function createVideoElement(src, container) {
-    const video = document.createElement('video');
-    video.className = 'memory-media';
-    video.src = src;
-    video.controls = true;
-    video.muted = true; // Cần thiết cho mobile
+function displayVideoPlaceholder(videoPath, index, mediaItem) {
+    // Create a placeholder with play button, but don't load the actual video yet
+    const thumbnailImg = document.createElement('div');
+    thumbnailImg.className = 'memory-photo video-thumbnail';
+    thumbnailImg.style.backgroundColor = '#000';
+    thumbnailImg.style.minHeight = '200px';
     
-    // Thêm preview thumbnail
-    const thumbContainer = document.createElement('div');
-    thumbContainer.className = 'video-thumbnail-container';
-    
-    // Icon play
     const playIcon = document.createElement('div');
     playIcon.className = 'play-icon';
     playIcon.innerHTML = '▶️';
+    playIcon.style.position = 'absolute';
+    playIcon.style.top = '50%';
+    playIcon.style.left = '50%';
+    playIcon.style.transform = 'translate(-50%, -50%)';
+    playIcon.style.fontSize = '30px';
+    playIcon.style.color = 'white';
+    playIcon.style.textShadow = '0 0 5px rgba(0,0,0,0.7)';
+    playIcon.style.zIndex = '2';
     
-    thumbContainer.appendChild(video);
-    thumbContainer.appendChild(playIcon);
+    mediaItem.innerHTML = '';
+    mediaItem.appendChild(thumbnailImg);
+    mediaItem.appendChild(playIcon);
     
-    thumbContainer.addEventListener('click', () => {
-        openFullSizeMedia(src, container.children.length + 1, 'video');
+    mediaItem.addEventListener('click', () => {
+        openFullSizeMedia(videoPath, index, 'video');
     });
-
-    container.appendChild(thumbContainer);
 }
 
-function openFullSizeImage(imageUrl, imageNumber) {
+function displayPlaceholder(index, mediaItem) {
+    const placeholder = document.createElement('img');
+    placeholder.className = 'memory-photo';
+    placeholder.src = '/api/placeholder/200/200';
+    placeholder.alt = `Placeholder ${index}`;
+    
+    mediaItem.innerHTML = '';
+    mediaItem.appendChild(placeholder);
+    
+    mediaItem.addEventListener('click', () => {
+        openFullSizeMedia(placeholder.src, index, 'image');
+    });
+}
+
+function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
     const modal = document.createElement('div');
     modal.style.position = 'fixed';
     modal.style.top = '0';
@@ -718,11 +762,23 @@ function openFullSizeImage(imageUrl, imageNumber) {
     modal.style.alignItems = 'center';
     modal.style.zIndex = '9999';
 
-    const img = document.createElement('img');
-    img.src = imageUrl;
-    img.style.maxWidth = '90%';
-    img.style.maxHeight = '90vh';
-    img.style.objectFit = 'contain';
+    let mediaElement;
+    
+    if (mediaType === 'video') {
+        mediaElement = document.createElement('video');
+        mediaElement.src = mediaUrl;
+        mediaElement.controls = true;
+        mediaElement.autoplay = true;
+        mediaElement.style.maxWidth = '90%';
+        mediaElement.style.maxHeight = '80vh';
+        mediaElement.style.objectFit = 'contain';
+    } else {
+        mediaElement = document.createElement('img');
+        mediaElement.src = mediaUrl;
+        mediaElement.style.maxWidth = '90%';
+        mediaElement.style.maxHeight = '90vh';
+        mediaElement.style.objectFit = 'contain';
+    }
 
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '×';
@@ -736,7 +792,7 @@ function openFullSizeImage(imageUrl, imageNumber) {
     closeBtn.style.cursor = 'pointer';
 
     const caption = document.createElement('div');
-    caption.textContent = `Hình ${imageNumber}`;
+    caption.textContent = `${mediaType === 'video' ? 'Video' : 'Hình'} ${mediaNumber}`;
     caption.style.position = 'absolute';
     caption.style.bottom = '20px';
     caption.style.color = 'white';
@@ -745,15 +801,19 @@ function openFullSizeImage(imageUrl, imageNumber) {
     caption.style.padding = '5px 15px';
     caption.style.borderRadius = '20px';
 
-    modal.appendChild(img);
+    modal.appendChild(mediaElement);
     modal.appendChild(closeBtn);
     modal.appendChild(caption);
 
     modal.addEventListener('click', () => {
+        // Nếu đang phát video, dừng video trước khi đóng modal
+        if (mediaType === 'video' && !mediaElement.paused) {
+            mediaElement.pause();
+        }
         modal.remove();
     });
 
-    img.addEventListener('click', (e) => {
+    mediaElement.addEventListener('click', (e) => {
         e.stopPropagation();
     });
 
