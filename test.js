@@ -174,70 +174,7 @@ style.textContent = `
         50% { transform: scale(1.2); }
         100% { transform: scale(1); opacity: 1; }
     }
-            .media-item {
-        position: relative;
-        width: 200px;
-        height: 200px;
-        margin: 10px;
-        overflow: hidden;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    .memory-media {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-
-    .video-thumbnail-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-    }
-
-    .play-icon {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 48px;
-        color: white;
-        text-shadow: 0 0 10px rgba(0,0,0,0.5);
-        opacity: 0.8;
-        transition: opacity 0.3s ease;
-    }
-
-    .video-thumbnail-container:hover .play-icon {
-        opacity: 1;
-    }
-
-    .media-modal video {
-        max-width: 90vw;
-        max-height: 90vh;
-    }
-
-    .modal-close-btn:hover {
-        color: #ff4081;
-        transform: scale(1.1);
-    }
-
-    .media-item:hover .memory-media {
-        transform: scale(1.1);
-    }
-
-    .photo-gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 20px;
-        padding: 20px;
-    }
 `;
-
-document.head.appendChild(style);
-
 
 document.head.appendChild(style);
 
@@ -641,136 +578,34 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    // Định nghĩa các định dạng file được hỗ trợ
-    const supportedFormats = {
-        images: ['.jpg', '.jpeg', '.png', '.gif'],
-        videos: ['.mp4', '.webm']
-    };
-    
-    const totalFiles = 100; // Số file tối đa sẽ thử
-    let loadedCount = 0;
-    
-    for (let i = 1; i <= totalFiles; i++) {
-        tryLoadMedia(i, supportedFormats, gallery, function(success) {
-            if (success) loadedCount++;
-            
-            // Nếu không có file nào được tải, hiển thị thông báo
-            if (i === totalFiles && loadedCount === 0) {
-                const noFiles = document.createElement('div');
-                noFiles.className = 'no-files-message';
-                noFiles.textContent = 'Không tìm thấy ảnh hoặc video trong album.';
-                noFiles.style.padding = '20px';
-                noFiles.style.textAlign = 'center';
-                gallery.appendChild(noFiles);
-            }
-        });
-    }
-}
+    const totalImages = 100; // Số lượng ảnh trong thư mục memory
 
-function tryLoadMedia(index, formats, gallery, callback) {
-    const mediaItem = document.createElement('div');
-    mediaItem.className = 'media-item';
-    gallery.appendChild(mediaItem);
-    
-    // Tạo danh sách các định dạng cần thử
-    const imageFormats = formats.images.map(ext => `memory/${index}${ext}`);
-    const videoFormats = formats.videos.map(ext => `memory/${index}${ext}`);
-    
-    // Thử tải ảnh trước
-    tryLoadImage(0);
-    
-    function tryLoadImage(imageIndex) {
-        if (imageIndex >= imageFormats.length) {
-            // Nếu không tìm thấy ảnh, thử tải video
-            tryLoadVideo(0);
-            return;
-        }
+    for (let i = 1; i <= totalImages; i++) {
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-item';
         
-        const img = new Image();
-        img.onload = function() {
-            // Ảnh tồn tại, hiển thị nó
-            createImageElement(imageFormats[imageIndex], mediaItem, imageFormats[imageIndex]);
-            callback(true);
-        };
+        const img = document.createElement('img');
+        img.className = 'memory-photo';
+        img.src = `memory/${i}.jpg`;
+        img.alt = `Birthday memory ${i}`;
         
         img.onerror = function() {
-            // Thử định dạng ảnh tiếp theo
-            tryLoadImage(imageIndex + 1);
+            this.src = '/api/placeholder/200/200';
         };
+
+        photoItem.appendChild(img);
         
-        img.src = imageFormats[imageIndex];
-    }
-    
-    function tryLoadVideo(videoIndex) {
-        if (videoIndex >= videoFormats.length) {
-            // Không tìm thấy cả ảnh và video, xóa mediaItem
-            mediaItem.remove();
-            callback(false);
-            return;
-        }
-        
-        const video = document.createElement('video');
-        
-        // Chỉ cần set src một lần và bắt sự kiện lỗi
-        video.addEventListener('error', function() {
-            // Thử định dạng video tiếp theo
-            tryLoadVideo(videoIndex + 1);
+        // Click để xem ảnh full size
+        photoItem.addEventListener('click', () => {
+            openFullSizeImage(`memory/${i}.jpg`, i);
         });
-        
-        // Nếu video có thể tải metadata (tồn tại), hiển thị nó
-        video.addEventListener('loadedmetadata', function() {
-            createVideoElement(videoFormats[videoIndex], mediaItem);
-            callback(true);
-        });
-        
-        // Thử tải video
-        video.src = videoFormats[videoIndex];
-        video.preload = 'metadata';
+
+        gallery.appendChild(photoItem);
     }
 }
 
-function createImageElement(src, container, originalPath) {
-    const img = document.createElement('img');
-    img.className = 'memory-media';
-    img.src = src;
-    img.alt = `Memory ${container.children.length + 1}`;
-    
-    img.addEventListener('click', () => {
-        openFullSizeMedia(originalPath, container.children.length + 1, 'image');
-    });
-
-    container.appendChild(img);
-}
-
-function createVideoElement(src, container) {
-    const video = document.createElement('video');
-    video.className = 'memory-media';
-    video.src = src;
-    video.controls = true;
-    video.muted = true; // Cần thiết cho mobile
-    
-    // Thêm preview thumbnail
-    const thumbContainer = document.createElement('div');
-    thumbContainer.className = 'video-thumbnail-container';
-    
-    // Icon play
-    const playIcon = document.createElement('div');
-    playIcon.className = 'play-icon';
-    playIcon.innerHTML = '▶️';
-    
-    thumbContainer.appendChild(video);
-    thumbContainer.appendChild(playIcon);
-    
-    thumbContainer.addEventListener('click', () => {
-        openFullSizeMedia(src, container.children.length + 1, 'video');
-    });
-
-    container.appendChild(thumbContainer);
-}
-
-function openFullSizeMedia(mediaUrl, mediaNumber, type) {
+function openFullSizeImage(imageUrl, imageNumber) {
     const modal = document.createElement('div');
-    modal.className = 'media-modal';
     modal.style.position = 'fixed';
     modal.style.top = '0';
     modal.style.left = '0';
@@ -782,24 +617,14 @@ function openFullSizeMedia(mediaUrl, mediaNumber, type) {
     modal.style.alignItems = 'center';
     modal.style.zIndex = '9999';
 
-    let mediaElement;
-    
-    if (type === 'video') {
-        mediaElement = document.createElement('video');
-        mediaElement.controls = true;
-        mediaElement.autoplay = true;
-    } else {
-        mediaElement = document.createElement('img');
-    }
-
-    mediaElement.src = mediaUrl;
-    mediaElement.style.maxWidth = '90%';
-    mediaElement.style.maxHeight = '90vh';
-    mediaElement.style.objectFit = 'contain';
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.maxWidth = '90%';
+    img.style.maxHeight = '90vh';
+    img.style.objectFit = 'contain';
 
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '×';
-    closeBtn.className = 'modal-close-btn';
     closeBtn.style.position = 'absolute';
     closeBtn.style.top = '20px';
     closeBtn.style.right = '20px';
@@ -810,8 +635,7 @@ function openFullSizeMedia(mediaUrl, mediaNumber, type) {
     closeBtn.style.cursor = 'pointer';
 
     const caption = document.createElement('div');
-    caption.textContent = `${type === 'video' ? 'Video' : 'Hình'} ${mediaNumber}`;
-    caption.className = 'modal-caption';
+    caption.textContent = `Hình ${imageNumber}`;
     caption.style.position = 'absolute';
     caption.style.bottom = '20px';
     caption.style.color = 'white';
@@ -820,18 +644,15 @@ function openFullSizeMedia(mediaUrl, mediaNumber, type) {
     caption.style.padding = '5px 15px';
     caption.style.borderRadius = '20px';
 
-    modal.appendChild(mediaElement);
+    modal.appendChild(img);
     modal.appendChild(closeBtn);
     modal.appendChild(caption);
 
     modal.addEventListener('click', () => {
-        if (type === 'video') {
-            mediaElement.pause();
-        }
         modal.remove();
     });
 
-    mediaElement.addEventListener('click', (e) => {
+    img.addEventListener('click', (e) => {
         e.stopPropagation();
     });
 
