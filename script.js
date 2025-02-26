@@ -15,7 +15,7 @@ const birthdays = [
         name: "Thành",
         month: 2,
         day: 27,
-        message: "🎂 Hội mẹ bầu đơn thân Chúc mừng sinh nhật cu Thành nha 🎂"
+        message: "🎂 Hội mẹ bầu đơn thân Chúc mừng sinh nhật bé Thành nha 🎂"
     },
     {
         name: "Đức",
@@ -603,7 +603,7 @@ function loadSamplePhotos() {
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '';
     
-    const totalMedia = 100; // Number of media items
+    const totalMedia = 75; // Number of media items
     
     for (let i = 1; i <= totalMedia; i++) {
         loadMediaItem(i, gallery);
