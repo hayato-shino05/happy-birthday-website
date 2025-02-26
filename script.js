@@ -807,7 +807,7 @@ function initSocialShare() {
 
 function shareOnSocialMedia(platform) {
     const url = window.location.href;
-    const text = 'Chúc mừng sinh nhật!';
+    const text = 'Hội Mẹ Bầu Đơn Thân';
     
     const shareUrls = {
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
