@@ -15,7 +15,7 @@ const birthdays = [
         name: "Thành",
         month: 2,
         day: 27,
-        message: "🎂 Chúc mừng sinh nhật nha cu 🎂"
+        message: "🎂 Hội mẹ bầu đơn thân Chúc mừng sinh nhật cu Thành nha 🎂"
     },
     {
         name: "Đức",
