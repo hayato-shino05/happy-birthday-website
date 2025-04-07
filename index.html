@@ -90,38 +90,62 @@
         
         <div id="birthdayContent" class="hidden">
             <div class="cake-container">
-                <!-- SVG cake with better appearance -->
-                <svg class="cake" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Cake plate -->
-                    <ellipse cx="100" cy="95" rx="90" ry="5" fill="#d1d1d1" />
-                    
-                    <!-- Bottom layer -->
-                    <path d="M30,95 C30,75 170,75 170,95" fill="#f9a4cb" />
-                    
-                    <!-- Middle layer -->
-                    <path d="M45,75 C45,58 155,58 155,75" fill="#feb8da" />
-                    
-                    <!-- Top layer -->
-                    <path d="M60,58 C60,45 140,45 140,58" fill="#ffcce5" />
-                    
-                    <!-- Frosting decorations -->
-                    <path d="M30,95 C30,89 170,89 170,95" fill="#ffffff" />
-                    <path d="M45,75 C45,70 155,70 155,75" fill="#ffffff" />
-                    <path d="M60,58 C60,54 140,54 140,58" fill="#ffffff" />
-                    
-                    <!-- Small decorations -->
-                    <circle cx="50" cy="82" r="3" fill="#ff6666" />
-                    <circle cx="80" cy="82" r="3" fill="#66ff66" />
-                    <circle cx="110" cy="82" r="3" fill="#6666ff" />
-                    <circle cx="140" cy="82" r="3" fill="#ffff66" />
-                    
-                    <circle cx="65" cy="65" r="3" fill="#ff6666" />
-                    <circle cx="95" cy="65" r="3" fill="#66ff66" />
-                    <circle cx="125" cy="65" r="3" fill="#6666ff" />
+                <svg class="cake" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Bánh tầng 3 (trên cùng) -->
+                    <g class="cake-tier-3">
+                        <path d="M60 80 L140 80 C140 80 145 90 140 100 L60 100 C55 90 60 80 60 80" fill="#f9e4b7"/>
+                        <path d="M60 80 L140 80 C140 80 145 85 140 90 L60 90 C55 85 60 80 60 80" fill="white"/>
+                        <!-- Trang trí sao vàng -->
+                        <path d="M75 85 L78 88 L82 85 L80 89 L83 92 L78 91 L75 95 L74 91 L69 92 L72 89 Z" fill="#ffd700"/>
+                        <path d="M95 85 L98 88 L102 85 L100 89 L103 92 L98 91 L95 95 L94 91 L89 92 L92 89 Z" fill="#ffd700"/>
+                        <path d="M115 85 L118 88 L122 85 L120 89 L123 92 L118 91 L115 95 L114 91 L109 92 L112 89 Z" fill="#ffd700"/>
+                    </g>
+
+                    <!-- Bánh tầng 2 (giữa) -->
+                    <g class="cake-tier-2">
+                        <path d="M50 100 L150 100 C150 100 155 115 150 130 L50 130 C45 115 50 100 50 100" fill="#f9e4b7"/>
+                        <path d="M50 100 L150 100 C150 100 155 110 150 115 L50 115 C45 110 50 100 50 100" fill="white"/>
+                        <!-- Trang trí chấm hồng -->
+                        <circle cx="70" cy="108" r="3" fill="#ff92a3"/>
+                        <circle cx="90" cy="108" r="3" fill="#ff92a3"/>
+                        <circle cx="110" cy="108" r="3" fill="#ff92a3"/>
+                        <circle cx="130" cy="108" r="3" fill="#ff92a3"/>
+                    </g>
+
+                    <!-- Bánh tầng 1 (dưới cùng) -->
+                    <g class="cake-tier-1">
+                        <path d="M40 130 L160 130 C160 130 165 150 160 170 L40 170 C35 150 40 130 40 130" fill="#f9e4b7"/>
+                        <path d="M40 130 L160 130 C160 130 165 140 160 145 L40 145 C35 140 40 130 40 130" fill="white"/>
+                        <!-- Chữ Happy Birthday -->
+                        <text x="100" y="155" text-anchor="middle" fill="#ff6b81" font-family="Arial" font-size="12">Happy</text>
+                        <text x="100" y="165" text-anchor="middle" fill="#ff6b81" font-family="Arial" font-size="12">Birthday</text>
+                    </g>
+
+                    <!-- Nến -->
+                    <g class="candles">
+                        <!-- Nến 1 -->
+                        <rect x="70" y="50" width="4" height="30" fill="white" stroke="#ddd"/>
+                        <g class="flame" id="flame1">
+                            <path d="M72 45 Q74 35 76 45 Q78 50 72 45" fill="#ff6b6b"/>
+                        </g>
+
+                        <!-- Nến 2 -->
+                        <rect x="98" y="50" width="4" height="30" fill="white" stroke="#ddd"/>
+                        <g class="flame" id="flame2">
+                            <path d="M100 45 Q102 35 104 45 Q106 50 100 45" fill="#ff6b6b"/>
+                        </g>
+
+                        <!-- Nến 3 -->
+                        <rect x="126" y="50" width="4" height="30" fill="white" stroke="#ddd"/>
+                        <g class="flame" id="flame3">
+                            <path d="M128 45 Q130 35 132 45 Q134 50 128 45" fill="#ff6b6b"/>
+                        </g>
+                    </g>
                 </svg>
                 
                 <div class="candle" id="candle"></div>
                 <div class="flame" id="flame"></div>
+                <div class="sparkles"></div>
             </div>
             
             <button id="micPermissionBtn">Cho phép sử dụng microphone</button>

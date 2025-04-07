@@ -9,7 +9,7 @@ const birthdays = [
         name: "Hiệp",
         month: 10,
         day: 2,
-        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
+        message: "🎉 Ê Hiệp, sinh nhật vui quá nha mày! 🎉"
     },
     {
         name: "Thành",
@@ -33,7 +33,7 @@ const birthdays = [
         name: "Viện",
         month: 6,
         day: 24,
-        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
+        message: "🎉 Ê Viện, sinh nhật vui quá nha mày! 🎉"
     },
     {
         name: "Diệu",
@@ -63,95 +63,156 @@ const birthdays = [
 
 // Kiểm tra xem có phải ngày sinh nhật không
 function checkIfBirthday(date) {
-    return birthdays.find(person => 
-        date.getMonth() === person.month - 1 && 
-        date.getDate() === person.day
-    );
+    try {
+        // Reset time to midnight
+        const checkDate = new Date(date);
+        checkDate.setHours(0, 0, 0, 0);
+        
+        return birthdays.find(person => {
+            // So sánh tháng thực tế (1-12) và ngày
+            const monthMatch = (checkDate.getMonth() + 1) === person.month;
+            const dayMatch = checkDate.getDate() === person.day;
+            
+            console.log(`Checking ${person.name}:`, {
+                personMonth: person.month,
+                currentMonth: checkDate.getMonth() + 1,
+                monthMatch: monthMatch,
+                personDay: person.day,
+                currentDay: checkDate.getDate(),
+                dayMatch: dayMatch
+            });
+            
+            return monthMatch && dayMatch;
+        });
+    } catch (error) {
+        console.error('Error in checkIfBirthday:', error);
+        return null;
+    }
 }
 
 // Tìm sinh nhật tiếp theo
 function findNextBirthday(currentDate) {
-    let nearestPerson = null;
-    let nearestDate = null;
-    let smallestDiff = Infinity;
+    try {
+        let nearestPerson = null;
+        let nearestDate = null;
+        let smallestDiff = Infinity;
 
-    for (const person of birthdays) {
-        let birthday = new Date(currentDate.getFullYear(), person.month - 1, person.day);
-        
-        // Nếu sinh nhật năm nay đã qua, tính cho năm sau
-        if (currentDate > birthday) {
-            birthday = new Date(currentDate.getFullYear() + 1, person.month - 1, person.day);
+        // Tạo một bản sao của mảng birthdays để không ảnh hưởng đến mảng gốc
+        const birthdaysList = [...birthdays];
+
+        for (const person of birthdaysList) {
+            // Tạo ngày sinh nhật cho năm hiện tại
+            let birthday = new Date(currentDate.getFullYear(), person.month - 1, person.day);
+            
+            // Nếu sinh nhật năm nay đã qua, tính cho năm sau
+            if (currentDate > birthday) {
+                birthday = new Date(currentDate.getFullYear() + 1, person.month - 1, person.day);
+            }
+
+            const diff = birthday - currentDate;
+            console.log(`Checking ${person.name}:`, {
+                birthday: birthday,
+                diff: diff,
+                currentSmallest: smallestDiff
+            });
+
+            if (diff < smallestDiff && diff >= 0) {
+                smallestDiff = diff;
+                nearestDate = birthday;
+                nearestPerson = person;
+                console.log(`New nearest person: ${person.name}`);
+            }
         }
 
-        const diff = birthday - currentDate;
-        if (diff < smallestDiff) {
-            smallestDiff = diff;
-            nearestDate = birthday;
-            nearestPerson = person;
-        }
+        console.log('Final nearest person:', nearestPerson?.name);
+        return { person: nearestPerson, date: nearestDate };
+    } catch (error) {
+        console.error('Error finding next birthday:', error);
+        return { person: null, date: null };
     }
-
-    return { person: nearestPerson, date: nearestDate };
 }
 
 // Hiển thị đếm ngược
 function displayCountdown(targetDate, person) {
-    const now = new Date();
-    const diff = targetDate - now;
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    try {
+        const now = new Date();
+        const diff = targetDate - now;
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    const countdownElement = document.getElementById('countdown');
-    if (countdownElement) {
-        countdownElement.classList.remove('hidden');
-        countdownElement.innerHTML = `
-            <h1>Đếm Ngược Đến Sinh Nhật ${person.name}</h1>
-            <div class="time">
-                <span id="days">${days}</span> ngày
-                <span id="hours">${hours}</span> giờ
-                <span id="minutes">${minutes}</span> phút
-                <span id="seconds">${seconds}</span> giây
-            </div>
-        `;
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            countdownElement.classList.remove('hidden');
+            countdownElement.innerHTML = `
+                <h1>Đếm Ngược Đến Sinh Nhật ${person.name}</h1>
+                <div class="time">
+                    <div>
+                        <span id="days">${days}</span>
+                        <div>Ngày</div>
+                    </div>
+                    <div>
+                        <span id="hours">${hours}</span>
+                        <div>Giờ</div>
+                    </div>
+                    <div>
+                        <span id="minutes">${minutes}</span>
+                        <div>Phút</div>
+                    </div>
+                    <div>
+                        <span id="seconds">${seconds}</span>
+                        <div>Giây</div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error displaying countdown:', error);
     }
 }
 
 function updateCountdownTime() {
-    const now = new Date();
-    const birthdayPerson = checkIfBirthday(now);
-
-    // Nếu hôm nay là sinh nhật
-    if (birthdayPerson) {
-        const today = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-        const lastShownDate = localStorage.getItem('lastBirthdayShown');
+    try {
+        const now = new Date();
+        console.log('Current date:', now);
         
-        // Nếu chưa hiển thị sinh nhật hôm nay hoặc đã hiển thị nhưng là ngày khác
-        if (lastShownDate !== today) {
-            localStorage.setItem('lastBirthdayShown', today);
-            localStorage.setItem('currentBirthday', birthdayPerson.name);
-            showBirthdayContent(birthdayPerson);
-        } else {
-            // Nếu đã hiển thị rồi, kiểm tra xem có phải đang hiển thị đúng người không
-            const currentlyShowing = localStorage.getItem('currentBirthday');
-            if (currentlyShowing === birthdayPerson.name) {
+        // Reset time to midnight to avoid time-of-day issues
+        now.setHours(0, 0, 0, 0);
+        
+        const birthdayPerson = checkIfBirthday(now);
+        console.log('Birthday person found:', birthdayPerson);
+
+        // Nếu hôm nay là sinh nhật
+        if (birthdayPerson) {
+            const today = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`; // Fix: Add 1 to month
+            const lastShownDate = localStorage.getItem('lastBirthdayShown');
+            console.log('Today:', today, 'Last shown:', lastShownDate);
+            
+            // Nếu chưa hiển thị sinh nhật hôm nay
+            if (lastShownDate !== today) {
+                console.log('Showing birthday content for:', birthdayPerson.name);
+                localStorage.setItem('lastBirthdayShown', today);
+                localStorage.setItem('currentBirthday', birthdayPerson.name);
                 showBirthdayContent(birthdayPerson);
             }
+        } else {
+            // Xóa dữ liệu sinh nhật cũ
+            localStorage.removeItem('lastBirthdayShown');
+            localStorage.removeItem('currentBirthday');
+            
+            // Tìm và hiển thị đếm ngược đến sinh nhật tiếp theo
+            const nextBirthday = findNextBirthday(now);
+            if (nextBirthday.person) {
+                displayCountdown(nextBirthday.date, nextBirthday.person);
+            }
         }
-    } else {
-        // Xóa dữ liệu sinh nhật cũ nếu không còn là ngày sinh nhật
-        localStorage.removeItem('lastBirthdayShown');
-        localStorage.removeItem('currentBirthday');
-        
-        // Tìm và hiển thị đếm ngược đến sinh nhật tiếp theo
-        const nextBirthday = findNextBirthday(now);
-        if (nextBirthday.person) {
-            displayCountdown(nextBirthday.date, nextBirthday.person);
-        }
+    } catch (error) {
+        console.error('Error in updateCountdownTime:', error);
     }
 }
+
 // Add this CSS to your existing styles
 const style = document.createElement('style');
 style.textContent = `
@@ -866,4 +927,35 @@ document.addEventListener('DOMContentLoaded', function() {
     initGames();
     initSocialShare();
     initMusicPlayer();
+});
+
+// Debug function
+function debugDate() {
+    const now = new Date();
+    console.log('Current Date:', {
+        fullDate: now,
+        month: now.getMonth() + 1, // Chuyển về 1-12
+        date: now.getDate(),
+        year: now.getFullYear()
+    });
+    
+    const birthdayPerson = checkIfBirthday(now);
+    console.log('Birthday Check Result:', birthdayPerson);
+    
+    // Kiểm tra tất cả sinh nhật
+    birthdays.forEach(person => {
+        console.log(`Checking ${person.name}:`, {
+            personMonth: person.month, // Tháng thực tế (1-12)
+            currentMonth: now.getMonth() + 1, // Chuyển về 1-12
+            personDay: person.day,
+            currentDay: now.getDate(),
+            isMatch: (now.getMonth() + 1) === person.month && now.getDate() === person.day
+        });
+    });
+}
+
+// Gọi hàm debug khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    debugDate();
+    // ... rest of the existing initialization code ...
 });
