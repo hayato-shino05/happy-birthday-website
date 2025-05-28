@@ -1241,7 +1241,10 @@ function playSound() {
 function initPhotoAlbum() {
     const albumBtn = document.getElementById('openAlbum');
     const memoryWall = document.getElementById('memoryWall');
+    const photoGallery = document.getElementById('photoGallery');
     let isOpen = false;
+    let isSlideshowMode = false;
+    let swiperInstance = null;
 
     albumBtn.addEventListener('click', () => {
         if (!isOpen) {
@@ -1251,6 +1254,10 @@ function initPhotoAlbum() {
         } else {
             memoryWall.style.display = 'none';
             isOpen = false;
+            if (isSlideshowMode) {
+                toggleSlideshowMode(false);
+                isSlideshowMode = false;
+            }
         }
     });
 
@@ -1258,8 +1265,89 @@ function initPhotoAlbum() {
         if (e.target === memoryWall) {
             memoryWall.style.display = 'none';
             isOpen = false;
+            if (isSlideshowMode) {
+                toggleSlideshowMode(false);
+                isSlideshowMode = false;
+            }
         }
     });
+
+    // Thêm nút chuyển đổi chế độ slideshow
+    const toggleSlideshowBtn = document.createElement('button');
+    toggleSlideshowBtn.textContent = 'Xem Slideshow';
+    toggleSlideshowBtn.className = 'feature-button';
+    toggleSlideshowBtn.style.position = 'absolute';
+    toggleSlideshowBtn.style.top = '10px';
+    toggleSlideshowBtn.style.right = '10px';
+    toggleSlideshowBtn.addEventListener('click', () => {
+        isSlideshowMode = !isSlideshowMode;
+        toggleSlideshowMode(isSlideshowMode);
+        if (isSlideshowMode) {
+            toggleSlideshowBtn.textContent = 'Xem Lưới';
+        } else {
+            toggleSlideshowBtn.textContent = 'Xem Slideshow';
+        }
+    });
+    memoryWall.appendChild(toggleSlideshowBtn);
+
+    // Đóng slideshow
+    document.getElementById('closeSlideshow').addEventListener('click', () => {
+        isSlideshowMode = false;
+        toggleSlideshowMode(false);
+        toggleSlideshowBtn.textContent = 'Xem Slideshow';
+    });
+
+    function toggleSlideshowMode(enabled) {
+        const slideshowContainer = document.getElementById('slideshowContainer');
+        if (enabled) {
+            photoGallery.style.display = 'none';
+            slideshowContainer.style.display = 'block';
+            initSlideshow();
+        } else {
+            photoGallery.style.display = 'grid';
+            slideshowContainer.style.display = 'none';
+            if (swiperInstance) {
+                swiperInstance.destroy();
+                swiperInstance = null;
+            }
+        }
+    }
+
+    function initSlideshow() {
+        const slideshowWrapper = document.getElementById('slideshowWrapper');
+        slideshowWrapper.innerHTML = '';
+        
+        const totalMedia = 75; // Số lượng media items
+        for (let i = 1; i <= totalMedia; i++) {
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slideshowWrapper.appendChild(slide);
+            loadMediaItemForSlideshow(i, slide);
+        }
+
+        if (swiperInstance) {
+            swiperInstance.destroy();
+        }
+        swiperInstance = new Swiper('#slideshowContainer', {
+            loop: true,
+            autoplay: {
+                delay: 3000,
+                disableOnInteraction: false,
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            effect: 'fade',
+            fadeEffect: {
+                crossFade: true
+            }
+        });
+    }
 }
 
 function loadSamplePhotos() {
@@ -1364,6 +1452,65 @@ function loadMediaItem(index, gallery) {
         mediaItem.addEventListener('click', () => {
             openFullSizeMedia(placeholder.src, index, 'image');
         });
+    }
+}
+
+function loadMediaItemForSlideshow(index, slide) {
+    const videoPath = `memory/${index}.mp4`;
+    const imagePath = `memory/${index}.jpg`;
+    
+    // First try to fetch the video to check if it exists
+    fetch(videoPath, { method: 'HEAD' })
+        .then(response => {
+            if (response.ok) {
+                // Video exists, display it
+                const videoElement = document.createElement('video');
+                videoElement.src = videoPath;
+                videoElement.controls = true;
+                videoElement.muted = true;
+                
+                slide.innerHTML = '';
+                slide.appendChild(videoElement);
+            } else {
+                // Video doesn't exist, try image
+                tryLoadImage();
+            }
+        })
+        .catch(() => {
+            // Error fetching video, try image
+            tryLoadImage();
+        });
+
+    function tryLoadImage() {
+        // Check if image exists
+        fetch(imagePath, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    // Image exists
+                    const img = document.createElement('img');
+                    img.src = imagePath;
+                    img.alt = `Memory ${index}`;
+                    
+                    slide.innerHTML = '';
+                    slide.appendChild(img);
+                } else {
+                    // Image doesn't exist, use placeholder
+                    usePlaceholder();
+                }
+            })
+            .catch(() => {
+                // Error fetching image, use placeholder
+                usePlaceholder();
+            });
+    }
+
+    function usePlaceholder() {
+        const placeholder = document.createElement('img');
+        placeholder.src = '/api/placeholder/800/600';
+        placeholder.alt = `Placeholder ${index}`;
+        
+        slide.innerHTML = '';
+        slide.appendChild(placeholder);
     }
 }
 

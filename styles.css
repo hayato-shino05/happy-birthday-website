@@ -554,6 +554,92 @@ h1 {
     padding: 20px;
 }
 
+/* Slideshow Styles */
+.swiper-container {
+    width: 100%;
+    height: 100%;
+    background: #FFF9F3;
+    border: 2px solid #D4B08C;
+    box-shadow: 6px 6px 0 #D4B08C;
+    display: none; /* ẩn mặc định, chỉ hiện khi slideshow được kích hoạt */
+    margin: 0 auto;
+    position: relative;
+    z-index: 2001;
+}
+
+.swiper-slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.swiper-slide img, .swiper-slide video {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border: 2px solid #D4B08C;
+    box-shadow: 4px 4px 0 #D4B08C;
+}
+
+.swiper-button-next, .swiper-button-prev {
+    color: #854D27;
+    background: rgba(255, 249, 243, 0.8);
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 2px 2px 0 #D4B08C;
+    transition: all 0.3s;
+}
+
+.swiper-button-next:hover, .swiper-button-prev:hover {
+    transform: scale(1.1);
+    box-shadow: 3px 3px 0 #D4B08C;
+}
+
+.swiper-pagination-bullet {
+    background: #D4B08C;
+    opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+    background: #854D27;
+    opacity: 1;
+}
+
+.slideshow-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 2002;
+}
+
+.slideshow-controls button {
+    padding: 8px 15px;
+    background: #854D27;
+    color: #FFF9F3;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 3px 3px 0 #D4B08C;
+    font-size: 0.9em;
+    text-transform: uppercase;
+}
+
+.slideshow-controls button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 #D4B08C;
+}
+
 .photo-item {
     position: relative;
     aspect-ratio: 1;
