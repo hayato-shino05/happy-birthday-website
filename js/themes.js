@@ -70,20 +70,25 @@ function detectSeasonAndFestival() {
     const date = now.getDate();
     let theme = 'default';
     
-    // Xác định mùa
-    if (month >= 3 && month <= 5) theme = 'spring';
-    else if (month >= 6 && month <= 8) theme = 'summer';
-    else if (month >= 9 && month <= 11) theme = 'autumn';
-    else theme = 'winter';
-    
-    // Xác định lễ hội
+    // Xác định lễ hội trước (ưu tiên lễ hội hơn mùa)
+    // Lễ hội Giáng Sinh (Quốc tế)
     if (month === 12 && date >= 20 && date <= 25) theme = 'christmas';
-    else if (month === 1 || month === 2) theme = 'tet';
+    // Lễ hội Tết Nguyên Đán (Việt Nam) - thường rơi vào cuối tháng 1 hoặc đầu tháng 2
+    else if ((month === 1 && date >= 20) || (month === 2 && date <= 15)) theme = 'tet';
+    // Lễ hội Halloween (Quốc tế)
     else if (month === 10 && date >= 28 && date <= 31) theme = 'halloween';
-    // Các lễ hội Nhật Bản
-    else if (month === 3 || month === 4) theme = 'hanami'; // Lễ hội ngắm hoa anh đào
-    else if (month === 8 && date >= 13 && date <= 15) theme = 'obon'; // Lễ hội Obon
-    else if (month === 9 || month === 10) theme = 'tsukimi'; // Lễ hội ngắm trăng
+    // Các lễ hội Nhật Bản (ưu tiên cao)
+    else if (month === 3 || (month === 4 && date <= 15)) theme = 'hanami'; // Lễ hội ngắm hoa anh đào (tháng 3 đến giữa tháng 4)
+    else if (month === 8 && date >= 13 && date <= 15) theme = 'obon'; // Lễ hội Obon (tháng 8, thường 13-15)
+    else if ((month === 9 && date >= 15) || (month === 10 && date <= 15)) theme = 'tsukimi'; // Lễ hội ngắm trăng (tháng 9-10)
+    
+    // Nếu không có lễ hội, xác định mùa theo khí hậu Việt Nam
+    if (theme === 'default') {
+        if (month >= 2 && month <= 4) theme = 'spring'; // Xuân: Tháng 2-4
+        else if (month >= 5 && month <= 7) theme = 'summer'; // Hè: Tháng 5-7
+        else if (month >= 8 && month <= 10) theme = 'autumn'; // Thu: Tháng 8-10
+        else theme = 'winter'; // Đông: Tháng 11-1
+    }
     
     return theme;
 }
@@ -92,7 +97,16 @@ function detectSeasonAndFestival() {
 function applyTheme(theme) {
     const body = document.body;
     const countdown = document.querySelector('.countdown');
-    const container = document.querySelector('.container');
+    
+    // Xóa tất cả hiệu ứng hiện có
+    const themeEffects = document.querySelectorAll('.theme-effect');
+    themeEffects.forEach(effect => effect.remove());
+    
+    // Xóa bóng bay
+    const balloonContainer = document.getElementById('balloonContainer');
+    if (balloonContainer) {
+        balloonContainer.innerHTML = '';
+    }
     
     // Xóa các class giao diện cũ
     body.classList.remove('spring', 'summer', 'autumn', 'winter', 'christmas', 'tet', 'halloween', 'hanami', 'obon', 'tsukimi');
@@ -106,61 +120,55 @@ function applyTheme(theme) {
         countdown.classList.add(theme);
     }
     
-    // Xóa các hiệu ứng cũ
-    const oldOverlay = document.querySelector('.theme-overlay');
-    if (oldOverlay) oldOverlay.remove();
-    const oldEffects = document.querySelectorAll('.theme-effect');
-    oldEffects.forEach(effect => effect.remove());
-    const oldThemeIndicator = document.querySelector('.theme-indicator');
-    if (oldThemeIndicator) oldThemeIndicator.remove();
+    // Chỉ áp dụng video background, không tạo hiệu ứng
+    applyVideoBackground(theme, body);
     
-    // Thêm hình ảnh nền và hiệu ứng theo chủ đề
-    const overlay = document.createElement('div');
-    overlay.className = 'theme-overlay';
-    body.insertBefore(overlay, body.firstChild); // Đảm bảo overlay ở đầu để không che các phần tử khác
-    
-    // Tạo hiệu ứng động
-    switch(theme) {
-        case 'spring':
-        case 'hanami':
-            console.log('Creating falling petals for', theme);
-            createFallingPetals(40, theme); // Tăng số lượng hoa anh đào rơi
-            break;
-        case 'summer':
-        case 'obon':
-            console.log('Creating floating lanterns for', theme);
-            createFloatingLanterns(20, theme); // Tăng số lượng đèn lồng nổi
-            createFireflies(15, theme); // Thêm đom đóm cho mùa hè
-            break;
-        case 'autumn':
-        case 'tsukimi':
-            console.log('Creating falling leaves for', theme);
-            createFallingLeaves(40, theme); // Tăng số lượng lá rơi
-            break;
-        case 'winter':
-            console.log('Creating falling snow for', theme);
-            createFallingSnow(80, theme); // Tăng số lượng tuyết rơi
-            break;
-        case 'christmas':
-            console.log('Creating Christmas effects for', theme);
-            createFallingSnow(50, theme);
-            createChristmasLights(20, theme); // Tăng số lượng đèn Giáng Sinh
-            break;
-        case 'tet':
-            console.log('Creating fireworks for', theme);
-            createFireworks(10, theme); // Tăng số lượng pháo hoa
-            break;
-        case 'halloween':
-            console.log('Creating ghosts for', theme);
-            createGhosts(10, theme); // Tăng số lượng ma Halloween
-            createBats(10, theme); // Thêm dơi cho Halloween
-            break;
+    // Tạo các hiệu ứng theo chủ đề
+    if (theme === 'autumn' || theme === 'tsukimi') {
+        console.log('Creating falling leaves for', theme);
+        createFallingLeaves(40, theme);
+    } else if (theme === 'spring' || theme === 'hanami') {
+        console.log('Creating falling petals for', theme);
+        createFallingPetals(30, theme);
+    } else if (theme === 'summer') {
+        console.log('Creating heat wave and sun glare for', theme);
+        createHeatWave(theme);
+        createSunGlare(theme);
+    } else if (theme === 'winter') {
+        console.log('Creating falling snow for', theme);
+        createFallingSnow(50, theme);
+    } else if (theme === 'christmas') {
+        console.log('Creating Christmas lights for', theme);
+        createChristmasLights(30, theme);
+    } else if (theme === 'tet') {
+        console.log('Creating fireworks for', theme);
+        createFireworks(5, theme);
+    } else if (theme === 'halloween') {
+        console.log('Creating bats and ghosts for', theme);
+        createBats(10, theme);
+        createGhosts(5, theme);
+    } else if (theme === 'obon') {
+        console.log('Creating floating lanterns for', theme);
+        createFloatingLanterns(20, theme);
     }
     
     // Thêm chỉ báo chủ đề để kiểm tra
     const themeIndicator = document.createElement('div');
     themeIndicator.className = 'theme-indicator';
-    themeIndicator.textContent = `Current Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`;
+    let themeText = '';
+    // Hiển thị tên mùa bằng tiếng Việt và giữ nguyên tên lễ hội bằng tiếng Anh
+    if (theme === 'hanami') themeText = 'Hanami';
+    else if (theme === 'obon') themeText = 'Obon';
+    else if (theme === 'tsukimi') themeText = 'Tsukimi';
+    else if (theme === 'christmas') themeText = 'Christmas';
+    else if (theme === 'tet') themeText = 'Tet';
+    else if (theme === 'halloween') themeText = 'Halloween';
+    else if (theme === 'spring') themeText = 'Mùa Xuân';
+    else if (theme === 'summer') themeText = 'Mùa Hè';
+    else if (theme === 'autumn') themeText = 'Mùa Thu';
+    else if (theme === 'winter') themeText = 'Mùa Đông';
+    else themeText = theme.charAt(0).toUpperCase() + theme.slice(1);
+    themeIndicator.textContent = `Chủ Đề Hiện Tại: ${themeText}`;
     themeIndicator.style.position = 'fixed';
     themeIndicator.style.top = '60px';
     themeIndicator.style.left = '20px';
@@ -171,28 +179,129 @@ function applyTheme(theme) {
     themeIndicator.style.zIndex = '1000';
     body.appendChild(themeIndicator);
     
-    console.log(`Applied theme: ${theme}`);
+    console.log(`Applied theme: ${theme} with corresponding effects`);
 }
 
-// Hàm tạo hiệu ứng đom đóm cho mùa hè
-function createFireflies(count, theme) {
-    for (let i = 0; i < count; i++) {
-        const firefly = document.createElement('div');
-        firefly.className = 'theme-effect firefly';
-        firefly.style.left = `${Math.random() * 80 + 10}vw`;
-        firefly.style.top = `${Math.random() * 60 + 20}vh`;
-        firefly.style.width = '3px';
-        firefly.style.height = '3px';
-        firefly.style.backgroundColor = '#FFFF00';
-        firefly.style.borderRadius = '50%';
-        firefly.style.position = 'fixed';
-        firefly.style.opacity = '0.8';
-        firefly.style.zIndex = '1';
-        firefly.style.boxShadow = '0 0 5px rgba(255, 255, 0, 0.7)';
-        firefly.style.animation = `blink ${Math.random() * 1.5 + 1}s ease-in-out infinite, float ${Math.random() * 2 + 2}s ease-in-out infinite`;
-        firefly.style.animationDelay = `${Math.random() * 2}s, ${Math.random() * 2}s`;
-        document.body.appendChild(firefly);
+// Hàm áp dụng video background theo chủ đề
+function applyVideoBackground(theme, body) {
+    let videoSource = '';
+    // Xác định video tương ứng với chủ đề
+    switch(theme) {
+        case 'spring':
+            videoSource = 'video/spring.mp4';
+            break;
+        case 'summer':
+            videoSource = 'video/summer.mp4';
+            break;
+        case 'autumn':
+            videoSource = 'video/autumn.mp4';
+            break;
+        case 'winter':
+            videoSource = 'video/winter.mp4';
+            break;
+        case 'hanami':
+            // Luân phiên giữa 2 video hanami
+            const lastHanamiUsed = localStorage.getItem('lastHanamiVideo') || 'hanami.mov';
+            videoSource = lastHanamiUsed === 'hanami.mov' ? 'video/hanami-2.mp4' : 'video/hanami.mov';
+            localStorage.setItem('lastHanamiVideo', videoSource);
+            break;
+        case 'christmas':
+            videoSource = 'video/christmas.mp4';
+            break;
+        case 'tet':
+            videoSource = 'video/tet.mp4';
+            break;
+        case 'halloween':
+            videoSource = 'video/halloween.mp4';
+            break;
+        case 'obon':
+            videoSource = 'video/obon.mp4';
+            break;
+        case 'tsukimi':
+            videoSource = 'video/tsukimi.mp4';
+            break;
+        default:
+            return; // Không áp dụng video cho các chủ đề khác nếu không có
     }
+
+    // Kiểm tra xem file video có tồn tại không
+    const fallbackVideoSources = {
+        'christmas': 'https://cdn.pixabay.com/vimeo/403565117/snowfall-22544.mp4',
+        'tet': 'https://cdn.pixabay.com/vimeo/567444566/lanterns-92722.mp4',
+        'halloween': 'https://cdn.pixabay.com/vimeo/474265737/fog-54278.mp4',
+        'obon': 'https://cdn.pixabay.com/vimeo/353997337/lanterns-14022.mp4',
+        'tsukimi': 'https://cdn.pixabay.com/vimeo/330326136/moon-8312.mp4'
+    };
+
+    // Tạo phần tử video background
+    const video = document.createElement('video');
+    video.className = 'video-background';
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = true;
+    video.style.position = 'fixed';
+    video.style.top = '0';
+    video.style.left = '0';
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.style.objectFit = 'cover';
+    video.style.zIndex = '-1';
+    video.style.opacity = '1.0'; // Hiển thị video hoàn toàn không có lớp màu phủ
+
+    // Thêm xử lý lỗi để sử dụng video dự phòng nếu cần
+    video.onerror = function() {
+        if (fallbackVideoSources[theme]) {
+            console.log(`Video local không khả dụng, sử dụng video online: ${fallbackVideoSources[theme]}`);
+            video.src = fallbackVideoSources[theme];
+        }
+    };
+
+    // Đặt nguồn video
+    video.src = videoSource;
+
+    // Chèn video vào đầu body để làm background
+    body.insertBefore(video, body.firstChild);
+    console.log(`Applied video background for theme: ${theme} with source: ${videoSource}`);
+}
+
+// Hàm tạo hiệu ứng sóng nhiệt cho mùa hè
+function createHeatWave(theme) {
+    const heatWave = document.createElement('div');
+    heatWave.className = 'theme-effect heat-wave';
+    heatWave.style.position = 'fixed';
+    heatWave.style.top = '0';
+    heatWave.style.left = '0';
+    heatWave.style.width = '100vw';
+    heatWave.style.height = '100vh';
+    heatWave.style.background = 'rgba(255, 255, 0, 0.05)';
+    heatWave.style.opacity = '0.3';
+    heatWave.style.zIndex = '1';
+    heatWave.style.pointerEvents = 'none';
+    heatWave.style.animation = 'heatWave 3s ease-in-out infinite';
+    document.body.appendChild(heatWave);
+    console.log('Created heat wave effect for', theme);
+}
+
+// Hàm tạo hiệu ứng ánh nắng cho mùa hè
+function createSunGlare(theme) {
+    for (let i = 0; i < 5; i++) {
+        const glare = document.createElement('div');
+        glare.className = 'theme-effect sun-glare';
+        glare.style.position = 'fixed';
+        glare.style.top = `${Math.random() * 30 + 10}vh`;
+        glare.style.left = `${Math.random() * 80 + 10}vw`;
+        const size = Math.random() * 100 + 50;
+        glare.style.width = `${size}px`;
+        glare.style.height = `${size}px`;
+        glare.style.background = 'radial-gradient(circle, rgba(255, 255, 100, 0.3), transparent)';
+        glare.style.opacity = `${Math.random() * 0.3 + 0.2}`;
+        glare.style.zIndex = '1';
+        glare.style.pointerEvents = 'none';
+        glare.style.animation = `blink ${Math.random() * 2 + 2}s ease-in-out infinite`;
+        glare.style.animationDelay = `${Math.random() * 3}s`;
+        document.body.appendChild(glare);
+    }
+    console.log('Created sun glare effect for', theme);
 }
 
 // Hàm tạo hiệu ứng dơi cho Halloween
@@ -237,21 +346,76 @@ function createFallingPetals(count, theme) {
 
 // Hàm tạo hiệu ứng lá rơi
 function createFallingLeaves(count, theme) {
+    // Màu sắc lá mùa thu - thêm nhiều màu đỏ và cam
+    const autumnColors = ['#FF4500', '#FF8C00', '#A52A2A', '#8B0000', '#CD5C5C', '#B22222', '#FF6347', '#DC143C', '#E25822', '#D2691E'];
+    
     for (let i = 0; i < count; i++) {
         const leaf = document.createElement('div');
         leaf.className = 'theme-effect leaf';
         leaf.style.left = `${Math.random() * 100}vw`;
         leaf.style.top = `${Math.random() * -50}vh`;
-        leaf.style.width = `${Math.random() * 15 + 5}px`;
-        leaf.style.height = `${Math.random() * 10 + 5}px`;
-        leaf.style.backgroundColor = theme === 'tsukimi' ? '#FFA500' : '#FFA500';
-        leaf.style.borderRadius = '0 50% 0 50%';
+        
+        // Tạo kích thước khác nhau cho lá
+        const size = Math.random() * 15 + 5;
+        leaf.style.width = `${size}px`;
+        leaf.style.height = `${size * 0.8}px`;
+        
+        // Màu ngẫu nhiên từ bảng màu mùa thu
+        leaf.style.backgroundColor = autumnColors[Math.floor(Math.random() * autumnColors.length)];
+        
+        // Hình dạng lá khác nhau - một số lá tròn, một số lá hình giọt nước
+        const leafShapes = ['0 50% 0 50%', '50% 0 50% 50%', '50% 50% 0 50%', '30% 70% 70% 30%'];
+        leaf.style.borderRadius = leafShapes[Math.floor(Math.random() * leafShapes.length)];
+        
         leaf.style.position = 'fixed';
-        leaf.style.opacity = '0.8';
+        leaf.style.opacity = `${Math.random() * 0.3 + 0.6}`; // Độ trong suốt thay đổi
         leaf.style.zIndex = '1';
-        leaf.style.animation = `fall ${Math.random() * 5 + 5}s linear infinite, sway ${Math.random() * 2 + 2}s ease-in-out infinite`;
-        leaf.style.animationDelay = `${Math.random() * 5}s, ${Math.random() * 2}s`;
+        
+        // Thêm hiệu ứng xoay và đung đưa
+        const fallDuration = Math.random() * 8 + 7; // Thời gian rơi lâu hơn
+        const swayDuration = Math.random() * 3 + 2; // Thời gian đung đưa
+        leaf.style.animation = `fall ${fallDuration}s linear infinite, sway ${swayDuration}s ease-in-out infinite, rotate ${swayDuration * 1.5}s linear infinite`;
+        leaf.style.animationDelay = `${Math.random() * 5}s, ${Math.random() * 2}s, ${Math.random() * 3}s`;
+        
         document.body.appendChild(leaf);
+    }
+    
+    // Thêm CSS cho hiệu ứng xoay nếu chưa có
+    if (!document.getElementById('leaf-animations')) {
+        const style = document.createElement('style');
+        style.id = 'leaf-animations';
+        style.textContent = `
+            @keyframes fall {
+                0% {
+                    transform: translateY(0);
+                }
+                100% {
+                    transform: translateY(100vh);
+                }
+            }
+            
+            @keyframes sway {
+                0% {
+                    transform: translateX(0px);
+                }
+                50% {
+                    transform: translateX(20px);
+                }
+                100% {
+                    transform: translateX(0px);
+                }
+            }
+            
+            @keyframes rotate {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
 

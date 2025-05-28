@@ -300,7 +300,6 @@ function showBirthdayContent(birthdayPerson) {
 
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
 
-    createBalloons();
     createConfetti();
     init3DCake();
 

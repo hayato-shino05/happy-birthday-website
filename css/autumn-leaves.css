@@ -1,0 +1,87 @@
+/* CSS cho hiệu ứng lá rơi mùa thu */
+.leaf {
+    position: fixed;
+    z-index: 1;
+    opacity: 0.8;
+    pointer-events: none; /* Để không cản trở các tương tác người dùng */
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-10vh) rotate(0deg);
+    }
+    100% {
+        transform: translateY(100vh) rotate(360deg);
+    }
+}
+
+@keyframes sway {
+    0% {
+        transform: translateX(0px);
+    }
+    50% {
+        transform: translateX(20px);
+    }
+    100% {
+        transform: translateX(0px);
+    }
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tạo các hình dạng lá khác nhau */
+.leaf-shape-1 {
+    border-radius: 0 50% 0 50%;
+}
+
+.leaf-shape-2 {
+    border-radius: 50% 0 50% 0;
+}
+
+.leaf-shape-3 {
+    border-radius: 30% 70% 70% 30%;
+}
+
+.leaf-shape-4 {
+    border-radius: 50% 50% 50% 0;
+}
+
+/* Các màu sắc mùa thu */
+.leaf-color-1 {
+    background-color: #FF4500;
+}
+
+.leaf-color-2 {
+    background-color: #FF8C00;
+}
+
+.leaf-color-3 {
+    background-color: #A52A2A;
+}
+
+.leaf-color-4 {
+    background-color: #8B0000;
+}
+
+.leaf-color-5 {
+    background-color: #CD5C5C;
+}
+
+.leaf-color-6 {
+    background-color: #B22222;
+}
+
+.leaf-color-7 {
+    background-color: #FF6347;
+}
+
+.leaf-color-8 {
+    background-color: #DC143C;
+}

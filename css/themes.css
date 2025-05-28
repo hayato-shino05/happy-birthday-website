@@ -1,51 +1,51 @@
-/* Giao diện theo mùa */
+/* Giao diện theo mùa - Dựa trên văn hóa Nhật Bản */
 body.spring {
-    background-color: #D6F0D6;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2388C788' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    color: #1B5E20;
+    background-color: #F8DDE4;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E91E63' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    color: #C2185B;
 }
 
 body.summer {
-    background-color: #FFF0D6;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFB300' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-color: #FFE0B2;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFD12E' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     color: #E65100;
 }
 
 body.autumn {
-    background-color: #F9E4D4;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E65100' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-color: #F5CBA7;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E2571E' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     color: #BF360C;
 }
 
 body.winter {
-    background-color: #D6EFFF;
+    background-color: #D1E9F6;
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230079B0' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     color: #01579B;
 }
 
 /* Giao diện theo lễ hội */
 body.christmas {
-    background-color: #FFE6E6;
+    background-color: #EF9A9A;
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D32F2F' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     color: #B71C1C;
 }
 
 body.tet {
-    background-color: #FFF3E0;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFA000' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    color: #E91E63;
+    background-color: #FFD54F;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E91E63' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    color: #C2185B;
 }
 
 body.halloween {
-    background-color: #E0E0E0;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236A1B9A' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    color: #4A148C;
+    background-color: #4A148C;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Gg fill='%23FF5722' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    color: #FFCCBC;
 }
 
-/* Giao diện countdown theo mùa và lễ hội */
+/* Giao diện countdown theo mùa và lễ hội - Dựa trên văn hóa Nhật Bản */
 .countdown.spring {
-    background: linear-gradient(135deg, #E6F2E6 0%, #C8E6C9 100%);
-    border-color: #1B5E20;
+    background: linear-gradient(135deg, #FCE4EC 0%, #F8DDE4 100%);
+    border-color: #C2185B;
 }
 
 .countdown.summer {
@@ -59,23 +59,23 @@ body.halloween {
 }
 
 .countdown.winter {
-    background: linear-gradient(135deg, #E6F7FF 0%, #B3E5FC 100%);
+    background: linear-gradient(135deg, #E6F7FF 0%, #D1E9F6 100%);
     border-color: #01579B;
 }
 
 .countdown.christmas {
-    background: linear-gradient(135deg, #FFF0F0 0%, #FFCDD2 100%);
+    background: linear-gradient(135deg, #FFF0F0 0%, #EF9A9A 100%);
     border-color: #B71C1C;
 }
 
 .countdown.tet {
-    background: linear-gradient(135deg, #FFF8E6 0%, #FFE082 100%);
+    background: linear-gradient(135deg, #FFF8E6 0%, #FFD54F 100%);
     border-color: #E91E63;
 }
 
 .countdown.halloween {
-    background: linear-gradient(135deg, #F0F0F0 0%, #E0E0E0 100%);
-    border-color: #4A148C;
+    background: linear-gradient(135deg, #4A148C 0%, #6A1B9A 100%);
+    border-color: #FF5722;
 }
 
 /* Theme Overlay */
@@ -94,7 +94,7 @@ body.halloween {
 }
 
 body.spring .theme-overlay, body.hanami .theme-overlay {
-    background: linear-gradient(135deg, #E6F2E6 0%, #C8E6C9 50%, #A5D8A7 100%);
+    background: linear-gradient(135deg, #FCE4EC 0%, #F8DDE4 50%, #F5C9D8 100%);
 }
 
 body.summer .theme-overlay, body.obon .theme-overlay {
@@ -106,7 +106,7 @@ body.autumn .theme-overlay, body.tsukimi .theme-overlay {
 }
 
 body.winter .theme-overlay {
-    background: linear-gradient(135deg, #E6F7FF 0%, #B3E5FC 50%, #81D4FA 100%);
+    background: linear-gradient(135deg, #E6F7FF 0%, #D1E9F6 50%, #B3E5FC 100%);
 }
 
 body.christmas .theme-overlay {
@@ -118,7 +118,7 @@ body.tet .theme-overlay {
 }
 
 body.halloween .theme-overlay {
-    background: linear-gradient(135deg, #F0F0F0 0%, #E0E0E0 50%, #BDBDBD 100%);
+    background: linear-gradient(135deg, #4A148C 0%, #6A1B9A 50%, #8E24AA 100%);
 }
 
 /* Animations cho hiệu ứng theo chủ đề */
@@ -160,22 +160,22 @@ body.halloween .theme-overlay {
 
 /* Giao diện cho lễ hội Nhật Bản */
 .hanami .countdown {
-    background: linear-gradient(135deg, #FFE6F2 0%, #FFCCE6 100%);
-    border-color: #FF4081;
+    background: linear-gradient(135deg, #FFE6F2 0%, #F8DDE4 100%);
+    border-color: #C2185B;
 }
 
 .obon .countdown {
     background: linear-gradient(135deg, #FFF0E6 0%, #FFE0CC 100%);
-    border-color: #FF5722;
+    border-color: #E64A19;
 }
 
 .tsukimi .countdown {
-    background: linear-gradient(135deg, #E6F2FF 0%, #CCE6FF 100%);
-    border-color: #2196F3;
+    background: linear-gradient(135deg, #E6F2FF 0%, #D1E9F6 100%);
+    border-color: #1976D2;
 }
 
 .hanami .game-button, .hanami .feature-button, .hanami .music-control, .hanami .share-button {
-    background: #FF4081;
+    background: #E91E63;
     border-color: #C2185B;
 }
 
@@ -187,4 +187,4 @@ body.halloween .theme-overlay {
 .tsukimi .game-button, .tsukimi .feature-button, .tsukimi .music-control, .tsukimi .share-button {
     background: #2196F3;
     border-color: #1976D2;
-} 
+}

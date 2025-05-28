@@ -1,67 +1,4 @@
- // Tạo bóng bay
-function createBalloons() {
-    const colors = ['#ff6b6b', '#7dd3fc', '#ffd166', '#a5d8ff', '#ffd3da', '#c2f0c2'];
-    const balloonContainer = document.getElementById('balloonContainer');
 
-    // Clear any existing balloons
-    balloonContainer.innerHTML = '';
-
-    const positions = [
-        {left: '5%', top: '10%'},      // Top left
-        {left: '12%', top: '25%'},     // Left side
-        {left: '8%', top: '60%'},      // Bottom left
-        {left: '20%', top: '80%'},     // Bottom left
-        {left: '85%', top: '15%'},     // Top right
-        {left: '92%', top: '30%'},     // Right side
-        {left: '88%', top: '65%'},     // Bottom right
-        {left: '78%', top: '75%'},     // Bottom right
-        {left: '30%', top: '5%'},      // Top
-        {left: '70%', top: '8%'},      // Top
-        {left: '10%', top: '40%'},     // Left middle
-        {left: '90%', top: '45%'}      // Right middle
-    ];
-
-    for (let i = 0; i < positions.length; i++) {
-        const balloon = document.createElement('div');
-        balloon.className = 'balloon';
-
-        // Create balloon SVG
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 50 60');
-        svg.style.width = '100%';
-        svg.style.height = '100%';
-
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', 'M25,1 C13,1 5,12 5,25 C5,38 13,47 25,47 C37,47 45,38 45,25 C45,12 37,1 25,1 Z');
-        path.setAttribute('fill', colors[i % colors.length]);
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        line.setAttribute('d', 'M25,47 C26,55 24,55 25,60');
-        line.setAttribute('stroke', '#888');
-        line.setAttribute('stroke-width', '1.5');
-        line.setAttribute('fill', 'none');
-
-        svg.appendChild(path);
-        svg.appendChild(line);
-        balloon.appendChild(svg);
-
-        balloonContainer.appendChild(balloon);
-
-        // Position based on predefined positions
-        balloon.style.left = positions[i].left;
-        balloon.style.top = positions[i].top;
-
-        // Randomize size slightly
-        const size = 70 + Math.random() * 30;
-        balloon.style.width = size + 'px';
-        balloon.style.height = Math.floor(size * 1.2) + 'px';
-
-        // Animate with delay
-        balloon.style.opacity = 0.8;
-        balloon.style.animation = `float ${Math.random() * 2 + 4}s ease-in-out infinite`;
-        balloon.style.animationDelay = Math.random() * 5 + 's';
-    }
-}
 
 // Biến toàn cục cho microphone
 let blowProgress = 0;
@@ -869,13 +806,327 @@ function searchMediaByTag(query) {
     });
 }
 
-// Trò chơi
+// Trò chơi và lịch sinh nhật
 function initGames() {
     const memoryGameBtn = document.getElementById('startMemoryGame');
     const puzzleGameBtn = document.getElementById('startPuzzleGame');
+    const calendarBtn = document.getElementById('openCalendar');
+    const quizBtn = document.getElementById('startBirthdayQuiz');
 
     memoryGameBtn.addEventListener('click', startMemoryGame);
     puzzleGameBtn.addEventListener('click', startPuzzleGame);
+    if (calendarBtn) {
+        calendarBtn.addEventListener('click', openBirthdayCalendar);
+    }
+    if (quizBtn) {
+        quizBtn.addEventListener('click', startBirthdayQuiz);
+    }
+}
+
+// Hàm mở trò chơi đố vui sinh nhật
+function startBirthdayQuiz() {
+    let quizModal = document.getElementById('birthdayQuizModal');
+    if (!quizModal) {
+        quizModal = document.createElement('div');
+        quizModal.id = 'birthdayQuizModal';
+        quizModal.style.position = 'fixed';
+        quizModal.style.top = '0';
+        quizModal.style.left = '0';
+        quizModal.style.width = '100%';
+        quizModal.style.height = '100%';
+        quizModal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        quizModal.style.display = 'flex';
+        quizModal.style.justifyContent = 'center';
+        quizModal.style.alignItems = 'center';
+        quizModal.style.zIndex = '10000';
+        quizModal.style.display = 'none';
+
+        const quizContainer = document.createElement('div');
+        quizContainer.style.background = '#FFF9F3';
+        quizContainer.style.border = '2px solid #D4B08C';
+        quizContainer.style.borderRadius = '0';
+        quizContainer.style.padding = '20px';
+        quizContainer.style.width = '90%';
+        quizContainer.style.maxWidth = '500px';
+        quizContainer.style.maxHeight = '80vh';
+        quizContainer.style.overflowY = 'auto';
+        quizContainer.style.boxShadow = '8px 8px 0 #D4B08C';
+        quizContainer.style.position = 'relative';
+        quizContainer.style.textAlign = 'center';
+
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-btn';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '10px';
+        closeBtn.style.right = '10px';
+        closeBtn.style.fontSize = '30px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.color = '#854D27';
+        closeBtn.addEventListener('click', () => {
+            quizModal.style.display = 'none';
+        });
+
+        const title = document.createElement('h2');
+        title.textContent = 'Đố Vui Sinh Nhật';
+        title.style.color = '#854D27';
+        title.style.marginBottom = '20px';
+        title.style.fontFamily = '\'DM Serif Display\', serif';
+
+        const quizArea = document.createElement('div');
+        quizArea.id = 'quizArea';
+        quizArea.style.display = 'flex';
+        quizArea.style.flexDirection = 'column';
+        quizArea.style.gap = '10px';
+        quizArea.style.margin = '20px auto';
+        quizArea.style.width = '90%';
+
+        const restartBtn = document.createElement('button');
+        restartBtn.textContent = 'Chơi Lại';
+        restartBtn.style.padding = '10px 20px';
+        restartBtn.style.background = '#854D27';
+        restartBtn.style.color = '#FFF9F3';
+        restartBtn.style.border = '2px solid #D4B08C';
+        restartBtn.style.borderRadius = '0';
+        restartBtn.style.cursor = 'pointer';
+        restartBtn.style.fontSize = '1.1em';
+        restartBtn.style.transition = 'all 0.3s';
+        restartBtn.style.boxShadow = '4px 4px 0 #D4B08C';
+        restartBtn.style.textTransform = 'uppercase';
+        restartBtn.style.letterSpacing = '1px';
+        restartBtn.addEventListener('click', () => {
+            initBirthdayQuiz();
+        });
+        restartBtn.addEventListener('mouseover', () => {
+            restartBtn.style.transform = 'translate(-2px, -2px)';
+            restartBtn.style.boxShadow = '6px 6px 0 #D4B08C';
+        });
+        restartBtn.addEventListener('mouseout', () => {
+            restartBtn.style.transform = 'none';
+            restartBtn.style.boxShadow = '4px 4px 0 #D4B08C';
+        });
+
+        quizContainer.appendChild(closeBtn);
+        quizContainer.appendChild(title);
+        quizContainer.appendChild(quizArea);
+        quizContainer.appendChild(restartBtn);
+        quizModal.appendChild(quizContainer);
+        document.body.appendChild(quizModal);
+    }
+    quizModal.style.display = 'flex';
+    initBirthdayQuiz();
+}
+
+// Hàm khởi tạo đố vui sinh nhật
+function initBirthdayQuiz() {
+    const quizArea = document.getElementById('quizArea');
+    quizArea.innerHTML = '';
+    
+    // Kiểm tra danh sách sinh nhật
+    if (typeof birthdays === 'undefined' || birthdays.length === 0) {
+        const noDataMsg = document.createElement('p');
+        noDataMsg.textContent = 'Không có dữ liệu sinh nhật để tạo câu hỏi.';
+        noDataMsg.style.color = '#854D27';
+        noDataMsg.style.fontStyle = 'italic';
+        quizArea.appendChild(noDataMsg);
+        return;
+    }
+    
+    // Tạo danh sách câu hỏi từ danh sách sinh nhật
+    let questions = [];
+    birthdays.forEach(person => {
+        questions.push({
+            question: `Ngày sinh của ${person.name} là ngày nào?`,
+            correctAnswer: `${person.day}/${person.month}`,
+            options: [
+                `${person.day}/${person.month}`,
+                `${Math.floor(Math.random() * 28) + 1}/${Math.floor(Math.random() * 12) + 1}`,
+                `${Math.floor(Math.random() * 28) + 1}/${Math.floor(Math.random() * 12) + 1}`,
+                `${Math.floor(Math.random() * 28) + 1}/${Math.floor(Math.random() * 12) + 1}`
+            ]
+        });
+    });
+    
+    // Xáo trộn danh sách câu hỏi
+    questions = questions.sort(() => Math.random() - 0.5).slice(0, 5); // Lấy 5 câu hỏi ngẫu nhiên
+    
+    let currentQuestionIndex = 0;
+    let score = 0;
+    
+    // Hiển thị câu hỏi
+function displayQuestion() {
+        quizArea.innerHTML = '';
+        if (currentQuestionIndex >= questions.length) {
+            const resultMsg = document.createElement('p');
+            resultMsg.textContent = `Đố vui hoàn tất! Điểm của bạn: ${score}/${questions.length}`;
+            resultMsg.style.color = '#854D27';
+            resultMsg.style.fontSize = '1.2em';
+            resultMsg.style.fontWeight = 'bold';
+            quizArea.appendChild(resultMsg);
+            return;
+        }
+        
+        const question = questions[currentQuestionIndex];
+        const questionText = document.createElement('p');
+        questionText.textContent = `${currentQuestionIndex + 1}. ${question.question}`;
+        questionText.style.color = '#854D27';
+        questionText.style.fontSize = '1.1em';
+        questionText.style.marginBottom = '15px';
+        quizArea.appendChild(questionText);
+        
+        // Xáo trộn các lựa chọn
+        const shuffledOptions = question.options.sort(() => Math.random() - 0.5);
+        shuffledOptions.forEach(option => {
+            const optionBtn = document.createElement('button');
+            optionBtn.textContent = option;
+            optionBtn.style.padding = '10px 15px';
+            optionBtn.style.margin = '5px';
+            optionBtn.style.background = '#854D27';
+            optionBtn.style.color = '#FFF9F3';
+            optionBtn.style.border = '2px solid #D4B08C';
+            optionBtn.style.borderRadius = '0';
+            optionBtn.style.cursor = 'pointer';
+            optionBtn.style.fontSize = '1em';
+            optionBtn.style.transition = 'all 0.3s';
+            optionBtn.style.boxShadow = '2px 2px 0 #D4B08C';
+            optionBtn.addEventListener('click', () => {
+                checkAnswer(option, question.correctAnswer);
+            });
+            optionBtn.addEventListener('mouseover', () => {
+                optionBtn.style.transform = 'translate(-1px, -1px)';
+                optionBtn.style.boxShadow = '3px 3px 0 #D4B08C';
+            });
+            optionBtn.addEventListener('mouseout', () => {
+                optionBtn.style.transform = 'none';
+                optionBtn.style.boxShadow = '2px 2px 0 #D4B08C';
+            });
+            quizArea.appendChild(optionBtn);
+        });
+    }
+    
+    // Kiểm tra câu trả lời
+function checkAnswer(selected, correct) {
+        if (selected === correct) {
+            score++;
+            alert('Đúng!');
+        } else {
+            alert(`Sai! Đáp án đúng là: ${correct}`);
+        }
+        currentQuestionIndex++;
+        displayQuestion();
+    }
+    
+    // Hiển thị câu hỏi đầu tiên
+    displayQuestion();
+}
+
+// Hàm mở lịch sinh nhật
+function openBirthdayCalendar() {
+    let calendarModal = document.getElementById('birthdayCalendarModal');
+    if (!calendarModal) {
+        calendarModal = document.createElement('div');
+        calendarModal.id = 'birthdayCalendarModal';
+        calendarModal.style.position = 'fixed';
+        calendarModal.style.top = '0';
+        calendarModal.style.left = '0';
+        calendarModal.style.width = '100%';
+        calendarModal.style.height = '100%';
+        calendarModal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        calendarModal.style.display = 'flex';
+        calendarModal.style.justifyContent = 'center';
+        calendarModal.style.alignItems = 'center';
+        calendarModal.style.zIndex = '10000';
+        calendarModal.style.display = 'none';
+
+        const calendarContainer = document.createElement('div');
+        calendarContainer.style.background = '#FFF9F3';
+        calendarContainer.style.border = '2px solid #D4B08C';
+        calendarContainer.style.borderRadius = '0';
+        calendarContainer.style.padding = '20px';
+        calendarContainer.style.width = '90%';
+        calendarContainer.style.maxWidth = '600px';
+        calendarContainer.style.maxHeight = '80vh';
+        calendarContainer.style.overflowY = 'auto';
+        calendarContainer.style.boxShadow = '8px 8px 0 #D4B08C';
+        calendarContainer.style.position = 'relative';
+        calendarContainer.style.textAlign = 'center';
+
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-btn';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '10px';
+        closeBtn.style.right = '10px';
+        closeBtn.style.fontSize = '30px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.color = '#854D27';
+        closeBtn.addEventListener('click', () => {
+            calendarModal.style.display = 'none';
+        });
+
+        const title = document.createElement('h2');
+        title.textContent = 'Lịch Sinh Nhật';
+        title.style.color = '#854D27';
+        title.style.marginBottom = '20px';
+        title.style.fontFamily = '\'DM Serif Display\', serif';
+
+        const calendarView = document.createElement('div');
+        calendarView.id = 'calendarView';
+        calendarView.style.display = 'flex';
+        calendarView.style.flexDirection = 'column';
+        calendarView.style.gap = '10px';
+        calendarView.style.margin = '20px auto';
+        calendarView.style.width = '90%';
+
+        calendarContainer.appendChild(closeBtn);
+        calendarContainer.appendChild(title);
+        calendarContainer.appendChild(calendarView);
+        calendarModal.appendChild(calendarContainer);
+        document.body.appendChild(calendarModal);
+    }
+    calendarModal.style.display = 'flex';
+    displayBirthdayCalendar();
+}
+
+// Hàm hiển thị lịch sinh nhật
+function displayBirthdayCalendar() {
+    const calendarView = document.getElementById('calendarView');
+    calendarView.innerHTML = '';
+    
+    // Lấy danh sách sinh nhật từ biến birthdays (được định nghĩa trong core.js)
+    if (typeof birthdays === 'undefined') {
+        const noDataMsg = document.createElement('p');
+        noDataMsg.textContent = 'Không có dữ liệu sinh nhật để hiển thị.';
+        noDataMsg.style.color = '#854D27';
+        noDataMsg.style.fontStyle = 'italic';
+        calendarView.appendChild(noDataMsg);
+        return;
+    }
+    
+    // Sắp xếp danh sách sinh nhật theo tháng và ngày
+    const sortedBirthdays = birthdays.sort((a, b) => {
+        if (a.month === b.month) {
+            return a.day - b.day;
+        }
+        return a.month - b.month;
+    });
+    
+    // Hiển thị danh sách sinh nhật
+    const list = document.createElement('ul');
+    list.style.listStyleType = 'none';
+    list.style.padding = '0';
+    list.style.textAlign = 'left';
+    
+    sortedBirthdays.forEach(person => {
+        const listItem = document.createElement('li');
+        listItem.style.padding = '10px';
+        listItem.style.borderBottom = '1px solid #D4B08C';
+        listItem.style.color = '#2C1810';
+        listItem.textContent = `${person.name} - Ngày ${person.day} Tháng ${person.month}`;
+        list.appendChild(listItem);
+    });
+    
+    calendarView.appendChild(list);
 }
 
 function startMemoryGame() {
@@ -1066,7 +1317,7 @@ function startPuzzleGame() {
         puzzleContainer.style.borderRadius = '0';
         puzzleContainer.style.padding = '20px';
         puzzleContainer.style.width = '90%';
-        puzzleContainer.style.maxWidth = '700px';
+        puzzleContainer.style.maxWidth = '800px';
         puzzleContainer.style.boxShadow = '8px 8px 0 #D4B08C';
         puzzleContainer.style.position = 'relative';
         puzzleContainer.style.textAlign = 'center';
@@ -1093,11 +1344,11 @@ function startPuzzleGame() {
         const puzzleArea = document.createElement('div');
         puzzleArea.id = 'puzzleArea';
         puzzleArea.style.display = 'grid';
-        puzzleArea.style.gridTemplateColumns = 'repeat(3, 1fr)';
+        puzzleArea.style.gridTemplateColumns = 'repeat(4, 1fr)';
         puzzleArea.style.gap = '2px';
         puzzleArea.style.margin = '20px auto';
-        puzzleArea.style.width = '400px';
-        puzzleArea.style.height = '400px';
+        puzzleArea.style.width = '600px';
+        puzzleArea.style.height = '300px';
         puzzleArea.style.border = '2px solid #D4B08C';
         puzzleArea.style.background = '#EEE';
 
@@ -1107,7 +1358,7 @@ function startPuzzleGame() {
         piecesContainer.style.flexWrap = 'wrap';
         piecesContainer.style.justifyContent = 'center';
         piecesContainer.style.marginTop = '20px';
-        piecesContainer.style.width = '400px';
+        piecesContainer.style.width = '600px';
         piecesContainer.style.minHeight = '100px';
         piecesContainer.style.border = '2px solid #D4B08C';
         piecesContainer.style.padding = '10px';
@@ -1158,14 +1409,22 @@ function initPuzzleGame() {
     
     // Sử dụng một hình ảnh mặc định từ thư mục memory
     const imageUrl = 'memory/1.jpg';
-    const gridSize = 3; // Lưới 3x3
-    let pieceWidth = 400 / gridSize;
-    let pieceHeight = 400 / gridSize;
+    const gridCols = 4; // 4 cột để ưu tiên chiều ngang
+    const gridRows = 2; // 2 hàng để giảm chiều dọc
+    const totalPieces = gridCols * gridRows;
+    // Điều chỉnh kích thước dựa trên kích thước màn hình, ưu tiên chiều ngang tối đa
+    const containerWidth = Math.min(window.innerWidth * 0.9, 600);
+    const containerHeight = Math.min(window.innerHeight * 0.4, containerWidth * 0.5); // Tỷ lệ 2:1 để kéo dài chiều ngang và giảm chiều dọc
+    puzzleArea.style.width = containerWidth + 'px';
+    puzzleArea.style.height = containerHeight + 'px';
+    puzzleArea.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
+    let pieceWidth = containerWidth / gridCols;
+    let pieceHeight = containerHeight / gridRows;
     let pieces = [];
-    let placedPieces = Array(gridSize * gridSize).fill(false);
+    let placedPieces = Array(totalPieces).fill(false);
     
     // Tạo các ô trống trong khu vực ghép hình
-    for (let i = 0; i < gridSize * gridSize; i++) {
+    for (let i = 0; i < totalPieces; i++) {
         const slot = document.createElement('div');
         slot.style.width = pieceWidth + 'px';
         slot.style.height = pieceHeight + 'px';
@@ -1191,23 +1450,24 @@ function initPuzzleGame() {
     }
     
     // Tạo các mảnh ghép
-    for (let y = 0; y < gridSize; y++) {
-        for (let x = 0; x < gridSize; x++) {
-            const index = y * gridSize + x;
+    for (let y = 0; y < gridRows; y++) {
+        for (let x = 0; x < gridCols; x++) {
+            const index = y * gridCols + x;
             const piece = document.createElement('div');
             piece.id = 'piece-' + index;
             piece.draggable = true;
             piece.style.width = pieceWidth + 'px';
             piece.style.height = pieceHeight + 'px';
             piece.style.backgroundImage = `url(${imageUrl})`;
-            piece.style.backgroundSize = `${400}px ${400}px`;
+            piece.style.backgroundSize = `${containerWidth}px ${containerHeight}px`;
             piece.style.backgroundPosition = `-${x * pieceWidth}px -${y * pieceHeight}px`;
             piece.style.border = '1px solid #D4B08C';
             piece.style.cursor = 'move';
             piece.dataset.correctIndex = index;
+            piece.classList.add('puzzle-piece');
             piece.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('text', piece.id);
-                if (piece.dataset.currentIndex) {
+                if (piece.dataset.currentIndex !== undefined) {
                     placedPieces[piece.dataset.currentIndex] = false;
                 }
             });
@@ -1229,15 +1489,19 @@ function initPuzzleGame() {
 }
 
 function checkPuzzleCompletion() {
-    const pieces = document.querySelectorAll('#puzzleArea .puzzle-piece');
+    const slots = document.querySelectorAll('#puzzleArea > div');
     let isComplete = true;
-    for (let piece of pieces) {
-        if (piece.dataset.correctIndex !== piece.dataset.currentIndex) {
+    let filledSlots = 0;
+    for (let slot of slots) {
+        const slotIndex = slot.dataset.index;
+        const piece = slot.querySelector('.puzzle-piece');
+        if (!piece || piece.dataset.correctIndex !== slotIndex) {
             isComplete = false;
-            break;
+        } else {
+            filledSlots++;
         }
     }
-    if (isComplete) {
+    if (isComplete && filledSlots === slots.length) {
         setTimeout(() => {
             alert('Chúc mừng! Bạn đã hoàn thành ghép hình!');
         }, 300);
@@ -1253,6 +1517,200 @@ function initSocialShare() {
             shareOnSocialMedia(platform);
         });
     });
+    
+    const eCardBtn = document.getElementById('createECard');
+    if (eCardBtn) {
+        eCardBtn.addEventListener('click', openECardGenerator);
+    }
+}
+
+// Hàm mở trình tạo thẻ chúc mừng điện tử
+function openECardGenerator() {
+    let eCardModal = document.getElementById('eCardModal');
+    if (!eCardModal) {
+        eCardModal = document.createElement('div');
+        eCardModal.id = 'eCardModal';
+        eCardModal.style.position = 'fixed';
+        eCardModal.style.top = '0';
+        eCardModal.style.left = '0';
+        eCardModal.style.width = '100%';
+        eCardModal.style.height = '100%';
+        eCardModal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        eCardModal.style.display = 'flex';
+        eCardModal.style.justifyContent = 'center';
+        eCardModal.style.alignItems = 'center';
+        eCardModal.style.zIndex = '10000';
+        eCardModal.style.display = 'none';
+
+        const eCardContainer = document.createElement('div');
+        eCardContainer.style.background = '#FFF9F3';
+        eCardContainer.style.border = '2px solid #D4B08C';
+        eCardContainer.style.borderRadius = '0';
+        eCardContainer.style.padding = '20px';
+        eCardContainer.style.width = '90%';
+        eCardContainer.style.maxWidth = '500px';
+        eCardContainer.style.maxHeight = '80vh';
+        eCardContainer.style.overflowY = 'auto';
+        eCardContainer.style.boxShadow = '8px 8px 0 #D4B08C';
+        eCardContainer.style.position = 'relative';
+        eCardContainer.style.textAlign = 'center';
+
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-btn';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '10px';
+        closeBtn.style.right = '10px';
+        closeBtn.style.fontSize = '30px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.color = '#854D27';
+        closeBtn.addEventListener('click', () => {
+            eCardModal.style.display = 'none';
+        });
+
+        const title = document.createElement('h2');
+        title.textContent = 'Tạo Thẻ Chúc Mừng';
+        title.style.color = '#854D27';
+        title.style.marginBottom = '20px';
+        title.style.fontFamily = '\'DM Serif Display\', serif';
+
+        const form = document.createElement('div');
+        form.style.display = 'flex';
+        form.style.flexDirection = 'column';
+        form.style.gap = '15px';
+        form.style.marginBottom = '20px';
+
+        const messageInput = document.createElement('textarea');
+        messageInput.id = 'eCardMessage';
+        messageInput.placeholder = 'Nhập lời chúc của bạn...';
+        messageInput.style.width = '100%';
+        messageInput.style.height = '100px';
+        messageInput.style.padding = '10px';
+        messageInput.style.border = '2px solid #D4B08C';
+        messageInput.style.borderRadius = '0';
+        messageInput.style.fontFamily = '\'Old Standard TT\', serif';
+        messageInput.style.fontSize = '16px';
+        messageInput.style.background = '#FFF9F3';
+        messageInput.style.color = '#2C1810';
+        messageInput.style.resize = 'none';
+
+        const imageSelect = document.createElement('select');
+        imageSelect.id = 'eCardImage';
+        imageSelect.style.width = '100%';
+        imageSelect.style.padding = '10px';
+        imageSelect.style.border = '2px solid #D4B08C';
+        imageSelect.style.borderRadius = '0';
+        imageSelect.style.fontFamily = '\'Old Standard TT\', serif';
+        imageSelect.style.fontSize = '16px';
+        imageSelect.style.background = '#FFF9F3';
+        imageSelect.style.color = '#2C1810';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Chọn hình nền thẻ';
+        imageSelect.appendChild(defaultOption);
+        // Thêm các tùy chọn hình nền từ thư mục memory (giả định)
+        for (let i = 1; i <= 5; i++) {
+            const option = document.createElement('option');
+            option.value = `memory/${i}.jpg`;
+            option.textContent = `Hình nền ${i}`;
+            imageSelect.appendChild(option);
+        }
+
+        const generateBtn = document.createElement('button');
+        generateBtn.textContent = 'Tạo Thẻ và Chia Sẻ';
+        generateBtn.style.padding = '10px 20px';
+        generateBtn.style.background = '#854D27';
+        generateBtn.style.color = '#FFF9F3';
+        generateBtn.style.border = '2px solid #D4B08C';
+        generateBtn.style.borderRadius = '0';
+        generateBtn.style.cursor = 'pointer';
+        generateBtn.style.fontSize = '1.1em';
+        generateBtn.style.transition = 'all 0.3s';
+        generateBtn.style.boxShadow = '4px 4px 0 #D4B08C';
+        generateBtn.style.textTransform = 'uppercase';
+        generateBtn.style.letterSpacing = '1px';
+        generateBtn.addEventListener('click', generateECard);
+        generateBtn.addEventListener('mouseover', () => {
+            generateBtn.style.transform = 'translate(-2px, -2px)';
+            generateBtn.style.boxShadow = '6px 6px 0 #D4B08C';
+        });
+        generateBtn.addEventListener('mouseout', () => {
+            generateBtn.style.transform = 'none';
+            generateBtn.style.boxShadow = '4px 4px 0 #D4B08C';
+        });
+
+        form.appendChild(messageInput);
+        form.appendChild(imageSelect);
+        form.appendChild(generateBtn);
+
+        eCardContainer.appendChild(closeBtn);
+        eCardContainer.appendChild(title);
+        eCardContainer.appendChild(form);
+        eCardModal.appendChild(eCardContainer);
+        document.body.appendChild(eCardModal);
+    }
+    eCardModal.style.display = 'flex';
+}
+
+// Hàm tạo thẻ chúc mừng điện tử
+function generateECard() {
+    const message = document.getElementById('eCardMessage').value.trim();
+    const imageUrl = document.getElementById('eCardImage').value;
+    
+    if (!message || !imageUrl) {
+        alert('Vui lòng nhập lời chúc và chọn hình nền!');
+        return;
+    }
+    
+    // Tạo liên kết chia sẻ (giả định, có thể tích hợp API thực tế nếu cần)
+    const encodedMessage = encodeURIComponent(message);
+    const encodedImage = encodeURIComponent(imageUrl);
+    const eCardLink = `${window.location.origin}/ecard?message=${encodedMessage}&image=${encodedImage}`;
+    
+    // Hiển thị liên kết để chia sẻ
+    const modalContent = document.querySelector('#eCardModal .modal-content');
+    const shareSection = document.createElement('div');
+    shareSection.style.marginTop = '20px';
+    shareSection.style.textAlign = 'center';
+    shareSection.innerHTML = `
+        <p style="margin-bottom: 10px; color: #854D27;">Sao chép liên kết để chia sẻ thẻ chúc mừng:</p>
+        <input type="text" value="${eCardLink}" readonly style="width: 100%; padding: 10px; border: 2px solid #D4B08C; background: #FFF9F3; color: #2C1810; font-family: 'Old Standard TT', serif; font-size: 14px;">
+        <button onclick="copyECardLink(this)" style="margin-top: 10px; padding: 8px 15px; background: #854D27; color: #FFF9F3; border: 2px solid #D4B08C; cursor: pointer; font-size: 1em; transition: all 0.3s; box-shadow: 4px 4px 0 #D4B08C;">Sao Chép Liên Kết</button>
+    `;
+    modalContent.appendChild(shareSection);
+    
+    // Xem trước thẻ chúc mừng
+    const preview = document.createElement('div');
+    preview.style.marginTop = '20px';
+    preview.style.border = '2px solid #D4B08C';
+    preview.style.padding = '10px';
+    preview.style.backgroundImage = `url(${imageUrl})`;
+    preview.style.backgroundSize = 'cover';
+    preview.style.backgroundPosition = 'center';
+    preview.style.height = '200px';
+    preview.style.display = 'flex';
+    preview.style.alignItems = 'center';
+    preview.style.justifyContent = 'center';
+    preview.style.color = '#FFF9F3';
+    preview.style.textShadow = '1px 1px 2px #000';
+    preview.style.fontFamily = '\'Old Standard TT\', serif';
+    preview.style.fontSize = '16px';
+    preview.style.textAlign = 'center';
+    preview.textContent = message;
+    modalContent.appendChild(preview);
+    
+    console.log(`Generated eCard with message: ${message} and image: ${imageUrl}`);
+}
+
+// Hàm sao chép liên kết thẻ chúc mừng
+function copyECardLink(button) {
+    const input = button.previousElementSibling;
+    input.select();
+    document.execCommand('copy');
+    button.textContent = '✓ Đã Sao Chép';
+    setTimeout(() => {
+        button.textContent = 'Sao Chép Liên Kết';
+    }, 2000);
 }
 
 function shareOnSocialMedia(platform) {
@@ -2003,7 +2461,611 @@ document.addEventListener('DOMContentLoaded', function() {
     initInviteFriends();
     // Khởi tạo tính năng cộng đồng
     initCommunityFeatures();
+    // Khởi tạo bảng tin chúc mừng
+    initBulletinBoard();
+    // Khởi tạo quà tặng ảo
+    initVirtualGift();
 });
+
+// Khởi tạo quà tặng ảo
+function initVirtualGift() {
+    const virtualGiftBtn = document.getElementById('virtualGiftBtn');
+    const virtualGiftModal = document.getElementById('virtualGiftModal');
+    const closeVirtualGift = document.getElementById('closeVirtualGift');
+    const submitGift = document.getElementById('submitGift');
+    let selectedGift = null;
+    
+    virtualGiftBtn.addEventListener('click', () => {
+        virtualGiftModal.style.display = 'flex';
+        loadGiftList();
+    });
+    
+    closeVirtualGift.addEventListener('click', () => {
+        virtualGiftModal.style.display = 'none';
+    });
+    
+    virtualGiftModal.addEventListener('click', (e) => {
+        if (e.target === virtualGiftModal) {
+            virtualGiftModal.style.display = 'none';
+        }
+    });
+    
+    submitGift.addEventListener('click', () => {
+        const senderInput = document.getElementById('giftSender');
+        const sender = senderInput.value.trim() || 'Ẩn danh';
+        
+        if (selectedGift) {
+            saveVirtualGift(sender, selectedGift);
+            senderInput.value = '';
+            virtualGiftModal.style.display = 'none';
+            alert('Quà tặng ảo đã được gửi!');
+            displaySavedVirtualGifts();
+        } else {
+            alert('Vui lòng chọn một món quà!');
+        }
+    });
+}
+
+// Tải danh sách quà tặng ảo
+function loadGiftList() {
+    const giftListContainer = document.getElementById('giftList');
+    giftListContainer.innerHTML = '';
+    
+    const gifts = [
+        { id: 'flower', name: 'Hoa 🌸', emoji: '🌸' },
+        { id: 'cake', name: 'Bánh Sinh Nhật 🎂', emoji: '🎂' },
+        { id: 'gift', name: 'Hộp Quà 🎁', emoji: '🎁' },
+        { id: 'balloon', name: 'Bóng Bay 🎈', emoji: '🎈' },
+        { id: 'heart', name: 'Trái Tim ❤️', emoji: '❤️' }
+    ];
+    
+    gifts.forEach(gift => {
+        const giftItem = document.createElement('div');
+        giftItem.className = 'gift-item';
+        giftItem.style.padding = '10px';
+        giftItem.style.margin = '5px';
+        giftItem.style.border = '2px solid #D4B08C';
+        giftItem.style.background = 'rgba(255, 249, 243, 0.5)';
+        giftItem.style.cursor = 'pointer';
+        giftItem.style.textAlign = 'center';
+        giftItem.style.display = 'inline-block';
+        giftItem.style.width = 'calc(33.33% - 10px)';
+        giftItem.style.boxSizing = 'border-box';
+        giftItem.innerHTML = `
+            <span style="font-size: 2em;">${gift.emoji}</span>
+            <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #854D27;">${gift.name}</p>
+        `;
+        giftItem.dataset.giftId = gift.id;
+        giftItem.addEventListener('click', function() {
+            document.querySelectorAll('.gift-item').forEach(item => item.style.background = 'rgba(255, 249, 243, 0.5)');
+            this.style.background = 'rgba(133, 77, 39, 0.3)';
+            window.selectedGift = gift;
+        });
+        giftListContainer.appendChild(giftItem);
+    });
+}
+
+// Lưu quà tặng ảo vào localStorage
+function saveVirtualGift(sender, gift) {
+    const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
+    const now = new Date();
+    const time = now.toLocaleString('vi-VN');
+    const giftData = { sender, giftId: gift.id, giftName: gift.name, time };
+    let virtualGifts = JSON.parse(localStorage.getItem('virtualGifts') || '{}');
+    if (!virtualGifts[birthdayPerson]) {
+        virtualGifts[birthdayPerson] = [];
+    }
+    virtualGifts[birthdayPerson].push(giftData);
+    localStorage.setItem('virtualGifts', JSON.stringify(virtualGifts));
+}
+
+// Hiển thị quà tặng ảo đã lưu
+function displaySavedVirtualGifts() {
+    const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
+    const virtualGifts = JSON.parse(localStorage.getItem('virtualGifts') || '{}');
+    const gifts = virtualGifts[birthdayPerson] || [];
+    let viewGiftsBtn = document.getElementById('viewVirtualGiftsBtn');
+    const customMessageContainer = document.querySelector('.custom-message-container');
+    
+    if (gifts.length > 0) {
+        if (!viewGiftsBtn) {
+            viewGiftsBtn = document.createElement('button');
+            viewGiftsBtn.id = 'viewVirtualGiftsBtn';
+            viewGiftsBtn.className = 'feature-button';
+            viewGiftsBtn.textContent = '🎁 Xem Quà Tặng Ảo';
+            viewGiftsBtn.addEventListener('click', () => {
+                openVirtualGiftsModal(birthdayPerson);
+            });
+            customMessageContainer.appendChild(viewGiftsBtn);
+        }
+        viewGiftsBtn.style.display = 'block';
+    } else if (viewGiftsBtn) {
+        viewGiftsBtn.style.display = 'none';
+    }
+}
+
+// Mở modal hiển thị danh sách quà tặng ảo đã nhận
+function openVirtualGiftsModal(birthdayPerson) {
+    let giftsModal = document.getElementById('virtualGiftsModal');
+    if (!giftsModal) {
+        giftsModal = document.createElement('div');
+        giftsModal.id = 'virtualGiftsModal';
+        giftsModal.style.position = 'fixed';
+        giftsModal.style.top = '0';
+        giftsModal.style.left = '0';
+        giftsModal.style.width = '100%';
+        giftsModal.style.height = '100%';
+        giftsModal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        giftsModal.style.display = 'flex';
+        giftsModal.style.justifyContent = 'center';
+        giftsModal.style.alignItems = 'center';
+        giftsModal.style.zIndex = '10000';
+        giftsModal.style.display = 'none';
+
+        const modalContent = document.createElement('div');
+        modalContent.style.background = '#FFF9F3';
+        modalContent.style.border = '2px solid #D4B08C';
+        modalContent.style.borderRadius = '0';
+        modalContent.style.padding = '20px';
+        modalContent.style.width = '80%';
+        modalContent.style.maxWidth = '500px';
+        modalContent.style.boxShadow = '8px 8px 0 #D4B08C';
+        modalContent.style.position = 'relative';
+        modalContent.style.textAlign = 'center';
+
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-btn';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '10px';
+        closeBtn.style.right = '10px';
+        closeBtn.style.fontSize = '30px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.color = '#854D27';
+        closeBtn.addEventListener('click', () => {
+            giftsModal.style.display = 'none';
+        });
+
+        const title = document.createElement('h2');
+        title.textContent = 'Quà Tặng Ảo Đã Nhận';
+        title.style.color = '#854D27';
+        title.style.marginBottom = '20px';
+        title.style.fontFamily = "'DM Serif Display', serif";
+
+        const giftsList = document.createElement('div');
+        giftsList.id = 'virtualGiftsList';
+        giftsList.style.marginBottom = '20px';
+        giftsList.style.textAlign = 'left';
+        giftsList.style.maxHeight = '300px';
+        giftsList.style.overflowY = 'scroll';
+
+        modalContent.appendChild(closeBtn);
+        modalContent.appendChild(title);
+        modalContent.appendChild(giftsList);
+        giftsModal.appendChild(modalContent);
+        document.body.appendChild(giftsModal);
+    }
+    giftsModal.style.display = 'flex';
+
+    const giftsList = document.getElementById('virtualGiftsList');
+    giftsList.innerHTML = '';
+    const virtualGifts = JSON.parse(localStorage.getItem('virtualGifts') || '{}');
+    const gifts = virtualGifts[birthdayPerson] || [];
+    if (gifts.length > 0) {
+        gifts.forEach((giftObj, index) => {
+            const giftItem = document.createElement('div');
+            giftItem.style.padding = '10px';
+            giftItem.style.borderBottom = '1px solid #D4B08C';
+            giftItem.style.color = '#2C1810';
+            giftItem.innerHTML = `
+                <span style="font-size: 1.5em;">${getGiftEmoji(giftObj.giftId)}</span>
+                <span>${giftObj.giftName} từ ${giftObj.sender}</span>
+                <small>(${giftObj.time})</small>
+            `;
+            giftsList.appendChild(giftItem);
+        });
+    } else {
+        const noGifts = document.createElement('p');
+        noGifts.textContent = 'Chưa có quà tặng ảo nào.';
+        noGifts.style.color = '#2C1810';
+        giftsList.appendChild(noGifts);
+    }
+}
+
+// Hàm lấy biểu tượng emoji cho quà tặng
+function getGiftEmoji(giftId) {
+    const giftEmojis = {
+        flower: '🌸',
+        cake: '🎂',
+        gift: '🎁',
+        balloon: '🎈',
+        heart: '❤️'
+    };
+    return giftEmojis[giftId] || '🎁';
+}
+
+// Khởi tạo bảng tin chúc mừng
+function initBulletinBoard() {
+    const bulletinBtn = document.getElementById('bulletinBoardBtn');
+    const bulletinModal = document.getElementById('bulletinBoardModal');
+    const closeBulletinBoard = document.getElementById('closeBulletinBoard');
+    const submitPost = document.getElementById('submitPost');
+    const selectGiftBtn = document.getElementById('selectGiftBtn');
+    const virtualGiftModal = document.getElementById('virtualGiftModal');
+    const closeVirtualGift = document.getElementById('closeVirtualGift');
+    
+    bulletinBtn.addEventListener('click', () => {
+        bulletinModal.style.display = 'flex';
+        loadBulletinPosts();
+    });
+    
+    closeBulletinBoard.addEventListener('click', () => {
+        bulletinModal.style.display = 'none';
+    });
+    
+    bulletinModal.addEventListener('click', (e) => {
+        if (e.target === bulletinModal) {
+            bulletinModal.style.display = 'none';
+        }
+    });
+    
+    submitPost.addEventListener('click', () => {
+        const senderInput = document.getElementById('postSender');
+        const messageInput = document.getElementById('postMessage');
+        const sender = senderInput.value.trim() || 'Ẩn danh';
+        const message = messageInput.value.trim();
+        
+        if (message) {
+            saveBulletinPost(sender, message, window.selectedGift);
+            senderInput.value = '';
+            messageInput.value = '';
+            if (window.selectedGift) {
+                window.selectedGift = null;
+                document.getElementById('selectedGiftDisplay').style.display = 'none';
+                document.getElementById('selectedGiftDisplay').textContent = '';
+            }
+            loadBulletinPosts();
+        } else {
+            alert('Vui lòng nhập nội dung lời chúc!');
+        }
+    });
+    
+    selectGiftBtn.addEventListener('click', () => {
+        virtualGiftModal.style.display = 'flex';
+        loadGiftList();
+    });
+    
+    closeVirtualGift.addEventListener('click', () => {
+        virtualGiftModal.style.display = 'none';
+    });
+    
+    virtualGiftModal.addEventListener('click', (e) => {
+        if (e.target === virtualGiftModal) {
+            virtualGiftModal.style.display = 'none';
+        }
+    });
+    
+    // Tải danh sách quà tặng đã nhận để hiển thị nút xem quà tặng
+    displaySavedVirtualGifts();
+}
+
+// Tải danh sách quà tặng ảo
+function loadGiftList() {
+    const giftListContainer = document.getElementById('giftList');
+    giftListContainer.innerHTML = '';
+    
+    const gifts = [
+        { id: 'flower', name: 'Hoa 🌸', emoji: '🌸' },
+        { id: 'cake', name: 'Bánh Sinh Nhật 🎂', emoji: '🎂' },
+        { id: 'gift', name: 'Hộp Quà 🎁', emoji: '🎁' },
+        { id: 'balloon', name: 'Bóng Bay 🎈', emoji: '🎈' },
+        { id: 'heart', name: 'Trái Tim ❤️', emoji: '❤️' }
+    ];
+    
+    gifts.forEach(gift => {
+        const giftItem = document.createElement('div');
+        giftItem.className = 'gift-item';
+        giftItem.style.padding = '10px';
+        giftItem.style.margin = '5px';
+        giftItem.style.border = '2px solid #D4B08C';
+        giftItem.style.background = 'rgba(255, 249, 243, 0.5)';
+        giftItem.style.cursor = 'pointer';
+        giftItem.style.textAlign = 'center';
+        giftItem.style.display = 'inline-block';
+        giftItem.style.width = 'calc(33.33% - 10px)';
+        giftItem.style.boxSizing = 'border-box';
+        giftItem.innerHTML = `
+            <span style="font-size: 2em;">${gift.emoji}</span>
+            <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #854D27;">${gift.name}</p>
+        `;
+        giftItem.dataset.giftId = gift.id;
+        giftItem.addEventListener('click', function() {
+            document.querySelectorAll('.gift-item').forEach(item => item.style.background = 'rgba(255, 249, 243, 0.5)');
+            this.style.background = 'rgba(133, 77, 39, 0.3)';
+            window.selectedGift = gift;
+            document.getElementById('selectedGiftDisplay').style.display = 'block';
+            document.getElementById('selectedGiftDisplay').textContent = `Quà tặng đã chọn: ${gift.name}`;
+            document.getElementById('virtualGiftModal').style.display = 'none';
+        });
+        giftListContainer.appendChild(giftItem);
+    });
+}
+
+// Hiển thị quà tặng ảo đã lưu
+function displaySavedVirtualGifts() {
+    const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
+    const virtualGifts = JSON.parse(localStorage.getItem('virtualGifts') || '{}');
+    const gifts = virtualGifts[birthdayPerson] || [];
+    let viewGiftsBtn = document.getElementById('viewVirtualGiftsBtn');
+    const customMessageContainer = document.querySelector('.custom-message-container');
+    
+    if (gifts.length > 0) {
+        if (!viewGiftsBtn) {
+            viewGiftsBtn = document.createElement('button');
+            viewGiftsBtn.id = 'viewVirtualGiftsBtn';
+            viewGiftsBtn.className = 'feature-button';
+            viewGiftsBtn.textContent = '🎁 Xem Quà Tặng Ảo';
+            viewGiftsBtn.addEventListener('click', () => {
+                openVirtualGiftsModal(birthdayPerson);
+            });
+            customMessageContainer.appendChild(viewGiftsBtn);
+        }
+        viewGiftsBtn.style.display = 'block';
+    } else if (viewGiftsBtn) {
+        viewGiftsBtn.style.display = 'none';
+    }
+}
+
+// Mở modal hiển thị danh sách quà tặng ảo đã nhận
+function openVirtualGiftsModal(birthdayPerson) {
+    let giftsModal = document.getElementById('virtualGiftsModal');
+    if (!giftsModal) {
+        giftsModal = document.createElement('div');
+        giftsModal.id = 'virtualGiftsModal';
+        giftsModal.style.position = 'fixed';
+        giftsModal.style.top = '0';
+        giftsModal.style.left = '0';
+        giftsModal.style.width = '100%';
+        giftsModal.style.height = '100%';
+        giftsModal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        giftsModal.style.display = 'flex';
+        giftsModal.style.justifyContent = 'center';
+        giftsModal.style.alignItems = 'center';
+        giftsModal.style.zIndex = '10000';
+        giftsModal.style.display = 'none';
+
+        const modalContent = document.createElement('div');
+        modalContent.style.background = '#FFF9F3';
+        modalContent.style.border = '2px solid #D4B08C';
+        modalContent.style.borderRadius = '0';
+        modalContent.style.padding = '20px';
+        modalContent.style.width = '80%';
+        modalContent.style.maxWidth = '500px';
+        modalContent.style.boxShadow = '8px 8px 0 #D4B08C';
+        modalContent.style.position = 'relative';
+        modalContent.style.textAlign = 'center';
+
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-btn';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '10px';
+        closeBtn.style.right = '10px';
+        closeBtn.style.fontSize = '30px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.color = '#854D27';
+        closeBtn.addEventListener('click', () => {
+            giftsModal.style.display = 'none';
+        });
+
+        const title = document.createElement('h2');
+        title.textContent = 'Quà Tặng Ảo Đã Nhận';
+        title.style.color = '#854D27';
+        title.style.marginBottom = '20px';
+        title.style.fontFamily = "'DM Serif Display', serif";
+
+        const giftsList = document.createElement('div');
+        giftsList.id = 'virtualGiftsList';
+        giftsList.style.marginBottom = '20px';
+        giftsList.style.textAlign = 'left';
+        giftsList.style.maxHeight = '300px';
+        giftsList.style.overflowY = 'scroll';
+
+        modalContent.appendChild(closeBtn);
+        modalContent.appendChild(title);
+        modalContent.appendChild(giftsList);
+        giftsModal.appendChild(modalContent);
+        document.body.appendChild(giftsModal);
+    }
+    giftsModal.style.display = 'flex';
+
+    const giftsList = document.getElementById('virtualGiftsList');
+    giftsList.innerHTML = '';
+    const virtualGifts = JSON.parse(localStorage.getItem('virtualGifts') || '{}');
+    const gifts = virtualGifts[birthdayPerson] || [];
+    if (gifts.length > 0) {
+        gifts.forEach((giftObj, index) => {
+            const giftItem = document.createElement('div');
+            giftItem.style.padding = '10px';
+            giftItem.style.borderBottom = '1px solid #D4B08C';
+            giftItem.style.color = '#2C1810';
+            giftItem.innerHTML = `
+                <span style="font-size: 1.5em;">${getGiftEmoji(giftObj.giftId)}</span>
+                <span>${giftObj.giftName} từ ${giftObj.sender}</span>
+                <small>(${giftObj.time})</small>
+            `;
+            giftsList.appendChild(giftItem);
+        });
+    } else {
+        const noGifts = document.createElement('p');
+        noGifts.textContent = 'Chưa có quà tặng ảo nào.';
+        noGifts.style.color = '#2C1810';
+        giftsList.appendChild(noGifts);
+    }
+}
+
+// Hàm lấy biểu tượng emoji cho quà tặng
+function getGiftEmoji(giftId) {
+    const giftEmojis = {
+        flower: '🌸',
+        cake: '🎂',
+        gift: '🎁',
+        balloon: '🎈',
+        heart: '❤️'
+    };
+    return giftEmojis[giftId] || '🎁';
+}
+
+// Lưu bài đăng vào localStorage
+function saveBulletinPost(sender, message, gift = null) {
+    const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
+    const now = new Date();
+    const time = now.toLocaleString('vi-VN');
+    const post = { sender, message, time, likes: 0, replies: [], gift };
+    let bulletinPosts = JSON.parse(localStorage.getItem('bulletinPosts') || '{}');
+    if (!bulletinPosts[birthdayPerson]) {
+        bulletinPosts[birthdayPerson] = [];
+    }
+    bulletinPosts[birthdayPerson].push(post);
+    localStorage.setItem('bulletinPosts', JSON.stringify(bulletinPosts));
+    
+    // Lưu quà tặng ảo riêng biệt để hiển thị trong danh sách quà tặng
+    if (gift) {
+        let virtualGifts = JSON.parse(localStorage.getItem('virtualGifts') || '{}');
+        if (!virtualGifts[birthdayPerson]) {
+            virtualGifts[birthdayPerson] = [];
+        }
+        virtualGifts[birthdayPerson].push({ sender, giftId: gift.id, giftName: gift.name, time });
+        localStorage.setItem('virtualGifts', JSON.stringify(virtualGifts));
+    }
+}
+
+// Tải và hiển thị các bài đăng từ localStorage
+function loadBulletinPosts() {
+    const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
+    const bulletinPostsContainer = document.getElementById('bulletinPosts');
+    bulletinPostsContainer.innerHTML = '';
+    const postsData = JSON.parse(localStorage.getItem('bulletinPosts') || '{}');
+    const posts = postsData[birthdayPerson] || [];
+    
+    if (posts.length === 0) {
+        const noPosts = document.createElement('p');
+        noPosts.textContent = 'Chưa có lời chúc nào. Hãy là người đầu tiên!';
+        noPosts.style.color = '#854D27';
+        bulletinPostsContainer.appendChild(noPosts);
+        return;
+    }
+    
+    posts.forEach((post, index) => {
+        const postDiv = document.createElement('div');
+        postDiv.className = 'bulletin-post';
+        postDiv.style.marginBottom = '15px';
+        postDiv.style.padding = '10px';
+        postDiv.style.background = 'rgba(255, 249, 243, 0.5)';
+        postDiv.style.border = '1px solid #D4B08C';
+        postDiv.style.textAlign = 'left';
+        postDiv.innerHTML = `
+            <strong>${post.sender}</strong> <small>(${post.time})</small>
+            <p>${post.message}</p>
+            ${post.gift ? `<div class="gift-icon" style="margin-top: 5px; font-size: 1.5em;">${getGiftEmoji(post.gift.id)} ${post.gift.name}</div>` : ''}
+            <button class="like-btn" data-index="${index}">👍 Thích (${post.likes})</button>
+            <button class="reply-btn" data-index="${index}">💬 Trả lời</button>
+            <div class="replies" id="replies-${index}"></div>
+            <div class="reply-form" id="reply-form-${index}" style="display: none; margin-top: 10px;">
+                <input type="text" class="reply-sender" placeholder="Tên của bạn..." maxlength="50" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                <textarea class="reply-message" placeholder="Nhập câu trả lời..." maxlength="200" style="width: 100%; height: 60px; padding: 5px; margin-bottom: 5px;"></textarea>
+                <button class="submit-reply" data-index="${index}">Gửi</button>
+            </div>
+        `;
+        bulletinPostsContainer.appendChild(postDiv);
+        
+        // Hiển thị các câu trả lời nếu có
+        const repliesContainer = document.getElementById(`replies-${index}`);
+        post.replies.forEach(reply => {
+            const replyDiv = document.createElement('div');
+            replyDiv.style.marginLeft = '20px';
+            replyDiv.style.marginTop = '5px';
+            replyDiv.style.padding = '5px';
+            replyDiv.style.background = 'rgba(255, 249, 243, 0.3)';
+            replyDiv.style.borderLeft = '2px solid #D4B08C';
+            replyDiv.innerHTML = `
+                <strong>${reply.sender}</strong> <small>(${reply.time})</small>
+                <p>${reply.message}</p>
+            `;
+            repliesContainer.appendChild(replyDiv);
+        });
+    });
+    
+    // Thêm sự kiện cho các nút Thích
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            likePost(index);
+        });
+    });
+    
+    // Thêm sự kiện cho các nút Trả lời
+    document.querySelectorAll('.reply-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            const replyForm = document.getElementById(`reply-form-${index}`);
+            replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+    
+    // Thêm sự kiện cho các nút Gửi câu trả lời
+    document.querySelectorAll('.submit-reply').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            const replyForm = document.getElementById(`reply-form-${index}`);
+            const senderInput = replyForm.querySelector('.reply-sender');
+            const messageInput = replyForm.querySelector('.reply-message');
+            const sender = senderInput.value.trim() || 'Ẩn danh';
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                saveReply(index, sender, message);
+                senderInput.value = '';
+                messageInput.value = '';
+                replyForm.style.display = 'none';
+                loadBulletinPosts();
+            } else {
+                alert('Vui lòng nhập nội dung câu trả lời!');
+            }
+        });
+    });
+    
+    // Cuộn xuống cuối bảng tin
+    bulletinPostsContainer.scrollTop = bulletinPostsContainer.scrollHeight;
+}
+
+// Tăng lượt thích cho bài đăng
+function likePost(index) {
+    const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
+    let bulletinPosts = JSON.parse(localStorage.getItem('bulletinPosts') || '{}');
+    const posts = bulletinPosts[birthdayPerson] || [];
+    if (posts[index]) {
+        posts[index].likes += 1;
+        bulletinPosts[birthdayPerson] = posts;
+        localStorage.setItem('bulletinPosts', JSON.stringify(bulletinPosts));
+        loadBulletinPosts();
+    }
+}
+
+// Lưu câu trả lời cho bài đăng
+function saveReply(postIndex, sender, message) {
+    const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
+    const now = new Date();
+    const time = now.toLocaleString('vi-VN');
+    const reply = { sender, message, time };
+    let bulletinPosts = JSON.parse(localStorage.getItem('bulletinPosts') || '{}');
+    const posts = bulletinPosts[birthdayPerson] || [];
+    if (posts[postIndex]) {
+        posts[postIndex].replies.push(reply);
+        bulletinPosts[birthdayPerson] = posts;
+        localStorage.setItem('bulletinPosts', JSON.stringify(bulletinPosts));
+    }
+}
 
 function initCommunityFeatures() {
     // Thêm nút Phòng Chat Sinh Nhật
@@ -2664,16 +3726,13 @@ function playVideoMessage(videoUrl) {
 function initInviteFriends() {
     // Kiểm tra xem nút mời bạn bè đã tồn tại chưa, nếu chưa thì tạo mới
     let inviteBtn = document.getElementById('inviteFriendsBtn');
+    const customMessageContainer = document.querySelector('.custom-message-container');
     if (!inviteBtn) {
         inviteBtn = document.createElement('button');
         inviteBtn.id = 'inviteFriendsBtn';
         inviteBtn.className = 'feature-button';
         inviteBtn.textContent = '📩 Mời Bạn Bè';
-        inviteBtn.style.position = 'fixed';
-        inviteBtn.style.top = '80px';
-        inviteBtn.style.right = '20px';
-        inviteBtn.style.zIndex = '1000';
-        document.body.appendChild(inviteBtn);
+        customMessageContainer.appendChild(inviteBtn);
     }
 
     inviteBtn.addEventListener('click', () => {
@@ -2690,6 +3749,20 @@ function initInviteFriends() {
         localStorage.setItem('inviteCount', inviteCount.toString());
         alert(`Bạn đã tham gia qua lời mời! Số người tham gia: ${inviteCount}`);
     }
+}
+
+// Hàm lấy tên người có sinh nhật gần nhất hoặc hôm nay
+function getNextBirthdayPerson() {
+    const currentBirthday = localStorage.getItem('currentBirthday');
+    if (currentBirthday) {
+        return currentBirthday;
+    }
+    if (typeof findNextBirthday === 'function') {
+        const now = new Date();
+        const nextBirthday = findNextBirthday(now);
+        return nextBirthday.person ? nextBirthday.person.name : 'người thân yêu';
+    }
+    return 'người thân yêu';
 }
 
 function openInviteModal() {
@@ -2793,7 +3866,7 @@ function openInviteModal() {
         inviteMessage.style.fontSize = '16px';
         inviteMessage.style.background = '#FFF9F3';
         inviteMessage.style.color = '#2C1810';
-        const birthdayPerson = localStorage.getItem('currentBirthday') || 'bạn thân';
+        const birthdayPerson = localStorage.getItem('currentBirthday') || getNextBirthdayPerson();
         inviteMessage.value = `Hãy tham gia chúc mừng sinh nhật ${birthdayPerson} cùng Hội Mẹ Bầu Đơn Thân!`;
 
         const emailInput = document.createElement('input');
@@ -2830,7 +3903,7 @@ function openInviteModal() {
                 sendInviteEmail(email, message);
                 inviteModal.style.display = 'none';
                 emailInput.value = '';
-                const birthdayPerson = localStorage.getItem('currentBirthday') || 'bạn thân';
+                const birthdayPerson = localStorage.getItem('currentBirthday') || getNextBirthdayPerson();
                 inviteMessage.value = `Hãy tham gia chúc mừng sinh nhật ${birthdayPerson} cùng Hội Mẹ Bầu Đơn Thân!`;
             } else {
                 alert('Vui lòng nhập email và lời mời!');
@@ -2885,3 +3958,20 @@ function sendInviteEmail(email, message) {
     localStorage.setItem('inviteSentCount', inviteSentCount.toString());
     alert(`Đã gửi lời mời đến ${email}! Số lời mời đã gửi: ${inviteSentCount}`);
 }
+
+// Khởi tạo các tính năng
+document.addEventListener('DOMContentLoaded', function() {
+    createBalloons();
+    initPhotoAlbum();
+    initGames();
+    initSocialShare();
+    initMusicPlayer();
+    
+    // Các tính năng từ community.js
+    if (typeof initCustomMessage === 'function') initCustomMessage();
+    if (typeof initCommunityFeatures === 'function') initCommunityFeatures();
+    if (typeof initInviteFriends === 'function') initInviteFriends();
+    
+    // Cập nhật hiển thị tin nhắn lưu trữ nếu có
+    if (typeof displaySavedCustomMessage === 'function') displaySavedCustomMessage();
+});

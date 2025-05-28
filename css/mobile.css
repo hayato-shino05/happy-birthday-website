@@ -1,0 +1,359 @@
+/* Mobile Optimization Styles */
+/* These styles are specifically for mobile devices to ensure a better user experience */
+
+/* Apply styles for screens smaller than 768px */
+@media screen and (max-width: 768px) {
+    /* General layout adjustments */
+    body {
+        font-size: 14px; /* Smaller font size for better readability on mobile */
+        padding: 0;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    .container {
+        padding: 15px 10px;
+        max-width: 100%; /* Ensure container uses full width */
+    }
+
+    h1 {
+        font-size: 2.2em; /* Smaller heading for mobile */
+        margin-bottom: 15px;
+    }
+
+    /* Countdown adjustments */
+    .countdown {
+        font-size: 1.1em;
+        padding: 10px;
+        margin: 15px 0;
+        max-width: 100%; /* Full width for countdown */
+    }
+
+    .countdown h1 {
+        font-size: 1.8em;
+        margin-bottom: 15px;
+    }
+
+    .countdown .time {
+        gap: 10px;
+    }
+
+    .countdown .time span {
+        min-width: 50px;
+        font-size: 1.5em;
+        padding: 8px 12px;
+    }
+
+    /* Cake container */
+    .cake-container {
+        width: 220px;
+        height: 220px;
+        margin: 30px auto 15px;
+    }
+
+    /* Buttons */
+    .feature-button, #blowButton, #micPermissionBtn {
+        padding: 8px 15px;
+        font-size: 0.9em;
+        margin: 5px;
+    }
+
+    /* Music player */
+    .music-player {
+        padding: 5px 10px;
+        bottom: 10px;
+        width: 90%;
+        box-sizing: border-box;
+    }
+
+    .music-control {
+        width: 30px;
+        height: 30px;
+    }
+
+    .song-title {
+        font-size: 0.9em;
+    }
+
+    /* Games container */
+    .games-container {
+        bottom: 60px;
+        left: 0;
+        width: 100%;
+        justify-content: center;
+        padding: 5px;
+    }
+
+    .game-button {
+        padding: 6px 12px;
+        font-size: 0.8em;
+        margin: 3px;
+    }
+
+    /* Social share buttons */
+    .social-share {
+        right: 5px;
+        top: auto;
+        bottom: 100px;
+        transform: none;
+        gap: 5px;
+    }
+
+    .share-button {
+        width: 35px;
+        height: 35px;
+    }
+
+    /* Custom message container */
+    .custom-message-container {
+        top: 5px;
+        right: 5px;
+        gap: 5px;
+        max-width: 180px;
+    }
+
+    /* Album and Memory Wall */
+    .memory-wall {
+        width: 98%;
+        height: 85%;
+        padding: 10px;
+    }
+
+    .photo-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+        padding: 10px;
+    }
+
+    /* Bulletin board modal */
+    .bulletin-board-modal .modal-content {
+        width: 95%;
+        max-width: 320px;
+        max-height: 80vh;
+        padding: 10px;
+    }
+
+    .bulletin-posts {
+        max-height: 300px;
+        padding: 5px;
+    }
+
+    .bulletin-post {
+        margin-bottom: 8px;
+        padding: 6px;
+        font-size: 0.85em;
+    }
+
+    .post-form input, .post-form textarea {
+        padding: 6px;
+        font-size: 0.85em;
+    }
+
+    .post-form textarea {
+        height: 70px;
+    }
+
+    .post-form button, .post-form .gift-select-btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+
+    /* Virtual gift modal */
+    .virtual-gift-modal .modal-content {
+        width: 95%;
+        max-width: 320px;
+        padding: 10px;
+    }
+
+    .gift-list {
+        max-height: 300px;
+        padding: 5px;
+    }
+
+    .gift-item {
+        width: calc(50% - 8px);
+        padding: 6px;
+        font-size: 0.8em;
+    }
+
+    /* Puzzle game */
+    #puzzleArea {
+        width: 100%;
+        height: 200px;
+        margin: 10px auto;
+    }
+
+    #piecesContainer {
+        width: 100%;
+        min-height: 80px;
+        margin-top: 10px;
+        padding: 5px;
+    }
+}
+
+/* Extra small screens */
+@media screen and (max-width: 480px) {
+    body {
+        font-size: 12px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .container {
+        padding: 10px 5px;
+    }
+
+    .countdown {
+        font-size: 0.9em;
+        padding: 8px;
+        margin: 10px 0;
+    }
+
+    .countdown h1 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+
+    .countdown .time span {
+        min-width: 40px;
+        font-size: 1.2em;
+        padding: 6px 10px;
+    }
+
+    .cake-container {
+        width: 180px;
+        height: 180px;
+        margin: 20px auto 10px;
+    }
+
+    .feature-button, #blowButton, #micPermissionBtn {
+        padding: 6px 10px;
+        font-size: 0.8em;
+        margin: 3px;
+    }
+
+    .music-player {
+        padding: 3px 5px;
+        bottom: 5px;
+    }
+
+    .music-control {
+        width: 25px;
+        height: 25px;
+    }
+
+    .song-title {
+        font-size: 0.8em;
+    }
+
+    .games-container {
+        bottom: 50px;
+        padding: 3px;
+    }
+
+    .game-button {
+        padding: 5px 10px;
+        font-size: 0.75em;
+    }
+
+    .social-share {
+        bottom: 80px;
+    }
+
+    .share-button {
+        width: 30px;
+        height: 30px;
+    }
+
+    .custom-message-container {
+        top: 3px;
+        right: 3px;
+        max-width: 160px;
+    }
+
+    .photo-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 5px;
+    }
+
+    .bulletin-board-modal .modal-content {
+        width: 98%;
+        max-width: 290px;
+        padding: 8px;
+    }
+
+    .bulletin-posts {
+        max-height: 250px;
+    }
+
+    .post-form textarea {
+        height: 60px;
+    }
+
+    /* Virtual gift modal */
+    .virtual-gift-modal .modal-content {
+        width: 98%;
+        max-width: 290px;
+        padding: 8px;
+    }
+
+    .gift-list {
+        max-height: 250px;
+    }
+
+    /* Virtual gifts view modal */
+    .virtual-gifts-modal .modal-content {
+        width: 98%;
+        max-width: 290px;
+        padding: 8px;
+    }
+
+    .virtual-gifts-list {
+        max-height: 250px;
+    }
+
+    /* Puzzle game */
+    #puzzleArea {
+        height: 180px;
+    }
+
+    #piecesContainer {
+        min-height: 60px;
+    }
+}
+
+/* Very small screens */
+@media screen and (max-width: 320px) {
+    body {
+        font-size: 11px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    .cake-container {
+        width: 150px;
+        height: 150px;
+    }
+
+    .custom-message-container {
+        max-width: 140px;
+    }
+
+    .feature-button, #blowButton, #micPermissionBtn {
+        padding: 5px 8px;
+        font-size: 0.75em;
+    }
+
+    .photo-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+
+    /* Puzzle game */
+    #puzzleArea {
+        height: 150px;
+    }
+}

@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/autumn-leaves.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
 <style>
@@ -54,19 +56,12 @@
     <div class="games-container">
         <button class="game-button" id="startMemoryGame">🎮 Trò chơi Trí nhớ</button>
         <button class="game-button" id="startPuzzleGame">🧩 Ghép hình</button>
+        <button id="openCalendar" class="game-button">📅 Lịch sinh nhật</button>
+        <button id="startBirthdayQuiz" class="game-button">❓ đoán sinh nhật</button>
     </div>
 
-    <!-- Social Share -->
-    <div class="social-share">
-        <button class="share-button" data-platform="facebook">
-            <i class="fab fa-facebook-f"></i>
-        </button>
-        <button class="share-button" data-platform="x-twitter">
-            <i class="fa-brands fa-x-twitter"></i>
-        </button>
-        <button class="share-button" data-platform="instagram">
-            <i class="fab fa-instagram"></i>
-        </button>
+
+
     </div>
 
     <!-- Language Selector -->
@@ -80,6 +75,32 @@
     <!-- Custom Message Button -->
     <div class="custom-message-container">
         <button class="feature-button" id="customMessageBtn">✍️ Gửi Lời Chúc</button>
+        <button class="feature-button" id="bulletinBoardBtn">📋 Bảng Tin Chúc Mừng</button>
+    </div>
+
+    <!-- Bulletin Board Modal -->
+    <div class="bulletin-board-modal" id="bulletinBoardModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeBulletinBoard">&times;</span>
+            <h2>Bảng Tin Chúc Mừng Sinh Nhật</h2>
+            <div class="bulletin-posts" id="bulletinPosts"></div>
+            <div class="post-form">
+                <input type="text" id="postSender" placeholder="Tên của bạn..." maxlength="50">
+                <textarea id="postMessage" placeholder="Nhập lời chúc của bạn tại đây..." maxlength="300"></textarea>
+                <button id="selectGiftBtn" class="gift-select-btn">🎁 Chọn Quà Tặng Ảo</button>
+                <div id="selectedGiftDisplay" style="display: none; margin-top: 10px; color: #854D27;"></div>
+                <button id="submitPost">Đăng Lời Chúc</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Virtual Gift Selection Modal -->
+    <div class="virtual-gift-modal" id="virtualGiftModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeVirtualGift">&times;</span>
+            <h2>Chọn Quà Tặng Ảo</h2>
+            <div class="gift-list" id="giftList"></div>
+        </div>
     </div>
 
     <!-- Custom Message Modal -->
@@ -146,6 +167,8 @@
     <script src="js/core.js"></script>
     <script src="js/themes.js"></script>
     <script src="js/features.js"></script>
+    <script src="js/community.js"></script>
+    <script src="js/autumn-leaves.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css" />

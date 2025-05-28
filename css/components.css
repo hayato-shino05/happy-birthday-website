@@ -531,6 +531,357 @@
     top: 20px;
     right: 20px;
     z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bulletin-board-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.bulletin-board-modal .modal-content {
+    background: #FFF9F3;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 8px 8px 0 #D4B08C;
+    position: relative;
+    text-align: center;
+}
+
+.bulletin-board-modal .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #854D27;
+}
+
+.bulletin-board-modal h2 {
+    color: #854D27;
+    margin-bottom: 20px;
+    font-family: 'DM Serif Display', serif;
+}
+
+.bulletin-posts {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 2px solid #D4B08C;
+    background: rgba(255, 249, 243, 0.3);
+}
+
+.bulletin-post {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(255, 249, 243, 0.5);
+    border: 1px solid #D4B08C;
+    text-align: left;
+}
+
+.bulletin-post strong {
+    color: #854D27;
+}
+
+.bulletin-post small {
+    color: #666;
+}
+
+.bulletin-post p {
+    margin: 5px 0;
+}
+
+.bulletin-post .like-btn, .bulletin-post .reply-btn {
+    padding: 5px 10px;
+    background: #854D27;
+    color: #FFF9F3;
+    border: 1px solid #D4B08C;
+    border-radius: 0;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: all 0.2s;
+    box-shadow: 2px 2px 0 #D4B08C;
+}
+
+.bulletin-post .like-btn:hover, .bulletin-post .reply-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #D4B08C;
+}
+
+.post-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.post-form input, .post-form textarea {
+    padding: 10px;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    font-family: 'Old Standard TT', serif;
+    font-size: 16px;
+    background: #FFF9F3;
+    color: #2C1810;
+}
+
+.post-form textarea {
+    height: 100px;
+    resize: none;
+}
+
+.post-form button {
+    padding: 10px 20px;
+    background: #854D27;
+    color: #FFF9F3;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: all 0.3s;
+    box-shadow: 4px 4px 0 #D4B08C;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.post-form button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #D4B08C;
+}
+
+.post-form .gift-select-btn {
+    background: #854D27;
+    color: #FFF9F3;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s;
+    box-shadow: 4px 4px 0 #D4B08C;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    margin: 0 auto;
+}
+
+.post-form .gift-select-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #D4B08C;
+    background: #9b5c2f;
+}
+
+.gift-icon {
+    margin-top: 5px;
+    font-size: 1.2em;
+    color: #854D27;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.reply-form input, .reply-form textarea {
+    padding: 5px;
+    border: 1px solid #D4B08C;
+    border-radius: 0;
+    font-family: 'Old Standard TT', serif;
+    background: #FFF9F3;
+    color: #2C1810;
+}
+
+.reply-form textarea {
+    height: 60px;
+    resize: none;
+}
+
+.reply-form button {
+    padding: 5px 10px;
+    background: #854D27;
+    color: #FFF9F3;
+    border: 1px solid #D4B08C;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 2px 2px 0 #D4B08C;
+}
+
+.reply-form button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #D4B08C;
+}
+
+/* Virtual Gift Modal */
+.virtual-gift-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.virtual-gift-modal .modal-content {
+    background: #FFF9F3;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 8px 8px 0 #D4B08C;
+    position: relative;
+    text-align: center;
+}
+
+.virtual-gift-modal .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #854D27;
+}
+
+.virtual-gift-modal h2 {
+    color: #854D27;
+    margin-bottom: 20px;
+    font-family: 'DM Serif Display', serif;
+}
+
+.gift-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 2px solid #D4B08C;
+    background: rgba(255, 249, 243, 0.3);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.gift-item {
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #D4B08C;
+    background: rgba(255, 249, 243, 0.5);
+    cursor: pointer;
+    text-align: center;
+    display: inline-block;
+    width: calc(33.33% - 10px);
+    box-sizing: border-box;
+    transition: background 0.3s;
+}
+
+.gift-item:hover {
+    background: rgba(133, 77, 39, 0.2);
+}
+
+.gift-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.gift-form input {
+    padding: 10px;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    font-family: 'Old Standard TT', serif;
+    font-size: 16px;
+    background: #FFF9F3;
+    color: #2C1810;
+}
+
+.gift-form button {
+    padding: 10px 20px;
+    background: #854D27;
+    color: #FFF9F3;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: all 0.3s;
+    box-shadow: 4px 4px 0 #D4B08C;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.gift-form button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #D4B08C;
+}
+
+/* Virtual Gifts View Modal */
+.virtual-gifts-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.virtual-gifts-modal .modal-content {
+    background: #FFF9F3;
+    border: 2px solid #D4B08C;
+    border-radius: 0;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 8px 8px 0 #D4B08C;
+    position: relative;
+    text-align: center;
+}
+
+.virtual-gifts-modal .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #854D27;
+}
+
+.virtual-gifts-modal h2 {
+    color: #854D27;
+    margin-bottom: 20px;
+    font-family: 'DM Serif Display', serif;
+}
+
+.virtual-gifts-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 2px solid #D4B08C;
+    background: rgba(255, 249, 243, 0.3);
+    text-align: left;
 }
 
 .custom-message-modal {
@@ -679,4 +1030,173 @@
         margin: 5px;
         font-size: 0.9em;
     }
-} 
+
+    /* Bulletin board modal adjustments */
+    .bulletin-board-modal .modal-content {
+        width: 95%;
+        max-width: 350px;
+        max-height: 85vh;
+        padding: 15px;
+    }
+
+    .bulletin-posts {
+        max-height: 350px;
+        padding: 5px;
+    }
+
+    .bulletin-post {
+        margin-bottom: 10px;
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .bulletin-post .like-btn, .bulletin-post .reply-btn {
+        padding: 3px 8px;
+        font-size: 0.8em;
+        margin-right: 5px;
+    }
+
+    .post-form input, .post-form textarea {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .post-form textarea {
+        height: 80px;
+    }
+
+    .post-form button {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+
+    .post-form .gift-select-btn {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+
+    .reply-form input, .reply-form textarea {
+        padding: 5px;
+        font-size: 0.85em;
+    }
+
+    .reply-form textarea {
+        height: 50px;
+    }
+
+    .reply-form button {
+        padding: 5px 10px;
+        font-size: 0.85em;
+    }
+
+    /* Custom message container adjustments */
+    .custom-message-container {
+        top: 10px;
+        right: 10px;
+        width: auto;
+        max-width: 200px;
+    }
+
+    /* Virtual gift modal adjustments */
+    .virtual-gift-modal .modal-content {
+        width: 95%;
+        max-width: 350px;
+        max-height: 85vh;
+        padding: 15px;
+    }
+
+    .gift-list {
+        max-height: 350px;
+        padding: 5px;
+    }
+
+    .gift-item {
+        width: calc(50% - 10px);
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    /* Virtual gifts view modal adjustments */
+    .virtual-gifts-modal .modal-content {
+        width: 95%;
+        max-width: 350px;
+        max-height: 85vh;
+        padding: 15px;
+    }
+
+    .virtual-gifts-list {
+        max-height: 350px;
+        padding: 5px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .bulletin-board-modal .modal-content {
+        width: 98%;
+        max-width: 300px;
+        padding: 10px;
+    }
+
+    .bulletin-posts {
+        max-height: 300px;
+    }
+
+    .bulletin-post {
+        padding: 5px;
+        font-size: 0.85em;
+    }
+
+    .post-form input, .post-form textarea {
+        padding: 5px;
+        font-size: 0.85em;
+    }
+
+    .post-form textarea {
+        height: 70px;
+    }
+
+    .post-form button {
+        padding: 5px 10px;
+        font-size: 0.85em;
+    }
+
+    /* Virtual gift modal adjustments */
+    .virtual-gift-modal .modal-content {
+        width: 98%;
+        max-width: 300px;
+        padding: 10px;
+    }
+
+    .gift-list {
+        max-height: 300px;
+        padding: 5px;
+    }
+
+    .gift-item {
+        width: calc(50% - 10px);
+        padding: 5px;
+        font-size: 0.85em;
+    }
+
+    .gift-form input {
+        padding: 5px;
+        font-size: 0.85em;
+    }
+
+    .gift-form button {
+        padding: 5px 10px;
+        font-size: 0.85em;
+    }
+
+    /* Virtual gifts view modal adjustments */
+    .virtual-gifts-modal .modal-content {
+        width: 98%;
+        max-width: 300px;
+        padding: 10px;
+    }
+
+    .virtual-gifts-list {
+        max-height: 300px;
+        padding: 5px;
+    }
+}
