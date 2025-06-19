@@ -1,6 +1,6 @@
-# Website Chúc Mừng Sinh Nhật 🎂
+# Happy-Birthday-Website 🎂
 
-Một trang web tương tác đẹp mắt để tổ chức và ghi nhớ những ngày sinh nhật đặc biệt của nhóm bạn thân!
+Website tương tác mã nguồn mở giúp bạn tổ chức, ghi nhớ và chia sẻ ngày sinh nhật theo cách vui nhộn: đếm ngược, bánh 3D thổi nến, album ảnh/video, minigame, chat cộng đồng, đổi giao diện theo mùa/lễ hội và nhiều hơn thế nữa.
 
 ## Các Tính Năng Chính ✨
 
@@ -63,6 +63,21 @@ git clone [đường-dẫn-repository]
 
 3. Cho phép sử dụng microphone khi được yêu cầu để sử dụng tính năng "Thổi nến"
 
+## Thiết Lập Phát Triển 🛠️
+
+```bash
+# Cài dependencies
+npm install
+
+# Kiểm tra và tự động sửa style
+npm run lint -- --fix
+npm run format
+```
+
+## Tích Hợp Liên Tục (CI) ⚙️
+
+Repo sử dụng GitHub Actions để tự động chạy ESLint và Prettier trên mỗi push hoặc pull request. Kết quả sẽ hiển thị dưới dạng dấu ✅ / ❌ ngay trên PR.
+
 ## Tùy Chỉnh 🎨
 
 ### Thêm Sinh Nhật Mới
@@ -88,11 +103,25 @@ Chỉnh sửa mảng `birthdays` trong file `script.js`:
 
 ## Đóng Góp 🤝
 
-Mọi đóng góp đều được hoan nghênh! Hãy tạo issue hoặc gửi yêu cầu cải tiến.
+1. Fork và clone repo
+2. Tạo nhánh mới từ `main`:
+```bash
+git checkout -b feature/ten-tinh-nang
+```
+3. Thực hiện thay đổi, đảm bảo chạy:
+```bash
+npm run lint -- --fix
+npm run format
+```
+4. Commit & push, mở Pull Request kèm mô tả rõ ràng.
+
+Chúng tôi hoan nghênh mọi ý tưởng, issue và PR!
 
 ## Giấy Phép 📄
 
-Dự án này là mã nguồn mở và được phân phối theo giấy phép MIT.
+Dự án này được phân phối dưới giấy phép [MIT](LICENSE).
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ---
 

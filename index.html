@@ -164,13 +164,34 @@
         </div>
     </div>
 
-    <script src="js/core.js"></script>
-    <script src="js/themes.js"></script>
-    <script src="js/features.js"></script>
-    <script src="js/community.js"></script>
-    <script src="js/autumn-leaves.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+    <script defer src="js/core.js"></script>
+    <script defer src="js/themes.js"></script>
+    <script defer src="js/features.js"></script>
+    <script defer src="js/community.js"></script>
+    <script defer src="js/autumn-leaves.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script defer src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+
+    <!-- Lazy-load helper for images created dynamically -->
+    <script defer>
+      document.addEventListener('DOMContentLoaded', () => {
+        const ensureLazy = img => {
+          if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy')
+        }
+        document.querySelectorAll('img').forEach(ensureLazy)
+        const observer = new MutationObserver(ms => {
+          ms.forEach(m => {
+            m.addedNodes.forEach(node => {
+              if (node.nodeType === 1) {
+                if (node.tagName === 'IMG') ensureLazy(node)
+                node.querySelectorAll?.('img').forEach(ensureLazy)
+              }
+            })
+          })
+        })
+        observer.observe(document.body, { childList: true, subtree: true })
+      })
+    </script>
     <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css" />
 </body>
 </html>
