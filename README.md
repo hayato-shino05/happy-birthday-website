@@ -1,4 +1,4 @@
-# 🎂 Website Chúc Mừng Sinh Nhật - Niềm Vui Kết Nối 🎉
+# 🎂 Website Chúc Mừng Sinh Nhật - Niềm Vui Kết Nối
 
 > **Một website tương tác mã nguồn mở đầy sáng tạo** giúp bạn tổ chức, ghi nhớ và chia sẻ những khoảnh khắc sinh nhật đáng nhớ theo cách vui nhộn và độc đáo! Từ đếm ngược thời gian, bánh sinh nhật 3D có thể thổi nến, đến album ảnh/video, trò chơi nhỏ, trò chuyện cộng đồng và giao diện thay đổi theo mùa - tất cả tạo nên một trải nghiệm khó quên!
 
