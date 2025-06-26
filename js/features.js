@@ -845,6 +845,85 @@ function initMemoryGame() {
     });
 }
 
+// Biến toàn cục để lưu trữ danh sách ảnh cho trò chơi ghép hình
+let puzzleGameImages = [];
+let isPuzzleImagesLoaded = false;
+
+// Hàm tải danh sách ảnh từ media
+async function loadPuzzleImages() {
+    if (isPuzzleImagesLoaded && puzzleGameImages.length > 0) {
+        return puzzleGameImages;
+    }
+    
+    try {
+        console.log("Đang tải ảnh cho trò chơi ghép hình...");
+        
+        // Nếu window.mediaFilesLoaded đã được định nghĩa và có giá trị true
+        if (window.mediaFilesLoaded && window.mediaFiles && window.mediaFiles.length > 0) {
+            // Lọc chỉ lấy các file ảnh từ mediaFiles
+            const imageFiles = window.mediaFiles.filter(file => 
+                file.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+            );
+            
+            if (imageFiles.length > 0) {
+                console.log(`Đã tìm thấy ${imageFiles.length} ảnh từ media đã tải`);
+                puzzleGameImages = imageFiles;
+                isPuzzleImagesLoaded = true;
+                return imageFiles;
+            }
+        }
+        
+        // Nếu không có mediaFiles hoặc không tìm thấy ảnh, thử tải từ Supabase
+        console.log("Đang tải ảnh từ Supabase...");
+        
+        // Kiểm tra xem supabase đã được định nghĩa chưa
+        if (typeof supabase !== 'undefined') {
+            const { data, error } = await supabase
+                .storage
+                .from('media')
+                .list('', {
+                    limit: 100,
+                    sortBy: { column: 'name', order: 'asc' }
+                });
+                
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+                // Lọc các file ảnh
+                const imageFiles = data
+                    .filter(file => file.name !== '.emptyFolderPlaceholder')
+                    .filter(file => file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+                    .map(file => file.name);
+                
+                if (imageFiles.length > 0) {
+                    console.log(`Đã tìm thấy ${imageFiles.length} ảnh từ Supabase`);
+                    puzzleGameImages = imageFiles;
+                    isPuzzleImagesLoaded = true;
+                    window.useLocalMedia = false;
+                    return imageFiles;
+                }
+            }
+        }
+        
+        // Fallback: Sử dụng danh sách ảnh local
+        console.log("Sử dụng danh sách ảnh local");
+        const localImages = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', 
+                            '6.jpg', '7.jpg', '8.jpg', '9.jpg', '10.jpg'];
+        puzzleGameImages = localImages;
+        isPuzzleImagesLoaded = true;
+        window.useLocalMedia = true;
+        return localImages;
+    } catch (error) {
+        console.error("Lỗi khi tải ảnh cho trò chơi ghép hình:", error);
+        // Fallback: Sử dụng danh sách ảnh mặc định
+        const defaultImages = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg'];
+        puzzleGameImages = defaultImages;
+        isPuzzleImagesLoaded = true;
+        window.useLocalMedia = true;
+        return defaultImages;
+    }
+}
+
 function startPuzzleGame() {
     // Tạo modal cho trò chơi ghép hình
     let puzzleModal = document.getElementById('puzzleGameModal');
@@ -916,8 +995,16 @@ function startPuzzleGame() {
         piecesContainer.style.padding = '10px';
         piecesContainer.style.background = '#FFF9F3';
 
+        // Thêm thông tin hiện đang sử dụng hình ảnh nào
+        const imageInfo = document.createElement('div');
+        imageInfo.id = 'puzzleImageInfo';
+        imageInfo.style.marginTop = '10px';
+        imageInfo.style.fontSize = '14px';
+        imageInfo.style.color = '#854D27';
+        imageInfo.style.fontStyle = 'italic';
+        
         const restartBtn = document.createElement('button');
-        restartBtn.textContent = 'Chơi Lại';
+        restartBtn.textContent = 'Đổi Ảnh Khác';
         restartBtn.style.padding = '10px 20px';
         restartBtn.style.background = '#854D27';
         restartBtn.style.color = '#FFF9F3';
@@ -929,7 +1016,9 @@ function startPuzzleGame() {
         restartBtn.style.boxShadow = '4px 4px 0 #D4B08C';
         restartBtn.style.textTransform = 'uppercase';
         restartBtn.style.letterSpacing = '1px';
-        restartBtn.addEventListener('click', () => {
+        restartBtn.addEventListener('click', async () => {
+            // Tải lại ảnh mới và khởi tạo lại trò chơi
+            await loadPuzzleImages();
             initPuzzleGame();
         });
         restartBtn.addEventListener('mouseover', () => {
@@ -945,28 +1034,64 @@ function startPuzzleGame() {
         puzzleContainer.appendChild(title);
         puzzleContainer.appendChild(puzzleArea);
         puzzleContainer.appendChild(piecesContainer);
+        puzzleContainer.appendChild(imageInfo);
         puzzleContainer.appendChild(restartBtn);
         puzzleModal.appendChild(puzzleContainer);
         document.body.appendChild(puzzleModal);
     }
+    
+    // Hiển thị modal
     puzzleModal.style.display = 'flex';
-    initPuzzleGame();
+    
+    // Trước tiên tải danh sách ảnh, sau đó khởi tạo trò chơi
+    loadPuzzleImages().then(() => {
+        initPuzzleGame();
+    }).catch(error => {
+        console.error("Lỗi khi tải ảnh:", error);
+        initPuzzleGame(); // Vẫn khởi tạo trò chơi với ảnh mặc định nếu có lỗi
+    });
 }
 
 function initPuzzleGame() {
     const puzzleArea = document.getElementById('puzzleArea');
     const piecesContainer = document.getElementById('piecesContainer');
+    const imageInfo = document.getElementById('puzzleImageInfo');
+    
+    if (!puzzleArea || !piecesContainer) return;
+    
     puzzleArea.innerHTML = '';
     piecesContainer.innerHTML = '';
     
-    // Sử dụng một hình ảnh mặc định từ thư mục memory
-    const imageUrl = 'memory/1.jpg';
+    // Chọn một ảnh ngẫu nhiên từ danh sách
+    let imageFile = '1.jpg'; // Ảnh mặc định
+    
+    if (puzzleGameImages.length > 0) {
+        const randomIndex = Math.floor(Math.random() * puzzleGameImages.length);
+        imageFile = puzzleGameImages[randomIndex];
+    }
+    
+    // Xác định đường dẫn tới ảnh
+    let imageUrl;
+    if (window.useLocalMedia) {
+        imageUrl = `memory/${imageFile}`;
+    } else {
+        const baseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/';
+        imageUrl = `${baseUrl}${imageFile}`;
+    }
+    
+    // Hiển thị thông tin ảnh đang được sử dụng
+    if (imageInfo) {
+        imageInfo.textContent = `Đang sử dụng ảnh: ${imageFile}`;
+    }
+    
+    console.log("Trò chơi ghép hình sử dụng ảnh:", imageUrl);
+    
     const gridCols = 4; // 4 cột để ưu tiên chiều ngang
     const gridRows = 2; // 2 hàng để giảm chiều dọc
     const totalPieces = gridCols * gridRows;
     // Điều chỉnh kích thước dựa trên kích thước màn hình, ưu tiên chiều ngang tối đa
     const containerWidth = Math.min(window.innerWidth * 0.9, 600);
-    const containerHeight = Math.min(window.innerHeight * 0.4, containerWidth * 0.5); // Tỷ lệ 2:1 để kéo dài chiều ngang và giảm chiều dọc
+    const containerHeight = Math.min(window.innerHeight * 0.4, containerWidth * 0.5); // Tỷ lệ 2:1 
     puzzleArea.style.width = containerWidth + 'px';
     puzzleArea.style.height = containerHeight + 'px';
     puzzleArea.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
@@ -975,69 +1100,86 @@ function initPuzzleGame() {
     let pieces = [];
     let placedPieces = Array(totalPieces).fill(false);
     
-    // Tạo các ô trống trong khu vực ghép hình
-    for (let i = 0; i < totalPieces; i++) {
-        const slot = document.createElement('div');
-        slot.style.width = pieceWidth + 'px';
-        slot.style.height = pieceHeight + 'px';
-        slot.style.border = '1px dashed #D4B08C';
-        slot.dataset.index = i;
-        slot.addEventListener('dragover', (e) => e.preventDefault());
-        slot.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const pieceId = e.dataTransfer.getData('text');
-            const piece = document.getElementById(pieceId);
-            if (piece && !placedPieces[slot.dataset.index]) {
-                const correctIndex = piece.dataset.correctIndex;
-                slot.appendChild(piece);
-                piece.style.position = 'static';
-                piece.style.width = '100%';
-                piece.style.height = '100%';
-                placedPieces[slot.dataset.index] = true;
-                piece.dataset.currentIndex = slot.dataset.index;
-                checkPuzzleCompletion();
-            }
-        });
-        puzzleArea.appendChild(slot);
-    }
+    // Tạo một phần tử img tạm thời để kiểm tra ảnh
+    const testImage = new Image();
+    testImage.onload = () => {
+        // Ảnh hợp lệ, tiếp tục tạo trò chơi
+        createPuzzleGame(imageUrl);
+    };
+    testImage.onerror = () => {
+        // Ảnh không tồn tại, sử dụng ảnh mặc định
+        console.error("Không thể tải ảnh:", imageUrl);
+        imageUrl = 'memory/1.jpg'; // Ảnh mặc định
+        createPuzzleGame(imageUrl);
+    };
+    testImage.src = imageUrl;
     
-    // Tạo các mảnh ghép
-    for (let y = 0; y < gridRows; y++) {
-        for (let x = 0; x < gridCols; x++) {
-            const index = y * gridCols + x;
-            const piece = document.createElement('div');
-            piece.id = 'piece-' + index;
-            piece.draggable = true;
-            piece.style.width = pieceWidth + 'px';
-            piece.style.height = pieceHeight + 'px';
-            piece.style.backgroundImage = `url(${imageUrl})`;
-            piece.style.backgroundSize = `${containerWidth}px ${containerHeight}px`;
-            piece.style.backgroundPosition = `-${x * pieceWidth}px -${y * pieceHeight}px`;
-            piece.style.border = '1px solid #D4B08C';
-            piece.style.cursor = 'move';
-            piece.dataset.correctIndex = index;
-            piece.classList.add('puzzle-piece');
-            piece.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text', piece.id);
-                if (piece.dataset.currentIndex !== undefined) {
-                    placedPieces[piece.dataset.currentIndex] = false;
+    // Hàm tạo trò chơi ghép hình
+    function createPuzzleGame(imgUrl) {
+        // Tạo các ô trống trong khu vực ghép hình
+        for (let i = 0; i < totalPieces; i++) {
+            const slot = document.createElement('div');
+            slot.style.width = pieceWidth + 'px';
+            slot.style.height = pieceHeight + 'px';
+            slot.style.border = '1px dashed #D4B08C';
+            slot.dataset.index = i;
+            slot.addEventListener('dragover', (e) => e.preventDefault());
+            slot.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const pieceId = e.dataTransfer.getData('text');
+                const piece = document.getElementById(pieceId);
+                if (piece && !placedPieces[slot.dataset.index]) {
+                    const correctIndex = piece.dataset.correctIndex;
+                    slot.appendChild(piece);
+                    piece.style.position = 'static';
+                    piece.style.width = '100%';
+                    piece.style.height = '100%';
+                    placedPieces[slot.dataset.index] = true;
+                    piece.dataset.currentIndex = slot.dataset.index;
+                    checkPuzzleCompletion();
                 }
             });
-            pieces.push(piece);
+            puzzleArea.appendChild(slot);
         }
+        
+        // Tạo các mảnh ghép
+        for (let y = 0; y < gridRows; y++) {
+            for (let x = 0; x < gridCols; x++) {
+                const index = y * gridCols + x;
+                const piece = document.createElement('div');
+                piece.id = 'piece-' + index;
+                piece.draggable = true;
+                piece.style.width = pieceWidth + 'px';
+                piece.style.height = pieceHeight + 'px';
+                piece.style.backgroundImage = `url(${imgUrl})`;
+                piece.style.backgroundSize = `${containerWidth}px ${containerHeight}px`;
+                piece.style.backgroundPosition = `-${x * pieceWidth}px -${y * pieceHeight}px`;
+                piece.style.border = '1px solid #D4B08C';
+                piece.style.cursor = 'move';
+                piece.dataset.correctIndex = index;
+                piece.classList.add('puzzle-piece');
+                piece.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text', piece.id);
+                    if (piece.dataset.currentIndex !== undefined) {
+                        placedPieces[piece.dataset.currentIndex] = false;
+                    }
+                });
+                pieces.push(piece);
+            }
+        }
+        
+        // Xáo trộn các mảnh ghép
+        for (let i = pieces.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+        }
+        
+        // Đặt các mảnh ghép vào khu vực chứa
+        pieces.forEach(piece => {
+            piece.style.margin = '5px';
+            piecesContainer.appendChild(piece);
+        });
     }
-    
-    // Xáo trộn các mảnh ghép
-    for (let i = pieces.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
-    }
-    
-    // Đặt các mảnh ghép vào khu vực chứa
-    pieces.forEach(piece => {
-        piece.style.margin = '5px';
-        piecesContainer.appendChild(piece);
-    });
 }
 
 function checkPuzzleCompletion() {
@@ -1836,16 +1978,16 @@ function saveAudioMessage() {
                     
                     // Fallback nếu không thể lưu vào Supabase
                     console.log("Không thể lưu vào Supabase, sử dụng localStorage");
-                    let audioMessages = JSON.parse(localStorage.getItem('audioMessages') || '{}');
-                    if (!audioMessages[birthdayPerson]) {
-                        audioMessages[birthdayPerson] = [];
-                    }
-                    audioMessages[birthdayPerson].push({ url: window.currentAudioMessage, sender: senderName });
-                    localStorage.setItem('audioMessages', JSON.stringify(audioMessages));
+        let audioMessages = JSON.parse(localStorage.getItem('audioMessages') || '{}');
+        if (!audioMessages[birthdayPerson]) {
+            audioMessages[birthdayPerson] = [];
+        }
+        audioMessages[birthdayPerson].push({ url: window.currentAudioMessage, sender: senderName });
+        localStorage.setItem('audioMessages', JSON.stringify(audioMessages));
                     alert('Lời chúc ghi âm đã được lưu cục bộ!');
-                    document.getElementById('recordMessageModal').style.display = 'none';
-                    senderNameInput.value = '';
-                    displaySavedAudioMessages();
+        document.getElementById('recordMessageModal').style.display = 'none';
+        senderNameInput.value = '';
+        displaySavedAudioMessages();
                 } catch (error) {
                     console.error('Lỗi khi lưu tin nhắn âm thanh:', error);
                     alert('Đã xảy ra lỗi khi lưu tin nhắn âm thanh.');

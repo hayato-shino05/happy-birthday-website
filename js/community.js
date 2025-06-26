@@ -1328,6 +1328,9 @@ function initCommunityFeatures() {
     // Khởi tạo lời chúc cá nhân
     initCustomMessage();
     
+    // Thiết lập kết nối real-time cho chat
+    setupChatRealtime();
+    
     // Thêm nút Chat Nhóm vào trang
     const container = document.querySelector('.container');
     
@@ -1721,19 +1724,22 @@ async function loadChatHistory() {
 // Gửi tin nhắn chat
 async function sendChatMessage(sender, text) {
     try {
+        // Tạo dữ liệu tin nhắn
+        const messageData = { 
+            sender: sender,
+            text: text,
+            created_at: new Date().toISOString()
+        };
+        
+        // Hiển thị tin nhắn ngay lập tức trên giao diện
+        appendNewChatMessage(messageData);
+        
         // Lưu tin nhắn vào Supabase
         const { data, error } = await supabase
             .from('chat_messages')
-            .insert([
-                { 
-                    sender: sender,
-                    text: text
-                }
-            ]);
+            .insert([messageData]);
             
         if (error) throw error;
-        
-        // Không cần gọi loadChatHistory() vì real-time subscription sẽ tự động cập nhật
         
         return true;
     } catch (error) {
@@ -1741,13 +1747,12 @@ async function sendChatMessage(sender, text) {
         
         // Fallback to localStorage if Supabase fails
         const chatMessages = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]');
-    chatMessages.push({
-        sender: sender,
-        text: text,
-        timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('birthdayChatMessages', JSON.stringify(chatMessages));
-    loadChatHistory();
+        chatMessages.push({
+            sender: sender,
+            text: text,
+            timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('birthdayChatMessages', JSON.stringify(chatMessages));
         
         return false;
     }

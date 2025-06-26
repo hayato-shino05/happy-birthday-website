@@ -5,6 +5,52 @@ window.useLocalMedia = false;  // Kiểm soát việc sử dụng local media
 window.isLoadingMedia = false;  // Ngăn tải file cùng lúc
 window.mediaAlreadyLoaded = false;  // Theo dõi trạng thái tải
 
+// Thêm CSS cho phần video
+const albumStyle = document.createElement('style');
+albumStyle.textContent = `
+.photo-item {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.photo-item:hover {
+    transform: scale(1.05);
+    z-index: 2;
+}
+
+.photo-item-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.play-icon {
+    transition: all 0.3s ease;
+    pointer-events: auto;
+}
+
+.photo-item:hover .play-icon {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+}
+
+/* Đảm bảo video trong modal hiển thị đúng */
+#fullSizeMediaModal video {
+    display: block;
+    max-width: 90%;
+    max-height: 80vh;
+}
+
+/* Đảm bảo các nút điều khiển hiển thị phía trên */
+#fullSizeMediaModal button,
+#fullSizeMediaModal .caption {
+    z-index: 10002;
+}
+`;
+document.head.appendChild(albumStyle);
+
 // Khởi tạo Swiper
 let swiperInstance = null;
 
@@ -251,6 +297,7 @@ function renderPhotoItem(index, gallery) {
         
         // Hiển thị video khi click
         photoContainer.addEventListener('click', () => {
+            console.log("Video clicked, opening full size:", index);
             openFullSizeMedia(video.src, index, 'video');
         });
         
@@ -265,6 +312,16 @@ function renderPhotoItem(index, gallery) {
         playIcon.style.fontSize = '30px';
         playIcon.style.opacity = '0.8';
         playIcon.style.textShadow = '0 0 5px rgba(0,0,0,0.5)';
+        playIcon.style.cursor = 'pointer';
+        playIcon.style.zIndex = '5'; // Make sure it's above the video
+        
+        // Thêm sự kiện click riêng cho icon play
+        playIcon.addEventListener('click', (e) => {
+            console.log("Play icon clicked, opening full size:", index);
+            e.stopPropagation(); // Ngăn chặn lan truyền để không kích hoạt click của photoContainer
+            openFullSizeMedia(video.src, index, 'video');
+        });
+        
         photoContainer.appendChild(playIcon);
         
         // Phát video khi hover
@@ -279,10 +336,6 @@ function renderPhotoItem(index, gallery) {
         
         video.addEventListener('ended', () => {
             photoContainer.classList.remove('active');
-        });
-        
-        video.addEventListener('click', (e) => {
-            e.stopPropagation();
         });
         
         photoContainer.appendChild(video);
@@ -463,6 +516,8 @@ function initTags() {
 
 // Mở modal xem ảnh/video full-size
 function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
+    console.log(`Opening ${mediaType} in full size:`, mediaUrl);
+
     // Đóng bất kỳ modal toàn màn hình nào đang mở trước đó
     const existingModal = document.getElementById('fullSizeMediaModal');
     if (existingModal) {
@@ -485,6 +540,7 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
     let mediaElement;
     
     if (mediaType === 'video') {
+        console.log("Creating video element for full-size view");
         mediaElement = document.createElement('video');
         mediaElement.src = mediaUrl;
         mediaElement.controls = true;
@@ -492,12 +548,50 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
         mediaElement.style.maxWidth = '90%';
         mediaElement.style.maxHeight = '80vh';
         mediaElement.style.objectFit = 'contain';
+        mediaElement.style.zIndex = '10001';
+        
+        // Đảm bảo video có thể phát được
+        mediaElement.addEventListener('loadedmetadata', () => {
+            console.log("Video metadata loaded, trying to play");
+            mediaElement.play().catch(e => console.error('Lỗi khi phát video:', e));
+        });
+        
+        // Tạo nút phát/dừng phụ trợ
+        const playPauseBtn = document.createElement('button');
+        playPauseBtn.innerHTML = '⏸️';
+        playPauseBtn.style.position = 'absolute';
+        playPauseBtn.style.bottom = '100px';
+        playPauseBtn.style.left = '50%';
+        playPauseBtn.style.transform = 'translateX(-50%)';
+        playPauseBtn.style.padding = '10px 20px';
+        playPauseBtn.style.background = '#854D27';
+        playPauseBtn.style.color = '#FFF9F3';
+        playPauseBtn.style.border = '2px solid #D4B08C';
+        playPauseBtn.style.cursor = 'pointer';
+        playPauseBtn.style.borderRadius = '0';
+        playPauseBtn.style.boxShadow = '2px 2px 0 #D4B08C';
+        playPauseBtn.style.zIndex = '10002';
+        
+        playPauseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (mediaElement.paused) {
+                mediaElement.play();
+                playPauseBtn.innerHTML = '⏸️';
+            } else {
+                mediaElement.pause();
+                playPauseBtn.innerHTML = '▶️';
+            }
+        });
+        
+        modal.appendChild(playPauseBtn);
     } else {
+        console.log("Creating image element for full-size view");
         mediaElement = document.createElement('img');
         mediaElement.src = mediaUrl;
         mediaElement.style.maxWidth = '90%';
         mediaElement.style.maxHeight = '80vh';
         mediaElement.style.objectFit = 'contain';
+        mediaElement.style.zIndex = '10001';
     }
 
     const closeBtn = document.createElement('button');
@@ -510,6 +604,14 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
     closeBtn.style.background = 'none';
     closeBtn.style.border = 'none';
     closeBtn.style.cursor = 'pointer';
+    closeBtn.style.zIndex = '10002';
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (mediaType === 'video' && !mediaElement.paused) {
+            mediaElement.pause();
+        }
+        modal.remove();
+    });
 
     const caption = document.createElement('div');
     caption.textContent = `${mediaType === 'video' ? 'Video' : 'Hình'} ${mediaNumber}`;
@@ -520,6 +622,7 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
     caption.style.background = 'rgba(0,0,0,0.5)';
     caption.style.padding = '5px 15px';
     caption.style.borderRadius = '20px';
+    caption.style.zIndex = '10002';
 
     // Thêm nút gắn thẻ
     const tagBtn = document.createElement('button');
@@ -535,6 +638,7 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
     tagBtn.style.cursor = 'pointer';
     tagBtn.style.borderRadius = '0';
     tagBtn.style.boxShadow = '2px 2px 0 #D4B08C';
+    tagBtn.style.zIndex = '10002';
     tagBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         openTagModal(mediaNumber);
@@ -547,21 +651,21 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
 
     modal.addEventListener('click', () => {
         // Nếu đang phát video, dừng video trước khi đóng modal
-        if (mediaType === 'video' && !mediaElement.paused) {
+        if (mediaType === 'video' && mediaElement && !mediaElement.paused) {
             mediaElement.pause();
         }
         modal.remove();
+        console.log("Modal closed");
     });
 
+    // Ngăn chặn sự kiện click trên phần tử media khỏi lan truyền đến modal
     mediaElement.addEventListener('click', (e) => {
-        e.stopPropagation();
-    });
-
-    tagBtn.addEventListener('click', (e) => {
+        console.log("Media element clicked, preventing propagation");
         e.stopPropagation();
     });
 
     document.body.appendChild(modal);
+    console.log(`${mediaType} modal opened`);
 }
 
 // Hàm mở modal gắn thẻ

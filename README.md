@@ -13,12 +13,13 @@
 | **Tính Năng**                     | **Mô Tả**                                                                 |
 |-----------------------------------|---------------------------------------------------------------------------|
 | 🎉 **Đếm Ngược Sinh Nhật**        | Hiển thị thời gian còn lại đến sinh nhật tiếp theo trong nhóm bạn bè.     |
-| 🎂 **Bánh Sinh Nhật Tương Tác**   | Bánh 3 tầng đẹp mắt với nến có thể thổi tắt bằng microphone.             |
+| 🎂 **Bánh Sinh Nhật Tương Tác**   | Bánh 3 tầng đẹp mắt với nến có thể thổi tắt bằng nút thổi nến.           |
 | 📸 **Album Kỷ Niệm**              | Xem, gắn thẻ, tìm kiếm và chia sẻ những khoảnh khắc đáng nhớ qua ảnh/video. |
 | 🎮 **Trò Chơi Tương Tác**         | Bao gồm Trí Nhớ, Ghép Hình, Đố Vui Sinh Nhật và Lịch Sinh Nhật.          |
 | 🎵 **Trình Phát Nhạc**            | Phát những bài hát sinh nhật vui tươi, tạo không khí lễ hội.             |
 | 🎭 **Giao Diện Theo Mùa**         | Tự động thay đổi theo mùa và lễ hội: Xuân/Hạ/Thu/Đông, Giáng Sinh, Tết, Halloween, Hanami... |
 | 💬 **Tính Năng Cộng Đồng**        | Gửi tin nhắn văn bản, âm thanh, video, tặng quà ảo và bảng tin chúc mừng. |
+| 📹 **Quay Video Lời Chúc**        | Quay và lưu trữ video lời chúc sinh nhật thông qua camera thiết bị.      |
 | 🎈 **Hiệu Ứng Tương Tác**         | Thổi nến, pháo hoa rực rỡ, bóng bay bay lượn tạo không khí sôi động.     |
 | 📱 **Chia Sẻ Mạng Xã Hội**        | Dễ dàng chia sẻ niềm vui lên Facebook, Twitter và Instagram.             |
 | 🌐 **Hỗ Trợ Đa Ngôn Ngữ**         | Giao diện hỗ trợ cả Tiếng Việt và Tiếng Anh, dễ dàng chuyển đổi.         |
@@ -37,7 +38,7 @@
 
 3. **Giải Trí và Tương Tác Vui Vẻ**:
    - Các trò chơi và hiệu ứng tương tác tạo không khí lễ hội sôi động.
-   - Trải nghiệm thổi nến độc đáo qua microphone, chân thực như thật.
+   - Tính năng quay video lời chúc giúp ghi lại khoảnh khắc đặc biệt.
    - Hiệu ứng hình ảnh đẹp mắt làm tăng sự hứng thú cho người dùng.
 
 4. **Tiện Ích Thực Tế Cho Cuộc Sống**:
@@ -54,7 +55,7 @@
 
 - **HTML5** & **CSS3**: Xây dựng giao diện đẹp mắt và tương thích.
 - **JavaScript (Thuần)**: Tạo các tính năng tương tác mượt mà.
-- **Web Audio API**: Hỗ trợ tính năng thổi nến qua microphone.
+- **MediaDevices API**: Hỗ trợ tính năng quay video lời chúc thông qua camera.
 - **Canvas API**: Vẽ các hiệu ứng hình ảnh sống động.
 - **Local Storage**: Lưu trữ dữ liệu cục bộ tiện lợi.
 - **Supabase (Backend as a Service)**:
@@ -66,14 +67,14 @@
 
 1. **Tải Về Mã Nguồn**:
    ```bash
-   git clone [đường-dẫn-repository]
+   git clone https://github.com/yourusername/happy-birthday-website.git
    ```
 
 2. **Mở Website**:
    - Mở file `index.html` trong trình duyệt web của bạn.
 
-3. **Cấp Quyền Microphone**:
-   - Cho phép sử dụng microphone khi được yêu cầu để trải nghiệm tính năng "Thổi Nến".
+3. **Cấp Quyền Camera**:
+   - Cho phép sử dụng camera khi được yêu cầu để trải nghiệm tính năng quay video lời chúc.
 
 ## 💻 Thiết Lập Phát Triển 💻
 
@@ -98,14 +99,13 @@ Chỉnh sửa cơ sở dữ liệu trên **Supabase** hoặc cập nhật mảng
 {
     name: "Tên Người",
     month: 1-12,
-    day: 1-31,
-    message: "Lời chúc sinh nhật đặc biệt của bạn"
+    day: 1-31
 }
 ```
 
 ### **Thêm Ảnh và Video Vào Album**
-- Đặt các file ảnh/video của bạn vào thư mục `memory/`.
-- Hoặc sử dụng giao diện ứng dụng để tải lên trực tiếp.
+- Sử dụng giao diện ứng dụng để tải ảnh và video lên trực tiếp, các file sẽ được lưu trữ trên **Supabase Storage**.
+- Hoặc, nếu bạn có quyền truy cập vào Supabase, có thể thêm file trực tiếp vào bucket `media` trên Supabase.
 
 ## 🌐 Trình Duyệt Hỗ Trợ 🌐
 
