@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="stylesheet" href="css/autumn-leaves.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     
 <style>
     .social-share {
@@ -44,6 +45,32 @@
     .fa-instagram {
         color: #e4405f;
     }
+    
+    .birthday-title {
+        font-family: 'Dancing Script', cursive;
+        font-size: 3.5em;
+        color: #8B4513;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+        margin: 0;
+        padding: 20px;
+        animation: birthdayPop 1.5s ease-out;
+    }
+    
+    .birthday-subtitle {
+        font-family: 'Dancing Script', cursive;
+        font-size: 2em;
+        color: #FF1493;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+        margin: 0;
+        padding: 10px;
+        animation: birthdayPop 1.8s ease-out;
+    }
+    
+    @keyframes birthdayPop {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); opacity: 1; }
+    }
     </style>
 </head>
 <body>
@@ -58,10 +85,6 @@
         <button class="game-button" id="startPuzzleGame">🧩 Ghép hình</button>
         <button id="openCalendar" class="game-button">📅 Lịch sinh nhật</button>
         <button id="startBirthdayQuiz" class="game-button">❓ đoán sinh nhật</button>
-    </div>
-
-
-
     </div>
 
     <!-- Language Selector -->
@@ -85,11 +108,9 @@
             <h2>Bảng Tin Chúc Mừng Sinh Nhật</h2>
             <div class="bulletin-posts" id="bulletinPosts"></div>
             <div class="post-form">
-                <input type="text" id="postSender" placeholder="Tên của bạn..." maxlength="50">
-                <textarea id="postMessage" placeholder="Nhập lời chúc của bạn tại đây..." maxlength="300"></textarea>
                 <button id="selectGiftBtn" class="gift-select-btn">🎁 Chọn Quà Tặng Ảo</button>
                 <div id="selectedGiftDisplay" style="display: none; margin-top: 10px; color: #854D27;"></div>
-                <button id="submitPost">Đăng Lời Chúc</button>
+                <button id="submitPost">Gửi Quà Tặng</button>
             </div>
         </div>
     </div>
@@ -100,6 +121,8 @@
             <span class="close-btn" id="closeVirtualGift">&times;</span>
             <h2>Chọn Quà Tặng Ảo</h2>
             <div class="gift-list" id="giftList"></div>
+            <input type="text" id="giftSender" placeholder="Tên của bạn..." style="width: 100%; padding: 10px; margin: 15px 0; border: 2px solid #D4B08C;">
+            <button id="submitGift" style="padding: 10px 20px; background: #854D27; color: #FFF9F3; border: 2px solid #D4B08C; cursor: pointer; font-size: 1.1em;">Gửi Quà Tặng</button>
         </div>
     </div>
 
@@ -121,6 +144,12 @@
 
     <!-- Memory Wall Modal -->
     <div class="memory-wall" id="memoryWall">
+        <div class="album-controls">
+            <div class="search-box">
+                <input type="text" id="searchTags" placeholder="Tìm kiếm theo thẻ...">
+            </div>
+            <button id="slideshowBtn" class="feature-button">▶️ Xem Slideshow</button>
+        </div>
         <div class="photo-gallery" id="photoGallery"></div>
         <div class="swiper-container" id="slideshowContainer">
             <div class="swiper-wrapper" id="slideshowWrapper"></div>
@@ -138,15 +167,45 @@
     </div>
     
     <div class="container">
-        <h1 id="birthdayTitle" style="display: none;">Chúc Mừng Sinh Nhật</h1>
+        <h1 id="birthdayTitle" class="birthday-title" style="display: none;">Chúc Mừng Sinh Nhật</h1>
         
         <div class="countdown" id="countdown">
             <p>Còn <span id="days">0</span> ngày, <span id="hours">0</span> giờ, <span id="minutes">0</span> phút, <span id="seconds">0</span> giây nữa là đến sinh nhật!</p>
         </div>
         
         <div id="birthdayContent" class="hidden">
-            <div class="cake-container">
+            <div class="cake-container" style="display: none;">
                 <!-- Bánh 3D sẽ được thêm bởi JavaScript -->
+            </div>
+            
+            <div class="cake-2d-container">
+                <div class="cake-2d">
+                    <div class="cake-tier cake-tier-1">
+                        <div class="cake-decoration cake-decoration-1"></div>
+                        <div class="cake-decoration cake-decoration-2"></div>
+                        <div class="cake-decoration cake-decoration-3"></div>
+                        <div class="cake-decoration cake-decoration-4"></div>
+                        <div class="cake-decoration cake-decoration-5"></div>
+                    </div>
+                    <div class="cake-tier cake-tier-2"></div>
+                    <div class="cake-tier cake-tier-3">
+                        <div class="candle candle-1">
+                            <div class="flame"></div>
+                        </div>
+                        <div class="candle candle-2">
+                            <div class="flame"></div>
+                        </div>
+                        <div class="candle candle-3">
+                            <div class="flame"></div>
+                        </div>
+                        <div class="candle candle-4">
+                            <div class="flame"></div>
+                        </div>
+                        <div class="candle candle-5">
+                            <div class="flame"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <button id="micPermissionBtn">Cho phép sử dụng microphone</button>
@@ -164,11 +223,13 @@
         </div>
     </div>
 
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script defer src="js/supabase-config.js"></script>
     <script defer src="js/core.js"></script>
     <script defer src="js/themes.js"></script>
     <script defer src="js/features.js"></script>
     <script defer src="js/community.js"></script>
-    <script defer src="js/autumn-leaves.js"></script>
+    <script defer src="js/album.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script defer src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
 

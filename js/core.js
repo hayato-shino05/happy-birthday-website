@@ -1,66 +1,5 @@
-// Dữ liệu ngày sinh nhật
-const birthdays = [
-    {
-        name: "Dũng",
-        month: 12,
-        day: 7,
-        message: "🎉 Ê Dũng, sinh nhật vui quá nha mày! 🎉"
-    },
-    {
-        name: "Hiệp",
-        month: 10,
-        day: 2,
-        message: "🎉 Ê Hiệp, sinh nhật vui quá nha mày! 🎉"
-    },
-    {
-        name: "Thành",
-        month: 2,
-        day: 27,
-        message: "🎂 Hội mẹ bầu đơn thân Chúc mừng sinh nhật bé Thành nha 🎂"
-    },
-    {
-        name: "Đức",
-        month: 8,
-        day: 19,
-        message: "🎈 Đức ơi, sinh nhật mày tới rồi kìa, quẩy tung nóc đi nha! 🎈"
-    },
-    {
-        name: "Tiển",
-        month: 7,
-        day: 26,
-        message: "🎉 Tiển ơi, sinh nhật mày phải quẩy cho đã nha thằng khỉ! 🎉"
-    },
-    {
-        name: "Viện",
-        month: 6,
-        day: 24,
-        message: "🎉 Ê Viện, sinh nhật vui quá nha mày! 🎉"
-    },
-    {
-        name: "Diệu",
-        month: 8,
-        day: 5,
-        message: "🎂 Diệu xinh đẹp, sinh nhật vui nha nhỏ bạn! 🎂"
-    },
-    {
-        name: "Hiền",
-        month: 5,
-        day: 8,
-        message: "🎈 Hiền ơi, sinh nhật mày quẩy tưng bừng luôn nha! 🎈"
-    },
-    {
-        name: "Uyên",
-        month: 11,
-        day: 19,
-        message: "🎉 Uyên ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
-    },
-    {
-        name: "Như",
-        month: 10,
-        day: 12,
-        message: "🎉 Như ơi, sinh nhật mày tới rồi, quẩy banh nóc đi nha nhỏ! 🎈"
-    }
-];
+// Dữ liệu ngày sinh nhật - sẽ được tải từ Supabase
+let birthdays = [];
 
 // Thêm CSS nội tuyến cần thiết
 const style = document.createElement('style');
@@ -112,6 +51,51 @@ style.textContent = `
 `;
 
 document.head.appendChild(style);
+
+// Tải danh sách sinh nhật từ Supabase
+async function loadBirthdays() {
+    try {
+        // Kiểm tra xem đã có kết nối Supabase chưa
+        if (!supabase) {
+            console.error("Supabase chưa được khởi tạo");
+            return;
+        }
+        
+        // Lấy dữ liệu từ bảng birthdays
+        const { data, error } = await supabase
+            .from('birthdays')
+            .select('*')
+            .order('month')
+            .order('day');
+            
+        if (error) {
+            console.error("Lỗi khi tải dữ liệu sinh nhật:", error);
+            return;
+        }
+        
+        // Chuyển đổi dữ liệu sang định dạng cần thiết
+        birthdays = data.map(item => ({
+            name: item.name,
+            month: item.month,
+            day: item.day,
+            year: item.year,
+            message: item.message || `🎉 Chúc mừng sinh nhật ${item.name}! 🎉`
+        }));
+        
+        console.log("Đã tải danh sách sinh nhật từ Supabase:", birthdays);
+        
+        // Sau khi tải xong, kiểm tra sinh nhật
+        checkBirthdayAndInitialize();
+    } catch (error) {
+        console.error("Lỗi khi tải sinh nhật từ Supabase:", error);
+    }
+}
+
+// Khởi tạo trang khi tài liệu sẵn sàng
+document.addEventListener('DOMContentLoaded', () => {
+    // Tải danh sách sinh nhật từ Supabase khi trang đã tải xong
+    setTimeout(loadBirthdays, 1000); // Chờ 1 giây để đảm bảo Supabase đã được khởi tạo
+});
 
 // Kiểm tra xem có phải ngày sinh nhật không
 function checkIfBirthday(date) {
@@ -225,29 +209,32 @@ function displayCountdown(targetDate, person) {
     }
 }
 
-// Cập nhật thời gian đếm ngược
-function updateCountdownTime() {
+// Hàm kiểm tra sinh nhật và khởi tạo
+async function checkBirthdayAndInitialize() {
     try {
+        // Nếu danh sách sinh nhật rỗng, thử tải lại từ Supabase
+        if (birthdays.length === 0) {
+            await loadBirthdays();
+            // Nếu vẫn không có dữ liệu, dừng xử lý
+            if (birthdays.length === 0) {
+                console.error("Không thể tải dữ liệu sinh nhật");
+                return;
+            }
+        }
+        
         const now = new Date();
-        console.log('Current date:', now);
-        
-        // Reset time to midnight to avoid time-of-day issues
-        now.setHours(0, 0, 0, 0);
-        
         const birthdayPerson = checkIfBirthday(now);
-        console.log('Birthday person found:', birthdayPerson);
 
-        // Nếu hôm nay là sinh nhật
+        // Nếu có sinh nhật, khởi tạo nội dung sinh nhật
         if (birthdayPerson) {
             const today = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
             const lastShownDate = localStorage.getItem('lastBirthdayShown');
-            console.log('Today:', today, 'Last shown:', lastShownDate);
             
             // Nếu chưa hiển thị sinh nhật hôm nay
             if (lastShownDate !== today) {
-                console.log('Showing birthday content for:', birthdayPerson.name);
                 localStorage.setItem('lastBirthdayShown', today);
                 localStorage.setItem('currentBirthday', birthdayPerson.name);
+                localStorage.setItem('birthdayPerson', birthdayPerson.name); // Thêm cho các chức năng khác
                 showBirthdayContent(birthdayPerson);
             }
         } else {
@@ -255,12 +242,35 @@ function updateCountdownTime() {
             localStorage.removeItem('lastBirthdayShown');
             localStorage.removeItem('currentBirthday');
             
-            // Tìm và hiển thị đếm ngược đến sinh nhật tiếp theo
-            const nextBirthday = findNextBirthday(now);
+            // Khởi tạo đếm ngược
+            const nextBirthday = findNextBirthday(new Date());
             if (nextBirthday.person) {
                 displayCountdown(nextBirthday.date, nextBirthday.person);
             }
         }
+    } catch (error) {
+        console.error('Error in checkBirthdayAndInitialize:', error);
+    }
+}
+
+// Cập nhật thời gian đếm ngược (chạy mỗi giây)
+function updateCountdownTime() {
+    try {
+        // Lấy thông tin sinh nhật tiếp theo từ localStorage
+        const nextBirthdayDateStr = localStorage.getItem('nextBirthdayDate');
+        const nextBirthdayPersonStr = localStorage.getItem('nextBirthdayPerson');
+        
+        if (!nextBirthdayDateStr || !nextBirthdayPersonStr) {
+            // Nếu không có dữ liệu, chạy lại hàm khởi tạo một lần
+            checkBirthdayAndInitialize();
+            return;
+        }
+        
+        const nextBirthdayDate = new Date(nextBirthdayDateStr);
+        const nextBirthdayPerson = JSON.parse(nextBirthdayPersonStr);
+        
+        // Chỉ cập nhật bộ đếm thời gian, không kiểm tra lại ngày sinh nhật
+        displayCountdown(nextBirthdayDate, nextBirthdayPerson);
     } catch (error) {
         console.error('Error in updateCountdownTime:', error);
     }
@@ -276,12 +286,20 @@ function showBirthdayContent(birthdayPerson) {
     const birthdayContent = document.getElementById('birthdayContent');
     if (birthdayContent) {
         birthdayContent.classList.remove('hidden');
+        birthdayContent.classList.add('appearing');
+        
+        // Xóa lớp animation sau khi nó hoàn thành
+        setTimeout(() => {
+            birthdayContent.classList.remove('appearing');
+        }, 1000);
     }
 
     const birthdayTitle = document.getElementById('birthdayTitle');
     if (birthdayTitle) {
         birthdayTitle.style.display = 'block';
         birthdayTitle.style.opacity = '1';
+        birthdayTitle.classList.add('birthday-title');
+        birthdayTitle.textContent = 'Chúc Mừng Sinh Nhật';
     }
 
     const birthdayMessage = document.getElementById('birthdayMessage');
@@ -290,152 +308,116 @@ function showBirthdayContent(birthdayPerson) {
         birthdayMessage.style.display = 'block';
         birthdayMessage.style.opacity = '1';
         birthdayMessage.style.transform = 'translateY(0)';
+        birthdayMessage.classList.add('celebrating');
     }
 
-    document.getElementById('flame').style.opacity = '1';
-    document.getElementById('micPermissionBtn').style.display = 'inline-block';
-    document.querySelector('.countdown-container').style.display = 'none';
-    document.querySelector('.cake-container').style.display = 'block';
-    document.querySelector('.birthday-message').style.display = 'block';
+    // Hiển thị bánh 2D
+    const cake2DContainer = document.querySelector('.cake-2d-container');
+    if (cake2DContainer) {
+        cake2DContainer.style.display = 'flex';
+    }
+    
+    // Hiện nút thổi nến với hiệu ứng sau khi bánh đã hiển thị
+    setTimeout(() => {
+        const blowButton = document.getElementById('blowButton');
+        if (blowButton) {
+            blowButton.style.display = 'block';
+            blowButton.style.opacity = '0';
+            blowButton.style.transform = 'translateY(20px)';
+            
+            // Hiệu ứng hiện dần
+            setTimeout(() => {
+                blowButton.style.transition = 'all 0.5s ease';
+                blowButton.style.opacity = '1';
+                blowButton.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // Gắn sự kiện cho nút thổi nến - Chỉ cần nhấn nút là thổi tắt
+            blowButton.onclick = function() {
+                // Gọi trực tiếp hàm thổi tắt nến khi nhấn nút
+                if (typeof blowOutCandle === 'function') {
+                    blowOutCandle();
+                } else {
+                    console.log('Đang xử lý thổi nến...');
+                    // Fallback nếu không tìm thấy hàm
+                    const flames = document.querySelectorAll('.flame');
+                    if (flames && flames.length > 0) {
+                        flames.forEach((flame, index) => {
+                            setTimeout(() => {
+                                flame.style.opacity = '0';
+                            }, index * 200);
+                        });
+                    }
+                }
+            };
+        }
+    }, 1000);
+    
+    // Ẩn nút cấp quyền microphone vì không cần thiết
+    const micPermissionBtn = document.getElementById('micPermissionBtn');
+    if (micPermissionBtn) {
+        micPermissionBtn.style.display = 'none';
+    }
+    
+    // Ẩn bánh 3D và hiển thị bánh 2D
+    const cakeContainer = document.querySelector('.cake-container');
+    if (cakeContainer) {
+        cakeContainer.style.display = 'none';
+    }
+    
+    const birthdayMessageContainer = document.querySelector('.birthday-message');
+    if (birthdayMessageContainer) {
+        birthdayMessageContainer.style.display = 'block';
+    }
 
+    // Thay đổi nền trang với hiệu ứng
+    document.body.style.transition = 'background 1.5s ease';
     document.body.style.background = 'linear-gradient(135deg, #ffe6eb 0%, #ffb8c6 100%)';
 
+    // Tạo hiệu ứng confetti rơi xuống
+    setTimeout(() => {
     createConfetti();
-    init3DCake();
+        
+        // Thêm đợt confetti thứ hai sau vài giây
+        setTimeout(createConfetti, 2000);
+    }, 500);
 
-    playBirthdayMusic();
+    // Phát nhạc sinh nhật với độ trễ nhỏ
+    setTimeout(playBirthdayMusic, 1200);
     
     // Hiển thị lời chúc cá nhân hóa nếu có
-    displaySavedCustomMessage();
+    setTimeout(displaySavedCustomMessage, 1500);
+    
+    // Thêm hiệu ứng bóng bay
+    if (typeof createBalloons === 'function') {
+        setTimeout(createBalloons, 1000);
+    }
 }
 
 // Hàm khởi tạo bánh sinh nhật 3D
 function init3DCake() {
-    const cakeContainer = document.querySelector('.cake-container');
-    cakeContainer.innerHTML = '';
+    // Bánh 3D đã bị vô hiệu hóa, chỉ sử dụng bánh 2D
+    console.log('Bánh 3D đã bị vô hiệu hóa, chỉ sử dụng bánh 2D');
+    return;
+}
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, cakeContainer.clientWidth / cakeContainer.clientHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(cakeContainer.clientWidth, cakeContainer.clientHeight);
-    cakeContainer.appendChild(renderer.domElement);
+// Thêm trang trí cho bánh
+function addCakeTierDecorations(tier, radius, height, color) {
+    // Đã bị vô hiệu hóa vì không còn dùng bánh 3D
+    return;
+}
 
-    // Ánh sáng
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(0, 1, 1);
-    scene.add(directionalLight);
+// Thêm chữ Happy Birthday lên bánh
+function addBirthdayText(cakeGroup) {
+    // Đã vô hiệu hóa chức năng hiển thị chữ "Chúc Mừng Sinh Nhật"
+    return; // Không thêm chữ vào bánh nữa
+}
 
-    // Tạo bánh sinh nhật (hình trụ 3 tầng)
-    const cakeGroup = new THREE.Group();
-
-    // Tầng 1 (dưới cùng)
-    const tier1Geometry = new THREE.CylinderGeometry(5, 5, 2, 32);
-    const tier1Material = new THREE.MeshPhongMaterial({ color: 0xf9e4b7 });
-    const tier1 = new THREE.Mesh(tier1Geometry, tier1Material);
-    tier1.position.y = 1;
-    cakeGroup.add(tier1);
-
-    // Tầng 2 (giữa)
-    const tier2Geometry = new THREE.CylinderGeometry(3.5, 3.5, 2, 32);
-    const tier2Material = new THREE.MeshPhongMaterial({ color: 0xf9e4b7 });
-    const tier2 = new THREE.Mesh(tier2Geometry, tier2Material);
-    tier2.position.y = 3.2;
-    cakeGroup.add(tier2);
-
-    // Tầng 3 (trên cùng)
-    const tier3Geometry = new THREE.CylinderGeometry(2, 2, 2, 32);
-    const tier3Material = new THREE.MeshPhongMaterial({ color: 0xf9e4b7 });
-    const tier3 = new THREE.Mesh(tier3Geometry, tier3Material);
-    tier3.position.y = 5.4;
-    cakeGroup.add(tier3);
-
-    // Tạo nến
-    const candleGroup = new THREE.Group();
-    const candleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1.5, 16);
-    const candleMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    
-    const candle1 = new THREE.Mesh(candleGeometry, candleMaterial);
-    candle1.position.set(-1, 6.5, 0);
-    candleGroup.add(candle1);
-    
-    const candle2 = new THREE.Mesh(candleGeometry, candleMaterial);
-    candle2.position.set(0, 6.5, 0);
-    candleGroup.add(candle2);
-    
-    const candle3 = new THREE.Mesh(candleGeometry, candleMaterial);
-    candle3.position.set(1, 6.5, 0);
-    candleGroup.add(candle3);
-    
-    // Tạo ngọn lửa
-    const flameGeometry = new THREE.ConeGeometry(0.1, 0.3, 8);
-    const flameMaterial = new THREE.MeshPhongMaterial({ color: 0xff6b6b, emissive: 0xff6b6b, emissiveIntensity: 0.5 });
-    
-    const flame1 = new THREE.Mesh(flameGeometry, flameMaterial);
-    flame1.position.set(-1, 7.2, 0);
-    candleGroup.add(flame1);
-    
-    const flame2 = new THREE.Mesh(flameGeometry, flameMaterial);
-    flame2.position.set(0, 7.2, 0);
-    candleGroup.add(flame2);
-    
-    const flame3 = new THREE.Mesh(flameGeometry, flameMaterial);
-    flame3.position.set(1, 7.2, 0);
-    candleGroup.add(flame3);
-    
-    cakeGroup.add(candleGroup);
-    scene.add(cakeGroup);
-
-    camera.position.z = 10;
-
-    // Tương tác chuột
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
-    
-    cakeContainer.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        previousMousePosition = {
-            x: e.clientX,
-            y: e.clientY
-        };
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            const deltaMove = {
-                x: e.clientX - previousMousePosition.x,
-                y: e.clientY - previousMousePosition.y
-            };
-            const rotationSpeed = 0.005;
-            cakeGroup.rotation.z += deltaMove.x * rotationSpeed;
-            cakeGroup.rotation.x += deltaMove.y * rotationSpeed;
-            previousMousePosition = {
-                x: e.clientX,
-                y: e.clientY
-            };
-        }
-    });
-    
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    // Animation loop
-    function animate() {
-        requestAnimationFrame(animate);
-        // Hiệu ứng nổi cho bánh
-        cakeGroup.position.y = Math.sin(Date.now() * 0.001) * 0.5;
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    // Xử lý thay đổi kích thước cửa sổ
-    window.addEventListener('resize', () => {
-        camera.aspect = cakeContainer.clientWidth / cakeContainer.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(cakeContainer.clientWidth, cakeContainer.clientHeight);
-    });
+// Tính năng tải Three.js nếu chưa có
+function loadThreeJS(callback) {
+    // Đã bị vô hiệu hóa vì không còn dùng bánh 3D
+    if (callback) callback();
+    return;
 }
 
 // Phát nhạc sinh nhật
@@ -477,10 +459,10 @@ function debugDate() {
 
 // Khởi tạo trang
 document.addEventListener('DOMContentLoaded', function() {
-    // Khởi tạo đếm ngược
-    updateCountdownTime();
+    // Kiểm tra sinh nhật một lần khi tải trang
+    checkBirthdayAndInitialize();
     
-    // Cập nhật mỗi giây
+    // Cập nhật đếm ngược mỗi giây (không kiểm tra lại ngày sinh nhật)
     setInterval(updateCountdownTime, 1000);
     
     // Khởi tạo các tính năng khác

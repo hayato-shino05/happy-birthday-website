@@ -48,6 +48,7 @@ function applyLanguage(lang) {
         songTitle: document.querySelector('.song-title')
     };
     
+    // Cập nhật nội dung cho birthdayTitle từ đối tượng translations
     if (elements.birthdayTitle) elements.birthdayTitle.textContent = translations[lang].title;
     if (elements.blowButton) elements.blowButton.textContent = translations[lang].blowButton;
     if (elements.micPermissionBtn) elements.micPermissionBtn.textContent = translations[lang].micPermission;
