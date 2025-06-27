@@ -909,7 +909,7 @@ function addUploadButton(gallery) {
     
     // Icon tải lên
     const uploadIcon = document.createElement('div');
-    uploadIcon.innerHTML = '📤';
+    uploadIcon.innerHTML = '<img src="assets/icon/upload.png" alt="Upload Icon" style="width: 100px; height: 100px;">';
     uploadIcon.style.fontSize = '40px';
     uploadIcon.style.marginBottom = '10px';
     
@@ -917,7 +917,7 @@ function addUploadButton(gallery) {
     const uploadText = document.createElement('div');
     uploadText.textContent = 'Tải lên';
     uploadText.style.color = '#854D27';
-    uploadText.style.fontSize = '14px';
+    uploadText.style.fontSize = '20px';
     uploadText.style.fontWeight = 'bold';
     
     // Input type="file" (ẩn)
