@@ -76,6 +76,13 @@
 3. **Cấp Quyền Camera**:
    - Cho phép sử dụng camera khi được yêu cầu để trải nghiệm tính năng quay video lời chúc.
 
+4. **Triển Khai Lên Vercel**:
+   - Đăng ký và tạo dự án trên Vercel.
+   - Thêm các biến môi trường sau trong phần cài đặt:
+     - `SUPABASE_URL`: URL của dự án Supabase của bạn
+     - `SUPABASE_ANON_KEY`: Khóa truy cập ẩn danh (anon key) từ Supabase
+   - Vercel sẽ tự động tạo file `env.js` trong quá trình build dựa trên các biến môi trường đã cấu hình.
+
 ## 💻 Thiết Lập Phát Triển 💻
 
 ```bash

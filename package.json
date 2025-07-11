@@ -6,7 +6,9 @@
   "private": false,
   "scripts": {
     "lint": "eslint . --ext .js --max-warnings=0",
-    "format": "prettier --write \"**/*.{js,json,css,html,md}\""
+    "format": "prettier --write \"**/*.{js,json,css,html,md}\"",
+    "prebuild": "node generate-env.js",
+    "build": "echo 'Build completed with environment variables'"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

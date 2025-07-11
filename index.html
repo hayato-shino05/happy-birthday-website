@@ -223,18 +223,8 @@
         </div>
     </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script defer src="js/supabase-config.js"></script>
-    <script defer src="js/core.js"></script>
-    <script defer src="js/themes.js"></script>
-    <script defer src="js/features.js"></script>
-    <script defer src="js/community.js"></script>
-    <script defer src="js/album.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script defer src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
-
     <!-- Lazy-load helper for images created dynamically -->
-    <script defer>
+    <script>
       document.addEventListener('DOMContentLoaded', () => {
         const ensureLazy = img => {
           if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy')
@@ -254,5 +244,16 @@
       })
     </script>
     <link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css" />
+
+    <script src="env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/themes.js"></script>
+    <script src="js/features.js"></script>
+    <script src="js/community.js"></script>
+    <script src="js/album.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
 </body>
 </html>

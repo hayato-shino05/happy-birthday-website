@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": ".",
+  "framework": null,
+  "headers": [
+    {
+      "source": "/env.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
+} 

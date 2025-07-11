@@ -1075,7 +1075,13 @@ function initPuzzleGame() {
     if (window.useLocalMedia) {
         imageUrl = `memory/${imageFile}`;
     } else {
-        const baseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/';
+        // Sử dụng biến môi trường cho URL Supabase
+        let baseUrl = '';
+        if (window.env && window.env.SUPABASE_URL) {
+            baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
+        } else {
+            console.error('SUPABASE_URL không được định nghĩa trong biến môi trường');
+        }
         imageUrl = `${baseUrl}${imageFile}`;
     }
     

@@ -260,8 +260,13 @@ function renderPhotoItem(index, gallery) {
         // Sử dụng thư mục memory local
         mediaPath = `memory/${index}`;
     } else {
-        // Lấy URL từ Supabase Storage
-        const baseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/';
+        // Lấy URL từ Supabase Storage sử dụng biến môi trường
+        let baseUrl = '';
+        if (window.env && window.env.SUPABASE_URL) {
+            baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
+        } else {
+            console.error('SUPABASE_URL không được định nghĩa trong biến môi trường');
+        }
         mediaPath = `${baseUrl}${index}`;
     }
     
@@ -451,8 +456,13 @@ function renderSlideItem(index, slide) {
         // Sử dụng thư mục memory local
         mediaPath = `memory/${index}`;
     } else {
-        // Lấy URL từ Supabase Storage
-        const baseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/';
+        // Lấy URL từ Supabase Storage sử dụng biến môi trường
+        let baseUrl = '';
+        if (window.env && window.env.SUPABASE_URL) {
+            baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
+        } else {
+            console.error('SUPABASE_URL không được định nghĩa trong biến môi trường');
+        }
         mediaPath = `${baseUrl}${index}`;
     }
     
