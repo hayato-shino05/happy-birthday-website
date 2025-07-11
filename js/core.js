@@ -183,27 +183,45 @@ function displayCountdown(targetDate, person) {
         const countdownElement = document.getElementById('countdown');
         if (countdownElement) {
             countdownElement.classList.remove('hidden');
-            countdownElement.innerHTML = `
-                <h1>Đếm Ngược Đến Sinh Nhật ${person.name}</h1>
-                <div class="time">
-                    <div>
-                        <span id="days">${days}</span>
-                        <div>Ngày</div>
+            
+            // Kiểm tra xem HTML hiển thị đã tồn tại chưa
+            const titleElement = countdownElement.querySelector('h1');
+            
+            // Nếu chưa có HTML hoặc hiển thị người sinh nhật khác, tạo mới toàn bộ HTML
+            if (!titleElement || titleElement.dataset.person !== person.name) {
+                countdownElement.innerHTML = `
+                    <h1 data-person="${person.name}">Đếm Ngược Đến Sinh Nhật ${person.name}</h1>
+                    <div class="time">
+                        <div>
+                            <span id="days">${days}</span>
+                            <div>Ngày</div>
+                        </div>
+                        <div>
+                            <span id="hours">${hours}</span>
+                            <div>Giờ</div>
+                        </div>
+                        <div>
+                            <span id="minutes">${minutes}</span>
+                            <div>Phút</div>
+                        </div>
+                        <div>
+                            <span id="seconds">${seconds}</span>
+                            <div>Giây</div>
+                        </div>
                     </div>
-                    <div>
-                        <span id="hours">${hours}</span>
-                        <div>Giờ</div>
-                    </div>
-                    <div>
-                        <span id="minutes">${minutes}</span>
-                        <div>Phút</div>
-                    </div>
-                    <div>
-                        <span id="seconds">${seconds}</span>
-                        <div>Giây</div>
-                    </div>
-                </div>
-            `;
+                `;
+            } else {
+                // Nếu đã có HTML, chỉ cập nhật các số đếm để tránh bị nhảy
+                const daysElement = countdownElement.querySelector('#days');
+                const hoursElement = countdownElement.querySelector('#hours');
+                const minutesElement = countdownElement.querySelector('#minutes');
+                const secondsElement = countdownElement.querySelector('#seconds');
+                
+                if (daysElement) daysElement.textContent = days;
+                if (hoursElement) hoursElement.textContent = hours;
+                if (minutesElement) minutesElement.textContent = minutes;
+                if (secondsElement) secondsElement.textContent = seconds;
+            }
         }
     } catch (error) {
         console.error('Error displaying countdown:', error);
