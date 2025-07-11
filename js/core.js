@@ -1,5 +1,6 @@
 // Dữ liệu ngày sinh nhật - sẽ được tải từ Supabase
 let birthdays = [];
+let lastBirthdayCheck = null; // Thêm biến để theo dõi lần kiểm tra cuối cùng
 
 // Thêm CSS nội tuyến cần thiết
 const style = document.createElement('style');
@@ -212,40 +213,67 @@ function displayCountdown(targetDate, person) {
 // Hàm kiểm tra sinh nhật và khởi tạo
 async function checkBirthdayAndInitialize() {
     try {
-        // Nếu danh sách sinh nhật rỗng, thử tải lại từ Supabase
-        if (birthdays.length === 0) {
-            await loadBirthdays();
-            // Nếu vẫn không có dữ liệu, dừng xử lý
-            if (birthdays.length === 0) {
-                console.error("Không thể tải dữ liệu sinh nhật");
-                return;
-            }
-        }
-        
         const now = new Date();
-        const birthdayPerson = checkIfBirthday(now);
-
-        // Nếu có sinh nhật, khởi tạo nội dung sinh nhật
-        if (birthdayPerson) {
-            const today = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-            const lastShownDate = localStorage.getItem('lastBirthdayShown');
+        
+        // Kiểm tra xem đã quá 24 giờ kể từ lần kiểm tra cuối cùng hay chưa
+        const lastCheck = localStorage.getItem('lastBirthdayCheck');
+        const shouldCheck = !lastCheck || (now - new Date(lastCheck)) > (24 * 60 * 60 * 1000);
+        
+        console.log("Kiểm tra sinh nhật mới: " + (shouldCheck ? "Có" : "Không") + 
+                   (lastCheck ? ", Lần kiểm tra cuối: " + new Date(lastCheck).toLocaleString() : ""));
+        
+        // Nếu danh sách sinh nhật rỗng hoặc đã đến thời gian kiểm tra lại
+        if (birthdays.length === 0 || shouldCheck) {
+            if (birthdays.length === 0) {
+                await loadBirthdays();
+                // Nếu vẫn không có dữ liệu, dừng xử lý
+                if (birthdays.length === 0) {
+                    console.error("Không thể tải dữ liệu sinh nhật");
+                    return;
+                }
+            }
             
-            // Nếu chưa hiển thị sinh nhật hôm nay
-            if (lastShownDate !== today) {
-                localStorage.setItem('lastBirthdayShown', today);
-                localStorage.setItem('currentBirthday', birthdayPerson.name);
-                localStorage.setItem('birthdayPerson', birthdayPerson.name); // Thêm cho các chức năng khác
-                showBirthdayContent(birthdayPerson);
+            // Cập nhật thời gian kiểm tra cuối cùng
+            localStorage.setItem('lastBirthdayCheck', now.toISOString());
+            lastBirthdayCheck = now;
+            
+            const birthdayPerson = checkIfBirthday(now);
+
+            // Nếu có sinh nhật, khởi tạo nội dung sinh nhật
+            if (birthdayPerson) {
+                const today = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+                const lastShownDate = localStorage.getItem('lastBirthdayShown');
+                
+                // Nếu chưa hiển thị sinh nhật hôm nay
+                if (lastShownDate !== today) {
+                    localStorage.setItem('lastBirthdayShown', today);
+                    localStorage.setItem('currentBirthday', birthdayPerson.name);
+                    localStorage.setItem('birthdayPerson', birthdayPerson.name); // Thêm cho các chức năng khác
+                    showBirthdayContent(birthdayPerson);
+                }
+            } else {
+                // Xóa dữ liệu sinh nhật cũ
+                localStorage.removeItem('lastBirthdayShown');
+                localStorage.removeItem('currentBirthday');
+                
+                // Khởi tạo đếm ngược
+                const nextBirthday = findNextBirthday(new Date());
+                if (nextBirthday.person) {
+                    // Lưu thông tin sinh nhật kế tiếp để sử dụng trong đếm ngược
+                    localStorage.setItem('nextBirthdayDate', nextBirthday.date.toISOString());
+                    localStorage.setItem('nextBirthdayPerson', JSON.stringify(nextBirthday.person));
+                    displayCountdown(nextBirthday.date, nextBirthday.person);
+                }
             }
         } else {
-            // Xóa dữ liệu sinh nhật cũ
-            localStorage.removeItem('lastBirthdayShown');
-            localStorage.removeItem('currentBirthday');
+            // Chỉ cập nhật đếm ngược từ dữ liệu đã lưu, không kiểm tra lại
+            const nextBirthdayDateStr = localStorage.getItem('nextBirthdayDate');
+            const nextBirthdayPersonStr = localStorage.getItem('nextBirthdayPerson');
             
-            // Khởi tạo đếm ngược
-            const nextBirthday = findNextBirthday(new Date());
-            if (nextBirthday.person) {
-                displayCountdown(nextBirthday.date, nextBirthday.person);
+            if (nextBirthdayDateStr && nextBirthdayPersonStr) {
+                const nextBirthdayDate = new Date(nextBirthdayDateStr);
+                const nextBirthdayPerson = JSON.parse(nextBirthdayPersonStr);
+                displayCountdown(nextBirthdayDate, nextBirthdayPerson);
             }
         }
     } catch (error) {
@@ -484,6 +512,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initCustomMessage();
     displaySavedCustomMessage();
     
-    // Debug
-    debugDate();
+    // Debug với số lượng log thấp hơn
+    // debugDate();
 }); 
