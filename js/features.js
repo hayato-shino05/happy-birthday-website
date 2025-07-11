@@ -1076,11 +1076,8 @@ function initPuzzleGame() {
     } else {
         // Sử dụng biến môi trường cho URL Supabase
         let baseUrl = '';
-        if (window.env && window.env.SUPABASE_URL_MEDIA) {
-            baseUrl = `${window.env.SUPABASE_URL_MEDIA}`;
-        } else {
-            // Không thể lấy biến môi trường Supabase
-        }
+            // Sử dụng đường dẫn trực tiếp thay vì window.env
+    baseUrl = `https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/`;
         imageUrl = `${baseUrl}${imageFile}`;
     }
     
