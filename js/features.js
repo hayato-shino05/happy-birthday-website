@@ -856,7 +856,7 @@ async function loadPuzzleImages() {
     }
     
     try {
-        console.log("Đang tải ảnh cho trò chơi ghép hình...");
+        // Đang tải ảnh cho trò chơi
         
         // Nếu window.mediaFilesLoaded đã được định nghĩa và có giá trị true
         if (window.mediaFilesLoaded && window.mediaFiles && window.mediaFiles.length > 0) {
@@ -866,17 +866,16 @@ async function loadPuzzleImages() {
             );
             
             if (imageFiles.length > 0) {
-                console.log(`Đã tìm thấy ${imageFiles.length} ảnh từ media đã tải`);
+                // Đã tìm thấy ảnh từ media đã tải
                 puzzleGameImages = imageFiles;
                 isPuzzleImagesLoaded = true;
                 return imageFiles;
             }
         }
         
-        // Nếu không có mediaFiles hoặc không tìm thấy ảnh, thử tải từ Supabase
-        console.log("Đang tải ảnh từ Supabase...");
-        
-        // Kiểm tra xem supabase đã được định nghĩa chưa
+                    // Nếu không có mediaFiles, thử tải từ Supabase
+            
+            // Kiểm tra xem supabase đã được định nghĩa chưa
         if (typeof supabase !== 'undefined') {
             const { data, error } = await supabase
                 .storage
@@ -896,7 +895,7 @@ async function loadPuzzleImages() {
                     .map(file => file.name);
                 
                 if (imageFiles.length > 0) {
-                    console.log(`Đã tìm thấy ${imageFiles.length} ảnh từ Supabase`);
+                    // Đã tìm thấy ảnh từ Supabase
                     puzzleGameImages = imageFiles;
                     isPuzzleImagesLoaded = true;
                     window.useLocalMedia = false;
@@ -906,7 +905,7 @@ async function loadPuzzleImages() {
         }
         
         // Fallback: Sử dụng danh sách ảnh local
-        console.log("Sử dụng danh sách ảnh local");
+                    // Sử dụng danh sách ảnh local
         const localImages = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', 
                             '6.jpg', '7.jpg', '8.jpg', '9.jpg', '10.jpg'];
         puzzleGameImages = localImages;
@@ -1080,7 +1079,7 @@ function initPuzzleGame() {
         if (window.env && window.env.SUPABASE_URL) {
             baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
         } else {
-            console.error('SUPABASE_URL không được định nghĩa trong biến môi trường');
+            // Không thể lấy biến môi trường Supabase
         }
         imageUrl = `${baseUrl}${imageFile}`;
     }
@@ -1090,7 +1089,7 @@ function initPuzzleGame() {
         imageInfo.textContent = `Đang sử dụng ảnh: ${imageFile}`;
     }
     
-    console.log("Trò chơi ghép hình sử dụng ảnh:", imageUrl);
+            // Khởi tạo trò chơi ghép hình
     
     const gridCols = 4; // 4 cột để ưu tiên chiều ngang
     const gridRows = 2; // 2 hàng để giảm chiều dọc
@@ -1114,7 +1113,7 @@ function initPuzzleGame() {
     };
     testImage.onerror = () => {
         // Ảnh không tồn tại, sử dụng ảnh mặc định
-        console.error("Không thể tải ảnh:", imageUrl);
+        // Không thể tải ảnh, sử dụng ảnh mặc định
         imageUrl = 'memory/1.jpg'; // Ảnh mặc định
         createPuzzleGame(imageUrl);
     };
@@ -1400,7 +1399,7 @@ function generateECard() {
     preview.textContent = message;
     modalContent.appendChild(preview);
     
-    console.log(`Generated eCard with message: ${message} and image: ${imageUrl}`);
+            // Đã tạo eCard
 }
 
 // Hàm sao chép liên kết thẻ chúc mừng
@@ -1983,7 +1982,7 @@ function saveAudioMessage() {
                     }
                     
                     // Fallback nếu không thể lưu vào Supabase
-                    console.log("Không thể lưu vào Supabase, sử dụng localStorage");
+                    // Fallback vào localStorage
         let audioMessages = JSON.parse(localStorage.getItem('audioMessages') || '{}');
         if (!audioMessages[birthdayPerson]) {
             audioMessages[birthdayPerson] = [];

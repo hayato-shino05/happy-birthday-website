@@ -1,250 +1,145 @@
-// Biến toàn cục cho album
-window.mediaFilesLoaded = false;  // Kiểm tra xem đã tải dữ liệu chưa
-window.mediaFiles = [];  // Lưu trữ danh sách file đã tải
-window.useLocalMedia = false;  // Kiểm soát việc sử dụng local media
-window.isLoadingMedia = false;  // Ngăn tải file cùng lúc
-window.mediaAlreadyLoaded = false;  // Theo dõi trạng thái tải
+// Album module cho happy-birthday-website
 
-// Thêm CSS cho phần video
-const albumStyle = document.createElement('style');
-albumStyle.textContent = `
-.photo-item {
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
+// Biến toàn cục lưu trữ thông tin album
+let swiperInstance;
 
-.photo-item:hover {
-    transform: scale(1.05);
-    z-index: 2;
-}
-
-.photo-item-media {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.play-icon {
-    transition: all 0.3s ease;
-    pointer-events: auto;
-}
-
-.photo-item:hover .play-icon {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-}
-
-/* Đảm bảo video trong modal hiển thị đúng */
-#fullSizeMediaModal video {
-    display: block;
-    max-width: 90%;
-    max-height: 80vh;
-}
-
-/* Đảm bảo các nút điều khiển hiển thị phía trên */
-#fullSizeMediaModal button,
-#fullSizeMediaModal .caption {
-    z-index: 10002;
-}
-`;
-document.head.appendChild(albumStyle);
-
-// Khởi tạo Swiper
-let swiperInstance = null;
-
-// Lấy thống kê từ Supabase - có thể tùy chỉnh để lọc các file
+// Hàm lấy thống kê media
 async function getMediaStats(bucket) {
-    try {
-        let { data, error } = await supabase
-            .storage
-            .from(bucket)
-            .list('', {
-                limit: 100,
-                offset: 0,
-                sortBy: { column: 'name', order: 'asc' }
-            });
-        
-        if (error) throw error;
-        
-        // Lọc bỏ file .emptyFolderPlaceholder
-        data = data.filter(file => file.name !== '.emptyFolderPlaceholder');
-        
-        // Đếm số lượng ảnh và video
-        const stats = {
-            total: data.length,
-            images: data.filter(file => file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)).length,
-            videos: data.filter(file => file.name.match(/\.(mp4|webm|mov|avi)$/i)).length,
-            fileList: data
-        };
-        
-        return stats;
-    } catch (error) {
-        console.error("Lỗi khi lấy thống kê media:", error);
-        throw error;
+    if (typeof getMediaStats === 'function' && typeof supabase !== 'undefined') {
+        try {
+            const stats = await window.getMediaStats(bucket);
+            return stats;
+        } catch (error) {
+            // Lỗi khi lấy thống kê media
+            return { total: 0, images: 0, videos: 0, error: true };
+        }
     }
+    return { total: 0, images: 0, videos: 0, error: true };
 }
 
-// Chức năng tải media ban đầu - dùng cho cả album và slideshow
+// Tải dữ liệu album
 async function loadAlbumMedia() {
-    // Ngăn tải hai lần
-    if (window.isLoadingMedia) {
-        console.log("Đang trong quá trình tải, bỏ qua yêu cầu tải mới");
+    // Kiểm tra xem đã tải hay chưa
+    if (window.mediaFilesLoading) {
+        // Đang trong quá trình tải, bỏ qua yêu cầu tải mới
         return;
     }
     
     // Đánh dấu đang tải
-    window.isLoadingMedia = true;
+    window.mediaFilesLoading = true;
     
+    // Lấy các phần tử DOM
     const gallery = document.getElementById('photoGallery');
     const slideshowWrapper = document.getElementById('slideshowWrapper');
+    const loadingMsgElement = document.querySelector('.album-loading');
     
-    // Xóa nội dung hiện tại
-    gallery.innerHTML = '';
-    
-    // Hiển thị thông báo đang tải
-    const loadingMsg = document.createElement('div');
-    loadingMsg.textContent = 'Đang tải album...';
-    loadingMsg.style.textAlign = 'center';
-    loadingMsg.style.padding = '20px';
-    loadingMsg.style.color = '#8B4513';
-    loadingMsg.style.fontSize = '16px';
-    gallery.appendChild(loadingMsg);
-    
-    try {
-        // Thử lấy dữ liệu từ Supabase Storage
-        const stats = await getMediaStats('media');
-        console.log('Thống kê media:', stats);
-        
-        // Hiển thị thống kê vào gallery nhưng sẽ bị xóa sau khi tải xong
-        const statsInfo = document.createElement('div');
-        statsInfo.innerHTML = `<div style="text-align: center; padding: 5px; margin-bottom: 10px; background: #f8f8f8;">
-            <strong>Thông kê Album:</strong> Tổng cộng ${stats.total} file (${stats.images} ảnh, ${stats.videos} video)
-        </div>`;
-        gallery.appendChild(statsInfo);
-        
-        // Lấy danh sách file từ Supabase
-        const mediaFiles = stats.fileList;
-        
-        if (!mediaFiles || mediaFiles.length === 0) {
-            console.log("Không có dữ liệu từ Supabase, chuyển sang local");
-            loadFromLocal(gallery, slideshowWrapper, loadingMsg);
-            return;
-        }
-        
-        // Đánh dấu sử dụng Supabase
-        window.useLocalMedia = false;
-        
-        // Lưu vào bộ nhớ đệm
-        window.mediaFiles = mediaFiles.map(file => file.name);
-        window.mediaFilesLoaded = true;
-        
-        // Xóa thông báo đang tải
-        if (gallery.contains(loadingMsg)) {
-            gallery.removeChild(loadingMsg);
-        }
-        
-        // Hiển thị tất cả các file, loại bỏ file .emptyFolderPlaceholder
-        mediaFiles.forEach(file => {
-            if (file.name !== '.emptyFolderPlaceholder') {
-                renderPhotoItem(file.name, gallery);
-            }
-        });
-        
-        // Thêm nút tải lên ở cuối
-        addUploadButton(gallery);
-        
-        // Thêm thông tin thống kê vào đầu gallery (giữ lại)
-        if (gallery.contains(statsInfo)) {
-            gallery.removeChild(statsInfo);
-        }
-        gallery.insertBefore(statsInfo, gallery.firstChild);
-        
-        console.log(`Đã tải ${mediaFiles.length} file từ Supabase Storage`);
-        
-        // Nếu đang ở chế độ slideshow, render slideshow
-        if (document.getElementById('slideshowContainer').style.display === 'block') {
-            renderSlideshow();
-        }
-    } catch (error) {
-        console.error('Lỗi khi tải ảnh từ Supabase:', error);
-        loadFromLocal(gallery, slideshowWrapper, loadingMsg);
-    } finally {
-        // Xóa trạng thái đang tải
-        window.isLoadingMedia = false;
-    }
-}
-
-// Tải dữ liệu từ thư mục local (fallback khi Supabase lỗi)
-function loadFromLocal(gallery, slideshowWrapper, loadingMsgElement) {
-    // Đánh dấu sử dụng local media
-    window.useLocalMedia = true;
-    
-    // Xóa thông báo đang tải
-    if (loadingMsgElement && gallery.contains(loadingMsgElement)) {
-        gallery.removeChild(loadingMsgElement);
-    }
-    
-    // Thông báo chuyển sang local
-    gallery.innerHTML = '<div style="text-align: center; padding: 10px; color: orange; margin-bottom: 15px; background-color: #fff3e0; border-radius: 5px;">Không thể kết nối tới Supabase. Hiển thị ảnh từ bộ nhớ cục bộ.</div>';
-    
-    // Danh sách đầy đủ các file ảnh và video trong thư mục memory
-    const fileList = [
-        '1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', 
-        '6.jpg', '7.jpg', '8.jpg', '9.jpg', '10.jpg'
-    ];
-    
-    // Hiển thị thông tin thống kê
-    const imgCount = fileList.filter(f => f.endsWith('.jpg')).length;
-    const vidCount = fileList.filter(f => f.endsWith('.mp4')).length;
-    
-    const statsInfo = document.createElement('div');
-    statsInfo.innerHTML = `<div style="text-align: center; padding: 5px; margin-bottom: 10px; background: #f8f8f8;">
-        <strong>Thống kê Album (Local):</strong> Tổng cộng ${fileList.length} file (${imgCount} ảnh, ${vidCount} video)
-    </div>`;
-    gallery.appendChild(statsInfo);
-    
-    // Lưu vào bộ nhớ đệm
-    window.mediaFiles = [...fileList];
-    window.mediaFilesLoaded = true;
-    
-    // Tải tất cả file local, bỏ qua file .emptyFolderPlaceholder
-    fileList.forEach(file => {
-        if (file !== '.emptyFolderPlaceholder') {
-            renderPhotoItem(file, gallery);
-        }
-    });
-    
-    // Thêm nút tải lên ở cuối
-    addUploadButton(gallery);
-    
-    // Di chuyển thống kê lên đầu
-    if (gallery.contains(statsInfo)) {
-        gallery.removeChild(statsInfo);
-    }
-    gallery.insertBefore(statsInfo, gallery.firstChild);
-    
-    // Nếu đang ở chế độ slideshow, render slideshow
-    if (document.getElementById('slideshowContainer').style.display === 'block') {
-        renderSlideshow();
-    }
-}
-
-// Render một ảnh/video vào gallery
-function renderPhotoItem(index, gallery) {
-    // Bỏ qua file .emptyFolderPlaceholder
-    if (index === '.emptyFolderPlaceholder') {
+    if (!gallery) {
+        window.mediaFilesLoading = false;
         return;
     }
     
-    // Sử dụng directory listing để đọc tất cả các file
+    // Xóa nội dung cũ nếu có
+    gallery.innerHTML = '';
+    if (slideshowWrapper) slideshowWrapper.innerHTML = '';
+    
+    if (loadingMsgElement) {
+        loadingMsgElement.textContent = 'Đang tải album...';
+        loadingMsgElement.style.display = 'block';
+    }
+
+    try {
+        // Tạo nút Upload nếu chưa có
+        addUploadButton(gallery);
+        
+        // Kiểm tra thống kê media
+        const stats = await getMediaStats('media');
+        
+        // Hiển thị thông tin
+        // Thống kê media
+        
+        // Nếu có dữ liệu media từ Supabase
+        if (stats && stats.total > 0 && !stats.error) {
+            // Tải từ Supabase
+            window.useLocalMedia = false;
+            
+            // Lấy danh sách file từ Supabase
+            const { data: mediaFiles, error } = await supabase
+                .storage
+                .from('media')
+                .list('', { sortBy: { column: 'name', order: 'asc' } });
+            
+            if (!error) {
+                // Lọc bỏ các thư mục
+                window.mediaFiles = mediaFiles
+                    .filter(item => !item.metadata || item.metadata.mimetype)
+                    .map(item => item.name);
+                
+                // Đánh dấu đã tải xong
+                window.mediaFilesLoaded = true;
+                
+                // Hiển thị dữ liệu
+                window.mediaFiles.forEach(file => renderPhotoItem(file, gallery));
+                
+                // Đã tải file từ Supabase Storage
+                
+                // Ẩn thông báo đang tải
+                if (loadingMsgElement) {
+                    loadingMsgElement.style.display = 'none';
+                }
+            } else {
+                // Không thể tải từ Supabase, dùng local
+                window.useLocalMedia = true;
+                loadFromLocal(gallery, slideshowWrapper, loadingMsgElement);
+            }
+        } else {
+            // Sử dụng dữ liệu local
+            window.useLocalMedia = true;
+            loadFromLocal(gallery, slideshowWrapper, loadingMsgElement);
+        }
+    } catch (error) {
+        // Lỗi khi tải ảnh từ Supabase
+        // Sử dụng local
+        window.useLocalMedia = true;
+        loadFromLocal(gallery, slideshowWrapper, loadingMsgElement);
+    } finally {
+        // Đánh dấu đã hoàn thành việc tải
+        window.mediaFilesLoading = false;
+    }
+}
+
+// Tải dữ liệu local
+function loadFromLocal(gallery, slideshowWrapper, loadingMsgElement) {
+    // Tạo danh sách ảnh mẫu
+    const sampleMedia = [];
+    
+    // Thêm 10 ảnh mẫu
+    for (let i = 1; i <= 10; i++) {
+        sampleMedia.push(`${i}.jpg`);
+    }
+    
+    // Thêm video mẫu
+    sampleMedia.push('sample.mp4');
+    
+    // Lưu danh sách file vào biến toàn cục
+    window.mediaFiles = sampleMedia;
+    window.mediaFilesLoaded = true;
+    
+    // Hiển thị dữ liệu
+    sampleMedia.forEach(file => renderPhotoItem(file, gallery));
+    
+    // Ẩn thông báo đang tải
+    if (loadingMsgElement) {
+        loadingMsgElement.style.display = 'none';
+    }
+}
+
+// Hiển thị một mục ảnh/video
+function renderPhotoItem(index, gallery) {
+    // Tạo container cho ảnh/video
     const photoContainer = document.createElement('div');
     photoContainer.className = 'photo-item';
-    photoContainer.dataset.mediaNumber = index;
-    photoContainer.dataset.index = index;  // Thêm index để dễ truy xuất
     
-    // Thêm nút tag
+    // Thêm nút gắn thẻ
     const tagButton = document.createElement('button');
     tagButton.className = 'tag-button';
     tagButton.textContent = '+';
@@ -265,7 +160,7 @@ function renderPhotoItem(index, gallery) {
         if (window.env && window.env.SUPABASE_URL) {
             baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
         } else {
-            console.error('SUPABASE_URL không được định nghĩa trong biến môi trường');
+            // Thiếu biến môi trường SUPABASE_URL
         }
         mediaPath = `${baseUrl}${index}`;
     }
@@ -302,7 +197,7 @@ function renderPhotoItem(index, gallery) {
         
         // Hiển thị video khi click
         photoContainer.addEventListener('click', () => {
-            console.log("Video clicked, opening full size:", index);
+            // Video clicked, opening full size
             openFullSizeMedia(video.src, index, 'video');
         });
         
@@ -322,7 +217,7 @@ function renderPhotoItem(index, gallery) {
         
         // Thêm sự kiện click riêng cho icon play
         playIcon.addEventListener('click', (e) => {
-            console.log("Play icon clicked, opening full size:", index);
+            // Play icon clicked, opening full size
             e.stopPropagation(); // Ngăn chặn lan truyền để không kích hoạt click của photoContainer
             openFullSizeMedia(video.src, index, 'video');
         });
@@ -331,7 +226,7 @@ function renderPhotoItem(index, gallery) {
         
         // Phát video khi hover
         photoContainer.addEventListener('mouseenter', () => {
-            video.play().catch(e => console.log('Video autoplay failed'));
+            video.play().catch(e => {/* Video autoplay failed */});
         });
         
         photoContainer.addEventListener('mouseleave', () => {
@@ -354,7 +249,7 @@ function renderPhotoItem(index, gallery) {
         
         // Xử lý lỗi khi tải ảnh
         img.onerror = function() {
-            console.error(`Không thể tải ảnh: ${mediaPath}`);
+            // Không thể tải ảnh
             // Hiển thị hình ảnh lỗi
             img.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22300%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20fill%3D%22%23EEEEEE%22%20d%3D%22M0%200h400v300H0z%22%2F%3E%3Ctext%20fill%3D%22%23999999%22%20font-family%3D%22Arial%2CSans-serif%22%20font-size%3D%2230%22%20font-weight%3D%22bold%22%20dy%3D%22.3em%22%20x%3D%22200%22%20y%3D%22150%22%20text-anchor%3D%22middle%22%3EKhông%20tải%20được%20ảnh%3C%2Ftext%3E%3C%2Fsvg%3E';
         };
@@ -380,11 +275,11 @@ function toggleSlideshowMode(enabled) {
         // Khởi tạo slideshow dựa vào dữ liệu đã tải
         if (window.mediaFilesLoaded) {
             // Đã tải dữ liệu, hiển thị ngay
-            console.log("Sử dụng dữ liệu đã tải để hiển thị slideshow");
+            // Sử dụng dữ liệu đã tải để hiển thị slideshow
             renderSlideshow();
         } else {
             // Chưa tải dữ liệu, cần tải từ server
-            console.log("Cần tải dữ liệu trước khi hiển thị slideshow");
+            // Cần tải dữ liệu trước khi hiển thị slideshow
             loadAlbumMedia();
         }
     } else {
@@ -403,7 +298,7 @@ function renderSlideshow() {
     slideshowWrapper.innerHTML = '';
     
     if (!window.mediaFilesLoaded || !window.mediaFiles || window.mediaFiles.length === 0) {
-        console.error("Không có dữ liệu để hiển thị slideshow");
+        // Không có dữ liệu để hiển thị slideshow
         return;
     }
     
@@ -461,7 +356,7 @@ function renderSlideItem(index, slide) {
         if (window.env && window.env.SUPABASE_URL) {
             baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
         } else {
-            console.error('SUPABASE_URL không được định nghĩa trong biến môi trường');
+            // Thiếu biến môi trường SUPABASE_URL
         }
         mediaPath = `${baseUrl}${index}`;
     }
@@ -490,7 +385,7 @@ function renderSlideItem(index, slide) {
         // Tự động phát khi được hiển thị
         slide.addEventListener('transitionend', () => {
             if (slide.classList.contains('swiper-slide-active')) {
-                video.play().catch(e => console.log('Video autoplay failed'));
+                video.play().catch(e => {/* Video autoplay failed */});
             } else {
                 video.pause();
             }
@@ -526,8 +421,6 @@ function initTags() {
 
 // Mở modal xem ảnh/video full-size
 function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
-    console.log(`Opening ${mediaType} in full size:`, mediaUrl);
-
     // Đóng bất kỳ modal toàn màn hình nào đang mở trước đó
     const existingModal = document.getElementById('fullSizeMediaModal');
     if (existingModal) {
@@ -550,7 +443,7 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
     let mediaElement;
     
     if (mediaType === 'video') {
-        console.log("Creating video element for full-size view");
+        // Creating video element for full-size view
         mediaElement = document.createElement('video');
         mediaElement.src = mediaUrl;
         mediaElement.controls = true;
@@ -562,8 +455,8 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
         
         // Đảm bảo video có thể phát được
         mediaElement.addEventListener('loadedmetadata', () => {
-            console.log("Video metadata loaded, trying to play");
-            mediaElement.play().catch(e => console.error('Lỗi khi phát video:', e));
+            // Video metadata loaded, trying to play
+            mediaElement.play().catch(e => {/* Lỗi khi phát video: */});
         });
         
         // Tạo nút phát/dừng phụ trợ
@@ -595,7 +488,7 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
         
         modal.appendChild(playPauseBtn);
     } else {
-        console.log("Creating image element for full-size view");
+        // Creating image element for full-size view
         mediaElement = document.createElement('img');
         mediaElement.src = mediaUrl;
         mediaElement.style.maxWidth = '90%';
@@ -665,17 +558,17 @@ function openFullSizeMedia(mediaUrl, mediaNumber, mediaType) {
             mediaElement.pause();
         }
         modal.remove();
-        console.log("Modal closed");
+        // Modal closed
     });
 
     // Ngăn chặn sự kiện click trên phần tử media khỏi lan truyền đến modal
     mediaElement.addEventListener('click', (e) => {
-        console.log("Media element clicked, preventing propagation");
+        // Media element clicked, preventing propagation
         e.stopPropagation();
     });
 
     document.body.appendChild(modal);
-    console.log(`${mediaType} modal opened`);
+    // Video modal opened
 }
 
 // Hàm mở modal gắn thẻ
@@ -830,19 +723,17 @@ async function saveTags(mediaIndex, tagsInput) {
             if (insertError) throw insertError;
         }
         
-        console.log(`Đã lưu thẻ cho media ${mediaIndex}:`, tags);
-        // Cập nhật lại giao diện album
+        // Đã lưu thẻ cho media
         loadAlbumMedia();
     } catch (error) {
-        console.error('Lỗi khi lưu thẻ vào Supabase:', error);
+        // Lỗi khi lưu thẻ vào Supabase
         alert('Không thể lưu thẻ. Vui lòng thử lại sau!');
         
         // Fallback to localStorage if Supabase fails
         const tagsData = JSON.parse(localStorage.getItem('mediaTags') || '{}');
         tagsData[mediaIndex] = tags;
         localStorage.setItem('mediaTags', JSON.stringify(tagsData));
-        console.log(`Đã lưu thẻ vào localStorage cho media ${mediaIndex}:`, tags);
-        // Cập nhật lại giao diện album
+        // Đã lưu thẻ vào localStorage cho media
         loadAlbumMedia();
     }
 }
@@ -885,7 +776,7 @@ async function searchMediaByTag(query) {
             item.style.display = matches ? 'block' : 'none';
         });
     } catch (error) {
-        console.error('Lỗi khi tìm kiếm theo thẻ từ Supabase:', error);
+        // Lỗi khi tìm kiếm theo thẻ từ Supabase
         
         // Fallback to localStorage if Supabase fails
         const photoGallery = document.getElementById('photoGallery');
@@ -1008,12 +899,13 @@ async function handleFileUpload(event) {
             
             if (window.useLocalMedia) {
                 // Lưu vào localStorage để demo
-                console.log(`[Local] Đang lưu file: ${fileName}`);
+                // Đang lưu file:
+                
                 // Trong thực tế, cần lưu file vào thư mục server
                 
                 // Tạo URL cho file
                 const fileUrl = URL.createObjectURL(file);
-                console.log(`Đã tạo URL cho file: ${fileUrl}`);
+                // Đã tạo URL cho file:
                 
                 // Lưu URL vào localStorage để demo
                 const localFiles = JSON.parse(localStorage.getItem('localUploadedFiles') || '[]');
@@ -1030,7 +922,7 @@ async function handleFileUpload(event) {
                     .upload(fileName, file);
                     
                 if (error) throw error;
-                console.log(`Đã tải lên Supabase: ${fileName}`);
+                // Đã tải lên Supabase:
             }
         }
         
@@ -1048,7 +940,7 @@ async function handleFileUpload(event) {
         // Tải lại album để hiển thị file mới
         loadAlbumMedia();
     } catch (error) {
-        console.error('Lỗi khi tải file lên:', error);
+        // Lỗi khi tải file lên:
         uploadStatus.textContent = `Lỗi: ${error.message || 'Không thể tải file lên'}`;
         uploadStatus.style.backgroundColor = '#f8d7da';
         uploadStatus.style.borderColor = '#f5c6cb';
@@ -1124,7 +1016,7 @@ function initPhotoAlbum() {
 
 // Hàm hiển thị album ảnh
 function showPhotoAlbum() {
-    console.log('Mở album ảnh');
+    // Mở album ảnh
     
     const memoryWall = document.getElementById('memoryWall');
     if (memoryWall) {
@@ -1152,7 +1044,7 @@ function showPhotoAlbum() {
             memoryWall.style.opacity = '1';
         }, 10);
     } else {
-        console.error('Không tìm thấy phần tử #memoryWall');
+        // Không tìm thấy phần tử #memoryWall
     }
     
     // Tải lại dữ liệu media nếu cần

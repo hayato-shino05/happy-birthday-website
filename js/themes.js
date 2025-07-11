@@ -61,7 +61,7 @@ function applyLanguage(lang) {
     if (elements.songTitle) elements.songTitle.textContent = translations[lang].songTitle;
     
     localStorage.setItem('language', lang);
-    console.log(`Applied language: ${lang}`);
+    // Applied language
 }
 
 // Hàm xác định mùa và lễ hội dựa trên ngày tháng
@@ -126,30 +126,30 @@ function applyTheme(theme) {
     
     // Tạo các hiệu ứng theo chủ đề
     if (theme === 'autumn' || theme === 'tsukimi') {
-        console.log('Creating falling leaves for', theme);
+        // Creating falling leaves effect
         createFallingLeaves(40, theme);
     } else if (theme === 'spring' || theme === 'hanami') {
-        console.log('Creating falling petals for', theme);
+        // Creating falling petals effect
         createFallingPetals(30, theme);
     } else if (theme === 'summer') {
-        console.log('Creating heat wave and sun glare for', theme);
+        // Creating heat wave and sun glare effect
         createHeatWave(theme);
         createSunGlare(theme);
     } else if (theme === 'winter') {
-        console.log('Creating falling snow for', theme);
+        // Creating falling snow effect
         createFallingSnow(50, theme);
     } else if (theme === 'christmas') {
-        console.log('Creating Christmas lights for', theme);
+        // Creating Christmas lights effect
         createChristmasLights(30, theme);
     } else if (theme === 'tet') {
-        console.log('Creating fireworks for', theme);
+        // Creating fireworks effect
         createFireworks(5, theme);
     } else if (theme === 'halloween') {
-        console.log('Creating bats and ghosts for', theme);
+        // Creating bats and ghosts effect
         createBats(10, theme);
         createGhosts(5, theme);
     } else if (theme === 'obon') {
-        console.log('Creating floating lanterns for', theme);
+        // Creating floating lanterns effect
         createFloatingLanterns(20, theme);
     }
     
@@ -180,7 +180,7 @@ function applyTheme(theme) {
     themeIndicator.style.zIndex = '1000';
     body.appendChild(themeIndicator);
     
-    console.log(`Applied theme: ${theme} with corresponding effects`);
+    // Applied theme with effects
 }
 
 // Hàm áp dụng video background theo chủ đề

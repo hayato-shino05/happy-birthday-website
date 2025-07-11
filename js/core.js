@@ -83,7 +83,7 @@ async function loadBirthdays() {
             message: item.message || `🎉 Chúc mừng sinh nhật ${item.name}! 🎉`
         }));
         
-        console.log("Đã tải danh sách sinh nhật từ Supabase:", birthdays);
+        // Đã tải danh sách sinh nhật từ Supabase
         
         // Sau khi tải xong, kiểm tra sinh nhật
         checkBirthdayAndInitialize();
@@ -110,14 +110,7 @@ function checkIfBirthday(date) {
             const monthMatch = (checkDate.getMonth() + 1) === person.month;
             const dayMatch = checkDate.getDate() === person.day;
             
-            console.log(`Checking ${person.name}:`, {
-                personMonth: person.month,
-                currentMonth: checkDate.getMonth() + 1,
-                monthMatch: monthMatch,
-                personDay: person.day,
-                currentDay: checkDate.getDate(),
-                dayMatch: dayMatch
-            });
+                    // Kiểm tra tháng và ngày
             
             return monthMatch && dayMatch;
         });
@@ -147,21 +140,17 @@ function findNextBirthday(currentDate) {
             }
 
             const diff = birthday - currentDate;
-            console.log(`Checking ${person.name}:`, {
-                birthday: birthday,
-                diff: diff,
-                currentSmallest: smallestDiff
-            });
+            // Kiểm tra ngày sinh nhật kế tiếp
 
             if (diff < smallestDiff && diff >= 0) {
                 smallestDiff = diff;
                 nearestDate = birthday;
                 nearestPerson = person;
-                console.log(`New nearest person: ${person.name}`);
+                // Cập nhật người có ngày sinh nhật gần nhất
             }
         }
 
-        console.log('Final nearest person:', nearestPerson?.name);
+        // Kết thúc tìm kiếm
         return { person: nearestPerson, date: nearestDate };
     } catch (error) {
         console.error('Error finding next birthday:', error);
@@ -237,8 +226,7 @@ async function checkBirthdayAndInitialize() {
         const lastCheck = localStorage.getItem('lastBirthdayCheck');
         const shouldCheck = !lastCheck || (now - new Date(lastCheck)) > (24 * 60 * 60 * 1000);
         
-        console.log("Kiểm tra sinh nhật mới: " + (shouldCheck ? "Có" : "Không") + 
-                   (lastCheck ? ", Lần kiểm tra cuối: " + new Date(lastCheck).toLocaleString() : ""));
+        // Kiểm tra có nên tải lại dữ liệu sinh nhật không
         
         // Nếu danh sách sinh nhật rỗng hoặc đã đến thời gian kiểm tra lại
         if (birthdays.length === 0 || shouldCheck) {
@@ -384,7 +372,7 @@ function showBirthdayContent(birthdayPerson) {
                 if (typeof blowOutCandle === 'function') {
                     blowOutCandle();
                 } else {
-                    console.log('Đang xử lý thổi nến...');
+                    // Xử lý thổi nến khi không có hàm blowOutCandle
                     // Fallback nếu không tìm thấy hàm
                     const flames = document.querySelectorAll('.flame');
                     if (flames && flames.length > 0) {
@@ -443,7 +431,6 @@ function showBirthdayContent(birthdayPerson) {
 // Hàm khởi tạo bánh sinh nhật 3D
 function init3DCake() {
     // Bánh 3D đã bị vô hiệu hóa, chỉ sử dụng bánh 2D
-    console.log('Bánh 3D đã bị vô hiệu hóa, chỉ sử dụng bánh 2D');
     return;
 }
 
@@ -470,7 +457,7 @@ function loadThreeJS(callback) {
 function playBirthdayMusic() {
     const audio = new Audio('happy-birthday.mp3');
     audio.play().catch(e => {
-        console.log('Auto-play prevented:', e);
+        // Auto-play bị ngăn chặn bởi trình duyệt
         const playButton = document.getElementById('playMusic');
         if (playButton) {
             playButton.textContent = '▶️';
@@ -481,26 +468,7 @@ function playBirthdayMusic() {
 // Debug function
 function debugDate() {
     const now = new Date();
-    console.log('Current Date:', {
-        fullDate: now,
-        month: now.getMonth() + 1, // Chuyển về 1-12
-        date: now.getDate(),
-        year: now.getFullYear()
-    });
-    
-    const birthdayPerson = checkIfBirthday(now);
-    console.log('Birthday Check Result:', birthdayPerson);
-    
-    // Kiểm tra tất cả sinh nhật
-    birthdays.forEach(person => {
-        console.log(`Checking ${person.name}:`, {
-            personMonth: person.month,
-            currentMonth: now.getMonth() + 1,
-            personDay: person.day,
-            currentDay: now.getDate(),
-            isMatch: (now.getMonth() + 1) === person.month && now.getDate() === person.day
-        });
-    });
+    // Hàm debug - không sử dụng trong production
 }
 
 // Khởi tạo trang

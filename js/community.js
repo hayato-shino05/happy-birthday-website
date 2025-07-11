@@ -22,7 +22,7 @@ window.getSavedUsername = getSavedUsername;
 
 // Khởi tạo bảng tin chúc mừng
 function initBulletinBoard() {
-    console.log('Khởi tạo Bảng tin chúc mừng');
+    // Khởi tạo Bảng tin chúc mừng
     const bulletinBtn = document.getElementById('bulletinBoardBtn');
     const bulletinModal = document.getElementById('bulletinBoardModal');
     const closeBulletinBoard = document.getElementById('closeBulletinBoard');
@@ -31,41 +31,41 @@ function initBulletinBoard() {
     
     // Kiểm tra các phần tử đã tồn tại
     if (!bulletinBtn) {
-        console.error('Không tìm thấy nút mở bảng tin');
+        // Không tìm thấy nút mở bảng tin
         return;
     }
     
     if (!bulletinModal) {
-        console.error('Không tìm thấy modal bảng tin');
+        // Không tìm thấy modal bảng tin
         return;
     }
     
     if (!closeBulletinBoard) {
-        console.error('Không tìm thấy nút đóng bảng tin');
+        // Không tìm thấy nút đóng bảng tin
         return;
     }
     
     // Đăng ký sự kiện click cho nút mở bảng tin
     bulletinBtn.addEventListener('click', () => {
-        console.log('Mở bảng tin chúc mừng');
+        // Mở bảng tin chúc mừng
         
         // Kiểm tra xem người dùng đã nhập tên chưa
         const userName = getSavedUsername();
         
         if (!userName) {
             // Nếu chưa có tên, mở modal nhập tên
-            console.log('Chưa có tên người dùng, mở modal nhập tên');
+            // Chưa có tên người dùng, mở modal nhập tên
             openUserNameModalForBulletin();
         } else {
             // Đã có tên, mở bảng tin chúc mừng
-            console.log('Đã có tên người dùng, mở bảng tin');
+            // Đã có tên người dùng, mở bảng tin
             bulletinModal.style.display = 'flex';
         }
     });
     
     // Đăng ký sự kiện click cho nút đóng bảng tin
     closeBulletinBoard.addEventListener('click', () => {
-        console.log('Đóng bảng tin chúc mừng');
+        // Đóng bảng tin chúc mừng
         bulletinModal.style.display = 'none';
     });
     
@@ -114,7 +114,7 @@ function initBulletinBoard() {
         });
     }
     
-    console.log('Đã khởi tạo xong Bảng tin chúc mừng');
+    // Đã khởi tạo xong Bảng tin chúc mừng
 }
 
 // Lời chúc cá nhân
