@@ -92,14 +92,14 @@ async function loadAlbumMedia() {
                 loadFromLocal(gallery, slideshowWrapper, loadingMsgElement);
             }
         } else {
-            // Sử dụng dữ liệu local
-            window.useLocalMedia = true;
+            // Sử dụng danh sách ảnh mẫu nhưng với đường dẫn Supabase
+            window.useLocalMedia = false;
             loadFromLocal(gallery, slideshowWrapper, loadingMsgElement);
         }
     } catch (error) {
         // Lỗi khi tải ảnh từ Supabase
-        // Sử dụng local
-        window.useLocalMedia = true;
+        // Sử dụng danh sách ảnh mẫu nhưng với đường dẫn Supabase
+        window.useLocalMedia = false;
         loadFromLocal(gallery, slideshowWrapper, loadingMsgElement);
     } finally {
         // Đánh dấu đã hoàn thành việc tải
@@ -123,6 +123,9 @@ function loadFromLocal(gallery, slideshowWrapper, loadingMsgElement) {
     // Lưu danh sách file vào biến toàn cục
     window.mediaFiles = sampleMedia;
     window.mediaFilesLoaded = true;
+    
+    // Đặt useLocalMedia = false để luôn sử dụng đường dẫn Supabase
+    window.useLocalMedia = false;
     
     // Hiển thị dữ liệu
     sampleMedia.forEach(file => renderPhotoItem(file, gallery));
@@ -190,6 +193,16 @@ function renderPhotoItem(index, gallery) {
         video.loop = true;
         video.preload = 'metadata';
         
+        // Xử lý lỗi khi tải video
+        video.onerror = function() {
+            // Nếu lỗi là do cố gắng tải từ thư mục memory, thử lại với Supabase
+            if (mediaPath.startsWith('memory/')) {
+                const fileNameOnly = mediaPath.replace('memory/', '');
+                const supabaseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/' + fileNameOnly;
+                video.src = supabaseUrl;
+            }
+        };
+        
         // Hiển thị video khi click
         photoContainer.addEventListener('click', () => {
             // Video clicked, opening full size
@@ -247,6 +260,14 @@ function renderPhotoItem(index, gallery) {
             // Không thể tải ảnh
             // Hiển thị hình ảnh lỗi
             img.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22300%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20fill%3D%22%23EEEEEE%22%20d%3D%22M0%200h400v300H0z%22%2F%3E%3Ctext%20fill%3D%22%23999999%22%20font-family%3D%22Arial%2CSans-serif%22%20font-size%3D%2230%22%20font-weight%3D%22bold%22%20dy%3D%22.3em%22%20x%3D%22200%22%20y%3D%22150%22%20text-anchor%3D%22middle%22%3EKhông%20tải%20được%20ảnh%3C%2Ftext%3E%3C%2Fsvg%3E';
+            
+            // Ghi nhật ký lỗi này
+            if (index.startsWith('memory/')) {
+                // Nếu lỗi là do cố gắng tải từ thư mục memory, thử lại với Supabase
+                const fileNameOnly = index.replace('memory/', '');
+                const supabaseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/' + fileNameOnly;
+                img.src = supabaseUrl;
+            }
         };
         
         // Hiển thị ảnh khi click
@@ -368,6 +389,16 @@ function renderSlideItem(index, slide) {
         video.style.maxHeight = '80vh';
         video.style.maxWidth = '100%';
         video.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+        
+        // Xử lý lỗi khi tải video
+        video.onerror = function() {
+            // Nếu lỗi là do cố gắng tải từ thư mục memory, thử lại với Supabase
+            if (mediaPath.startsWith('memory/')) {
+                const fileNameOnly = mediaPath.replace('memory/', '');
+                const supabaseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/' + fileNameOnly;
+                video.src = supabaseUrl;
+            }
+        };
         videoContainer.appendChild(video);
         
         slide.appendChild(videoContainer);
@@ -396,6 +427,16 @@ function renderSlideItem(index, slide) {
         img.style.maxHeight = '80vh';
         img.style.maxWidth = '100%';
         img.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+        
+        // Xử lý lỗi khi tải ảnh
+        img.onerror = function() {
+            // Nếu lỗi là do cố gắng tải từ thư mục memory, thử lại với Supabase
+            if (mediaPath.startsWith('memory/')) {
+                const fileNameOnly = mediaPath.replace('memory/', '');
+                const supabaseUrl = 'https://fmvqrwztdoyoworobsix.supabase.co/storage/v1/object/public/media/' + fileNameOnly;
+                img.src = supabaseUrl;
+            }
+        };
         imgContainer.appendChild(img);
         
         slide.appendChild(imgContainer);
