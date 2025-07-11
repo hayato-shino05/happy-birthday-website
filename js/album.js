@@ -158,7 +158,7 @@ function renderPhotoItem(index, gallery) {
         // Lấy URL từ Supabase Storage sử dụng biến môi trường
         let baseUrl = '';
         if (window.env && window.env.SUPABASE_URL) {
-            baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
+            baseUrl = `${window.env.SUPABASE_URL_MEDIA}`;
         } else {
             // Thiếu biến môi trường SUPABASE_URL
         }
@@ -354,7 +354,7 @@ function renderSlideItem(index, slide) {
         // Lấy URL từ Supabase Storage sử dụng biến môi trường
         let baseUrl = '';
         if (window.env && window.env.SUPABASE_URL) {
-            baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
+            baseUrl = `${window.env.SUPABASE_URL_MEDIA}`;
         } else {
             // Thiếu biến môi trường SUPABASE_URL
         }

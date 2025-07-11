@@ -1077,7 +1077,7 @@ function initPuzzleGame() {
         // Sử dụng biến môi trường cho URL Supabase
         let baseUrl = '';
         if (window.env && window.env.SUPABASE_URL) {
-            baseUrl = `${window.env.SUPABASE_URL}/storage/v1/object/public/media/`;
+            baseUrl = `${window.env.SUPABASE_URL_MEDIA}`;
         } else {
             // Không thể lấy biến môi trường Supabase
         }

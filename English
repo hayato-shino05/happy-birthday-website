@@ -1,0 +1,162 @@
+#Birthday Celebration Website - Joy Connection
+
+> **A creative open-source interactive website** that helps you organize, remember, and share memorable birthday moments in a fun and unique way! From countdown timers, interactive 3D birthday cakes with blowable candles, to photo/video albums, mini-games, community chat, and seasonal interfaces - all creating an unforgettable experience!
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Made%20with-❤️-ff69b4" alt="Made with Love">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+  <img src="https://img.shields.io/badge/Version-1.0-brightgreen" alt="Version 1.0">
+</p>
+
+##Key Features
+
+| **Feature**                       | **Description**                                                           |
+|-----------------------------------|---------------------------------------------------------------------------|
+| 🎉 **Birthday Countdown**         | Displays the time remaining until the next birthday in your friend group. |
+| 🎂 **Interactive Birthday Cake**  | A beautiful 3-tier cake with candles that can be blown out via a button.  |
+| 📸 **Memory Album**               | View, tag, search, and share memorable moments through photos/videos.     |
+| 🎮 **Interactive Games**          | Includes Memory Game, Puzzle, Birthday Quiz, and Birthday Calendar.       |
+| 🎵 **Music Player**               | Plays cheerful birthday songs to create a festive atmosphere.             |
+| 🎭 **Seasonal Interface**         | Automatically changes based on seasons and holidays: Spring/Summer/Autumn/Winter, Christmas, New Year, Halloween, Hanami... |
+| 💬 **Community Features**         | Send text, audio, video messages, virtual gifts, and a congratulations board. |
+| 📹 **Record Video Messages**      | Record and store birthday video messages using the device camera.         |
+| 🎈 **Interactive Effects**        | Blow candles, vibrant fireworks, flying balloons to create a lively vibe. |
+| 📱 **Social Media Sharing**       | Easily share the joy on Facebook, Twitter, and Instagram.                 |
+| 🌐 **Multi-Language Support**     | Interface supports both Japanese and English, with easy switching.        |
+
+##Great Benefits of the Project
+
+1. **Strengthen Friendship Bonds**:
+   - Ensures friends never miss each other's birthdays.
+   - Creates a shared space for regular interaction and sharing.
+   - Connects people through meaningful birthday organization activities.
+
+2. **Preserve Eternal Memories**:
+   - Digital album stores beautiful moments in photos and videos.
+   - Easily review and share memories with friends and family.
+   - Builds a shared collection of group memories.
+
+3. **Fun and Interactive Entertainment**:
+   - Games and interactive effects create a lively festive atmosphere.
+   - Video message feature captures special moments.
+   - Eye-catching visual effects increase user engagement.
+
+4. **Practical Conveniences for Life**:
+   - Automatic countdown reminds of important birthdays.
+   - Quickly share joy on social media with one click.
+   - User-friendly interface for all ages.
+
+5. **Build a Connected Community**:
+   - Creates a shared space for participation and contribution.
+   - Encourages positive interactions among members.
+   - Enhances connections through community features like messages and gifts.
+
+##Technologies Used
+
+- **HTML5** & **CSS3**: Build beautiful and compatible interfaces.
+- **JavaScript (Vanilla)**: Create smooth interactive features.
+- **MediaDevices API**: Support video message recording via device camera.
+- **Canvas API**: Draw lively visual effects.
+- **Local Storage**: Conveniently store local data.
+- **Supabase (Backend as a Service)**:
+  - Database for managing birthday info and messages.
+  - Storage for photos, videos, and multimedia files.
+  - Real-time registration for community features.
+
+##Getting Started Guide
+
+1. **Download the Source Code**:
+   ```bash
+   git clone https://github.com/hayato-shino05/happy-birthday-website.git
+   ```
+
+2. **Open the Website**:
+   - Open the `index.html` file in your web browser.
+
+3. **Grant Camera Permissions**:
+   - Allow camera access when prompted to experience the video message feature.
+
+4. **Deploy to Vercel**:
+   - Sign up and create a project on Vercel.
+   - Add the following environment variables in settings:
+     - `SUPABASE_URL`: Your Supabase project URL
+     - `SUPABASE_ANON_KEY`: Anonymous access key from Supabase
+   - Vercel will automatically create the `env.js` file during build based on the configured environment variables.
+
+## 💻 Development Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Check and auto-fix style errors
+npm run lint -- --fix
+npm run format
+```
+
+##Continuous Integration (CI)
+
+The repository uses **GitHub Actions** to automatically run **ESLint** and **Prettier** on every push or pull request. Results are displayed directly on the PR as ✅ or ❌.
+
+##Customization
+
+### **Add New Birthdays**
+Edit the database on **Supabase** or update the `birthdays` array in `core.js`:
+```javascript
+{
+    name: "Name",
+    month: 1-12,
+    day: 1-31
+}
+```
+
+### **Add Photos and Videos to Album**
+- Use the app interface to upload directly; files will be stored on **Supabase Storage**.
+- Or, if you have access to Supabase, add files directly to the `media` bucket.
+
+##Supported Browsers 
+
+- **Google Chrome** (Recommended)
+- **Mozilla Firefox**
+- **Apple Safari**
+- **Microsoft Edge**
+
+## Contributions 
+
+We welcome all contributions to make the project even better! Follow these steps:
+
+1. **Fork and Clone Repository**:
+   - Fork the project and clone it to your machine.
+
+2. **Create a New Branch**:
+   ```bash
+   git checkout -b feature/feature-name
+   ```
+
+3. **Implement Changes**:
+   - Write code, fix bugs, or add new features.
+   - Run source check commands:
+     ```bash
+     npm run lint -- --fix
+     npm run format
+     ```
+
+4. **Commit and Push**:
+   - Commit changes and push to your repository.
+   - Open a **Pull Request** with a detailed description of what you've done.
+
+> 💡 **Note**: Ideas, bug reports (issues), and pull requests are welcome! Let's build a creative and connected community together!
+
+##License 
+
+This project is distributed under the **[MIT](LICENSE) License** - free to use, edit, and share.
+
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+</p>
+
+---
+
+<p align="center">
+  <strong>Created with ❤️ by [Your Name] - For special birthdays and dear friends!</strong>
+</p>
