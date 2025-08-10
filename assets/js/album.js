@@ -1419,12 +1419,6 @@ function hidePhotoAlbum() {
     }
 }
 
-
-
-function initSlideshow() {
-    // Swiperは使用しない
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('photoGallery')) {
         initPhotoAlbum();

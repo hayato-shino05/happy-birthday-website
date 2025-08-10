@@ -9,9 +9,30 @@ function setupAudioAnalysis() {
 }
 
 function updateBlowProgress() {
+    // ブロー進捗の表示を更新
+    const progressContainer = document.getElementById('progressContainer');
+    if (progressContainer && blowProgress > 0) {
+        progressContainer.classList.remove('hidden');
+        const progressBar = progressContainer.querySelector('.progress-bar');
+        if (progressBar) {
+            progressBar.style.width = `${blowProgress}%`;
+        }
+    }
 }
 
 function disconnectAudio() {
+    // オーディオリソースのクリーンアップ
+    if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(e => console.log('AudioContext close error:', e));
+    }
+    if (microphone) {
+        microphone.disconnect();
+        microphone = null;
+    }
+    if (javascriptNode) {
+        javascriptNode.disconnect();
+        javascriptNode = null;
+    }
 }
 
 function blowOutCandle() {
@@ -84,14 +105,23 @@ function blowOutCandle() {
 
     const cake2D = document.querySelector('.cake-2d');
     if (cake2D) {
-        cake2D.style.animation = 'none';
-        setTimeout(() => {
-            cake2D.style.animation = 'shake 0.5s ease';
-            setTimeout(() => {
-                cake2D.style.animation = 'float 3s ease-in-out infinite';
-            }, 500);
-        }, 10);
+        animateCake2D(cake2D);
     }
+}
+
+function animateCake2D(cakeElement) {
+    cakeElement.style.animation = 'none';
+    
+    const resetAnimation = () => {
+        cakeElement.style.animation = 'shake 0.5s ease';
+    };
+    
+    const startFloating = () => {
+        cakeElement.style.animation = 'float 3s ease-in-out infinite';
+    };
+    
+    setTimeout(resetAnimation, 10);
+    setTimeout(startFloating, 510);
 }
 
 function createSmokeEffect2D(flameElement) {
@@ -284,21 +314,48 @@ function getRandomColor() {
     return colors[Math.floor(Math.random() * colors.length)];
 }
 
+const AudioManager = {
+    instances: [],
+    
+    createAudio(src, autoCleanup = true) {
+        const audio = new Audio(src);
+        this.instances.push(audio);
+        
+        if (autoCleanup) {
+            audio.addEventListener('ended', () => this.removeAudio(audio));
+        }
+        
+        return audio;
+    },
+    
+    removeAudio(audio) {
+        const index = this.instances.indexOf(audio);
+        if (index > -1) {
+            this.instances.splice(index, 1);
+        }
+    },
+    
+    cleanup() {
+        this.instances.forEach(audio => {
+            audio.pause();
+            audio.src = '';
+        });
+        this.instances = [];
+    }
+};
+
 function playSound() {
     try {
-        const audio = new Audio();
-        audio.src = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18A';
-
+        const noteSrc = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18A';
 
         for (let i = 0; i < 5; i++) {
             setTimeout(() => {
-                const note = new Audio();
-                note.src = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU9vT18A';
-                note.play().catch(e => console.log("Auto-play prevented: ", e));
+                const note = AudioManager.createAudio(noteSrc);
+                note.play().catch(e => console.log("自動再生が防止されました: ", e));
             }, i * 200);
         }
     } catch (e) {
-        console.log("Sound play error: ", e);
+        console.log("音声再生エラー: ", e);
     }
 }
 
@@ -594,23 +651,7 @@ function initMemoryGame() {
                 
                 if (flippedCards.length === 2) {
                     setTimeout(() => {
-                        const [card1, card2] = flippedCards;
-                        if (card1.dataset.symbol === card2.dataset.symbol) {
-                            card1.classList.add('matched');
-                            card2.classList.add('matched');
-                            matchedPairs++;
-                            if (matchedPairs === symbols.length / 2) {
-                                setTimeout(() => {
-                                    alert('おめでとうございます！すべてのペアを見つけました！');
-                                }, 300);
-                            }
-                        } else {
-                            card1.textContent = '';
-                            card1.classList.remove('flipped');
-                            card2.textContent = '';
-                            card2.classList.remove('flipped');
-                        }
-                        flippedCards = [];
+                        matchedPairs = checkMemoryMatch(flippedCards, symbols.length, matchedPairs);
                     }, 1000);
                 }
             }
@@ -620,6 +661,40 @@ function initMemoryGame() {
     });
 }
 
+function checkMemoryMatch(flippedCards, totalSymbols, currentMatchedPairs) {
+                        const [card1, card2] = flippedCards;
+    let newMatchedPairs = currentMatchedPairs;
+    
+                        if (card1.dataset.symbol === card2.dataset.symbol) {
+        newMatchedPairs = handleMatchedCards(card1, card2, totalSymbols, currentMatchedPairs);
+    } else {
+        handleUnmatchedCards(card1, card2);
+    }
+    
+    flippedCards.length = 0;
+    return newMatchedPairs;
+}
+
+function handleMatchedCards(card1, card2, totalSymbols, currentMatchedPairs) {
+                            card1.classList.add('matched');
+                            card2.classList.add('matched');
+    const newMatchedPairs = currentMatchedPairs + 1;
+    
+    if (newMatchedPairs === totalSymbols / 2) {
+                                setTimeout(() => {
+                                    alert('おめでとうございます！すべてのペアを見つけました！');
+                                }, 300);
+                            }
+    
+    return newMatchedPairs;
+}
+
+function handleUnmatchedCards(card1, card2) {
+                            card1.textContent = '';
+                            card1.classList.remove('flipped');
+                            card2.textContent = '';
+                            card2.classList.remove('flipped');
+                        }
 
 let puzzleGameImages = [];
 let isPuzzleImagesLoaded = false;
@@ -1058,7 +1133,7 @@ function initMusicPlayer() {
     const playButton = document.getElementById('playMusic');
     const musicPlayer = document.querySelector('.music-player');
     let isPlaying = false;
-    let audio = new Audio('assets/audio/happy-birthday.mp3');
+    let audio = AudioManager.createAudio('assets/audio/happy-birthday.mp3', false);
     let currentTrack = 'assets/audio/happy-birthday.mp3';
 
     let selectMusicBtn = document.getElementById('selectMusicBtn');
@@ -1084,7 +1159,7 @@ function initMusicPlayer() {
             audio.pause();
             playButton.textContent = '▶️';
         } else {
-            audio.play().catch(e => console.log('Audio play failed:', e));
+            audio.play().catch(e => console.log('音声再生失敗:', e));
             playButton.textContent = '⏸️';
         }
         isPlaying = !isPlaying;
@@ -1099,7 +1174,8 @@ function initMusicPlayer() {
         audio.pause();
         playButton.textContent = '▶️';
         isPlaying = false;
-        audio = new Audio(trackUrl);
+        AudioManager.removeAudio(audio);
+        audio = AudioManager.createAudio(trackUrl, false);
         currentTrack = trackUrl;
         document.querySelector('.song-title').textContent = trackName || '背景音';
         localStorage.setItem('selectedTrack', trackUrl);
@@ -1109,7 +1185,8 @@ function initMusicPlayer() {
     const savedTrack = localStorage.getItem('selectedTrack');
     const savedTrackName = localStorage.getItem('selectedTrackName');
     if (savedTrack) {
-        audio = new Audio(savedTrack);
+        AudioManager.removeAudio(audio);
+        audio = AudioManager.createAudio(savedTrack, false);
         currentTrack = savedTrack;
         document.querySelector('.song-title').textContent = savedTrackName || '背景音';
     }
@@ -1597,12 +1674,7 @@ function displayCustomMessage(message) {
 }
 
 
-function displaySavedCustomMessage() {
-    const savedMessage = localStorage.getItem('customBirthdayMessage');
-    if (savedMessage) {
-        displayCustomMessage(savedMessage);
-    }
-}
+
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1726,7 +1798,7 @@ function getGiftName(giftId) {
         'teddy': 'ぬいぐるみ',
         'heart': 'ハート'
     };
-    return gifts[giftId] || 'Quà Tặng';
+    return gifts[giftId] || 'ギフト';
 }
 
 function getGiftEmoji(giftId) {
@@ -1770,7 +1842,7 @@ async function saveVirtualGift(sender, gift) {
         
         return true;
     } catch (error) {
-        console.error('Lỗi khi lưu quà tặng:', error);
+        console.error('ギフト保存エラー:', error);
         
     const birthdayPerson = localStorage.getItem('currentBirthday') || 'unknown';
     const now = new Date();
@@ -1946,66 +2018,7 @@ async function openVirtualGiftsModal(birthdayPerson) {
 }
 }
 
-function initMusicPlayer() {
-    const playButton = document.getElementById('playMusic');
-    const musicPlayer = document.querySelector('.music-player');
-    let isPlaying = false;
-    let audio = new Audio('assets/audio/happy-birthday.mp3');
-    let currentTrack = 'assets/audio/happy-birthday.mp3';
 
-    let selectMusicBtn = document.getElementById('selectMusicBtn');
-    if (!selectMusicBtn) {
-        selectMusicBtn = document.createElement('button');
-        selectMusicBtn.id = 'selectMusicBtn';
-        const currentLang = localStorage.getItem('language') || 'ja';
-        const t = translations && translations[currentLang] ? translations[currentLang] : translations['ja'];
-        selectMusicBtn.textContent = t.selectMusic || '🎵 音楽を選ぶ';
-        selectMusicBtn.className = 'music-select-btn';
-        selectMusicBtn.addEventListener('click', openMusicSelectionModal);
-        musicPlayer.appendChild(selectMusicBtn);
-        
-        // 新しいボタンに現在の言語を適用
-        const savedLang = localStorage.getItem('language') || 'ja';
-        if (typeof updateDynamicButtonsLanguage !== 'undefined') {
-            updateDynamicButtonsLanguage(savedLang);
-        }
-    }
-
-    playButton.addEventListener('click', () => {
-        if (isPlaying) {
-            audio.pause();
-            playButton.textContent = '▶️';
-            } else {
-            audio.play().catch(e => console.log('Audio play failed:', e));
-            playButton.textContent = '⏸️';
-        }
-        isPlaying = !isPlaying;
-    });
-
-    audio.addEventListener('ended', () => {
-        playButton.textContent = '▶️';
-        isPlaying = false;
-    });
-
-    window.changeMusicTrack = function(trackUrl, trackName) {
-        audio.pause();
-        playButton.textContent = '▶️';
-        isPlaying = false;
-        audio = new Audio(trackUrl);
-        currentTrack = trackUrl;
-        document.querySelector('.song-title').textContent = trackName || '背景音';
-        localStorage.setItem('selectedTrack', trackUrl);
-        localStorage.setItem('selectedTrackName', trackName || '背景音');
-    };
-
-    const savedTrack = localStorage.getItem('selectedTrack');
-    const savedTrackName = localStorage.getItem('selectedTrackName');
-    if (savedTrack) {
-        audio = new Audio(savedTrack);
-        currentTrack = savedTrack;
-        document.querySelector('.song-title').textContent = savedTrackName || '背景音';
-    }
-}
 
 function openMusicSelectionModal() {
     let musicModal = document.getElementById('musicSelectionModal');
@@ -2171,7 +2184,7 @@ function openInviteModal() {
         emailInput.className = 'invite-email-input';
 
         const sendBtn = document.createElement('button');
-        sendBtn.textContent = 'Gửi Lời Mời';
+        sendBtn.textContent = '送信';
         sendBtn.className = 'invite-send-btn';
         sendBtn.addEventListener('click', () => {
             const email = emailInput.value.trim();
@@ -2214,7 +2227,7 @@ function generateInviteLink() {
 
 function sendInviteEmail(email, message) {
     const subject = encodeURIComponent('友人を招待してください');
-    const body = encodeURIComponent(`${message}\n\nTruy cập liên kết: ${document.getElementById('inviteLink').value}`);
+    const body = encodeURIComponent(`${message}\n\nリンクにアクセス: ${document.getElementById('inviteLink').value}`);
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
     let inviteSentCount = parseInt(localStorage.getItem('inviteSentCount') || '0', 10);
     inviteSentCount++;
@@ -2225,7 +2238,7 @@ function sendInviteEmail(email, message) {
 function createBalloons() {
     const balloonContainer = document.getElementById('balloonContainer');
     if (!balloonContainer) {
-        console.error('Không tìm thấy phần tử #balloonContainer');
+        console.error('#balloonContainer要素が見つかりません');
         return;
     }
     
@@ -2256,34 +2269,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof initInviteFriends === 'function') initInviteFriends();
     
         if (typeof displaySavedCustomMessage === 'function') displaySavedCustomMessage();
-        if (typeof displaySavedCustomMessage === 'function') displaySavedCustomMessage();
     } catch (error) {
         console.error('機能の初期化中にエラーが発生しました:', error);
     }
 });
 
-function saveUsername(name) {
-    if (typeof window.saveUsername === 'function') {
-        return window.saveUsername(name);
-    }
-    
-    if (name && name.trim() !== '') {
-        localStorage.setItem('birthdayChatUserName', name.trim());
-        return true;
-    }
-    return false;
-}
+window.addEventListener('beforeunload', () => {
+    AudioManager.cleanup();
+});
 
-function playAudioMessage(audioUrl) {
-    let audioPlayer = document.getElementById('audioMessagePlayer');
-    if (!audioPlayer) {
-        audioPlayer = document.createElement('audio');
-        audioPlayer.id = 'audioMessagePlayer';
-        audioPlayer.controls = true;
-        audioPlayer.className = 'audio-message-player';
-        const audioList = document.getElementById('audioMessagesList');
-        audioList.appendChild(audioPlayer);
-    }
-    audioPlayer.src = audioUrl;
-    audioPlayer.play().catch(e => console.log('Audio play failed:', e));
-}

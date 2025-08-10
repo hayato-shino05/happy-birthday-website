@@ -50,25 +50,7 @@ async function checkSupabaseConnection() {
     }
 }
 
-/**
- * Supabaseから誕生日リストを取得
- * @returns {Promise<Array>} 誕生日リスト
- */
-async function getBirthdays() {
-    try {
-        const { data, error } = await supabase
-            .from('birthdays')
-            .select('*')
-            .order('month')
-            .order('day');
-            
-        if (error) throw error;
-        return data || [];
-    } catch (error) {
-        console.error('誕生日リスト取得エラー:', error);
-        return [];
-    }
-}
+
 
 /**
  * テキストメッセージを保存
@@ -263,140 +245,11 @@ async function getVideoMessages(birthdayPerson) {
     }
 }
 
-/**
- * チャットのリアルタイムチャネルを設定
- */
-function setupRealtimeChat() {
-    const chatChannel = supabase
-        .channel('public:chat_messages')
-        .on('postgres_changes', 
-            { event: 'INSERT', schema: 'public', table: 'chat_messages' },
-            (payload) => {
-                // 新しいメッセージをUIに追加
-                appendNewChatMessage(payload.new);
-            }
-        )
-        .subscribe();
-}
 
-/**
- * 掲示板のリアルタイムチャネルを設定
- */
-function setupRealtimeBulletin() {
-    const bulletinChannel = supabase
-        .channel('public:bulletin_posts')
-        .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'bulletin_posts' },
-            (payload) => {
-                // 掲示板を更新
-                updateBulletinBoard(payload);
-            }
-        )
-        .subscribe();
-}
 
-/**
- * バケットからメディアファイルのリストを取得
- * @param {string} bucketName バケット名（デフォルト: media）
- * @returns {Promise<Array>} メディアファイルリスト
- */
-async function getMediaFiles(bucketName = 'media') {
-    try {
-        const { data, error } = await supabase
-            .storage
-            .from(bucketName)
-            .list();
-            
-        if (error) throw error;
-        return data || [];
-    } catch (error) {
-        console.error(`${bucketName}バケットからファイルリスト取得エラー:`, error);
-        return [];
-    }
-}
 
-/**
- * メディアファイルの公開URLを取得
- * @param {string} path ファイルパス
- * @param {string} bucketName バケット名（デフォルト: media）
- * @returns {string} 公開URL
- */
-function getMediaUrl(path, bucketName = 'media') {
-    try {
-        const { data } = supabase
-            .storage
-            .from(bucketName)
-            .getPublicUrl(path);
-            
-        return data.publicUrl;
-    } catch (error) {
-        console.error(`ファイル${path}のURL取得エラー:`, error);
-        return null;
-    }
-}
 
-/**
- * メディアバケット内のファイル数と種類を確認
- * @param {string} bucketName バケット名（デフォルト: media）
- * @returns {Promise<Object>} ファイル数情報
- */
-async function getMediaStats(bucketName = 'media') {
-    try {
-        // バケット内のすべてのファイルを取得
-        const { data, error } = await supabase
-            .storage
-            .from(bucketName)
-            .list('', { limit: 1000 }); // より多くのファイルを取得するために制限を増やす
-            
-        if (error) throw error;
-        
-        if (!data || data.length === 0) {
-            return {
-                total: 0,
-                images: 0,
-                videos: 0,
-                others: 0,
-                fileList: []
-            };
-        }
-        
-        console.log(`${bucketName}バケット内に${data.length}ファイルが見つかりました`);
-        
-        // ファイルをフィルタリング（フォルダを除外）
-        const files = data.filter(item => !item.metadata || item.metadata.mimetype);
-        
-        // タイプ別にファイル数をカウント
-        const stats = {
-            total: files.length,
-            images: 0,
-            videos: 0, 
-            others: 0,
-            fileList: files
-        };
-        
-        files.forEach(file => {
-            const name = file.name.toLowerCase();
-            if (name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png') || name.endsWith('.gif')) {
-                stats.images++;
-            } else if (name.endsWith('.mp4') || name.endsWith('.webm') || name.endsWith('.mov')) {
-                stats.videos++;
-            } else {
-                stats.others++;
-            }
-        });
-        
-        console.log(`統計: ${stats.images}画像, ${stats.videos}動画, ${stats.others}その他のファイル`);
-        
-        return stats;
-    } catch (error) {
-        console.error(`${bucketName}バケットからメディア情報取得エラー:`, error);
-        return {
-            total: 0,
-            images: 0,
-            videos: 0,
-            others: 0,
-            error: error.message,
-            fileList: []
-        };
-    }
-}
+
+
+
+

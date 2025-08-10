@@ -377,18 +377,7 @@ function showBirthdayContent(birthdayPerson, showEffects = true) {
     }
 }
 
-function init3DCake() {
-}
 
-function addCakeTierDecorations(tier, radius, height, color) {
-}
-
-function addBirthdayText(cakeGroup) {
-}
-
-function loadThreeJS(callback) {
-    if (callback) callback();
-}
 
 function playBirthdayMusic() {
     const audio = new Audio('assets/audio/happy-birthday.mp3');

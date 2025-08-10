@@ -13,6 +13,66 @@ function saveUsername(name) {
 window.saveUsername = saveUsername;
 window.getSavedUsername = getSavedUsername;
 
+// ユーティリティ関数：翻訳取得
+function getTranslation() {
+    const currentLang = localStorage.getItem('language') || 'ja';
+    return translations && translations[currentLang] ? translations[currentLang] : translations['ja'];
+}
+
+// ユーティリティ関数：基本モーダル作成
+function createBaseModal(modalId, modalClass) {
+    let modal = document.getElementById(modalId);
+    
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = modalClass;
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+    }
+    
+    return modal;
+}
+
+// ユーティリティ関数：モーダル閉じる処理追加
+function addModalCloseHandler(modal, customCloseCallback) {
+    const modalContent = modal.querySelector('.modal-content');
+    let closeBtn = modalContent.querySelector('.modal-close');
+    
+    if (!closeBtn) {
+        closeBtn = document.createElement('span');
+        closeBtn.textContent = '×';
+        closeBtn.className = 'modal-close';
+        modalContent.insertBefore(closeBtn, modalContent.firstChild);
+    }
+    
+    closeBtn.onclick = () => {
+        modal.classList.remove('show');
+        if (customCloseCallback) customCloseCallback();
+    };
+    
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+            if (customCloseCallback) customCloseCallback();
+        }
+    };
+    
+    return closeBtn;
+}
+
+// ユーティリティ関数：エラーハンドリング
+function handleError(message, error, showAlert = true) {
+    console.error(message, error);
+    if (showAlert) {
+        alert(message + (error?.message ? ': ' + error.message : ''));
+    }
+}
+
 function initBulletinBoard() {
     console.log('掲示板を初期化中');
     const bulletinBtn = document.getElementById('bulletinBoardBtn');
@@ -22,17 +82,17 @@ function initBulletinBoard() {
     const submitPost = document.getElementById('submitPost');
     
     if (!bulletinBtn) {
-        console.error('掲示板ボタンが見つかりません');
+        handleError('掲示板ボタンが見つかりません', null, false);
         return;
     }
     
     if (!bulletinModal) {
-        console.error('掲示板モーダルが見つかりません');
+        handleError('掲示板モーダルが見つかりません', null, false);
         return;
     }
     
     if (!closeBulletinBoard) {
-        console.error('掲示板閉じるボタンが見つかりません');
+        handleError('掲示板閉じるボタンが見つかりません', null, false);
         return;
     }
     
@@ -78,7 +138,7 @@ function initBulletinBoard() {
             const selectedGiftDisplay = document.getElementById('selectedGiftDisplay');
             
             if (!selectedGiftDisplay || !selectedGiftDisplay.classList.contains('show')) {
-                alert('送信前にギフトを選択してください！');
+                handleError('送信前にギフトを選択してください！');
                 return;
             }
             
@@ -88,7 +148,7 @@ function initBulletinBoard() {
                 return;
             }
             
-            alert('ギフトを正常に送信しました！');
+            handleError('ギフトを正常に送信しました！', null, true);
             bulletinModal.classList.remove('show');
         });
     }
@@ -144,7 +204,7 @@ function initCustomMessage() {
         let senderName = senderNameInput.value.trim();
         
         if (!messageText) {
-            alert('お祝いメッセージを入力してください！');
+            handleError('お祝いメッセージを入力してください！');
             return;
         }
         
@@ -167,7 +227,7 @@ function initCustomMessage() {
             customMessageModal.classList.remove('show');
             customMessageInput.value = '';
         } else {
-            alert('お祝いメッセージを保存できません。後でもう一度お試しください！');
+            handleError('お祝いメッセージを保存できません。後でもう一度お試しください！');
         }
     });
 
@@ -175,8 +235,7 @@ function initCustomMessage() {
     if (!recordBtn) {
         recordBtn = document.createElement('button');
         recordBtn.id = 'recordMessageBtn';
-        const currentLang = localStorage.getItem('language') || 'ja';
-        const t = translations && translations[currentLang] ? translations[currentLang] : translations['ja'];
+        const t = getTranslation();
         recordBtn.textContent = t.recordMessage || '🎤 お祝いメッセージを録音';
         recordBtn.className = 'record-message-btn';
         recordBtn.addEventListener('click', () => {
@@ -191,9 +250,8 @@ function initCustomMessage() {
     if (!videoBtn) {
         videoBtn = document.createElement('button');
         videoBtn.id = 'videoMessageBtn';
-        const currentLang2 = localStorage.getItem('language') || 'ja';
-        const t2 = translations && translations[currentLang2] ? translations[currentLang2] : translations['ja'];
-        videoBtn.textContent = t2.recordVideo || '🎥 お祝いビデオ';
+        const t = getTranslation();
+        videoBtn.textContent = t.recordVideo || '🎥 お祝いビデオ';
         videoBtn.className = 'video-message-btn';
         videoBtn.addEventListener('click', () => {
             customMessageModal.classList.remove('show');
@@ -207,30 +265,22 @@ function initCustomMessage() {
 }
 
 function openRecordMessageModal() {
-    let recordModal = document.getElementById('recordMessageModal');
+    const recordModal = createBaseModal('recordMessageModal', 'record-modal');
+    const modalContent = recordModal.querySelector('.modal-content');
     
-    if (!recordModal) {
-        recordModal = document.createElement('div');
-        recordModal.id = 'recordMessageModal';
-        recordModal.className = 'record-modal';
-        
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.textContent = '×';
-        closeBtn.className = 'modal-close';
-        closeBtn.addEventListener('click', () => {
-            recordModal.classList.remove('show');
+    // カスタム閉じる処理（録音停止）を追加
+    addModalCloseHandler(recordModal, () => {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
             }
         });
+    
+    // 既存のコンテンツがない場合のみ作成
+    if (!modalContent.querySelector('#recordBtn')) {
+        const t = getTranslation();
         
         const title = document.createElement('h2');
-        const currentLang3 = localStorage.getItem('language') || 'ja';
-        const t3 = translations && translations[currentLang3] ? translations[currentLang3] : translations['ja'];
-        title.textContent = t3.recordMessageTitle || 'お祝いメッセージを録音';
+        title.textContent = t.recordMessageTitle || 'お祝いメッセージを録音';
         title.className = 'modal-title';
         
         const recordControls = document.createElement('div');
@@ -238,13 +288,13 @@ function openRecordMessageModal() {
         
         const recordBtn = document.createElement('button');
         recordBtn.id = 'recordBtn';
-        recordBtn.textContent = '⏺️ 録音開始';
+        recordBtn.textContent = t.recordStart || '⏺️ 録音開始';
         recordBtn.className = 'record-btn';
         recordBtn.addEventListener('click', toggleRecording);
         
         const statusText = document.createElement('div');
         statusText.id = 'recordingStatus';
-        statusText.textContent = '未録音';
+        statusText.textContent = t.notRecorded || '未録音';
         statusText.className = 'recording-status';
         
         const audioPreview = document.createElement('audio');
@@ -255,42 +305,46 @@ function openRecordMessageModal() {
         const senderInput = document.createElement('input');
         senderInput.id = 'audioMessageSender';
         senderInput.type = 'text';
-        senderInput.placeholder = 'あなたのお名前...';
+        senderInput.placeholder = t.yourNamePlaceholder || 'あなたのお名前...';
         senderInput.className = 'audio-sender-input';
         
         const saveBtn = document.createElement('button');
         saveBtn.id = 'saveAudioBtn';
-        saveBtn.textContent = '💾 お祝いメッセージを保存';
+        saveBtn.textContent = t.saveAudioMessage || '💾 お祝いメッセージを保存';
         saveBtn.className = 'save-audio-btn';
         saveBtn.addEventListener('click', saveAudioMessage);
         
         recordControls.appendChild(recordBtn);
-        modalContent.appendChild(closeBtn);
         modalContent.appendChild(title);
         modalContent.appendChild(recordControls);
         modalContent.appendChild(statusText);
         modalContent.appendChild(audioPreview);
         modalContent.appendChild(senderInput);
         modalContent.appendChild(saveBtn);
-        
-        recordModal.appendChild(modalContent);
-        document.body.appendChild(recordModal);
     }
     
+    // リセット処理
     const recordBtn = document.getElementById('recordBtn');
     const audioPreview = document.getElementById('audioPreview');
     const senderInput = document.getElementById('audioMessageSender');
     const saveBtn = document.getElementById('saveAudioBtn');
     const statusText = document.getElementById('recordingStatus');
+    const t = getTranslation();
     
-    recordBtn.textContent = '⏺️ 録音開始';
+    if (recordBtn) recordBtn.textContent = t.recordStart || '⏺️ 録音開始';
+    if (audioPreview) {
     audioPreview.classList.remove('show');
     audioPreview.src = '';
+    }
+    if (senderInput) {
     senderInput.classList.remove('show');
     senderInput.value = '';
-    saveBtn.classList.remove('show');
-    statusText.textContent = '未録音';
+    }
+    if (saveBtn) saveBtn.classList.remove('show');
+    if (statusText) {
+        statusText.textContent = t.notRecorded || '未録音';
     statusText.className = 'recording-status';
+    }
     
     recordModal.classList.add('show');
 }
@@ -309,7 +363,7 @@ function startRecording() {
     const statusText = document.getElementById('recordingStatus');
     
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('お使いのブラウザは録音に対応していません！');
+        handleError('お使いのブラウザは録音に対応していません！');
         return;
     }
     navigator.mediaDevices.getUserMedia({ audio: true })
@@ -339,8 +393,7 @@ function startRecording() {
             statusText.className = 'recording-status recording';
         })
         .catch(error => {
-            console.error('マイクにアクセスできません:', error);
-            alert('マイクにアクセスできません。アクセス許可を確認してもう一度お試しください。');
+            handleError('マイクにアクセスできません。アクセス許可を確認してもう一度お試しください', error);
         });
 }
 
@@ -364,7 +417,7 @@ function saveAudioMessage() {
     const senderName = senderInput.value.trim() || '匿名';
     
     if (!audioBlob) {
-        alert('保存する録音がありません！');
+        handleError('保存する録音がありません！');
         return;
     }
     
@@ -379,23 +432,22 @@ function saveAudioMessage() {
         .then(success => {
             if (success) {
         document.getElementById('recordMessageModal').classList.remove('show');
-        alert('お祝い音声メッセージが正常に保存されました！');
+        handleError('お祝い音声メッセージが正常に保存されました！', null, true);
         displaySavedAudioMessages();
             } else {
                 if (statusText) {
                     statusText.textContent = '音声保存エラー';
                     statusText.className = 'recording-status error';
                 }
-                alert('音声保存エラー');
+                handleError('音声保存エラー');
             }
         })
         .catch(error => {
-            console.error('音声保存エラー:', error);
+            handleError('音声の保存中にエラーが発生しました', error);
             if (statusText) {
                 statusText.textContent = '音声保存エラー';
                 statusText.className = 'recording-status error';
             }
-            alert('音声の保存中にエラーが発生しました: ' + error.message);
         });
 }
 
@@ -422,57 +474,43 @@ function displaySavedAudioMessages() {
     }
         })
         .catch(error => {
-            console.error('音声リスト取得エラー:', error);
+            handleError('音声リスト取得エラー', error, false);
         });
 }
 
 function openAudioMessagesModal(birthdayPerson) {
-    let audioModal = document.getElementById('audioMessagesModal');
+    const audioModal = createBaseModal('audioMessagesModal', 'audio-messages-modal');
+    const modalContent = audioModal.querySelector('.modal-content');
     
-    if (!audioModal) {
-        audioModal = document.createElement('div');
-        audioModal.id = 'audioMessagesModal';
-        audioModal.className = 'audio-messages-modal';
-        
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.textContent = '×';
-        closeBtn.className = 'modal-close';
-        closeBtn.addEventListener('click', () => {
-            audioModal.classList.remove('show');
+    // カスタム閉じる処理（全音声停止）を追加
+    addModalCloseHandler(audioModal, () => {
             document.querySelectorAll('audio').forEach(audio => audio.pause());
         });
+    
+    // 既存のコンテンツがない場合のみ作成
+    if (!modalContent.querySelector('#audioMessagesList')) {
+        const t = getTranslation();
         
         const title = document.createElement('h2');
-        title.textContent = birthdayPerson ? `${birthdayPerson}へのお祝いメッセージ` : 'お誕生日お祝いメッセージ';
+        title.textContent = birthdayPerson ? 
+            (t.birthdayMessagesFor || '{person}へのお祝いメッセージ').replace('{person}', birthdayPerson) : 
+            (t.birthdayMessages || 'お誕生日お祝いメッセージ');
         title.className = 'modal-title';
         
         const messagesList = document.createElement('div');
         messagesList.id = 'audioMessagesList';
         messagesList.className = 'audio-messages-list';
         
-        const loadingMsg = document.createElement('p');
-        loadingMsg.textContent = '音声メッセージを読み込み中...';
-        loadingMsg.className = 'audio-loading-message';
-        loadingMsg.id = 'audioLoadingMessage';
-        messagesList.appendChild(loadingMsg);
-        
-        modalContent.appendChild(closeBtn);
         modalContent.appendChild(title);
         modalContent.appendChild(messagesList);
-        
-        audioModal.appendChild(modalContent);
-        document.body.appendChild(audioModal);
     }
         
     audioModal.classList.add('show');
     
         const messagesList = document.getElementById('audioMessagesList');
-    
     if (messagesList) {
-        messagesList.innerHTML = '<p id="audioLoadingMessage" class="audio-loading-message">音声メッセージを読み込み中...</p>';
+        const t = getTranslation();
+        messagesList.innerHTML = `<p id="audioLoadingMessage" class="audio-loading-message">${t.loadingAudioMessages || '音声メッセージを読み込み中...'}</p>`;
         
         getAudioMessages(birthdayPerson)
             .then(messages => {
@@ -480,7 +518,7 @@ function openAudioMessagesModal(birthdayPerson) {
                 
                 if (!messages || messages.length === 0) {
                 const noMessages = document.createElement('p');
-                noMessages.textContent = 'まだお祝い音声メッセージがありません。';
+                    noMessages.textContent = t.noAudioMessages || 'まだお祝い音声メッセージがありません。';
                 noMessages.className = 'no-audio-messages';
                 messagesList.appendChild(noMessages);
             } else {
@@ -514,12 +552,12 @@ function openAudioMessagesModal(birthdayPerson) {
             }
             })
             .catch(error => {
+                handleError(t.audioMessagesError || '音声メッセージ取得エラー', error, false);
                 messagesList.innerHTML = '';
                 const errorMsg = document.createElement('p');
-                errorMsg.textContent = '音声メッセージ読み込みエラー: ' + error.message;
+                errorMsg.textContent = (t.audioLoadError || '音声メッセージ読み込みエラー') + ': ' + error.message;
                 errorMsg.className = 'audio-error-message';
                 messagesList.appendChild(errorMsg);
-                console.error('音声メッセージ取得エラー:', error);
             });
     }
 }
@@ -527,8 +565,7 @@ function openAudioMessagesModal(birthdayPerson) {
 function playAudioMessage(audioUrl) {
     const audio = new Audio(audioUrl);
     audio.play().catch(error => {
-        console.error('音声再生できません:', error);
-        alert('音声を再生できません。もう一度お試しください。');
+        handleError('音声を再生できません。もう一度お試しください', error);
     });
 }
 
@@ -557,7 +594,7 @@ async function displaySavedCustomMessage() {
             displayCustomMessage(`${message.message} - ${message.sender}`);
         }
     } catch (error) {
-        console.error('お祝いメッセージ表示エラー:', error);
+        handleError('お祝いメッセージ表示エラー', error, false);
         
         // ローカルストレージからメッセージを取得
         const savedMessage = localStorage.getItem('customBirthdayMessage');
@@ -573,75 +610,16 @@ function getCurrentBirthdayPerson() {
     return localStorage.getItem('birthdayPerson') || '友達';
 }
 
-// ビデオメッセージモーダルを開く
-function openVideoMessageModal() {
-    let videoModal = document.getElementById('videoMessageModal');
-    
-    if (!videoModal) {
-        videoModal = document.createElement('div');
-        videoModal.id = 'videoMessageModal';
-        videoModal.className = 'video-message-modal';
-        
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.textContent = '×';
-        closeBtn.style.position = 'absolute';
-        closeBtn.style.top = '10px';
-        closeBtn.style.right = '20px';
-        closeBtn.style.fontSize = '30px';
-        closeBtn.style.fontWeight = 'bold';
-        closeBtn.style.cursor = 'pointer';
-        closeBtn.style.color = '#854D27';
-        closeBtn.addEventListener('click', () => {
-            videoModal.style.display = 'none';
-            
-            // ビデオストリームを停止
-            const videoPreview = document.getElementById('videoPreview');
-            if (videoPreview.srcObject) {
-                videoPreview.srcObject.getTracks().forEach(track => track.stop());
-                videoPreview.srcObject = null;
-            }
-            
-            // ビデオ録画を停止
-            if (videoRecorder && videoRecorder.state === 'recording') {
-                videoRecorder.stop();
-            }
-        });
-        
-        const title = document.createElement('h2');
-        const currentLang4 = localStorage.getItem('language') || 'ja';
-        const t4 = translations && translations[currentLang4] ? translations[currentLang4] : translations['ja'];
-        title.textContent = t4.recordVideoTitle || 'お祝いビデオを録画';
-        title.className = 'modal-title';
-        
-        const videoContainer = document.createElement('div');
-        videoContainer.className = 'video-container';
-        
-        const videoPreview = document.createElement('video');
-        videoPreview.id = 'videoPreview';
-        videoPreview.width = 540;
-        videoPreview.height = 360;
-        videoPreview.className = 'video-preview';
-        videoPreview.autoplay = true;
-        videoPreview.muted = true;
-        
-        const recordControls = document.createElement('div');
-        recordControls.className = 'video-record-controls';
-        
-        const startVideoBtn = document.createElement('button');
-        startVideoBtn.id = 'startVideoBtn';
-        startVideoBtn.textContent = '⏺️ 録画開始';
-        startVideoBtn.className = 'video-record-btn';
-        startVideoBtn.addEventListener('click', () => {
+// ビデオ録画処理のヘルパー関数
+function handleVideoRecording() {
             const startButton = document.getElementById('startVideoBtn');
             const videoPreview = document.getElementById('videoPreview');
             const statusText = document.getElementById('videoRecordingStatus');
+    const t = getTranslation();
             
-            if (startButton.textContent.includes('録画開始')) {
+    if (startButton.textContent.includes(t.recordStart || '録画開始')) {
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    alert('お使いのブラウザはビデオ録画に対応していません！');
+            handleError(t.browserNotSupported || 'お使いのブラウザはビデオ録画に対応していません！');
                     return;
                 }
                 
@@ -674,46 +652,91 @@ function openVideoMessageModal() {
                         };
                         
                         videoRecorder.start();
-                        startButton.textContent = '⏹️ 録画停止';
-                        statusText.textContent = '⚫ ビデオ録画中...';
+                startButton.textContent = t.recordStop || '⏹️ 録画停止';
+                statusText.textContent = t.recording || '⚫ ビデオ録画中...';
                         statusText.className = 'video-recording-status recording';
                     })
                     .catch(error => {
-                        console.error('カメラにアクセスできません:', error);
-                        alert('カメラにアクセスできません。アクセス許可を確認してもう一度お試しください。');
+                handleError(t.cameraAccessError || 'カメラにアクセスできません。アクセス許可を確認してもう一度お試しください', error);
                     });
             } else {
                 if (videoRecorder && videoRecorder.state === 'recording') {
                     videoRecorder.stop();
                     videoPreview.srcObject.getTracks().forEach(track => track.stop());
                     
-                    startButton.textContent = '🔄 再録画';
-                    statusText.textContent = '✅ ビデオ録画完了';
+            startButton.textContent = t.reRecord || '🔄 再録画';
+            statusText.textContent = t.recordCompleted || '✅ ビデオ録画完了';
                     statusText.className = 'video-recording-status completed';
                 }
-            }
-        });
+    }
+}
+
+// ビデオメッセージモーダルを開く
+function openVideoMessageModal() {
+    const videoModal = createBaseModal('videoMessageModal', 'video-message-modal');
+    const modalContent = videoModal.querySelector('.modal-content');
+    
+    // カスタム閉じる処理（ビデオストリーム停止）を追加
+    addModalCloseHandler(videoModal, () => {
+        const videoPreview = document.getElementById('videoPreview');
+        if (videoPreview && videoPreview.srcObject) {
+            videoPreview.srcObject.getTracks().forEach(track => track.stop());
+            videoPreview.srcObject = null;
+        }
+        
+        if (videoRecorder && videoRecorder.state === 'recording') {
+            videoRecorder.stop();
+        }
+    });
+    
+    // 既存のコンテンツがない場合のみ作成
+    if (!modalContent.querySelector('#startVideoBtn')) {
+        const t = getTranslation();
+        
+        const title = document.createElement('h2');
+        title.textContent = t.recordVideoTitle || 'お祝いビデオを録画';
+        title.className = 'modal-title';
+        
+        const videoContainer = document.createElement('div');
+        videoContainer.className = 'video-container';
+        
+        const videoPreview = document.createElement('video');
+        videoPreview.id = 'videoPreview';
+        videoPreview.width = 540;
+        videoPreview.height = 360;
+        videoPreview.className = 'video-preview';
+        videoPreview.autoplay = true;
+        videoPreview.muted = true;
+        
+        const recordControls = document.createElement('div');
+        recordControls.className = 'video-record-controls';
+        
+        const startVideoBtn = document.createElement('button');
+        startVideoBtn.id = 'startVideoBtn';
+        startVideoBtn.textContent = t.recordStart || '⏺️ 録画開始';
+        startVideoBtn.className = 'video-record-btn';
+        startVideoBtn.addEventListener('click', handleVideoRecording);
         
         const statusText = document.createElement('div');
         statusText.id = 'videoRecordingStatus';
-        statusText.textContent = '未録画';
+        statusText.textContent = t.notRecorded || '未録画';
         statusText.className = 'video-recording-status';
         
         const senderInput = document.createElement('input');
         senderInput.id = 'videoMessageSender';
         senderInput.type = 'text';
-        senderInput.placeholder = 'あなたのお名前...';
+        senderInput.placeholder = t.yourNamePlaceholder || 'あなたのお名前...';
         senderInput.className = 'video-sender-input';
         
         const saveBtn = document.createElement('button');
         saveBtn.id = 'saveVideoBtn';
-        saveBtn.textContent = '💾 ビデオ保存';
+        saveBtn.textContent = t.saveVideo || '💾 ビデオ保存';
         saveBtn.className = 'video-save-btn';
         saveBtn.addEventListener('click', () => {
-            const senderName = document.getElementById('videoMessageSender').value.trim() || '匿名';
-            const currentLang5 = localStorage.getItem('language') || 'ja';
-            const t5 = translations && translations[currentLang5] ? translations[currentLang5] : translations['ja'];
-            const videoName = (t5.videoFromSender || '{sender}からのお祝いビデオ').replace('{sender}', senderName);
+            const senderName = document.getElementById('videoMessageSender').value.trim() || 
+                               (t.anonymous || '匿名');
+            const videoName = (t.videoFromSender || '{sender}からのお祝いビデオ')
+                              .replace('{sender}', senderName);
             
             saveVideoMessage(videoBlob, videoName, senderName);
         });
@@ -721,33 +744,37 @@ function openVideoMessageModal() {
         videoContainer.appendChild(videoPreview);
         recordControls.appendChild(startVideoBtn);
         
-        modalContent.appendChild(closeBtn);
         modalContent.appendChild(title);
         modalContent.appendChild(videoContainer);
         modalContent.appendChild(recordControls);
         modalContent.appendChild(statusText);
         modalContent.appendChild(senderInput);
         modalContent.appendChild(saveBtn);
+    }
         
-        videoModal.appendChild(modalContent);
-        document.body.appendChild(videoModal);
-    } else {
+    // リセット処理
         const startButton = document.getElementById('startVideoBtn');
         const videoPreview = document.getElementById('videoPreview');
         const statusText = document.getElementById('videoRecordingStatus');
         const senderInput = document.getElementById('videoMessageSender');
         const saveBtn = document.getElementById('saveVideoBtn');
+    const t = getTranslation();
         
-        startButton.textContent = '⏺️ 録画開始';
+    if (startButton) startButton.textContent = t.recordStart || '⏺️ 録画開始';
+    if (videoPreview) {
         videoPreview.srcObject = null;
         videoPreview.src = '';
         videoPreview.muted = true;
-        statusText.textContent = '未録画';
+    }
+    if (statusText) {
+        statusText.textContent = t.notRecorded || '未録画';
         statusText.className = 'video-recording-status';
+    }
+    if (senderInput) {
         senderInput.classList.remove('show');
         senderInput.value = '';
-        saveBtn.classList.remove('show');
     }
+    if (saveBtn) saveBtn.classList.remove('show');
     
     videoModal.classList.add('show');
 }
@@ -759,12 +786,12 @@ let videoUrl;
 
 function saveVideoMessage(videoData, videoName, senderName) {
     if (!videoData) {
-        alert('保存するビデオがありません！');
+        handleError('保存するビデオがありません！');
         return;
     }
     
     if (videoData.size > 10 * 1024 * 1024) {
-        alert('ビデオが大きすぎます。短いビデオを録画してください（10MB未満）。');
+        handleError('ビデオが大きすぎます。短いビデオを録画してください（10MB未満）。');
         return;
     }
     
@@ -780,9 +807,8 @@ function saveVideoMessage(videoData, videoName, senderName) {
         .then(success => {
             if (success) {
         document.getElementById('videoMessageModal').classList.remove('show');
-        const currentLang6 = localStorage.getItem('language') || 'ja';
-        const t6 = translations && translations[currentLang6] ? translations[currentLang6] : translations['ja'];
-        alert(t6.videoSavedAlert || 'お祝いビデオが正常に保存されました！');
+        const t = getTranslation();
+        handleError(t.videoSavedAlert || 'お祝いビデオが正常に保存されました！', null, true);
         
         displaySavedVideoMessages();
             } else {
@@ -790,16 +816,15 @@ function saveVideoMessage(videoData, videoName, senderName) {
                     statusText.textContent = 'ビデオ保存エラー！';
                     statusText.className = 'video-recording-status error';
                 }
-                alert('ビデオを保存できません。後でもう一度お試しください。');
+                handleError('ビデオを保存できません。後でもう一度お試しください。');
             }
         })
         .catch(error => {
-            console.error('ビデオ保存エラー:', error);
+            handleError('ビデオ保存エラー', error);
             if (statusText) {
                 statusText.textContent = 'ビデオ保存エラー！';
                 statusText.className = 'video-recording-status error';
             }
-            alert('ビデオ保存エラー: ' + error.message);
         });
 }
 
@@ -813,9 +838,8 @@ function displaySavedVideoMessages() {
         if (!videoBtn && document.getElementById('customMessageDisplay')) {
             videoBtn = document.createElement('button');
             videoBtn.id = 'viewVideoMessagesBtn';
-            const currentLang7 = localStorage.getItem('language') || 'ja';
-            const t7 = translations && translations[currentLang7] ? translations[currentLang7] : translations['ja'];
-            videoBtn.textContent = t7.viewVideoMessages || '🎥 お祝いビデオを見る';
+            const t = getTranslation();
+            videoBtn.textContent = t.viewVideoMessages || '🎥 お祝いビデオを見る';
             videoBtn.className = 'view-video-messages-btn';
             
             videoBtn.addEventListener('click', () => {
@@ -828,74 +852,51 @@ function displaySavedVideoMessages() {
     }
         })
         .catch(error => {
-            console.error('ビデオリスト取得エラー:', error);
+            handleError('ビデオリスト取得エラー', error, false);
         });
 }
 
 function openVideoMessagesModal(birthdayPerson) {
-    let videoModal = document.getElementById('videoMessagesModal');
+    const videoModal = createBaseModal('videoMessagesModal', 'video-messages-modal');
+    const modalContent = videoModal.querySelector('.modal-content');
     
-    if (!videoModal) {
-        videoModal = document.createElement('div');
-        videoModal.id = 'videoMessagesModal';
-        videoModal.className = 'video-messages-modal';
-        
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.textContent = '×';
-        closeBtn.style.position = 'absolute';
-        closeBtn.style.top = '10px';
-        closeBtn.style.right = '20px';
-        closeBtn.style.fontSize = '30px';
-        closeBtn.style.fontWeight = 'bold';
-        closeBtn.style.cursor = 'pointer';
-        closeBtn.style.color = '#854D27';
-        closeBtn.addEventListener('click', () => {
-            videoModal.style.display = 'none';
+    // カスタム閉じる処理（全ビデオ停止）を追加
+    addModalCloseHandler(videoModal, () => {
             document.querySelectorAll('video').forEach(video => video.pause());
         });
+    
+    // 既存のコンテンツがない場合のみ作成
+    if (!modalContent.querySelector('#videoMessagesList')) {
+        const t = getTranslation();
         
         const title = document.createElement('h2');
-        const currentLang8 = localStorage.getItem('language') || 'ja';
-        const t8 = translations && translations[currentLang8] ? translations[currentLang8] : translations['ja'];
-        title.textContent = birthdayPerson ? (t8.birthdayVideoTitle || '{person}へのお祝いビデオ').replace('{person}', birthdayPerson) : (t8.recordVideo || 'お祝いビデオ');
+        title.textContent = birthdayPerson ? 
+            (t.birthdayVideoTitle || '{person}へのお祝いビデオ').replace('{person}', birthdayPerson) : 
+            (t.recordVideo || 'お祝いビデオ');
         title.className = 'modal-title';
         
         const messagesList = document.createElement('div');
         messagesList.id = 'videoMessagesList';
         messagesList.className = 'video-messages-list';
         
-        const loadingMsg = document.createElement('p');
-        loadingMsg.textContent = 'ビデオを読み込み中...';
-        loadingMsg.className = 'video-loading-message';
-        loadingMsg.id = 'videoLoadingMessage';
-        messagesList.appendChild(loadingMsg);
-        
-        modalContent.appendChild(closeBtn);
         modalContent.appendChild(title);
         modalContent.appendChild(messagesList);
-        
-        videoModal.appendChild(modalContent);
-        document.body.appendChild(videoModal);
     }
         
     videoModal.classList.add('show');
     
     const messagesList = document.getElementById('videoMessagesList');
-    
     if (messagesList) {
-        messagesList.innerHTML = '<p id="videoLoadingMessage" class="video-loading-message">ビデオを読み込み中...</p>';
+        const t = getTranslation();
+        messagesList.innerHTML = `<p id="videoLoadingMessage" class="video-loading-message">${t.loadingVideos || 'ビデオを読み込み中...'}</p>`;
+        
         getVideoMessages(birthdayPerson)
             .then(messages => {
                 messagesList.innerHTML = '';
                 
                 if (!messages || messages.length === 0) {
                 const noMessages = document.createElement('p');
-                const currentLang9 = localStorage.getItem('language') || 'ja';
-                const t9 = translations && translations[currentLang9] ? translations[currentLang9] : translations['ja'];
-                noMessages.textContent = t9.noVideoMessages || 'まだお祝いビデオがありません。';
+                    noMessages.textContent = t.noVideoMessages || 'まだお祝いビデオがありません。';
                 noMessages.className = 'video-no-messages';
                 messagesList.appendChild(noMessages);
             } else {
@@ -918,7 +919,8 @@ function openVideoMessagesModal(birthdayPerson) {
                     messageHeader.appendChild(timestamp);
                     
                         const videoTitle = document.createElement('h3');
-                        videoTitle.textContent = message.video_name || `ビデオ #${index + 1}`;
+                        videoTitle.textContent = message.video_name || 
+                                                (t.videoNumber || 'ビデオ #{number}').replace('{number}', index + 1);
                         videoTitle.className = 'video-message-title';
                     
                     const videoPlayer = document.createElement('video');
@@ -935,12 +937,12 @@ function openVideoMessagesModal(birthdayPerson) {
             }
             })
             .catch(error => {
+                handleError(t.videoGetError || 'ビデオ取得エラー', error, false);
                 messagesList.innerHTML = '';
                 const errorMsg = document.createElement('p');
-                errorMsg.textContent = 'ビデオ読み込みエラー: ' + error.message;
+                errorMsg.textContent = (t.videoLoadError || 'ビデオ読み込みエラー') + ': ' + error.message;
                 errorMsg.className = 'video-error-message';
                 messagesList.appendChild(errorMsg);
-                console.error('ビデオ取得エラー:', error);
             });
     }
 }
@@ -967,8 +969,7 @@ function playVideoMessage(videoUrl) {
     document.body.appendChild(videoContainer);
     
     video.play().catch(error => {
-        console.error('ビデオ再生エラー:', error);
-        alert('ビデオを再生できません。もう一度お試しください。');
+        handleError('ビデオを再生できません。もう一度お試しください', error);
     });
 }
 
@@ -983,8 +984,7 @@ function initCommunityFeatures() {
     if (container) {
         const chatButton = document.createElement('button');
         chatButton.id = 'openChatBtn';
-        const currentLang = localStorage.getItem('language') || 'ja';
-        const t = translations && translations[currentLang] ? translations[currentLang] : translations['ja'];
+        const t = getTranslation();
         chatButton.textContent = t.groupChat || '💬 グループチャット';
         chatButton.classList.add('feature-button', 'chat-button-fixed');
         
@@ -1010,59 +1010,46 @@ function checkUserNameAndOpenChat() {
     }
 }
 
-// ユーザー名入力モーダルを作成する共通関数 - CSS classes使用版
 function createUserNameModal(buttonText, onSubmit) {
-    let userNameModal = document.getElementById('userNameModal');
+    const userNameModal = createBaseModal('userNameModal', 'username-modal');
+    const modalContent = userNameModal.querySelector('.modal-content');
     
-    if (!userNameModal) {
-        userNameModal = document.createElement('div');
-        userNameModal.id = 'userNameModal';
-        userNameModal.className = 'username-modal';
-        
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.textContent = '×';
-        closeBtn.className = 'modal-close';
-        closeBtn.addEventListener('click', () => {
-            userNameModal.classList.remove('show');
-        });
-        
-        const title = document.createElement('h2');
+    addModalCloseHandler(userNameModal);
+    
+    // 既存の要素があるかチェック
+    let title = modalContent.querySelector('.modal-title');
+    let userNameInput = modalContent.querySelector('#chatUserNameInput');
+    let submitBtn = modalContent.querySelector('#userNameSubmitBtn');
+    
+    if (!title) {
+        title = document.createElement('h2');
         title.textContent = 'お名前を入力してください';
         title.className = 'modal-title';
+        modalContent.appendChild(title);
+    }
         
-        const userNameInput = document.createElement('input');
+    if (!userNameInput) {
+        userNameInput = document.createElement('input');
         userNameInput.id = 'chatUserNameInput';
         userNameInput.type = 'text';
         userNameInput.placeholder = 'お名前...';
         userNameInput.className = 'form-input';
+        modalContent.appendChild(userNameInput);
+    }
         
-        const submitBtn = document.createElement('button');
+    if (!submitBtn) {
+        submitBtn = document.createElement('button');
         submitBtn.id = 'userNameSubmitBtn';
         submitBtn.className = 'btn-submit';
-        
-        modalContent.appendChild(closeBtn);
-        modalContent.appendChild(title);
-        modalContent.appendChild(userNameInput);
         modalContent.appendChild(submitBtn);
-        
-        userNameModal.appendChild(modalContent);
-        document.body.appendChild(userNameModal);
     }
     
-    const submitBtn = document.getElementById('userNameSubmitBtn');
-    const userNameInput = document.getElementById('chatUserNameInput');
-    
-    // ボタンテキストを更新
     submitBtn.textContent = buttonText;
     
     // 既存のイベントリスナーを削除
     const newSubmitBtn = submitBtn.cloneNode(true);
     submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
     
-    // 新しいイベントリスナーを追加
     newSubmitBtn.addEventListener('click', () => {
         const userName = userNameInput.value.trim();
         
@@ -1071,15 +1058,11 @@ function createUserNameModal(buttonText, onSubmit) {
             userNameModal.classList.remove('show');
             onSubmit(userName);
         } else {
-            alert('お名前を入力してください！');
+            handleError('お名前を入力してください！');
         }
     });
     
-    // 入力フィールドをクリア
-    if (userNameInput) {
         userNameInput.value = '';
-    }
-    
     userNameModal.classList.add('show');
 }
 
@@ -1089,20 +1072,48 @@ function openUserNameModal() {
     });
 }
 
-// チャットルームモーダルを開く - CSS classes使用版
+// チャットメッセージ送信のヘルパー関数
+function createChatSendHandler(userName, messageInput) {
+    return () => {
+        const messageText = messageInput.value.trim();
+        
+        if (messageText) {
+            sendChatMessage(userName, messageText);
+            messageInput.value = '';
+        }
+    };
+}
+
+// チャット最小化切り替えのヘルパー関数
+function toggleChatMinimize(chatContent, chatInputArea, chatModal) {
+    if (chatContent.classList.contains('u-hidden')) {
+        chatContent.classList.remove('u-hidden');
+        chatInputArea.classList.remove('u-hidden');
+        chatModal.classList.add('chat-modal-expanded');
+    } else {
+        chatContent.classList.add('u-hidden');
+        chatInputArea.classList.add('u-hidden');
+        chatModal.classList.remove('chat-modal-expanded');
+    }
+}
+
+// チャットルームモーダルを開く
 function openChatRoomModal(userName) {
     let chatModal = document.getElementById('chatRoomModal');
     
     if (!chatModal) {
+        // チャットモーダルは特殊構造のため直接作成
         chatModal = document.createElement('div');
         chatModal.id = 'chatRoomModal';
         chatModal.className = 'chat-modal';
+        
+        const t = getTranslation();
         
         const chatHeader = document.createElement('div');
         chatHeader.className = 'chat-header';
         
         const chatTitle = document.createElement('h3');
-        chatTitle.textContent = '誕生日グループチャット';
+        chatTitle.textContent = t.groupChat || '誕生日グループチャット';
         chatTitle.className = 'chat-title';
         
         const closeBtn = document.createElement('span');
@@ -1112,19 +1123,18 @@ function openChatRoomModal(userName) {
             chatModal.classList.remove('show');
         });
         
+        const chatContent = document.createElement('div');
+        chatContent.id = 'chatMessages';
+        chatContent.className = 'chat-content';
+        
+        const chatInputArea = document.createElement('div');
+        chatInputArea.className = 'chat-input-area';
+        
         const minimizeBtn = document.createElement('span');
         minimizeBtn.textContent = '_';
         minimizeBtn.className = 'chat-btn chat-minimize';
         minimizeBtn.addEventListener('click', () => {
-            if (chatContent.classList.contains('u-hidden')) {
-                chatContent.classList.remove('u-hidden');
-                chatInputArea.classList.remove('u-hidden');
-                chatModal.classList.add('chat-modal-expanded');
-            } else {
-                chatContent.classList.add('u-hidden');
-                chatInputArea.classList.add('u-hidden');
-                chatModal.classList.remove('chat-modal-expanded');
-            }
+            toggleChatMinimize(chatContent, chatInputArea, chatModal);
         });
         
         const headerControls = document.createElement('div');
@@ -1135,37 +1145,22 @@ function openChatRoomModal(userName) {
         chatHeader.appendChild(chatTitle);
         chatHeader.appendChild(headerControls);
         
-        const chatContent = document.createElement('div');
-        chatContent.id = 'chatMessages';
-        chatContent.className = 'chat-content';
-        
-        const chatInputArea = document.createElement('div');
-        chatInputArea.className = 'chat-input-area';
-        
         const messageInput = document.createElement('input');
         messageInput.id = 'chatMessageInput';
         messageInput.type = 'text';
-        messageInput.placeholder = 'メッセージを入力...';
+        messageInput.placeholder = t.messageInputPlaceholder || 'メッセージを入力...';
         messageInput.className = 'chat-message-input';
         
         const sendBtn = document.createElement('button');
         sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
         sendBtn.className = 'chat-send-btn';
         
-        const sendMessage = () => {
-            const messageText = messageInput.value.trim();
-            
-            if (messageText) {
-                sendChatMessage(userName, messageText);
-                messageInput.value = '';
-            }
-        };
-        
-        sendBtn.addEventListener('click', sendMessage);
+        const sendHandler = createChatSendHandler(userName, messageInput);
+        sendBtn.addEventListener('click', sendHandler);
         
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                sendMessage();
+                sendHandler();
             }
         });
         
@@ -1237,7 +1232,7 @@ async function loadChatHistory() {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     } catch (error) {
-        console.error('チャット履歴読み込みエラー:', error);
+        handleError('チャット履歴読み込みエラー', error, false);
         
 
         const chatMessages = document.getElementById('chatMessages');
@@ -1274,7 +1269,7 @@ async function sendChatMessage(sender, text) {
         
         return true;
     } catch (error) {
-        console.error('メッセージ送信エラー:', error);
+        handleError('メッセージ送信エラー', error, false);
         const chatMessages = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]');
         chatMessages.push({
             sender: sender,
@@ -1301,7 +1296,7 @@ function setupChatRealtime() {
             
         console.log('チャット用リアルタイムチャンネルを設定しました');
     } catch (error) {
-        console.error('チャットリアルタイム設定エラー:', error);
+        handleError('チャットリアルタイム設定エラー', error, false);
     }
 }
 
@@ -1322,8 +1317,7 @@ function initInviteFriends() {
     if (container) {
         const inviteButton = document.createElement('button');
         inviteButton.id = 'inviteFriendsBtn';
-        const currentLang = localStorage.getItem('language') || 'ja';
-        const t = translations && translations[currentLang] ? translations[currentLang] : translations['ja'];
+        const t = getTranslation();
         inviteButton.textContent = t.inviteFriends || '👥 友達を招待';
         inviteButton.classList.add('feature-button', 'invite-button-fixed');
         
@@ -1339,101 +1333,28 @@ function initInviteFriends() {
     }
 }
 
-function openInviteModal() {
-    let inviteModal = document.getElementById('inviteModal');
-    
-    if (!inviteModal) {
-        inviteModal = document.createElement('div');
-        inviteModal.id = 'inviteModal';
-        inviteModal.className = 'invite-modal';
-        
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.textContent = '×';
-        closeBtn.className = 'modal-close';
-        closeBtn.addEventListener('click', () => {
-            inviteModal.classList.remove('show');
-        });
-        
-        const title = document.createElement('h2');
-        const currentLang = localStorage.getItem('language') || 'ja';
-        const t = translations && translations[currentLang] ? translations[currentLang] : translations['ja'];
-        title.textContent = t.inviteModalTitle || '友達を招待して参加してもらいましょう';
-        title.className = 'modal-title';
-        
-        const description = document.createElement('p');
-        const nextBirthdayPerson = localStorage.getItem('nextBirthdayPerson');
-        const nextBirthdayDate = localStorage.getItem('nextBirthdayDate');
-        
-        let birthdayPersonName = '大切な人';
-        let birthdayDateText = '';
-        
-        if (nextBirthdayPerson) {
-            try {
-                const person = JSON.parse(nextBirthdayPerson);
-                birthdayPersonName = person.name || '大切な人';
-            } catch (e) {
-                console.error('誕生日情報読み込みエラー:', e);
-            }
-        }
-        
-        if (nextBirthdayDate) {
-            try {
-                const date = new Date(nextBirthdayDate);
-                birthdayDateText = ` ${date.getMonth() + 1}月${date.getDate()}日に`;
-            } catch (e) {
-                console.error('誕生日読み込みエラー:', e);
-            }
-        }
-        
-        description.textContent = `友達を招待して${birthdayPersonName}の誕生日${birthdayDateText}一緒にお祝いしましょう！みんなで素敵な思い出を作り、心のこもったお祝いのメッセージを送りましょう。`;
-        description.className = 'modal-description';
-        
-        const linkSection = document.createElement('div');
-        linkSection.className = 'invite-link-section';
-        
-        const linkLabel = document.createElement('div');
-        linkLabel.textContent = t.inviteLink || '招待リンク：';
-        linkLabel.className = 'invite-link-label';
-        
-        const linkDisplay = document.createElement('div');
-        linkDisplay.className = 'invite-link-display';
-        
-        const linkInput = document.createElement('input');
-        linkInput.id = 'inviteLinkInput';
-        linkInput.type = 'text';
-        linkInput.readOnly = true;
-        linkInput.value = generateInviteLink();
-        linkInput.className = 'invite-link-input';
-        
-        const copyBtn = document.createElement('button');
-        copyBtn.textContent = t.copyButton || '📋 コピー';
-        copyBtn.className = 'invite-copy-btn';
-        copyBtn.addEventListener('click', () => {
+// 招待リンクコピーヘルパー関数
+function createCopyHandler(linkInput, copyBtn) {
+    const t = getTranslation();
+    return () => {
             linkInput.select();
             document.execCommand('copy');
             copyBtn.textContent = t.copyComplete || '✓ コピー完了';
             setTimeout(() => {
                 copyBtn.textContent = t.copyButton || '📋 コピー';
             }, 2000);
-        });
-        
-        linkDisplay.appendChild(linkInput);
-        linkDisplay.appendChild(copyBtn);
-        
-        const shareLabel = document.createElement('div');
-        shareLabel.textContent = t.shareLabel || 'シェアする：';
-        shareLabel.className = 'social-share-label';
-        
+    };
+}
+
+// ソーシャルシェアボタン作成ヘルパー関数
+function createSocialShareButtons(linkInput) {
         const socialShare = document.createElement('div');
         socialShare.className = 'social-share-container';
         
         const platforms = [
-            { name: 'Facebook', icon: 'facebook-f', color: '#1877f2' },
-            { name: 'Twitter', icon: 'x-twitter', color: '#000000' },
-            { name: 'WhatsApp', icon: 'whatsapp', color: '#25D366' }
+        { name: 'Facebook', icon: 'facebook-f', shareText: '一緒に誕生日をお祝いしましょう！' },
+        { name: 'Twitter', icon: 'x-twitter', shareText: '一緒に誕生日をお祝いしましょう！' },
+        { name: 'WhatsApp', icon: 'whatsapp', shareText: '一緒に誕生日をお祝いしましょう！ ' }
         ];
         
         platforms.forEach(platform => {
@@ -1451,10 +1372,10 @@ function openInviteModal() {
                         shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
                         break;
                     case 'Twitter':
-                        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(link)}&text=${encodeURIComponent('一緒に誕生日をお祝いしましょう！')}`;
+                    shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(link)}&text=${encodeURIComponent(platform.shareText)}`;
                         break;
                     case 'WhatsApp':
-                        shareUrl = `https://wa.me/?text=${encodeURIComponent('一緒に誕生日をお祝いしましょう！ ' + link)}`;
+                    shareUrl = `https://wa.me/?text=${encodeURIComponent(platform.shareText + link)}`;
                         break;
                 }
                 
@@ -1464,6 +1385,12 @@ function openInviteModal() {
             socialShare.appendChild(shareBtn);
         });
         
+    return socialShare;
+}
+
+// メール招待セクション作成ヘルパー関数
+function createEmailInviteSection() {
+    const t = getTranslation();
         const emailSection = document.createElement('div');
         emailSection.className = 'email-invite-section';
         
@@ -1495,7 +1422,7 @@ function openInviteModal() {
                 emailInput.value = '';
                 messageInput.value = '';
             } else {
-                alert(t.enterEmailAlert || '受信者のメールアドレスを入力してください！');
+            handleError(t.enterEmailAlert || '受信者のメールアドレスを入力してください！');
             }
         });
         
@@ -1503,20 +1430,103 @@ function openInviteModal() {
         emailSection.appendChild(emailInput);
         emailSection.appendChild(messageInput);
         emailSection.appendChild(sendEmailBtn);
+    
+    return emailSection;
+}
+
+// 誕生日情報から説明文を生成するヘルパー関数
+function createInviteDescription() {
+    const t = getTranslation();
+    const nextBirthdayPerson = localStorage.getItem('nextBirthdayPerson');
+    const nextBirthdayDate = localStorage.getItem('nextBirthdayDate');
+    
+    let birthdayPersonName = t.specialPerson || '大切な人';
+    let birthdayDateText = '';
+    
+    if (nextBirthdayPerson) {
+        try {
+            const person = JSON.parse(nextBirthdayPerson);
+            birthdayPersonName = person.name || (t.specialPerson || '大切な人');
+        } catch (e) {
+            handleError(t.birthdayInfoError || '誕生日情報読み込みエラー', e, false);
+        }
+    }
+    
+    if (nextBirthdayDate) {
+        try {
+            const date = new Date(nextBirthdayDate);
+            birthdayDateText = ` ${date.getMonth() + 1}月${date.getDate()}日に`;
+        } catch (e) {
+            handleError(t.birthdayDateError || '誕生日読み込みエラー', e, false);
+        }
+    }
+    
+    const description = document.createElement('p');
+    description.textContent = (t.inviteDescription || '友達を招待して{name}の誕生日{date}一緒にお祝いしましょう！みんなで素敵な思い出を作り、心のこもったお祝いのメッセージを送りましょう。')
+        .replace('{name}', birthdayPersonName)
+        .replace('{date}', birthdayDateText);
+    description.className = 'modal-description';
+    
+    return description;
+}
+
+function openInviteModal() {
+    const inviteModal = createBaseModal('inviteModal', 'invite-modal');
+    const modalContent = inviteModal.querySelector('.modal-content');
+    
+    addModalCloseHandler(inviteModal);
+    
+    // 既存のコンテンツがない場合のみ作成
+    if (!modalContent.querySelector('.invite-link-section')) {
+        const t = getTranslation();
+        
+        const title = document.createElement('h2');
+        title.textContent = t.inviteModalTitle || '友達を招待して参加してもらいましょう';
+        title.className = 'modal-title';
+        
+        const description = createInviteDescription();
+        
+        const linkSection = document.createElement('div');
+        linkSection.className = 'invite-link-section';
+        
+        const linkLabel = document.createElement('div');
+        linkLabel.textContent = t.inviteLink || '招待リンク：';
+        linkLabel.className = 'invite-link-label';
+        
+        const linkDisplay = document.createElement('div');
+        linkDisplay.className = 'invite-link-display';
+        
+        const linkInput = document.createElement('input');
+        linkInput.id = 'inviteLinkInput';
+        linkInput.type = 'text';
+        linkInput.readOnly = true;
+        linkInput.value = generateInviteLink();
+        linkInput.className = 'invite-link-input';
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = t.copyButton || '📋 コピー';
+        copyBtn.className = 'invite-copy-btn';
+        copyBtn.addEventListener('click', createCopyHandler(linkInput, copyBtn));
+        
+        linkDisplay.appendChild(linkInput);
+        linkDisplay.appendChild(copyBtn);
+        
+        const shareLabel = document.createElement('div');
+        shareLabel.textContent = t.shareLabel || 'シェアする：';
+        shareLabel.className = 'social-share-label';
+        
+        const socialShare = createSocialShareButtons(linkInput);
+        const emailSection = createEmailInviteSection();
         
         linkSection.appendChild(linkLabel);
         linkSection.appendChild(linkDisplay);
         linkSection.appendChild(shareLabel);
         linkSection.appendChild(socialShare);
         
-        modalContent.appendChild(closeBtn);
         modalContent.appendChild(title);
         modalContent.appendChild(description);
         modalContent.appendChild(linkSection);
         modalContent.appendChild(emailSection);
-        
-        inviteModal.appendChild(modalContent);
-        document.body.appendChild(inviteModal);
     }
     
     inviteModal.classList.add('show');
@@ -1555,7 +1565,7 @@ function openVirtualGiftModal(userName) {
         
         loadGiftList();
     } else {
-        console.error('ギフト選択モーダルが見つかりません');
+        handleError('ギフト選択モーダルが見つかりません', null, false);
     }
 }
 
