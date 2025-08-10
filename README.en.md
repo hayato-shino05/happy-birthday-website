@@ -164,7 +164,6 @@ happy-birthday-website/
   │   │   ├── components.css # UI components
   │   │   ├── themes.css  # Theme-specific CSS
   │   │   ├── mobile.css  # Mobile responsive
-  │   │   ├── autumn-leaves.css # Autumn leaves effects
   │   │   └── page/       # Page-specific CSS
   │   │       ├── core.css     # Core functionality CSS
   │   │       ├── album.css    # Album management CSS

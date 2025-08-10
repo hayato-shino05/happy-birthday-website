@@ -164,7 +164,6 @@ happy-birthday-website/
   │   │   ├── components.css # UI コンポーネント
   │   │   ├── themes.css  # テーマ別CSS
   │   │   ├── mobile.css  # モバイル対応
-  │   │   ├── autumn-leaves.css # 秋の葉エフェクト
   │   │   └── page/       # ページ別CSS
   │   │       ├── core.css     # コア機能CSS
   │   │       ├── album.css    # アルバム管理CSS
