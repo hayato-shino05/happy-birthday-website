@@ -1,20 +1,41 @@
-# Dependencies
-node_modules/
+# ファイルを無視する設定の詳細は https://help.github.com/articles/ignoring-files/ を参照してください。
 
-# Optional npm cache directory
-.npm
+# 依存関係
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Logs
+# テスト関連
+/coverage
+
+# Next.js 関連
+/.next/
+/out/
+
+# 本番ビルド関連
+/build
+
+# その他
+.DS_Store
+*.pem
+
+# デバッグ用ログ
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Build output
-dist/
-.cache/
+# 環境変数ファイル（必要であればコミット対象に含めてもよい）
+.env*
 
-# OS files
-.DS_Store
-Thumbs.db
-.env
-fix-birthday-simulator.html
+# Vercel 関連
+.vercel
+
+# TypeScript 関連
+*.tsbuildinfo
+next-env.d.ts

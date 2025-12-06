@@ -1,0 +1,1410 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Serif:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ===== ボタンのテキストカラーを白に固定 ===== */
+span.text-white\! {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+}
+
+/* ===== CSS変数 ===== */
+:root {
+  /* ビンテージ風カラーパレット */
+  --color-primary: #854D27;
+  --color-secondary: #D4B08C;
+  --color-background: #F3E5D8;
+  --color-surface: #FFF9F3;
+  --color-text: #2C1810;
+  --color-accent: #8B4513;
+  
+  /* テーマ固有の設定（テーマによって上書きされる） */
+  --theme-primary: #854D27;
+  --theme-secondary: #D4B08C;
+  --theme-background: #F3E5D8;
+  --theme-text: #2C1810;
+  
+  /* シャドウ */
+  --shadow-vintage: 4px 4px 0 var(--color-secondary);
+  --shadow-vintage-hover: 6px 6px 0 var(--color-secondary);
+  
+  /* フォント - 多言語対応（EN・JA） */
+  --font-body: 'Noto Serif', 'Noto Serif JP', serif;
+  --font-heading: 'Playfair Display', 'Noto Serif JP', serif;
+  --font-accent: 'Playfair Display', 'Noto Serif JP', serif;
+  --font-display: 'Playfair Display', 'Noto Serif JP', serif;
+}
+
+/* ===== ベーススタイル ===== */
+body {
+  font-family: var(--font-body);
+  background-color: transparent;
+  color: var(--theme-text);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  min-height: 100vh;
+  transition: color 0.5s ease;
+}
+
+/* ===== タイポグラフィ ===== */
+h1, h2, h3 {
+  font-family: var(--font-heading);
+}
+
+h1 {
+  font-size: 2.5em;
+  color: var(--theme-primary);
+  text-shadow: 2px 2px 0px var(--theme-secondary);
+  animation: pulse 2s infinite;
+}
+
+/* ===== ビンテージ風ボタンスタイル ===== */
+.btn-vintage {
+  padding: 12px 25px;
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border: 2px solid var(--color-secondary);
+  border-radius: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 1em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-vintage);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.btn-vintage:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-vintage-hover);
+}
+
+.btn-vintage:active {
+  transform: translate(0, 0);
+  box-shadow: 2px 2px 0 var(--color-secondary);
+}
+
+/* ===== ビンテージ風カード／ボックススタイル ===== */
+.card-vintage {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe9e9 100%);
+  border: 3px solid var(--color-accent);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 20px rgba(139, 69, 19, 0.2);
+}
+
+/* ===== カウントダウン用スタイル ===== */
+.countdown-box {
+  font-family: var(--font-heading);
+  font-size: 1.5em;
+  margin: 40px auto;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe9e9 100%);
+  border: 3px solid #8B4513;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 20px rgba(139, 69, 19, 0.2);
+  max-width: 800px;
+  text-align: center;
+}
+
+.countdown-title {
+  color: #8B4513;
+  font-size: 2em;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+  animation: titleFloat 3s ease-in-out infinite;
+}
+
+.countdown-time {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.countdown-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #8B4513;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+.countdown-number {
+  background: #8B4513;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 10px;
+  min-width: 60px;
+  text-align: center;
+  font-size: 1.8em;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(139, 69, 19, 0.3);
+  animation: numberPulse 1s ease-in-out infinite;
+}
+
+/* ===== アニメーション ===== */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes titleFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes numberPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes birthdayPop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== ビデオ背景 ===== */
+.video-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.video-background-fallback {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+}
+
+/* ===== テーマオーバーレイ ===== */
+.theme-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+/* ===== コンテナー ===== */
+.container-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  position: relative;
+  z-index: 10;
+}
+
+
+/* ===== テーマ別ボディスタイル ===== */
+body.theme-spring {
+  --theme-primary: #C2185B;
+  --theme-secondary: #F8DDE4;
+  --theme-background: #F8DDE4;
+  --theme-text: #C2185B;
+  background-color: #F8DDE4;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E91E63' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-summer {
+  --theme-primary: #E65100;
+  --theme-secondary: #FFE0B2;
+  --theme-background: #FFE0B2;
+  --theme-text: #E65100;
+  background-color: #FFE0B2;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFD12E' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-autumn {
+  --theme-primary: #BF360C;
+  --theme-secondary: #F5CBA7;
+  --theme-background: #F5CBA7;
+  --theme-text: #BF360C;
+  background-color: #F5CBA7;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E2571E' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-winter {
+  --theme-primary: #01579B;
+  --theme-secondary: #D1E9F6;
+  --theme-background: #D1E9F6;
+  --theme-text: #01579B;
+  background-color: #D1E9F6;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230079B0' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-christmas {
+  --theme-primary: #B71C1C;
+  --theme-secondary: #EF9A9A;
+  --theme-background: #EF9A9A;
+  --theme-text: #B71C1C;
+  background-color: #EF9A9A;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D32F2F' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-halloween {
+  --theme-primary: #FF5722;
+  --theme-secondary: #4A148C;
+  --theme-background: #4A148C;
+  --theme-text: #FFCCBC;
+  background-color: #4A148C;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FF5722' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-hanami {
+  --theme-primary: #C2185B;
+  --theme-secondary: #FCE4EC;
+  --theme-background: #FFF0F5;
+  --theme-text: #C2185B;
+  background-color: #FFF0F5;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E91E63' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ===== カウントダウン用テーマバリエーション ===== */
+.countdown-box.theme-spring {
+  background: linear-gradient(135deg, #FCE4EC 0%, #F8DDE4 100%);
+  border-color: #C2185B;
+}
+
+.countdown-box.theme-summer {
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE0B2 100%);
+  border-color: #E65100;
+}
+
+.countdown-box.theme-autumn {
+  background: linear-gradient(135deg, #F9EDE4 0%, #F5CBA7 100%);
+  border-color: #BF360C;
+}
+
+.countdown-box.theme-winter {
+  background: linear-gradient(135deg, #E6F7FF 0%, #D1E9F6 100%);
+  border-color: #01579B;
+}
+
+.countdown-box.theme-christmas {
+  background: linear-gradient(135deg, #FFF0F0 0%, #EF9A9A 100%);
+  border-color: #B71C1C;
+}
+
+.countdown-box.theme-halloween {
+  background: linear-gradient(135deg, #4A148C 0%, #6A1B9A 100%);
+  border-color: #FF5722;
+  color: #FFCCBC;
+}
+
+.countdown-box.theme-hanami {
+  background: linear-gradient(135deg, #FFE6F2 0%, #F8DDE4 100%);
+  border-color: #C2185B;
+}
+
+/* ===== フォトギャラリーのグリッド ===== */
+.photo-gallery-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+/* ===== モバイル向けレスポンシブ対応 ===== */
+@media screen and (max-width: 768px) {
+  h1 {
+    font-size: 1.8em;
+  }
+  
+  .countdown-box {
+    font-size: 1.2em;
+    padding: 20px;
+    margin: 20px 10px;
+  }
+  
+  .countdown-title {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+  }
+  
+  .countdown-time {
+    gap: 10px;
+  }
+  
+  .countdown-number {
+    min-width: 50px;
+    font-size: 1.5em;
+    padding: 8px 12px;
+  }
+  
+  .btn-vintage {
+    padding: 10px 18px;
+    font-size: 0.9em;
+  }
+  
+  /* フォトギャラリー - タブレットでは2列表示 */
+  .photo-gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  h1 {
+    font-size: 1.5em;
+  }
+  
+  .countdown-box {
+    font-size: 1em;
+    padding: 15px;
+  }
+  
+  .countdown-title {
+    font-size: 1.3em;
+  }
+  
+  .countdown-number {
+    min-width: 45px;
+    font-size: 1.3em;
+    padding: 6px 10px;
+  }
+  
+  /* フォトギャラリー - モバイルでは小さめの2列表示 */
+  .photo-gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+
+/* ===== レイアウト位置 ===== */
+.main-layout {
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 100px 20px;
+  position: relative;
+  z-index: 10;
+}
+
+/* 固定配置用クラス */
+.fixed-top-left {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fixed-top-center {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.fixed-top-right {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.fixed-bottom-left {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  max-width: calc(50% - 250px);
+}
+
+.fixed-bottom-center {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1001;
+}
+
+.fixed-bottom-right {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* ===== タブレットレイアウト（768px - 1024px）===== */
+@media screen and (max-width: 1024px) {
+  .fixed-bottom-left .games-container {
+    gap: 8px;
+  }
+  
+  .fixed-bottom-left .game-button {
+    padding: 8px 15px;
+    font-size: 0.85em;
+  }
+}
+
+/* ===== モバイルレイアウト調整（最大768px）===== */
+@media screen and (max-width: 768px) {
+  /* モバイルでアルバムボタンを表示（メッセージボタンの横に配置） */
+  .fixed-top-center {
+    display: block;
+    position: fixed;
+    top: 55px;
+    right: 8px;
+    left: auto;
+    transform: none;
+    z-index: 1000;
+  }
+  
+  .fixed-top-center button,
+  .fixed-top-center .header-btn {
+    padding: 4px 8px !important;
+    font-size: 0.55em !important;
+    box-shadow: 1px 1px 0 #D4B08C !important;
+    gap: 3px !important;
+  }
+  
+  /* 左上：言語＆テーマ - かなりコンパクトに */
+  .fixed-top-left {
+    top: 8px;
+    left: 8px;
+    gap: 3px;
+  }
+  
+  /* モバイル時の言語セレクターを小さくする */
+  .fixed-top-left .language-selector select,
+  .fixed-top-left select {
+    padding: 3px 6px !important;
+    font-size: 0.65em !important;
+    box-shadow: 1px 1px 0 #D4B08C !important;
+  }
+  
+  /* 右上：メッセージボタンを小さくする */
+  .fixed-top-right {
+    top: 8px;
+    right: 8px;
+  }
+  
+  .fixed-top-right > div {
+    gap: 4px !important;
+  }
+  
+  .fixed-top-right button,
+  .fixed-top-right .header-btn {
+    padding: 4px 8px !important;
+    font-size: 0.6em !important;
+    box-shadow: 2px 2px 0 #D4B08C !important;
+    gap: 3px !important;
+  }
+  
+  /* ゲームボタン - テーマ表示の下（Themeテキストを避けて約100px下） */
+  .fixed-bottom-left {
+    bottom: auto;
+    top: 100px;
+    left: 8px;
+    right: auto;
+    max-width: calc(70%);
+  }
+  
+  .fixed-bottom-left .games-container {
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: flex-start;
+  }
+  
+  .fixed-bottom-left .game-button {
+    padding: 3px 5px !important;
+    font-size: 0.5em !important;
+    box-shadow: 1px 1px 0 #D4B08C !important;
+    gap: 2px !important;
+  }
+  
+  /* ミュージックプレイヤー - 左下にコンパクト配置（操作しやすさは維持） */
+  .fixed-bottom-center {
+    bottom: 8px;
+    left: 8px;
+    right: auto;
+    transform: none;
+    max-width: 60%;
+  }
+  
+  .fixed-bottom-center .music-player {
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    box-shadow: 2px 2px 0 #D4B08C !important;
+  }
+  
+  .fixed-bottom-center .music-player button {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    font-size: 0.9rem !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  
+  .fixed-bottom-center .music-player .song-title {
+    display: none !important;
+  }
+  
+  /* 「曲を選ぶ」ボタンを小さめで表示 */
+  .fixed-bottom-center .music-player > button:last-of-type {
+    padding: 5px 10px !important;
+    font-size: 0.7em !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .fixed-bottom-center .music-player > button:last-of-type span:last-child {
+    display: none !important;
+  }
+  
+  /* ソーシャルボタン - 右下配置 */
+  .fixed-bottom-right {
+    bottom: 8px;
+    right: 8px;
+  }
+  
+  .fixed-bottom-right > div {
+    gap: 3px !important;
+    flex-direction: column !important;
+  }
+  
+  .fixed-bottom-right button {
+    padding: 4px 8px !important;
+    font-size: 0.55em !important;
+    box-shadow: 1px 1px 0 #D4B08C !important;
+    gap: 3px !important;
+  }
+  
+  /* モバイル時はソーシャルボタン内の絵文字アイコンを非表示 */
+  .fixed-bottom-right button span:first-child {
+    display: none;
+  }
+  
+  /* メインコンテンツ - カウントダウン用にスペースを広めに確保 */
+  .main-content {
+    padding: 140px 10px 80px;
+  }
+  
+  /* カウントダウンカードをモバイル向けに小さく調整 */
+  .countdown-card {
+    padding: 20px 15px !important;
+    margin-top: -40px !important;
+    max-width: 95% !important;
+  }
+  
+  .countdown-card h1 {
+    font-size: 1.2rem !important;
+    margin-bottom: 15px !important;
+  }
+}
+
+/* ===== 小さなモバイル端末向け（最大480px）===== */
+@media screen and (max-width: 480px) {
+  .fixed-top-left {
+    top: 5px;
+    left: 5px;
+    gap: 2px;
+  }
+  
+  .fixed-top-left .language-selector select {
+    padding: 2px 4px;
+    font-size: 0.6em;
+  }
+  
+  .fixed-top-left .theme-indicator {
+    font-size: 7px;
+    padding: 2px 4px;
+  }
+  
+  .fixed-top-right {
+    top: 5px;
+    right: 5px;
+  }
+  
+  .fixed-top-right > div {
+    gap: 2px !important;
+  }
+  
+  .fixed-top-right button,
+  .fixed-top-right .header-btn {
+    padding: 3px 5px !important;
+    font-size: 0.5em !important;
+    letter-spacing: 0 !important;
+  }
+  
+  /* ゲームボタン - テーマ表示の下（上から約90px） */
+  .fixed-bottom-left {
+    bottom: auto;
+    top: 90px;
+    left: 5px;
+    right: auto;
+    max-width: 65%;
+  }
+  
+  .fixed-bottom-left .games-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  
+  .fixed-bottom-left .game-button {
+    padding: 2px 4px !important;
+    font-size: 0.45em !important;
+    letter-spacing: 0 !important;
+    box-shadow: 1px 1px 0 #D4B08C !important;
+  }
+  
+  /* 画面がかなり小さい場合はゲームアイコンを非表示 */
+  .fixed-bottom-left .game-button span:first-child {
+    display: none;
+  }
+  
+  /* ソーシャルボタン - 右下に縦積み配置 */
+  .fixed-bottom-right {
+    bottom: 5px;
+    right: 5px;
+  }
+  
+  .fixed-bottom-right > div {
+    gap: 2px !important;
+    flex-direction: column !important;
+  }
+  
+  .fixed-bottom-right button {
+    padding: 3px 6px !important;
+    font-size: 0.45em !important;
+  }
+  
+  /* ミュージックプレイヤー - 左下にコンパクト配置（タップしやすさ維持） */
+  .fixed-bottom-center {
+    bottom: 5px;
+    left: 5px;
+    right: auto;
+    transform: none;
+    max-width: 55%;
+  }
+  
+  .fixed-bottom-center .music-player {
+    padding: 5px 8px !important;
+    gap: 5px !important;
+  }
+  
+  .fixed-bottom-center .music-player button {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .fixed-bottom-center .music-player .song-title {
+    display: none !important;
+  }
+  
+  /* 「曲を選ぶ」のアイコンだけを表示 */
+  .fixed-bottom-center .music-player > button:last-of-type {
+    padding: 4px 8px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .fixed-bottom-center .music-player > button:last-of-type span:last-child {
+    display: none !important;
+  }
+  
+  .main-content {
+    padding: 130px 8px 60px;
+  }
+  
+  /* カウントダウンカードをさらに小さく調整 */
+  .countdown-card {
+    padding: 15px 10px !important;
+    margin-top: -30px !important;
+    border-radius: 16px !important;
+  }
+  
+  .countdown-card h1 {
+    font-size: 1rem !important;
+    margin-bottom: 12px !important;
+  }
+  
+  /* カウントダウンタイマーの単位表示を小さく調整 */
+  .countdown-card > div > div > div:first-child {
+    padding: 8px 10px !important;
+    min-width: 45px !important;
+    font-size: 1.2rem !important;
+  }
+  
+  .countdown-card > div > div > span {
+    font-size: 0.6rem !important;
+  }
+}
+
+
+/* ===== カスタムアニメーション ===== */
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.5;
+  }
+  100% {
+    width: 500px;
+    height: 500px;
+    opacity: 0;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-300px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-scale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-ripple {
+  animation: ripple 0.6s ease-out forwards;
+}
+
+.animate-float-up {
+  animation: float-up 2s ease-out forwards;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-pulse-scale {
+  animation: pulse-scale 1s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 0.8s ease-in-out infinite;
+}
+
+.animate-in {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.zoom-in-95 {
+  animation-name: zoom-in;
+}
+
+.slide-in-from-right {
+  animation-name: slide-in-from-right;
+}
+
+.slide-in-from-bottom-4 {
+  animation-name: slide-in-from-bottom;
+}
+
+/* ===== カスタムスクロールバー ===== */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== フォーカス時のスタイル ===== */
+*:focus-visible {
+  outline: 2px solid rgba(236, 72, 153, 0.5);
+  outline-offset: 2px;
+}
+
+/* ===== テキスト選択時のスタイル ===== */
+::selection {
+  background: rgba(236, 72, 153, 0.3);
+  color: white;
+}
+
+
+/* ========================================
+ * チャットシステム - ビンテージスタイル
+ * ======================================== */
+
+/* チャット用のCSS変数 */
+:root {
+  --chat-sender-bg: #D4B08C;
+  --chat-receiver-bg: #F5E6D8;
+  --community-primary: #854D27;
+  --community-secondary: #D4B08C;
+  --community-background: #FFF9F3;
+  --community-text: #2C1810;
+}
+
+/* チャットモーダル - デスクトップ */
+.chat-modal {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 350px;
+  height: 450px;
+  background-color: var(--community-background);
+  border: 3px solid var(--community-secondary);
+  box-shadow: 6px 6px 0 var(--community-secondary);
+  display: none;
+  flex-direction: column;
+  z-index: 9999;
+  font-family: var(--font-body);
+  animation: slideInChat 0.3s ease-out;
+}
+
+@keyframes slideInChat {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-modal.show {
+  display: flex !important;
+}
+
+.chat-modal-expanded {
+  height: 500px;
+}
+
+/* チャットヘッダー */
+.chat-header {
+  background: var(--community-primary);
+  color: var(--community-background);
+  padding: 12px 15px;
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--community-secondary);
+  flex-shrink: 0;
+}
+
+.chat-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-controls {
+  display: flex !important;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.chat-btn {
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--community-background);
+  padding: 0 5px;
+  line-height: 1;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.chat-btn:hover {
+  opacity: 0.7;
+  transform: scale(1.1);
+}
+
+.chat-btn:active {
+  transform: scale(0.95);
+}
+
+.chat-minimize {
+  margin-right: 5px;
+}
+
+/* チャットコンテンツ */
+.chat-content {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex !important;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--community-background);
+  scroll-behavior: smooth;
+}
+
+/* チャット用のカスタムスクロールバー */
+.chat-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-content::-webkit-scrollbar-track {
+  background: rgba(133, 77, 39, 0.1);
+}
+
+.chat-content::-webkit-scrollbar-thumb {
+  background: var(--community-secondary);
+  border-radius: 3px;
+}
+
+.chat-content::-webkit-scrollbar-thumb:hover {
+  background: var(--community-primary);
+}
+
+/* チャット入力エリア */
+.chat-input-area {
+  display: flex !important;
+  padding: 12px;
+  border-top: 2px solid var(--community-secondary);
+  gap: 8px;
+  background: var(--community-background);
+  flex-shrink: 0;
+}
+
+.chat-message-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid var(--community-secondary);
+  border-radius: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--community-background);
+  color: var(--community-text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 0;
+}
+
+.chat-message-input:focus {
+  border-color: var(--community-primary);
+  box-shadow: 0 0 0 2px rgba(133, 77, 39, 0.1);
+}
+
+.chat-message-input::placeholder {
+  color: var(--community-primary);
+  opacity: 0.5;
+}
+
+.chat-send-btn {
+  padding: 10px 15px;
+  background: var(--community-primary);
+  color: var(--community-background);
+  border: 2px solid var(--community-secondary);
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 1em;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  background: var(--community-secondary);
+  color: var(--community-primary);
+  transform: translateY(-1px);
+}
+
+.chat-send-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* チャットメッセージ */
+.chat-message {
+  padding: 10px 12px;
+  border-radius: 0;
+  max-width: 80%;
+  word-break: break-word;
+  border: 2px solid var(--community-secondary);
+  box-shadow: 2px 2px 0 var(--community-secondary);
+  animation: fadeInMessage 0.3s ease-out;
+}
+
+@keyframes fadeInMessage {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-message--sender {
+  align-self: flex-end;
+  background: var(--chat-sender-bg);
+  color: var(--community-text);
+}
+
+.chat-message--receiver {
+  align-self: flex-start;
+  background: var(--chat-receiver-bg);
+  color: var(--community-text);
+}
+
+.chat-message__sender {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 0.85em;
+  color: var(--community-primary);
+}
+
+.chat-message__time {
+  font-size: 0.7em;
+  text-align: right;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* 固定表示のチャットボタン */
+.chat-button-fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 990;
+}
+
+/* 非表示用ユーティリティクラス */
+.u-hidden {
+  display: none !important;
+}
+
+/* ===== チャットのレスポンシブ対応 - タブレット（768px）===== */
+@media screen and (max-width: 768px) {
+  .chat-modal {
+    width: calc(100% - 20px);
+    max-width: 400px;
+    right: 10px;
+    bottom: 10px;
+    height: 400px;
+    box-shadow: 4px 4px 0 var(--community-secondary);
+  }
+  
+  .chat-modal-expanded {
+    height: 450px;
+  }
+  
+  .chat-header {
+    padding: 10px 12px;
+  }
+  
+  .chat-title {
+    font-size: 1em;
+  }
+  
+  .chat-btn {
+    font-size: 18px;
+    padding: 0 4px;
+  }
+  
+  .chat-content {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .chat-message {
+    max-width: 85%;
+    padding: 8px 10px;
+  }
+  
+  .chat-input-area {
+    padding: 10px;
+    gap: 6px;
+  }
+  
+  .chat-message-input {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  
+  .chat-send-btn {
+    padding: 8px 12px;
+  }
+}
+
+/* ===== Chat Responsive - Mobile (480px) ===== */
+@media screen and (max-width: 480px) {
+  .chat-modal {
+    width: calc(100% - 16px);
+    right: 8px;
+    left: 8px;
+    bottom: 8px;
+    height: 55vh;
+    min-height: 300px;
+    max-height: 400px;
+    box-shadow: 3px 3px 0 var(--community-secondary);
+  }
+  
+  .chat-modal-expanded {
+    height: 60vh;
+    max-height: 450px;
+  }
+  
+  .chat-header {
+    padding: 8px 10px;
+  }
+  
+  .chat-title {
+    font-size: 0.95em;
+  }
+  
+  .chat-btn {
+    font-size: 16px;
+    padding: 2px 4px;
+  }
+  
+  .chat-controls {
+    gap: 6px;
+  }
+  
+  .chat-content {
+    padding: 10px;
+    gap: 8px;
+  }
+  
+  .chat-message {
+    max-width: 88%;
+    padding: 8px;
+    font-size: 0.9em;
+    box-shadow: 1px 1px 0 var(--community-secondary);
+  }
+  
+  .chat-message__sender {
+    font-size: 0.8em;
+  }
+  
+  .chat-message__time {
+    font-size: 0.65em;
+  }
+  
+  .chat-input-area {
+    padding: 8px;
+    gap: 5px;
+  }
+  
+  .chat-message-input {
+    padding: 8px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .chat-send-btn {
+    padding: 8px 10px;
+  }
+  
+  .chat-send-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ===== Chat Responsive - Very Small (320px) ===== */
+@media screen and (max-width: 320px) {
+  .chat-modal {
+    width: calc(100% - 10px);
+    right: 5px;
+    left: 5px;
+    bottom: 5px;
+    height: 50vh;
+    min-height: 280px;
+  }
+  
+  .chat-header {
+    padding: 6px 8px;
+  }
+  
+  .chat-title {
+    font-size: 0.85em;
+  }
+  
+  .chat-btn {
+    font-size: 14px;
+  }
+  
+  .chat-content {
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .chat-message {
+    max-width: 90%;
+    padding: 6px;
+    font-size: 0.85em;
+  }
+  
+  .chat-input-area {
+    padding: 6px;
+    gap: 4px;
+  }
+  
+  .chat-message-input {
+    padding: 6px;
+  }
+  
+  .chat-send-btn {
+    padding: 6px 8px;
+  }
+}
+
+/* ===== Landscape Mode on Mobile ===== */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .chat-modal {
+    height: 85vh;
+    max-height: none;
+    bottom: 5px;
+  }
+  
+  .chat-modal-expanded {
+    height: 90vh;
+  }
+  
+  .chat-header {
+    padding: 6px 10px;
+  }
+  
+  .chat-content {
+    padding: 8px;
+  }
+  
+  .chat-input-area {
+    padding: 6px 8px;
+  }
+}

@@ -1,0 +1,98 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+interface BalloonsProps {
+  active: boolean
+  count?: number
+}
+
+interface Balloon {
+  id: number
+  x: number
+  color: string
+  delay: number
+  duration: number
+  size: number
+}
+
+// 風船コンポーネント
+export function Balloons({ active, count = 15 }: BalloonsProps) {
+  const [balloons, setBalloons] = useState<Balloon[]>([])
+
+  useEffect(() => {
+    if (active) {
+      const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8']
+
+      const newBalloons = Array.from({ length: count }, (_, i) => ({
+        id: i,
+        x: Math.random() * 90 + 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 2,
+        duration: 4 + Math.random() * 3,
+        size: 40 + Math.random() * 30,
+      }))
+
+      setBalloons(newBalloons)
+
+      const timer = setTimeout(() => {
+        setBalloons([])
+      }, 8000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [active, count])
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
+      <AnimatePresence>
+        {balloons.map((balloon) => (
+          <motion.div
+            key={balloon.id}
+            initial={{
+              x: `${balloon.x}vw`,
+              y: '110vh',
+              rotate: 0,
+            }}
+            animate={{
+              y: '-20vh',
+              x: `${balloon.x + (Math.random() - 0.5) * 20}vw`,
+              rotate: (Math.random() - 0.5) * 30,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: balloon.duration,
+              delay: balloon.delay,
+              ease: 'easeOut',
+            }}
+            className="absolute"
+          >
+            <div
+              className="relative rounded-full"
+              style={{
+                width: balloon.size,
+                height: balloon.size * 1.2,
+                backgroundColor: balloon.color,
+                boxShadow: `inset -10px -10px 20px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.3)`,
+              }}
+            >
+              {/* ハイライト */}
+              <div
+                className="absolute top-2 left-2 w-3 h-3 bg-white rounded-full opacity-60"
+                style={{ filter: 'blur(2px)' }}
+              />
+              {/* 風船の紐 */}
+              <div
+                className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gray-400"
+                style={{
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent)',
+                }}
+              />
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+}

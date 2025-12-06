@@ -1,376 +1,401 @@
-# 📁 Project Structure
+# 📁 プロジェクト構成
 
-> Detailed architecture documentation for Happy Birthday Website
-
-## Overview
-
-This project follows **Next.js 16 App Router** architecture with a modular, feature-based structure. It implements clean separation of concerns with dedicated directories for UI components, business logic, state management, and configuration.
+> 誕生日お祝いサイトのディレクトリ構成とアーキテクチャをまとめたドキュメントです。
+>
+> Next.js 16 の App Router を前提に、UI コンポーネント / ビジネスロジック / 状態管理 / 設定ファイルを明確に分離しています。
 
 ---
 
-## Directory Structure
+## 概要
 
-```
+- フロントエンドフレームワーク: **Next.js 16 (App Router)**
+- 言語: **TypeScript / React**
+- 状態管理: **Zustand**, 一部 React hooks
+- バックエンド: **Supabase (PostgreSQL + Storage + Realtime)**
+
+プロジェクトは「ページ」「機能」「UI」「コアライブラリ」をレイヤーごとに分け、保守しやすく拡張しやすい構成を目指しています。
+
+---
+
+## ディレクトリツリー（トップレベル）
+
+```text
 happy-birthday-website/
-├── 📁 app/                     # Next.js App Router
-├── 📁 components/              # React Components
-├── 📁 lib/                     # Core Libraries
-├── 📁 config/                  # Configuration
-├── 📁 types/                   # TypeScript Types
-├── 📁 public/                  # Static Assets
-├── 📁 __tests__/               # Test Files
-└── 📄 Configuration Files
+├── app/                     # Next.js App Router エントリ & API ルート
+├── components/              # 再利用可能な React コンポーネント
+├── lib/                     # コアロジック（hooks, stores, i18n など）
+├── config/                  # テーマ・音楽などの設定
+├── types/                   # TypeScript 型定義
+├── public/                  # 画像・フォントなどの静的アセット
+├── __tests__/               # テストコード
+└── 各種設定ファイル         # lint / format / build 設定
 ```
 
 ---
 
-## `/app` - Next.js App Router
+## `/app` – Next.js App Router
 
-```
+```text
 app/
-├── layout.tsx              # Root layout with providers
-├── page.tsx                # Home page
-├── globals.css             # Global styles + theme CSS
-├── sitemap.ts              # SEO sitemap
-├── favicon.ico             # Favicon
+├── layout.tsx              # ルートレイアウト + 共通プロバイダ
+├── page.tsx                # トップページ
+├── globals.css             # グローバルスタイル + テーマ CSS
+├── sitemap.ts              # SEO 用サイトマップ
+├── favicon.ico             # ファビコン
 │
-└── api/                    # API Routes (REST)
+└── api/                    # REST 形式の API ルート
     ├── birthdays/
-    │   ├── route.ts        # GET (list), POST (create)
+    │   ├── route.ts        # GET (一覧), POST (作成)
     │   ├── [id]/route.ts   # GET, PUT, DELETE by ID
-    │   ├── check/route.ts  # Check today's birthday
-    │   └── next/route.ts   # Get next birthday
+    │   ├── check/route.ts  # 今日が誕生日かチェック
+    │   └── next/route.ts   # 次の誕生日を取得
     │
     ├── messages/
-    │   ├── route.ts        # GET, POST messages
+    │   ├── route.ts        # GET, POST メッセージ
     │   ├── [id]/route.ts   # GET, PUT, DELETE by ID
-    │   └── latest/route.ts # Get latest messages
+    │   └── latest/route.ts # 最新メッセージを取得
     │
     ├── media/
-    │   ├── route.ts        # GET media files
-    │   ├── [id]/route.ts   # GET, DELETE by ID
-    │   └── tags/route.ts   # Manage media tags
+    │   ├── route.ts        # メディア一覧取得
+    │   ├── [id]/route.ts   # 単一メディア取得 / 削除
+    │   └── tags/route.ts   # メディアタグの取得
     │
     ├── gifts/
-    │   ├── route.ts        # GET, POST virtual gifts
-    │   └── [id]/route.ts   # GET, DELETE by ID
+    │   ├── route.ts        # GET, POST バーチャルギフト
+    │   └── [id]/route.ts   # 単一ギフト取得 / 削除
     │
-    ├── audio/route.ts      # Audio messages API
-    ├── video/route.ts      # Video messages API
-    └── upload/route.ts     # File upload handler
+    ├── audio/route.ts      # 音声メッセージ API
+    ├── video/route.ts      # 動画メッセージ API
+    └── upload/route.ts     # ファイルアップロード処理
 ```
 
 ---
 
-## `/components` - React Components
+## `/components` – React コンポーネント
 
-### UI Components (`/components/ui/`)
+### UI コンポーネント（`/components/ui/`）
 
-Reusable, atomic UI components following design system.
+デザインシステムに基づいた再利用可能な UI コンポーネント群です。
 
-| Component | Description |
-|-----------|-------------|
-| `Button.tsx` | Button variants (primary, secondary, vintage) |
-| `ButtonVintage.tsx` | Vintage-styled button |
-| `Input.tsx` | Form input with validation |
-| `Textarea.tsx` | Multi-line text input |
-| `Select.tsx` | Dropdown select |
-| `Card.tsx` | Card container |
-| `Modal.tsx` | Modal dialog (sm, md, lg, xl, widescreen) |
-| `ModalManager.tsx` | Global modal state management |
-| `Toast.tsx` | Notification toasts |
-| `Loading.tsx` | Loading spinners |
-| `ErrorBoundary.tsx` | Error boundary wrapper |
+| Component | 説明 |
+|-----------|------|
+| `Button.tsx` | プライマリ / セカンダリ / ビンテージなどのボタンバリエーション |
+| `ButtonVintage.tsx` | ビンテージ風スタイルのボタン |
+| `Input.tsx` | バリデーション付きテキスト入力 |
+| `Textarea.tsx` | 複数行テキスト入力 |
+| `Select.tsx` | セレクトボックス |
+| `Card.tsx` | 汎用カードコンテナ |
+| `Modal.tsx` | モーダルダイアログ（sm, md, lg, xl, widescreen） |
+| `ModalManager.tsx` | 全体のモーダル状態管理 |
+| `Toast.tsx` | トースト通知コンポーネント |
+| `Loading.tsx` | ローディングスピナー |
+| `ErrorBoundary.tsx` | エラーバウンダリラッパー |
 
-**Music Components:**
-| Component | Description |
-|-----------|-------------|
-| `MusicPlayer.tsx` | Main music player |
-| `MusicControls.tsx` | Play/pause/skip controls |
-| `MusicLibrary.tsx` | Music collection browser |
-| `MusicUploader.tsx` | Upload custom music |
-| `TrackSelector.tsx` | Track selection UI |
+**音楽関連コンポーネント**
 
-**Navigation Components:**
-| Component | Description |
-|-----------|-------------|
-| `LanguageSelector.tsx` | Language switcher (VI/EN/JA) |
-| `ThemeIndicator.tsx` | Current theme display |
-| `HeaderButtons.tsx` | Header action buttons |
-| `GameButtons.tsx` | Game navigation |
-| `SocialButtons.tsx` | Social sharing |
-| `ShareButton.tsx` | Individual share button |
-| `FeatureButton.tsx` | Feature toggle button |
+| Component | 説明 |
+|-----------|------|
+| `MusicPlayer.tsx` | メインの音楽プレーヤー |
+| `MusicControls.tsx` | 再生 / 一時停止 / スキップ操作 |
+| `MusicLibrary.tsx` | 楽曲ライブラリブラウザ |
+| `MusicUploader.tsx` | カスタム音源のアップロード UI |
+| `TrackSelector.tsx` | トラック選択 UI |
 
----
+**ナビゲーションコンポーネント**
 
-### Feature Components (`/components/features/`)
-
-Birthday celebration specific components.
-
-| Component | Description |
-|-----------|-------------|
-| `BirthdayCake.tsx` | 3D animated cake |
-| `Cake2D.tsx` | 2D cake alternative |
-| `Candle.tsx` | Individual candle |
-| `BlowButton.tsx` | Candle blowing interaction |
-| `CountdownTimer.tsx` | Birthday countdown logic |
-| `CountdownDisplay.tsx` | Countdown visualization |
-| `BirthdayChecker.tsx` | Check if today is birthday |
-| `BirthdayHero.tsx` | Hero section |
-| `BirthdayMessage.tsx` | Birthday message display |
-
-**Media Components:**
-| Component | Description |
-|-----------|-------------|
-| `PhotoGallery.tsx` | Photo gallery with grid |
-| `PhotoCard.tsx` | Individual photo card |
-| `MediaViewer.tsx` | Full-screen media viewer |
-| `MediaUploader.tsx` | Drag-and-drop uploader |
-| `Slideshow.tsx` | Auto-playing slideshow |
-| `TagInput.tsx` | Media tagging |
-
-**Animation Components:**
-| Component | Description |
-|-----------|-------------|
-| `Fireworks.tsx` | Firework animations |
-| `Balloons.tsx` | Floating balloons |
-| `Confetti.tsx` | Confetti celebration |
+| Component | 説明 |
+|-----------|------|
+| `LanguageSelector.tsx` | UI 言語の切り替え（英語 / 日本語） |
+| `ThemeIndicator.tsx` | 現在のテーマ表示 |
+| `HeaderButtons.tsx` | ヘッダーアクションボタン群 |
+| `GameButtons.tsx` | ゲーム画面へのナビゲーション |
+| `SocialButtons.tsx` | SNS 共有ボタン |
+| `ShareButton.tsx` | 単体の共有ボタン |
+| `FeatureButton.tsx` | 特定機能の ON/OFF トグル |
 
 ---
 
-### Community Components (`/components/community/`)
+### 誕生日機能コンポーネント（`/components/features/`）
 
-Social and communication features.
+誕生日祝い体験に特化したコンポーネントです。
 
-| Component | Description |
-|-----------|-------------|
-| `ChatRoom.tsx` | Real-time group chat |
-| `MessageList.tsx` | Message display list |
-| `MessageForm.tsx` | Message composition |
-| `MessageModal.tsx` | Message modal |
-| `BulletinBoard.tsx` | Social posts board |
-| `BulletinPost.tsx` | Individual post |
-| `PostForm.tsx` | Post creation |
-| `PostDetail.tsx` | Post with replies |
+| Component | 説明 |
+|-----------|------|
+| `BirthdayCake.tsx` | 3D ケーキ + アニメーション |
+| `Cake2D.tsx` | 2D ケーキ（フォールバック） |
+| `Candle.tsx` | ロウソク単体コンポーネント |
+| `BlowButton.tsx` | マイク入力を使った「ロウソクを吹き消す」体験 |
+| `CountdownTimer.tsx` | 誕生日までのカウントダウンロジック |
+| `CountdownDisplay.tsx` | カウントダウン表示 |
+| `BirthdayChecker.tsx` | 今日が誕生日かどうかのチェック |
+| `BirthdayHero.tsx` | ヒーローセクション |
+| `BirthdayMessage.tsx` | お祝いメッセージ表示 |
 
-**Media Messages:**
-| Component | Description |
-|-----------|-------------|
-| `VideoMessageList.tsx` | Video messages |
-| `VideoRecorder.tsx` | Video recording |
-| `AudioMessageList.tsx` | Audio messages |
-| `AudioRecorder.tsx` | Audio recording |
-| `CameraCapture.tsx` | Camera integration |
+**メディア関連コンポーネント**
 
-**Gifts:**
-| Component | Description |
-|-----------|-------------|
-| `GiftSelector.tsx` | Gift selection |
-| `GiftAnimation.tsx` | Gift presentation |
+| Component | 説明 |
+|-----------|------|
+| `PhotoGallery.tsx` | グリッド表示のフォトギャラリー |
+| `PhotoCard.tsx` | 単一写真カード |
+| `MediaViewer.tsx` | フルスクリーンのメディアビューア |
+| `MediaUploader.tsx` | ドラッグ&ドロップ対応アップローダー |
+| `Slideshow.tsx` | スライドショー |
+| `TagInput.tsx` | メディア用タグ入力 |
 
----
+**アニメーションコンポーネント**
 
-### Game Components (`/components/games/`)
-
-Interactive birthday games.
-
-| Component | Description |
-|-----------|-------------|
-| `MemoryGame.tsx` | Card matching game |
-| `MemoryCard.tsx` | Individual memory card |
-| `BirthdayQuiz.tsx` | Trivia quiz |
-| `PuzzleGame.tsx` | Jigsaw puzzle |
-| `BirthdayCalendar.tsx` | Birthday tracker |
+| Component | 説明 |
+|-----------|------|
+| `Fireworks.tsx` | 花火アニメーション |
+| `Balloons.tsx` | 風船アニメーション |
+| `Confetti.tsx` | 紙吹雪アニメーション |
 
 ---
 
-### Effect Components (`/components/effects/`)
+### コミュニティコンポーネント（`/components/community/`）
 
-Visual effects and animations.
+チャットや掲示板など、コミュニケーション機能をまとめたレイヤーです。
 
-| Component | Description |
-|-----------|-------------|
-| `ParticleSystem.tsx` | Generic particle system |
-| `Confetti.tsx` | Confetti particles |
-| `FallingPetals.tsx` | Cherry blossom petals |
-| `FallingLeaves.tsx` | Autumn leaves |
-| `FallingSnow.tsx` | Winter snow |
-| `FloatingLanterns.tsx` | Festival lanterns |
-| `VideoBackground.tsx` | Video background player |
-| `ThemeEffects.tsx` | Theme-based effects |
+| Component | 説明 |
+|-----------|------|
+| `ChatRoom.tsx` | リアルタイムグループチャット |
+| `MessageList.tsx` | メッセージ一覧表示 |
+| `MessageForm.tsx` | メッセージ入力フォーム |
+| `MessageModal.tsx` | モーダル形式のメッセージ表示 |
+| `BulletinBoard.tsx` | ソーシャル掲示板 |
+| `BulletinPost.tsx` | 単一投稿表示 |
+| `PostForm.tsx` | 投稿作成フォーム |
+| `PostDetail.tsx` | 返信を含む投稿詳細 |
 
----
+**メディアメッセージ**
 
-### Layout Components (`/components/layout/`)
+| Component | 説明 |
+|-----------|------|
+| `VideoMessageList.tsx` | 動画メッセージ一覧 |
+| `VideoRecorder.tsx` | 動画録画 UI |
+| `AudioMessageList.tsx` | 音声メッセージ一覧 |
+| `AudioRecorder.tsx` | 音声録音 UI |
+| `CameraCapture.tsx` | カメラキャプチャ |
 
-Page structure components.
+**ギフト**
 
-| Component | Description |
-|-----------|-------------|
-| `MainLayout.tsx` | Main page layout |
-| `Header.tsx` | Page header |
-| `Footer.tsx` | Page footer |
-| `FloatingNav.tsx` | Floating navigation |
-
----
-
-## `/lib` - Core Libraries
-
-### Hooks (`/lib/hooks/`)
-
-Custom React hooks for business logic.
-
-**Data Hooks:**
-| Hook | Description |
-|------|-------------|
-| `useBirthdays.ts` | Birthday CRUD operations |
-| `useBirthdayCheck.ts` | Check birthday status |
-| `useNextBirthday.ts` | Get next birthday |
-| `useMessages.ts` | Message management |
-| `useRealtimeMessages.ts` | Real-time messaging |
-| `usePosts.ts` | Bulletin posts with replies |
-| `useGifts.ts` | Virtual gifts |
-| `useMediaFiles.ts` | Media file management |
-| `useUserName.ts` | User name persistence (localStorage) |
-
-**Media Hooks:**
-| Hook | Description |
-|------|-------------|
-| `useMusicPlayer.ts` | Music playback control |
-| `useSlideshow.ts` | Slideshow control |
-| `useVideoMessages.ts` | Video messages |
-| `useAudioMessages.ts` | Audio messages |
-| `useVideoRecorder.ts` | Video recording |
-| `useAudioRecorder.ts` | Audio recording |
-| `useMicrophone.ts` | Microphone access |
-
-**Game Hooks:**
-| Hook | Description |
-|------|-------------|
-| `useMemoryGame.ts` | Memory game logic |
-| `usePuzzleGame.ts` | Puzzle game logic |
-| `useQuiz.ts` | Quiz game logic |
-
-**Utility Hooks:**
-| Hook | Description |
-|------|-------------|
-| `useTheme.ts` | Theme management |
-| `useMediaQuery.ts` | Responsive breakpoints |
-| `useSwipeGesture.ts` | Touch gestures |
-| `useKeyboardShortcuts.ts` | Keyboard navigation |
-| `useUserName.ts` | User name persistence |
+| Component | 説明 |
+|-----------|------|
+| `GiftSelector.tsx` | ギフト選択 UI |
+| `GiftAnimation.tsx` | ギフト演出アニメーション |
 
 ---
 
-### Stores (`/lib/stores/`)
+### ゲームコンポーネント（`/components/games/`）
 
-Zustand state management with persistence.
+誕生日向けのミニゲーム群です。
 
-| Store | Description |
-|-------|-------------|
-| `birthdayStore.ts` | Birthday data state (CRUD, next birthday check) |
-| `themeStore.ts` | Theme preferences (16 themes, auto-detect) |
-| `musicStore.ts` | Music player state (playlist, volume, repeat, shuffle) |
-| `gameStore.ts` | Game scores and state (high scores, top 10) |
-| `languageStore.ts` | Language preference (VI/EN/JA) |
-| `uiStore.ts` | UI state (modals, toasts) |
-| `index.ts` | Store exports |
+| Component | 説明 |
+|-----------|------|
+| `MemoryGame.tsx` | 神経衰弱ゲーム |
+| `MemoryCard.tsx` | 神経衰弱用カード |
+| `BirthdayQuiz.tsx` | 誕生日クイズ |
+| `PuzzleGame.tsx` | ジグソーパズル |
+| `BirthdayCalendar.tsx` | 誕生日カレンダー |
 
 ---
 
-### Providers (`/lib/providers/`)
+### エフェクトコンポーネント（`/components/effects/`）
 
-React context providers.
+装飾用のビジュアルエフェクトをまとめたレイヤーです。
 
-| Provider | Description |
-|----------|-------------|
-| `ThemeProvider.tsx` | Theme context (16 themes, auto-detect) |
-| `QueryProvider.tsx` | TanStack Query client |
-| `LanguageContext.tsx` | Language context (VI/EN/JA) |
-
----
-
-### Other Libraries
-
-| Directory | Description |
-|-----------|-------------|
-| `/lib/supabase/` | Supabase client and queries |
-| `/lib/i18n/` | Translations (VI, EN, JA) |
-| `/lib/animations/` | Framer Motion variants |
-| `/lib/utils/` | Utility functions |
-| `/lib/validations/` | Form validation schemas |
+| Component | 説明 |
+|-----------|------|
+| `ParticleSystem.tsx` | 汎用パーティクルシステム |
+| `Confetti.tsx` | 紙吹雪エフェクト |
+| `FallingPetals.tsx` | 桜の花びらが舞うエフェクト |
+| `FallingLeaves.tsx` | 紅葉が舞うエフェクト |
+| `FallingSnow.tsx` | 雪のエフェクト |
+| `FloatingLanterns.tsx` | 提灯が浮かぶエフェクト |
+| `VideoBackground.tsx` | 動画背景コンポーネント |
+| `ThemeEffects.tsx` | テーマに応じたエフェクト切り替え |
 
 ---
 
-## `/config` - Configuration
+### レイアウトコンポーネント（`/components/layout/`）
 
-| File | Description |
-|------|-------------|
-| `themes.ts` | 16 theme configurations |
-| `music.ts` | Default music tracks |
+ページ全体の骨組みを定義するコンポーネントです。
+
+| Component | 説明 |
+|-----------|------|
+| `MainLayout.tsx` | アプリ全体のレイアウト |
+| `Header.tsx` | ヘッダー |
+| `Footer.tsx` | フッター |
+| `FloatingNav.tsx` | 浮遊型ナビゲーション |
 
 ---
 
-## `/types` - TypeScript Types
+## `/lib` – コアライブラリ
+
+### Hooks（`/lib/hooks/`）
+
+ビジネスロジックや UI ロジックをカプセル化したカスタムフック群です。
+
+**データ取得系 Hooks**
+
+| Hook | 説明 |
+|------|------|
+| `useBirthdays.ts` | 誕生日の CRUD 操作 |
+| `useBirthdayCheck.ts` | 今日が誕生日かどうかのチェック |
+| `useNextBirthday.ts` | 次の誕生日情報を取得 |
+| `useMessages.ts` | メッセージ一覧の管理 |
+| `useRealtimeMessages.ts` | Realtime メッセージ購読 |
+| `usePosts.ts` | 掲示板投稿 + 返信の取得 |
+| `useGifts.ts` | バーチャルギフトの取得・送信 |
+| `useMediaFiles.ts` | メディアファイル管理 |
+| `useUserName.ts` | ローカルストレージに保存したユーザー名の管理 |
+
+**メディア系 Hooks**
+
+| Hook | 説明 |
+|------|------|
+| `useMusicPlayer.ts` | 音楽プレーヤーの制御 |
+| `useSlideshow.ts` | スライドショー制御 |
+| `useVideoMessages.ts` | 動画メッセージ管理 |
+| `useAudioMessages.ts` | 音声メッセージ管理 |
+| `useVideoRecorder.ts` | 動画録画ロジック |
+| `useAudioRecorder.ts` | 音声録音ロジック |
+| `useMicrophone.ts` | マイクアクセス制御 |
+
+**ゲームロジック Hooks**
+
+| Hook | 説明 |
+|------|------|
+| `useMemoryGame.ts` | 神経衰弱ゲームのロジック |
+| `usePuzzleGame.ts` | パズルゲームのロジック |
+| `useQuiz.ts` | クイズロジック |
+
+**ユーティリティ Hooks**
+
+| Hook | 説明 |
+|------|------|
+| `useTheme.ts` | テーマ状態の管理・検出 |
+| `useMediaQuery.ts` | レスポンシブブレークポイント判定 |
+| `useSwipeGesture.ts` | スワイプジェスチャー検出 |
+| `useKeyboardShortcuts.ts` | キーボードショートカット |
+| `useUserName.ts` | ユーザー名の保持 |
+
+---
+
+### Stores（`/lib/stores/`）
+
+Zustand を使ったグローバル状態管理レイヤーです。必要に応じて `persist` ミドルウェアで永続化します。
+
+| Store | 説明 |
+|-------|------|
+| `birthdayStore.ts` | 誕生日データの状態（CRUD / 次の誕生日など） |
+| `themeStore.ts` | テーマ選択（季節・日本 / 国際イベントから自動判定） |
+| `musicStore.ts` | 音楽プレーヤーの状態（プレイリスト / ボリューム / リピート / シャッフル） |
+| `gameStore.ts` | ゲームスコアやハイスコア管理 |
+| `languageStore.ts` | UI 言語（英語 / 日本語）の管理 |
+| `uiStore.ts` | モーダル / トーストなど UI 状態 |
+| `index.ts` | 各ストアのエクスポート集約 |
+
+---
+
+### Providers（`/lib/providers/`）
+
+React コンテキストや外部ライブラリのプロバイダをまとめたレイヤーです。
+
+| Provider | 説明 |
+|----------|------|
+| `ThemeProvider.tsx` | テーマコンテキスト（季節・イベントに応じた自動検出） |
+| `QueryProvider.tsx` | TanStack Query クライアントのプロバイダ |
+| `LanguageContext.tsx` | 言語コンテキスト（英語 / 日本語） |
+
+---
+
+### その他のサブディレクトリ
+
+| ディレクトリ | 説明 |
+|-------------|------|
+| `/lib/supabase/` | Supabase クライアントとクエリ関連ユーティリティ |
+| `/lib/i18n/` | 翻訳データと言語コンテキスト（英語 / 日本語） |
+| `/lib/animations/` | Framer Motion 用アニメーション定義 |
+| `/lib/utils/` | 汎用ユーティリティ関数 |
+| `/lib/validations/` | Zod を使ったバリデーションスキーマ |
+
+---
+
+## `/config` – 設定ファイル
+
+| File | 説明 |
+|------|------|
+| `themes.ts` | 季節・イベントごとのテーマ設定（色・背景・エフェクトなど） |
+| `music.ts` | デフォルトの楽曲リスト定義 |
+
+---
+
+## `/types` – TypeScript 型
+
+主要なドメインモデルを TypeScript 型として定義しています。
 
 ```typescript
-// Core types defined in types/index.ts
-interface Birthday { id, name, month, day, year?, message? }
-interface CustomMessage { id, sender, message, media_url? }
-interface AudioMessage { id, sender, audio_data, duration? }
-interface VideoMessage { id, sender, video_url, thumbnail_url? }
-interface MediaFile { id, file_name, file_path, file_type }
-interface VirtualGift { id, sender, gift_emoji, gift_name }
-interface BulletinPost { id, author, content, likes, replies? }
+// 代表的な型（types/index.ts より一部抜粋）
+interface Birthday { id: number; name: string; month: number; day: number; year?: number; message?: string }
+interface CustomMessage { id: number; sender: string; message: string; media_url?: string }
+interface AudioMessage { id: number; sender: string; audio_data: string; duration?: number }
+interface VideoMessage { id: number; sender: string; video_url: string; thumbnail_url?: string }
+interface MediaFile { id: number; file_name: string; file_path: string; file_type: 'image' | 'video' }
+interface VirtualGift { id: number; sender: string; gift_emoji: string; gift_name: string }
+interface BulletinPost { id: number; author: string; content: string; likes: number; replies?: BulletinReply[] }
 type ThemeName = 'spring' | 'summer' | 'autumn' | 'winter' | ...
-type Language = 'vi' | 'en' | 'ja'
+type Language = 'en' | 'ja'
 ```
 
 ---
 
-## Configuration Files
+## 設定ファイル群
 
-| File | Description |
-|------|-------------|
-| `package.json` | Dependencies and scripts |
-| `next.config.ts` | Next.js configuration |
-| `tsconfig.json` | TypeScript configuration |
-| `vitest.config.ts` | Test configuration |
-| `vitest.setup.ts` | Test setup |
-| `.prettierrc` | Code formatting |
-| `eslint.config.mjs` | Linting rules |
-| `postcss.config.mjs` | PostCSS/Tailwind |
+| File | 説明 |
+|------|------|
+| `package.json` | 依存関係と npm scripts |
+| `next.config.ts` | Next.js の設定 |
+| `tsconfig.json` | TypeScript コンパイラ設定 |
+| `vitest.config.ts` | Vitest 設定 |
+| `vitest.setup.ts` | テストセットアップコード |
+| `.prettierrc` | Prettier フォーマット設定 |
+| `eslint.config.mjs` | ESLint ルール定義 |
+| `postcss.config.mjs` | PostCSS / Tailwind 設定 |
 
 ---
 
-## Architecture Patterns
+## アーキテクチャ指針
 
-### 1. Component Architecture
-- **Atomic Design**: UI → Features → Pages
-- **Feature-based**: Components grouped by functionality
-- **Separation of Concerns**: UI, logic, data layers
+### 1. コンポーネント構成
 
-### 2. State Management
-- **Zustand Stores**: Global state with persistence
-- **React Hooks**: Local state and side effects
-- **TanStack Query**: Server state caching
+- **Atomic Design** を意識し、UI → Features → Pages の階層で整理
+- **機能単位のグルーピング**: 誕生日 / メッセージ / メディア / ゲームなど
+- **関心の分離**: 表示ロジックとビジネスロジックを切り離す
 
-### 3. Data Flow
-```
+### 2. 状態管理
+
+- グローバル状態は 基本的に **Zustand ストア** で管理
+- 各画面固有の状態は **React Hooks** でローカルに保持
+- サーバーサイドのデータは **TanStack Query** によるキャッシュ & フェッチ制御
+
+### 3. データフロー
+
+```text
 User Action → Hook → API Route → Supabase → Response → UI Update
                 ↓
-            Zustand Store (if needed)
+            Zustand Store（必要な場合のみ）
 ```
 
-### 4. Styling
-- **Tailwind CSS**: Utility-first
-- **CSS Variables**: Theme colors
-- **Framer Motion**: Animations
+### 4. スタイリング
+
+- **Tailwind CSS** をベースに、ユーティリティクラスでレイアウト
+- テーマ切り替え用に **CSS カスタムプロパティ**（色・影など）を活用
+- アニメーションは **Framer Motion** を中心に実装
 
 ---
 
-## Responsive Design
+## レスポンシブ設計
 
 ```css
 /* Mobile First Breakpoints */
@@ -382,10 +407,10 @@ User Action → Hook → API Route → Supabase → Response → UI Update
 
 ---
 
-## Performance Optimizations
+## パフォーマンス最適化
 
-- **Code Splitting**: Automatic with App Router
-- **Image Optimization**: Next.js Image component
-- **Lazy Loading**: Dynamic imports for heavy components
-- **State Persistence**: Zustand persist middleware
-- **Caching**: TanStack Query caching
+- **Code Splitting**: App Router による自動コード分割
+- **Image Optimization**: Next.js `Image` コンポーネント
+- **Lazy Loading**: 重いコンポーネントは動的インポート
+- **State Persistence**: 必要なストアのみ永続化
+- **Caching**: TanStack Query を活用したサーバーサイドデータのキャッシュ
