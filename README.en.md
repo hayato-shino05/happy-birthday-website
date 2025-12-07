@@ -1,9 +1,8 @@
-# Website Chúc Mừng Sinh Nhật - Kết Nối Niềm Vui
+# Birthday Celebration Website - A Platform to Connect Through Joy
 
-> **Website tương tác mã nguồn mở đầy sáng tạo** giúp bạn tổ chức, ghi nhớ và chia sẻ sinh nhật của bạn bè một cách vui vẻ và độc đáo! Từ đếm ngược thời gian thực, thổi nến bánh sinh nhật 2D, album ảnh/video, mini game, chat thời gian thực, đến các chủ đề theo mùa - mang đến trải nghiệm sinh nhật khó quên!
+> **A creative, interactive, open-source website** designed to help you remember, celebrate, and share birthdays with friends and family in fun and unique ways. Features real-time countdowns, interactive 2D birthday cake with blow-out candles, photo/video albums, mini-games, real-time chat, seasonal and festival themes, and more to create unforgettable birthday experiences.
 
-[![English](https://img.shields.io/badge/lang-English-blue)](README.en.md)
-[![日本語](https://img.shields.io/badge/lang-日本語-red)](README.ja.md)
+[![日本語](https://img.shields.io/badge/lang-日本語-red)](README.md)
 
 <p align="center">
   <img src="https://img.shields.io/badge/Made%20with-❤️-ff69b4" alt="Made with Love">
@@ -17,314 +16,302 @@
   <img src="https://img.shields.io/badge/Deploy-Vercel-black" alt="Deploy with Vercel">
 </p>
 
-## 🌟 Tính Năng Chính
+## 🌟 Key Features
 
-### 🎂 Tính Năng Cốt Lõi
-| **Tính Năng**                | **Mô Tả**                                                                |
-|------------------------------|--------------------------------------------------------------------------|
-| 🎉 **Đếm Ngược Thời Gian Thực** | Lấy dữ liệu sinh nhật từ Supabase, hiển thị thời gian còn lại đến sinh nhật tiếp theo |
-| 🎂 **Bánh Sinh Nhật Tương Tác** | Bánh 2D đẹp mắt, thổi nến bằng micro (sử dụng Framer Motion)       |
-| 🎵 **Trình Phát Nhạc**       | Sử dụng Howler.js, tự động phát nhạc sinh nhật, tải nhạc tùy chỉnh         |
-| 🎈 **Hiệu Ứng Hình Ảnh**     | Pháo giấy, pháo hoa, bóng bay (sử dụng Framer Motion)                     |
+### 🎂 Core Features
 
-### 📸 Tính Năng Album & Media
-| **Tính Năng**                | **Mô Tả**                                                                |
-|------------------------------|--------------------------------------------------------------------------|
-| 📸 **Album Ảnh & Video**     | Quản lý media với Supabase Storage, gắn thẻ, tìm kiếm, slideshow       |
-| 🏷️ **Hệ Thống Tag**         | Gắn thẻ cho file media, tìm kiếm và lọc theo thẻ               |
-| ⬆️ **Tải Lên Media**         | Tải trực tiếp ảnh/video (giới hạn 50MB, dùng react-dropzone)             |
-| 🔍 **Tìm Kiếm**              | Tìm kiếm nhanh theo thẻ, lọc thời gian thực                         |
+| **Feature**                        | **Description**                                                                 |
+|------------------------------------|---------------------------------------------------------------------------------|
+| 🎉 **Real-time Countdown**         | Fetches birthday data from Supabase and displays real-time countdown to next birthday |
+| 🎂 **Interactive Birthday Cake**   | Cute 2D cake with blow-out candles effect using microphone (powered by Framer Motion) |
+| 🎵 **Music Player**                | Birthday song playback using Howler.js with support for custom music uploads |
+| 🎈 **Visual Effects**              | Confetti, fireworks, balloons and more (powered by Framer Motion) |
 
-### 🎮 Game & Giải Trí
-| **Tính Năng**                | **Mô Tả**                                                                |
-|------------------------------|--------------------------------------------------------------------------|
-| 🧠 **Game Lật Thẻ**          | Game ghép thẻ trí nhớ, lưu điểm với Zustand                        |
-| 🧩 **Game Xếp Hình**         | Ghép hình jigsaw từ ảnh, điều chỉnh độ khó                               |
-| ❓ **Đố Vui Sinh Nhật**      | Câu đố về sinh nhật có thể tùy chỉnh                                       |
-| 📅 **Lịch Sinh Nhật**        | Hiển thị sinh nhật theo tháng, giao diện lịch trực quan                         |
+### 📸 Album & Media Features
 
-### 💬 Tính Năng Cộng Đồng & Mạng Xã Hội
-| **Tính Năng**                | **Mô Tả**                                                                |
-|------------------------------|--------------------------------------------------------------------------|
-| 💬 **Chat Thời Gian Thực**   | Sử dụng Supabase Realtime, lưu tên người dùng (localStorage)           |
-| 📋 **Bảng Tin Chúc Mừng**    | Đăng tin công khai, thích, trả lời                                     |
-| 🎙️ **Tin Nhắn Thoại**       | Ghi âm trên trình duyệt, lưu và phát tin nhắn thoại                               |
-| 📹 **Tin Nhắn Video**        | Quay video webcam, lưu và phát tin nhắn video                             |
-| 🎁 **Quà Tặng Ảo**           | Hệ thống chọn và gửi quà số (8 loại quà)                        |
-| ✉️ **Mời Bạn Bè**            | Chia sẻ lên mạng xã hội                                               |
+| **Feature**                        | **Description**                                                                 |
+|------------------------------------|---------------------------------------------------------------------------------|
+| 📸 **Photo & Video Album**         | Media management using Supabase Storage with tagging, search, and slideshow |
+| 🏷️ **Tag System**                  | Tag media files for easy search and filtering |
+| ⬆️ **Media Upload**                | Direct image/video upload (50MB limit, using react-dropzone) |
+| 🔍 **Search Function**             | Fast search by tags or text with real-time results |
 
-### 🎭 Chủ Đề & Tùy Chỉnh
-| **Tính Năng**                | **Mô Tả**                                                                |
-|------------------------------|--------------------------------------------------------------------------|
-| 🌸 **Chủ Đề Theo Mùa**       | Tự động chuyển đổi: Xuân (hoa anh đào), Hạ, Thu (lá vàng), Đông (tuyết)                         |
-| 🎄 **Chủ Đề Lễ Hội**         | Giáng sinh, Halloween, Hanami, Obon, Tanabata, Tsukimi, Kodomo no Hi, Bunkanohi... nhiều chủ đề |
-| 🎬 **Nền Video**             | Video nền theo chủ đề, có fallback                               |
-| ✨ **Hiệu Ứng Hạt**          | Lá rơi, hoa rơi, tuyết, đèn lồng, pháo hoa                       |
-| 🌐 **Đa Ngôn Ngữ**           | Hỗ trợ Tiếng Anh và Tiếng Nhật, chuyển đổi động                     |
+### 🎮 Games & Entertainment
 
-## Lợi Ích Tuyệt Vời Của Dự Án 💖
+| **Feature**                        | **Description**                                                                 |
+|------------------------------------|---------------------------------------------------------------------------------|
+| 🧠 **Memory Game**                 | Flip cards to find matching pairs with score tracking via Zustand |
+| 🧩 **Jigsaw Puzzle**               | Generate puzzles from any image with adjustable difficulty |
+| ❓ **Birthday Quiz**               | Birthday-themed quiz with customizable questions |
+| 📅 **Birthday Calendar**           | Calendar UI displaying birthdays by month |
 
-1. **Tăng Cường Tình Bạn**:
-   - Không bao giờ quên sinh nhật của bạn bè.
-   - Thúc đẩy giao lưu và chia sẻ trong không gian chung.
-   - Kết nối mọi người qua sự kiện sinh nhật ý nghĩa.
+### 💬 Community & Social Features
 
-2. **Lưu Giữ Kỷ Niệm Mãi Mãi**:
-   - Lưu trữ những khoảnh khắc đẹp bằng ảnh và video trong album số.
-   - Dễ dàng xem lại và chia sẻ với bạn bè, gia đình.
-   - Xây dựng bộ sưu tập chung của nhóm.
+| **Feature**                        | **Description**                                                                 |
+|------------------------------------|---------------------------------------------------------------------------------|
+| 💬 **Real-time Chat**              | Chat using Supabase Realtime with username stored in localStorage |
+| 📋 **Wish Message Board**          | Public message board with post, like, and reply features |
+| 🎙️ **Voice Messages**             | Record and save audio messages directly in browser |
+| 📹 **Video Messages**              | Capture and save video messages using webcam |
+| 🎁 **Virtual Gifts**               | Send various types of digital gifts |
+| ✉️ **Invite Friends**              | Easy URL sharing via social share buttons |
 
-3. **Giải Trí Vui Vẻ & Tương Tác**:
-   - Nâng cao không khí chúc mừng với game và hiệu ứng.
-   - Ghi lại khoảnh khắc đặc biệt với tính năng tin nhắn video.
-   - Thu hút sự quan tâm của người dùng với hiệu ứng hình ảnh.
+### 🎭 Themes & Customization
 
-4. **Tiện Lợi Thực Tế**:
-   - Nhắc nhở những ngày quan trọng với đếm ngược tự động.
-   - Chia sẻ niềm vui lên mạng xã hội chỉ với một cú click.
-   - Giao diện dễ sử dụng cho mọi lứa tuổi.
+*Code includes Japanese and international themes.*
 
-5. **Xây Dựng Cộng Đồng Vững Mạnh**:
-   - Tạo không gian chung để tham gia và đóng góp.
-   - Khuyến khích tương tác tích cực giữa các thành viên.
-   - Tăng cường kết nối qua tin nhắn và quà tặng.
+| **Feature**                        | **Description**                                                                 |
+|------------------------------------|---------------------------------------------------------------------------------|
+| 🌸 **Seasonal Themes**             | Auto-switching themes for Spring (cherry blossoms), Summer, Autumn (maple leaves), Winter (snow) |
+| 🎄 **Festival & Event Themes**     | Christmas, Halloween, Hanami, Obon, Moon Viewing, Tanabata, New Year, Children's Day, Culture Day, etc. |
+| 🎬 **Video Backgrounds**           | Theme-specific video backgrounds with fallback images |
+| ✨ **Particle Effects**            | Cherry petals, maple leaves, snow, lanterns, fireworks matching each theme |
+| 🌐 **Multi-language Support**      | English and Japanese support with dynamic UI switching |
 
-## Công Nghệ Sử Dụng
+## Value This Project Brings 💖
+
+1. **Strengthen Connections with Friends & Family**
+   - Never forget important birthdays
+   - Share messages and memories in a common celebration space
+   - Naturally increase communication around birthdays
+
+2. **Preserve Memories Long-term**
+   - Organize and save photos/videos in digital albums
+   - Easy to revisit and share with family and friends anytime
+   - Build a "shared memory collection" as a group
+
+3. **Entertainment to Liven Up Celebrations**
+   - Make online celebrations fun with games and effects
+   - Capture genuine feelings with video messages
+   - Create a "special feeling" with animated UI
+
+4. **Highly Practical Features**
+   - Auto countdown helps you prepare for important dates
+   - One-click social media sharing
+   - Simple UI accessible even for non-tech-savvy users
+
+5. **Works as a Hub for Small Communities**
+   - Can be used as a "common space" for teams, circles, or classes
+   - Promote positive communication through messages and gifts
+   - Open-source allows free customization for your community
+
+## Technology Stack
 
 ### Frontend
-| Công Nghệ | Phiên Bản | Mô Tả |
-|------|-----------|------|
-| **Next.js** | 16.0.7 | App Router, hỗ trợ React Compiler |
-| **React** | 19.2.0 | Tính năng React mới nhất |
-| **TypeScript** | 5.0 | Phát triển an toàn kiểu |
-| **Tailwind CSS** | 4.0 | CSS utility-first |
-| **Framer Motion** | 12.23.25 | Animation |
-| **Zustand** | 5.0.9 | Quản lý state (hỗ trợ persist) |
-| **TanStack Query** | 5.90.12 | Quản lý state server |
-| **Howler.js** | 2.2.4 | Phát nhạc |
-| **react-dropzone** | 14.3.8 | Upload file |
-| **date-fns** | 4.1.0 | Xử lý ngày tháng |
+
+| Technology | Version | Description |
+|------------|---------|-------------|
+| **Next.js** | 16.0.7 | App Router with React Compiler support |
+| **React** | 19.2.0 | Latest React features |
+| **TypeScript** | 5.0 | Type-safe development |
+| **Tailwind CSS** | 4.0 | Utility-first styling |
+| **Framer Motion** | 12.23.25 | Animation implementation |
+| **Zustand** | 5.0.9 | Global state management with persistence |
+| **TanStack Query** | 5.90.12 | Server state and cache management |
+| **Howler.js** | 2.2.4 | Audio playback |
+| **react-dropzone** | 14.3.8 | File upload UI |
+| **date-fns** | 4.1.0 | Date/time handling |
 
 ### Backend
-| Công Nghệ | Mô Tả |
-|------|------|
-| **Supabase** | Cơ sở dữ liệu PostgreSQL |
-| **Supabase Storage** | Lưu trữ file media |
-| **Supabase Realtime** | Tính năng thời gian thực |
-| **Next.js API Routes** | RESTful API |
 
-### Công Cụ Phát Triển
-| Công Nghệ | Mô Tả |
-|------|------|
-| **Vitest** | Framework testing |
-| **Testing Library** | Test component |
-| **ESLint** | Chất lượng code |
-| **Prettier** | Format code |
+| Technology | Description |
+|------------|-------------|
+| **Supabase** | PostgreSQL-based BaaS |
+| **Supabase Storage** | Media file storage |
+| **Supabase Realtime** | Real-time subscription features |
+| **Next.js API Routes** | RESTful API implementation |
 
-## Hướng Dẫn Bắt Đầu
+### Development Tools
 
-### Yêu Cầu
-- Node.js 18 trở lên
-- npm hoặc yarn
-- Tài khoản Supabase
+| Tool | Description |
+|------|-------------|
+| **Vitest** | Testing framework |
+| **Testing Library** | React component testing |
+| **ESLint** | Code quality checking |
+| **Prettier** | Code formatter |
 
-### 1. Tải Source Code
+## Getting Started (Local Environment)
+
+### Prerequisites
+
+- Node.js 18 or higher
+- npm or yarn
+- Supabase account
+
+### 1. Clone Repository
+
 ```bash
 git clone https://github.com/yourusername/happy-birthday-website.git
 cd happy-birthday-website
 ```
 
-### 2. Cài Đặt Dependencies
+### 2. Install Dependencies
+
 ```bash
 npm install
-# hoặc
+# or
 yarn install
 ```
 
-### 3. Cấu Hình Biến Môi Trường
+### 3. Configure Environment Variables
+
 ```bash
 cp .env.example .env.local
 ```
 
-Chỉnh sửa file `.env.local`:
+Edit `.env.local`:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 
-### 4. Thiết Lập Database
-Tham khảo [DATABASE.md](./DATABASE.md) để tạo các bảng cần thiết:
-- `birthdays` - Thông tin sinh nhật
-- `custom_messages` - Tin nhắn
-- `media_files` - File media
-- `virtual_gifts` - Quà tặng ảo
-- `audio_messages` - Tin nhắn thoại
-- `video_messages` - Tin nhắn video
-- `bulletin_posts` - Bài đăng bảng tin
-- `bulletin_replies` - Trả lời bảng tin
+### 4. Database Setup
 
-### 5. Khởi Động Server Dev
+See [DATABASE.md](./DATABASE.md) for detailed table and policy information. Main tables:
+
+- `birthdays` - Birthday information
+- `custom_messages` - Messages
+- `media_files` - Media files
+- `virtual_gifts` - Virtual gifts
+- `audio_messages` - Voice messages
+- `video_messages` - Video messages
+- `bulletin_posts` - Bulletin board posts
+- `bulletin_replies` - Bulletin board replies
+
+### 5. Start Development Server
+
 ```bash
 npm run dev
-# hoặc
+# or
 yarn dev
 ```
 
-Mở trình duyệt tại [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 6. Triển Khai
+### 6. Deployment
 
-#### Triển Khai Vercel (Khuyến Nghị)
+#### Deploy to Vercel (Recommended)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fhappy-birthday-website&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=Supabase%20configuration%20required&envLink=https%3A%2F%2Fsupabase.io%2F)
 
-**Triển Khai Thủ Công:**
-1. Import project vào [Vercel](https://vercel.com/)
-2. Cấu hình Environment Variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`: URL project Supabase
+**Manual Deployment Steps:**
+
+1. Import project to [Vercel](https://vercel.com/)
+2. Configure Environment Variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
-3. Build và deploy tự động hoàn tất!
+3. Vercel will automatically build and deploy
 
-## Biến Môi Trường và Bảo Mật
+## Environment Variables & Security
 
-### Biến Môi Trường Cần Thiết
-| Tên Biến | Mô Tả | Ví Dụ |
-|--------|------|-----|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL project Supabase | `https://abc123.supabase.co` |
+### Required Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | `https://abc123.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | `eyJhbGciOiJIUzI1NiI...` |
 
-### Lưu Ý Bảo Mật
-- ✅ **An toàn**: Anonymous keys dùng cho public
-- ✅ **An toàn**: URL là thông tin công khai  
-- ❌ **Nguy hiểm**: Tuyệt đối không public Service role key hoặc password
-- ✅ **RLS**: Bật Row Level Security trong Supabase
+### Security Notes
 
-## Cấu Trúc Dự Án 💻
+- ✅ **Safe**: Anonymous key is a public key meant for frontend use
+- ✅ **Safe**: URL itself is public information
+- ❌ **Dangerous**: Never expose service role keys or passwords
+- ✅ **RLS**: Enable Row Level Security in Supabase
 
-```
+## Project Structure 💻
+
+See [STRUCTURE.md](./STRUCTURE.md) for detailed structure. Here's an overview:
+
+```text
 happy-birthday-website/
 ├── app/                      # Next.js App Router
 │   ├── api/                  # API Routes
-│   │   ├── birthdays/        # API sinh nhật
-│   │   ├── messages/         # API tin nhắn
-│   │   ├── media/            # API media
-│   │   ├── gifts/            # API quà tặng
-│   │   ├── audio/            # API âm thanh
-│   │   ├── video/            # API video
-│   │   └── upload/           # API upload
+│   │   ├── birthdays/        # Birthday API
+│   │   ├── messages/         # Messages API
+│   │   ├── media/            # Media API
+│   │   ├── gifts/            # Gifts API
+│   │   ├── audio/            # Audio messages API
+│   │   ├── video/            # Video messages API
+│   │   └── upload/           # Upload API
 │   ├── layout.tsx            # Root layout
-│   ├── page.tsx              # Trang chủ
-│   └── globals.css           # CSS toàn cục
+│   ├── page.tsx              # Home page
+│   └── globals.css           # Global CSS
 ├── components/
-│   ├── ui/                   # Component UI
-│   │   ├── Button.tsx        # Nút bấm
-│   │   ├── Modal.tsx         # Modal
-│   │   ├── MusicPlayer.tsx   # Trình phát nhạc
-│   │   └── ...
-│   ├── features/             # Component tính năng
-│   │   ├── BirthdayCake.tsx  # Bánh sinh nhật
-│   │   ├── CountdownTimer.tsx # Đếm ngược
-│   │   ├── PhotoGallery.tsx  # Thư viện ảnh
-│   │   └── ...
-│   ├── community/            # Tính năng cộng đồng
-│   │   ├── ChatRoom.tsx      # Phòng chat
-│   │   ├── BulletinBoard.tsx # Bảng tin
-│   │   ├── GiftSelector.tsx  # Chọn quà
-│   │   └── ...
-│   ├── games/                # Game
-│   │   ├── MemoryGame.tsx    # Game lật thẻ
-│   │   ├── PuzzleGame.tsx    # Game xếp hình
-│   │   ├── BirthdayQuiz.tsx  # Đố vui
-│   │   └── BirthdayCalendar.tsx # Lịch sinh nhật
-│   ├── effects/              # Hiệu ứng hình ảnh
-│   │   ├── FallingPetals.tsx # Hoa rơi
-│   │   ├── FallingSnow.tsx   # Tuyết rơi
-│   │   ├── FallingLeaves.tsx # Lá rơi
-│   │   ├── FloatingLanterns.tsx # Đèn lồng
-│   │   └── VideoBackground.tsx # Nền video
+│   ├── ui/                   # UI components
+│   ├── features/             # Birthday feature components
+│   ├── community/            # Community features
+│   ├── games/                # Games
+│   ├── effects/              # Visual effects
 │   └── layout/               # Layout
-│       └── MainLayout.tsx    # Layout chính
 ├── lib/
-│   ├── hooks/                # Custom hooks
-│   │   ├── useBirthdayCheck.ts
-│   │   ├── useMessages.ts
-│   │   ├── useMusicPlayer.ts
-│   │   └── ...
+│   ├── hooks/                # Custom Hooks
 │   ├── stores/               # Zustand stores
-│   │   ├── birthdayStore.ts
-│   │   ├── themeStore.ts
-│   │   ├── musicStore.ts
-│   │   └── gameStore.ts
 │   ├── supabase/             # Supabase client
 │   ├── providers/            # React providers
-│   └── i18n/                 # Đa ngôn ngữ
-├── config/
-│   ├── themes.ts             # Cấu hình 16 chủ đề
-│   └── music.ts              # Cấu hình nhạc
-├── types/                    # Định nghĩa TypeScript
-├── __tests__/                # File test
-├── public/                   # File tĩnh
-│   ├── video/                # Video nền theo chủ đề
-│   └── audio/                # File nhạc
-└── package.json              # Dependencies
+│   └── i18n/                 # Internationalization
+├── config/                   # Theme, music configs
+├── types/                    # TypeScript type definitions
+├── __tests__/                # Test code
+├── public/                   # Static files (videos, audio, etc.)
+└── package.json              # Dependencies and scripts
 ```
 
-Chi tiết xem [STRUCTURE.md](./STRUCTURE.md).
+## npm Scripts
 
-## Lệnh NPM
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Generate coverage report |
 
-| Lệnh | Mô Tả |
-|---------|------|
-| `npm run dev` | Khởi động server dev |
-| `npm run build` | Build production |
-| `npm run start` | Khởi động server production |
-| `npm run lint` | Kiểm tra ESLint |
-| `npm run test` | Chạy test |
-| `npm run test:watch` | Chế độ watch test |
-| `npm run test:coverage` | Báo cáo coverage |
+## Browser Support
 
-## Trình Duyệt Hỗ Trợ 
-
-- **Google Chrome** (Khuyến nghị)
+- **Google Chrome** (Recommended)
 - **Mozilla Firefox**
 - **Apple Safari**
 - **Microsoft Edge**
 
-## Tài Liệu
+## Documentation
 
-| Tài Liệu | Mô Tả |
-|-------------|------|
-| [STRUCTURE.md](./STRUCTURE.md) | Chi tiết cấu trúc dự án |
-| [DATABASE.md](./DATABASE.md) | Schema database |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Hướng dẫn đóng góp |
-| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | Quy tắc ứng xử (Code of Conduct) |
+| Document | Description |
+|----------|-------------|
+| [STRUCTURE.md](./STRUCTURE.md) | Detailed project structure |
+| [DATABASE.md](./DATABASE.md) | Database schema details |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines |
+| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | Code of conduct |
 
-## Đóng Góp 
+## Contributing
 
-Chúng tôi hoan nghênh mọi đóng góp để làm dự án tốt hơn! Vui lòng làm theo các bước sau:
+Contributions to this project are very welcome! Please follow these steps:
 
-1. **Fork và Clone Repository**:
-   - Fork dự án và clone về local.
+1. **Fork & Clone**
+   - Fork the repository and clone it locally
 
-2. **Tạo Branch Mới**:
+2. **Create Branch**
+
    ```bash
-   git checkout -b feature/ten-tinh-nang
+   git checkout -b feature/your-feature-name
    ```
 
-3. **Thực Hiện Thay Đổi**:
-   - Viết code, sửa bug, hoặc thêm tính năng mới.
-   - Duy trì type safety của TypeScript.
-   - Thêm test.
+3. **Implement & Fix**
+   - Add features or fix bugs
+   - Maintain TypeScript type safety
+   - Add tests if possible
 
-4. **Commit và Push**:
-   - Commit thay đổi và push lên repository của bạn.
-   - Mở **Pull Request** với mô tả chi tiết.
+4. **Commit & Push**
+   - Commit changes and push to your repository
+   - Create a **Pull Request** with description
 
-> 💡 **Lưu ý**: Chúng tôi hoan nghênh ý tưởng, báo cáo lỗi (issue), và pull request! Cùng nhau xây dựng cộng đồng sáng tạo và gắn kết!
+> 💡 **Note**: Creating issues, sharing ideas, pull requests - all forms of participation are welcome. Let's build a tool to make birthdays more fun together!
 
-## Giấy Phép 
+## License
 
-Dự án này được phân phối dưới **giấy phép [MIT](LICENSE)** - tự do sử dụng, chỉnh sửa và chia sẻ.
+This project is released under the **[MIT License](LICENSE)**. Feel free to use for commercial or personal purposes, modify, and redistribute (within license terms).
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
@@ -333,5 +320,5 @@ Dự án này được phân phối dưới **giấy phép [MIT](LICENSE)** - t�
 ---
 
 <p align="center">
-  <strong>Được tạo với ❤️ cho những sinh nhật đặc biệt và những người bạn thân yêu!</strong>
+  <strong>For special birthdays and precious moments with loved ones. With love from Japan and around the world. 🎂🎉</strong>
 </p>
