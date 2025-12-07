@@ -105,7 +105,7 @@ export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    const fullDate = date.toLocaleString('en-US', {
+    const fullDate = date.toLocaleString('ja-JP', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

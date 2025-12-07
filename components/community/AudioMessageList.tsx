@@ -41,7 +41,7 @@ function AudioPlayer({ message }: { message: AudioMessage }) {
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString('ja-JP', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

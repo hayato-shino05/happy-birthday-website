@@ -4,8 +4,8 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { Language } from '@/lib/i18n/translations'
 
 const languages: { code: Language; label: string; shortLabel: string }[] = [
-  { code: 'en', label: 'English', shortLabel: 'EN' },
   { code: 'ja', label: '日本語', shortLabel: 'JP' },
+  { code: 'en', label: 'English', shortLabel: 'EN' },
 ]
 
 export function LanguageSelector() {

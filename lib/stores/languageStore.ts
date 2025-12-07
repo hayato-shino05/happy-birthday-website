@@ -16,20 +16,20 @@ interface LanguageState {
 export const useLanguageStore = create<LanguageState>()(
   persist(
     (set) => ({
-      currentLanguage: 'en',
-      availableLanguages: ['en', 'ja'],
+      currentLanguage: 'ja',
+      availableLanguages: ['ja', 'en'],
 
       setLanguage: (lang) => set({ currentLanguage: lang }),
 
       detectLanguage: () => {
-        if (typeof window === 'undefined') return 'en'
+        if (typeof window === 'undefined') return 'ja'
         
         const browserLang = navigator.language.toLowerCase()
         
         if (browserLang.startsWith('ja')) return 'ja'
         if (browserLang.startsWith('en')) return 'en'
         
-        return 'en'
+        return 'ja'
       },
     }),
     {

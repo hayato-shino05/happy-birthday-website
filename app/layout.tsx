@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   robots: 'index, follow',
   openGraph: {
     type: 'website',
-    locale: 'en_US',
-    alternateLocale: ['ja_JP'],
+    locale: 'ja_JP',
+    alternateLocale: ['en_US'],
     url: 'https://happy-birthday.vercel.app',
     siteName: 'Happy Birthday',
     title: 'Happy Birthday | お誕生日おめでとう',
@@ -65,7 +65,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ja" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
         <QueryProvider>
           <ThemeProvider>

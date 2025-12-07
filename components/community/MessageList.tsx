@@ -51,7 +51,7 @@ export function MessageList({ limit }: MessageListProps) {
 function MessageCard({ message, index }: { message: CustomMessage; index: number }) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('ja-JP', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

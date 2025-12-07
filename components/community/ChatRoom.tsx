@@ -147,7 +147,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
   }
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('en-US', {
+    return new Date(dateStr).toLocaleTimeString('ja-JP', {
       hour: '2-digit',
       minute: '2-digit',
     })
