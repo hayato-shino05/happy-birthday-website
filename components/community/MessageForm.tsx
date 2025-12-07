@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { getSupabase } from '@/lib/supabase/client'
 import { CameraCapture } from './CameraCapture'
+import { Icon } from '@/components/ui/Icon'
 
 interface MessageFormProps {
   birthdayPerson?: string
@@ -233,7 +234,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
                 gap: '8px',
               }}
             >
-              <span>📁</span>
+              <Icon name="Folder" size={18} />
               <span>ライブラリから選択</span>
             </button>
             
@@ -262,7 +263,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
                   boxShadow: '2px 2px 0 #D4B08C',
                 }}
               >
-                <span>📷</span>
+                <Icon name="Camera" size={16} />
                 <span>写真を撮る</span>
               </button>
               
@@ -289,7 +290,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
                   boxShadow: '2px 2px 0 #D4B08C',
                 }}
               >
-                <span>🎬</span>
+                <Icon name="Video" size={16} />
                 <span>ビデオを撮る</span>
               </button>
             </div>
@@ -356,7 +357,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
 
             {/* ファイル情報 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#854D27' }}>
-              <span>{isVideo ? '🎬' : '🖼️'}</span>
+              <Icon name={isVideo ? 'Video' : 'Image'} size={16} />
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {selectedFile.name}
               </span>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
+import { Icon } from './Icon'
 
 const socialButtonStyle: React.CSSProperties = {
   padding: '10px 20px',
@@ -80,7 +81,7 @@ export function SocialButtons() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span>👥</span>
+        <Icon name="Users" size={18} />
         <span>{t('inviteFriends') || '友達を招待'}</span>
       </button>
 
@@ -138,7 +139,7 @@ export function SocialButtons() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span>💬</span>
+        <Icon name="MessageCircle" size={18} />
         <span>{t('groupChat') || 'グループチャット'}</span>
       </button>
     </div>

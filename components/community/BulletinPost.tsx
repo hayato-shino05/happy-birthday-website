@@ -122,11 +122,11 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
 
       {/* メディアのサムネイル */}
       {post.media_url && (
-        <div style={{ marginBottom: '12px', borderRadius: '8px', overflow: 'hidden' }}>
-          {post.media_url.includes('video') || post.media_url.endsWith('.webm') || post.media_url.endsWith('.mp4') ? (
+        <div style={{ marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', aspectRatio: '1', width: '100%' }}>
+          {post.media_url.endsWith('.mp4') || post.media_url.endsWith('.webm') || post.media_url.endsWith('.ogg') ? (
             <video
               src={post.media_url}
-              style={{ width: '100%', height: '150px', objectFit: 'cover', background: '#000' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
               muted
               preload="metadata"
             />
@@ -134,7 +134,7 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
             <img
               src={post.media_url}
               alt="Media"
-              style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           )}
         </div>

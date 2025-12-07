@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useMusicPlayer } from '@/lib/hooks/useMusicPlayer'
+import { Icon } from './Icon'
 
 export function MusicPlayer() {
   const { t } = useLanguage()
@@ -120,7 +121,7 @@ export function MusicPlayer() {
           transition: 'background 0.3s',
         }}
       >
-        <span>🎵</span>
+        <Icon name="Music" size={16} />
         <span>{t('selectMusic') || '音楽を選択'}</span>
       </button>
 
@@ -146,8 +147,8 @@ export function MusicPlayer() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ color: '#854D27', fontSize: '0.7rem', fontWeight: 600 }}>
-              🎵 音楽
+            <span style={{ color: '#854D27', fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Icon name="Music" size={12} /> 音楽
             </span>
             <button
               onClick={() => setShowSelector(false)}
@@ -193,7 +194,7 @@ export function MusicPlayer() {
                     textAlign: 'left',
                   }}
                 >
-                  <span style={{ fontSize: '0.7rem' }}>{currentTrack?.id === track.id && isPlaying ? '🔊' : '🎵'}</span>
+                  <Icon name={currentTrack?.id === track.id && isPlaying ? 'Volume' : 'Music'} size={12} />
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {track.name}
                   </span>

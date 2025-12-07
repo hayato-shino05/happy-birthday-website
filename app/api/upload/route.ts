@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
     // ファイル種別を検証
     const allowedTypes = [
       'image/jpeg',
+      'image/jpg',
+      'image/jfif',
+      'image/pjpeg',
       'image/png',
       'image/gif',
       'image/webp',
@@ -26,26 +29,30 @@ export async function POST(request: NextRequest) {
       'video/webm',
       'video/ogg',
     ]
-    if (!allowedTypes.includes(file.type)) {
+    
+    const originalExt = file.name.split('.').pop()?.toLowerCase()
+    const isJfif = originalExt === 'jfif'
+    
+    if (!allowedTypes.includes(file.type) && !isJfif) {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 })
     }
 
     const supabase = getSupabase()
-
     // 一意なファイル名を生成
-    const fileExt = file.name.split('.').pop()
+
+    const fileExt = originalExt === 'jfif' ? 'jpg' : originalExt
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
     const filePath = `uploads/${fileName}`
 
-    // File を ArrayBuffer に変換し、さらに Buffer に変換
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Supabase Storage にアップロード
+    const contentType = isJfif ? 'image/jpeg' : file.type
+
     const { error: uploadError } = await supabase.storage
       .from('media')
       .upload(filePath, buffer, {
-        contentType: file.type,
+        contentType,
         upsert: false,
       })
 

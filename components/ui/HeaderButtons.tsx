@@ -2,6 +2,7 @@
 
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
+import { Icon } from './Icon'
 
 interface HeaderButtonsProps {
   position: 'center' | 'right'
@@ -43,7 +44,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
           e.currentTarget.style.boxShadow = '4px 4px 0 #D4B08C'
         }}
       >
-        <span>📸</span>
+        <Icon name="Camera" size={18} />
         <span>{t('viewAlbum') || 'アルバムを見る'}</span>
       </button>
     )
@@ -81,7 +82,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
           e.currentTarget.style.boxShadow = '3px 3px 0 #D4B08C'
         }}
       >
-        <span>✍️</span>
+        <Icon name="PenLine" size={18} />
         <span>{t('sendMessage') || 'メッセージを送る'}</span>
       </button>
 
@@ -115,7 +116,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
           e.currentTarget.style.boxShadow = '3px 3px 0 #D4B08C'
         }}
       >
-        <span>📋</span>
+        <Icon name="ClipboardList" size={18} />
         <span>{t('bulletinBoard') || '掲示板'}</span>
       </button>
     </div>
