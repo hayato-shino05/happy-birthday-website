@@ -13,9 +13,18 @@ export function BirthdayMessage({ message }: BirthdayMessageProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.6, duration: 0.8 }}
-      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl max-w-2xl mx-auto"
+      className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl p-8 shadow-2xl max-w-2xl mx-auto border-2 border-white/50"
+      style={{
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+      }}
     >
-      <p className="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 text-center leading-relaxed">
+      <p 
+        className="text-2xl md:text-3xl text-center leading-relaxed font-bold"
+        style={{
+          color: '#1a1a1a',
+          textShadow: '1px 1px 2px rgba(255, 255, 255, 0.9), 0 0 10px rgba(255, 255, 255, 0.5)',
+        }}
+      >
         {message}
       </p>
     </motion.div>
