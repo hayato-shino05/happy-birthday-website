@@ -1,5 +1,22 @@
-// テーマ設定ファイル
 import type { ThemeName } from '@/types'
+
+// テーマエフェクトタイプ
+export interface ThemeEffect {
+  type:
+    | 'fallingPetals'
+    | 'fallingLeaves'
+    | 'fallingSnow'
+    | 'floatingLanterns'
+    | 'fireworks'
+    | 'sparkles'
+    | 'christmasLights'
+    | 'bats'
+    | 'ghosts'
+    | 'fireflies'
+    | 'koinobori'
+    | 'moonGlow'
+  count: number
+}
 
 export interface ThemeConfig {
   name: ThemeName
@@ -16,24 +33,20 @@ export interface ThemeConfig {
   }
   gradient: string
   videoUrl?: string
+  youtubeId?: string
+  videoDuration?: number
   fallbackVideoUrl?: string
   effects: ThemeEffect[]
 }
 
-export interface ThemeEffect {
-  type: 'fallingPetals' | 'fallingLeaves' | 'fallingSnow' | 'floatingLanterns' | 'fireworks' | 'heatWave' | 'sunGlare' | 'christmasLights' | 'bats' | 'ghosts'
-  count: number
-}
-
+// 祭りの日付設定
 export interface FestivalDate {
   month: number
   startDate: number
   endDate: number
 }
 
-// 祭りの日付設定
 export const FESTIVAL_DATES: Record<string, FestivalDate | FestivalDate[]> = {
-  // 国際的な祭り
   christmas: { month: 12, startDate: 20, endDate: 25 },
   halloween: { month: 10, startDate: 28, endDate: 31 },
   hanami: [
@@ -60,9 +73,7 @@ export const SEASON_MONTHS: Record<string, number[]> = {
   autumn: [9, 10, 11],
 }
 
-// テーマ設定
 export const THEMES: Record<ThemeName, ThemeConfig> = {
-  // 季節
   spring: {
     name: 'spring',
     displayName: { en: 'Spring', ja: '春' },
@@ -75,7 +86,7 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-pink-100 via-rose-50 to-pink-200',
     videoUrl: '/video/spring.mp4',
-    effects: [{ type: 'fallingPetals', count: 30 }],
+    effects: [{ type: 'fallingPetals', count: 35 }],
   },
   summer: {
     name: 'summer',
@@ -90,8 +101,8 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     gradient: 'from-orange-100 via-yellow-50 to-amber-200',
     videoUrl: '/video/summer.mp4',
     effects: [
-      { type: 'heatWave', count: 1 },
-      { type: 'sunGlare', count: 5 },
+      { type: 'fireflies', count: 30 },
+      { type: 'sparkles', count: 15 },
     ],
   },
   autumn: {
@@ -106,7 +117,7 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-orange-200 via-amber-100 to-yellow-200',
     videoUrl: '/video/autumn.mp4',
-    effects: [{ type: 'fallingLeaves', count: 40 }],
+    effects: [{ type: 'fallingLeaves', count: 45 }],
   },
   winter: {
     name: 'winter',
@@ -120,10 +131,11 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-blue-100 via-cyan-50 to-sky-200',
     videoUrl: '/video/winter.mp4',
-    effects: [{ type: 'fallingSnow', count: 50 }],
+    effects: [
+      { type: 'fallingSnow', count: 60 },
+      { type: 'sparkles', count: 20 },
+    ],
   },
-
-  // 国際的な祭り
   christmas: {
     name: 'christmas',
     displayName: { en: 'Christmas', ja: 'クリスマス' },
@@ -136,7 +148,11 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-red-200 via-green-100 to-red-100',
     videoUrl: '/video/winter.mp4',
-    effects: [{ type: 'christmasLights', count: 30 }],
+    effects: [
+      { type: 'christmasLights', count: 35 },
+      { type: 'fallingSnow', count: 50 },
+      { type: 'sparkles', count: 30 },
+    ],
   },
   halloween: {
     name: 'halloween',
@@ -151,8 +167,9 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     gradient: 'from-purple-900 via-orange-900 to-purple-800',
     videoUrl: '/video/autumn.mp4',
     effects: [
-      { type: 'bats', count: 10 },
-      { type: 'ghosts', count: 5 },
+      { type: 'bats', count: 8 },
+      { type: 'ghosts', count: 4 },
+      { type: 'sparkles', count: 15 },
     ],
   },
   hanami: {
@@ -167,7 +184,10 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-pink-200 via-rose-100 to-pink-100',
     videoUrl: '/video/hanami.mp4',
-    effects: [{ type: 'fallingPetals', count: 30 }],
+    effects: [
+      { type: 'fallingPetals', count: 50 },
+      { type: 'sparkles', count: 15 },
+    ],
   },
   obon: {
     name: 'obon',
@@ -181,7 +201,11 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-orange-200 via-amber-100 to-orange-100',
     videoUrl: '/video/summer.mp4',
-    effects: [{ type: 'floatingLanterns', count: 20 }],
+    effects: [
+      { type: 'floatingLanterns', count: 25 },
+      { type: 'fireflies', count: 35 },
+      { type: 'fireworks', count: 8 },
+    ],
   },
   tsukimi: {
     name: 'tsukimi',
@@ -193,9 +217,13 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
       text: '#0D47A1',
       accent: '#64B5F6',
     },
-    gradient: 'from-blue-200 via-indigo-100 to-blue-100',
+    gradient: 'from-indigo-900 via-blue-800 to-indigo-900',
     videoUrl: '/video/autumn.mp4',
-    effects: [{ type: 'fallingLeaves', count: 40 }],
+    effects: [
+      { type: 'moonGlow', count: 1 },
+      { type: 'fallingLeaves', count: 30 },
+      { type: 'sparkles', count: 40 },
+    ],
   },
   tanabata: {
     name: 'tanabata',
@@ -210,8 +238,9 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     gradient: 'from-purple-200 via-pink-100 to-purple-100',
     videoUrl: '/video/summer.mp4',
     effects: [
-      { type: 'floatingLanterns', count: 15 },
-      { type: 'fallingPetals', count: 20 },
+      { type: 'sparkles', count: 50 },
+      { type: 'floatingLanterns', count: 12 },
+      { type: 'fireflies', count: 20 },
     ],
   },
   shogatsu: {
@@ -225,10 +254,11 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
       accent: '#EF5350',
     },
     gradient: 'from-red-200 via-white to-red-100',
-    videoUrl: '/video/winter.mp4',
+    youtubeId: 'qdHphBcKdbw',
+    videoDuration: 3600,
     effects: [
-      { type: 'fireworks', count: 8 },
-      { type: 'floatingLanterns', count: 10 },
+      { type: 'fireworks', count: 3 },
+      { type: 'floatingLanterns', count: 5 },
     ],
   },
   kodomo: {
@@ -243,7 +273,11 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-blue-200 via-cyan-100 to-blue-100',
     videoUrl: '/video/spring.mp4',
-    effects: [{ type: 'fallingPetals', count: 25 }],
+    effects: [
+      { type: 'koinobori', count: 4 },
+      { type: 'fallingPetals', count: 25 },
+      { type: 'sparkles', count: 20 },
+    ],
   },
   bunka: {
     name: 'bunka',
@@ -257,9 +291,11 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     },
     gradient: 'from-orange-200 via-amber-100 to-orange-100',
     videoUrl: '/video/autumn.mp4',
-    effects: [{ type: 'fallingLeaves', count: 30 }],
+    effects: [
+      { type: 'fallingLeaves', count: 40 },
+      { type: 'sparkles', count: 20 },
+    ],
   },
 }
 
-// すべてのテーマ名のリスト
 export const ALL_THEME_NAMES: ThemeName[] = Object.keys(THEMES) as ThemeName[]

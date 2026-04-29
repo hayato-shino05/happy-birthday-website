@@ -111,7 +111,6 @@ export interface BulletinReply {
   created_at: string
 }
 
-// テーマの型定義
 export type ThemeName =
   | 'spring'
   | 'summer'
