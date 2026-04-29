@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { LanguageProvider } from '@/lib/i18n/LanguageContext'
 import { ThemeProvider } from '@/lib/providers/ThemeProvider'
@@ -7,7 +8,7 @@ import { QueryProvider } from '@/lib/providers/QueryProvider'
 export const metadata: Metadata = {
   metadataBase: new URL('https://happy-birthday.vercel.app'),
   title: 'Happy Birthday | お誕生日おめでとう',
-  description: '誕生日を祝うウェブサイト。ろうそくを吹き消したり、メッセージを送ったり、ゲームをしたりできます！',
+  description: '誕生日を祝うウェブサイト。ろうそくを吹き消したり、メッセージを送ったり、ゲームをしよう！',
   keywords: ['birthday', '誕生日', 'お祝い', 'happy birthday', 'celebration'],
   authors: [{ name: 'Happy Birthday Team' }],
   creator: 'Happy Birthday Team',
@@ -74,6 +75,7 @@ export default function RootLayout({
             </LanguageProvider>
           </ThemeProvider>
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
   )
