@@ -120,6 +120,9 @@ values (
   array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg']
 );
 
+create policy "匿名閲覧: コミュニティメディア" on storage.objects for select to anon using (bucket_id = 'community-media');
+create policy "匿名作成: コミュニティメディア" on storage.objects for insert to anon with check (bucket_id = 'community-media');
+
 alter publication supabase_realtime add table public.chat_messages;
 
 commit;

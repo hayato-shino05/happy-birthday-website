@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import type { MediaFile, MediaStats } from '@/types'
 
 const CACHE_EXPIRY_TIME = 60000
@@ -92,21 +93,11 @@ export function useMediaFiles(): UseMediaFilesReturn {
 
   const uploadFile = useCallback(async (file: File): Promise<MediaFile | null> => {
     try {
-      const formData = new FormData()
-      formData.set('file', file)
-      formData.set('sender', 'ゲスト')
-      const response = await fetch('/api/upload', { method: 'POST', body: formData })
-      const payload = await response.json()
-
-      if (!response.ok) throw new Error(payload.error || 'ファイルをアップロードできませんでした')
+      const data = await uploadCommunityMedia({ file, sender: 'ゲスト' })
 
       setCacheTime(0)
       await fetchFiles(true)
-      return toMediaFile({
-        ...payload.data,
-        object_path: payload.data.object_path,
-        media_kind: payload.data.media_kind,
-      })
+      return toMediaFile(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ファイルをアップロードできませんでした')
       return null

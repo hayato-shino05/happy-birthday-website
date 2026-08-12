@@ -15,17 +15,14 @@ interface Reply {
 interface PostDetailProps {
   post: Post
   onBack: () => void
-  onLike: (postId: string) => Promise<boolean>
 }
 
-export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
+export default function PostDetail({ post, onBack }: PostDetailProps) {
   const [replies, setReplies] = useState<Reply[]>([])
   const [loading, setLoading] = useState(true)
   const [replyText, setReplyText] = useState('')
   const [replyName, setReplyName] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [liked, setLiked] = useState(false)
-  const [localLikes, setLocalLikes] = useState(post.likes)
 
   // 共有ストレージから自動入力
   useEffect(() => {
@@ -83,17 +80,6 @@ export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
       console.error('Error submitting reply:', err)
     } finally {
       setSubmitting(false)
-    }
-  }
-
-  const handleLike = async () => {
-    if (liked) return
-    setLiked(true)
-    setLocalLikes(prev => prev + 1)
-    const success = await onLike(post.id)
-    if (!success) {
-      setLiked(false)
-      setLocalLikes(prev => prev - 1)
     }
   }
 
@@ -196,31 +182,9 @@ export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
               </div>
             )}
 
-            {/* アクション */}
-            <div style={{ display: 'flex', gap: '12px', paddingTop: '16px', borderTop: '1px solid #D4B08C' }}>
-              <button
-                onClick={handleLike}
-                disabled={liked}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: liked ? 'rgba(233, 30, 99, 0.1)' : 'transparent',
-                  border: '1px solid',
-                  borderColor: liked ? '#E91E63' : '#D4B08C',
-                  borderRadius: '20px',
-                  padding: '8px 16px',
-                  cursor: liked ? 'default' : 'pointer',
-                  color: liked ? '#E91E63' : '#854D27',
-                }}
-              >
-                <span>{liked ? '❤️' : '🤍'}</span>
-        <span>{localLikes} いいね</span>
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#854D27', opacity: 0.7 }}>
-                <span>💬</span>
-                <span>{replies.length} 返信</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '16px', borderTop: '1px solid #D4B08C', color: '#854D27', opacity: 0.7 }}>
+              <span>💬</span>
+              <span>{replies.length} 返信</span>
             </div>
           </div>
         </div>

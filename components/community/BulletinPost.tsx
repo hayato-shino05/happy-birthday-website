@@ -1,19 +1,13 @@
 'use client'
 
-import { useState } from 'react'
 import { Post } from '@/lib/hooks/usePosts'
 
 interface BulletinPostProps {
   post: Post
-  onLike: (postId: string) => Promise<boolean>
   onReply?: () => void
 }
 
-export default function BulletinPost({ post, onLike, onReply }: BulletinPostProps) {
-  const [liked, setLiked] = useState(false)
-  const [liking, setLiking] = useState(false)
-  const [localLikes, setLocalLikes] = useState(post.likes)
-
+export default function BulletinPost({ post, onReply }: BulletinPostProps) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     const now = new Date()
@@ -22,7 +16,6 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    // 完全な日時のフォーマット
     const fullDate = date.toLocaleString('ja-JP', {
       day: '2-digit',
       month: '2-digit',
@@ -36,26 +29,8 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
     else if (minutes < 60) relative = `${minutes}分前`
     else if (hours < 24) relative = `${hours}時間前`
     else if (days < 7) relative = `${days}日前`
-    else relative = ''
 
     return relative ? `${relative} • ${fullDate}` : fullDate
-  }
-
-  const handleLike = async () => {
-    if (liked || liking) return
-    
-    setLiking(true)
-    setLiked(true)
-    setLocalLikes(prev => prev + 1)
-    
-    const success = await onLike(post.id)
-    
-    if (!success) {
-      setLiked(false)
-      setLocalLikes(prev => prev - 1)
-    }
-    
-    setLiking(false)
   }
 
   return (
@@ -81,7 +56,6 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
         e.currentTarget.style.boxShadow = '2px 2px 0 #D4B08C'
       }}
     >
-      {/* ヘッダー */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
         <div
           style={{
@@ -107,10 +81,9 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
         </div>
       </div>
 
-      {/* メッセージ */}
-      <p style={{ 
-        color: '#854D27', 
-        marginBottom: '12px', 
+      <p style={{
+        color: '#854D27',
+        marginBottom: '12px',
         whiteSpace: 'pre-wrap',
         display: '-webkit-box',
         WebkitLineClamp: 3,
@@ -120,7 +93,6 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
         {post.message}
       </p>
 
-      {/* メディアのサムネイル */}
       {post.media_url && (
         <div style={{ marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', aspectRatio: '1', width: '100%' }}>
           {post.media_url.endsWith('.mp4') || post.media_url.endsWith('.webm') || post.media_url.endsWith('.ogg') ? (
@@ -133,70 +105,29 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
           ) : (
             <img
               src={post.media_url}
-              alt="Media"
+              alt="添付メディア"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           )}
         </div>
       )}
 
-      {/* アクション */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          paddingTop: '12px',
-          borderTop: '1px solid #D4B08C',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={handleLike}
-          disabled={liked || liking}
+      {onReply && (
+        <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            background: liked ? 'rgba(233, 30, 99, 0.1)' : 'transparent',
-            border: '1px solid',
-            borderColor: liked ? '#E91E63' : '#D4B08C',
-            borderRadius: '20px',
-            padding: '6px 12px',
-            cursor: liked ? 'default' : 'pointer',
-            color: liked ? '#E91E63' : '#854D27',
+            paddingTop: '12px',
+            borderTop: '1px solid #D4B08C',
+            color: '#854D27',
             fontSize: '0.85rem',
-            transition: 'all 0.2s',
           }}
         >
-          <span>{liked ? '❤️' : '🤍'}</span>
-          <span>{localLikes}</span>
-        </button>
-
-        {onReply && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onReply()
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'transparent',
-              border: '1px solid #D4B08C',
-              borderRadius: '20px',
-              padding: '6px 12px',
-              cursor: 'pointer',
-              color: '#854D27',
-              fontSize: '0.85rem',
-            }}
-          >
-            <span>💬</span>
-            <span>{post.replies_count || 0}</span>
-          </button>
-        )}
-      </div>
+          <span>💬</span>
+          <span>{post.replies_count || 0}</span>
+        </div>
+      )}
     </div>
   )
 }
