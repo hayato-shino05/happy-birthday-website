@@ -7,9 +7,8 @@ interface Message {
   id: number
   sender: string
   message: string
-  gift_id?: string
-  media_url?: string
-  likes: number
+  birthday_person?: string
+  media_object_path?: string
   created_at: string
 }
 
@@ -17,8 +16,7 @@ interface UseMessagesReturn {
   messages: Message[]
   isLoading: boolean
   error: string | null
-  sendMessage: (sender: string, message: string, birthdayPerson?: string, mediaUrl?: string) => Promise<boolean>
-  deleteMessage: (id: number) => Promise<boolean>
+  sendMessage: (sender: string, message: string, birthdayPerson?: string, mediaObjectPath?: string) => Promise<boolean>
   refetch: () => Promise<void>
 }
 
@@ -33,7 +31,7 @@ export function useMessages(): UseMessagesReturn {
 
     try {
       const { data, error: fetchError } = await supabase
-        .from('bulletin_posts')
+        .from('messages')
         .select('*')
         .order('created_at', { ascending: false })
 
@@ -51,13 +49,13 @@ export function useMessages(): UseMessagesReturn {
   }, [fetchMessages])
 
   const sendMessage = useCallback(
-    async (sender: string, message: string, _birthdayPerson?: string, mediaUrl?: string): Promise<boolean> => {
+    async (sender: string, message: string, birthdayPerson?: string, mediaObjectPath?: string): Promise<boolean> => {
       try {
-        const { error: insertError } = await supabase.from('bulletin_posts').insert({
+        const { error: insertError } = await supabase.from('messages').insert({
           sender,
           message,
-          media_url: mediaUrl || null,
-          likes: 0,
+          birthday_person: birthdayPerson || null,
+          media_object_path: mediaObjectPath || null,
         })
 
         if (insertError) throw insertError
@@ -71,28 +69,11 @@ export function useMessages(): UseMessagesReturn {
     [fetchMessages]
   )
 
-  const deleteMessage = useCallback(
-    async (id: number): Promise<boolean> => {
-      try {
-        const { error: deleteError } = await supabase.from('bulletin_posts').delete().eq('id', id)
-
-        if (deleteError) throw deleteError
-        await fetchMessages()
-        return true
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'メッセージを削除できませんでした')
-        return false
-      }
-    },
-    [fetchMessages]
-  )
-
   return {
     messages,
     isLoading,
     error,
     sendMessage,
-    deleteMessage,
     refetch: fetchMessages,
   }
 }

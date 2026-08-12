@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
-import { getSupabase } from '@/lib/supabase/client'
 import { CameraCapture } from './CameraCapture'
 import { Icon } from '@/components/ui/Icon'
 
@@ -75,34 +74,19 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   }
 
   const uploadFile = async (file: File): Promise<string | null> => {
-    try {
-      const supabase = getSupabase()
-      const isVideo = file.type.startsWith('video/')
-      // メッセージからのすべてのメディアを'video'バケットに保存（'media'バケットはアルバム専用）
-      const bucket = 'video'
-      const ext = file.name.split('.').pop()
-      const fileName = `${isVideo ? 'video' : 'image'}_${Date.now()}.${ext}`
+    const formData = new FormData()
+    formData.set('file', file)
+    formData.set('sender', sender.trim())
+    if (birthdayPerson) formData.set('birthday_person', birthdayPerson)
 
-      setUploadProgress(10)
+    setUploadProgress(10)
+    const response = await fetch('/api/upload', { method: 'POST', body: formData })
+    const payload = await response.json()
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(fileName, file)
+    if (!response.ok) return null
 
-      if (uploadError) throw uploadError
-
-      setUploadProgress(80)
-
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(fileName)
-
-      setUploadProgress(100)
-      return urlData.publicUrl
-    } catch (err) {
-      console.error('Upload error:', err)
-      return null
-    }
+    setUploadProgress(100)
+    return payload.data.object_path as string
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,12 +101,12 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     setUploadProgress(0)
 
     try {
-      let mediaUrl: string | null = null
+      let mediaObjectPath: string | null = null
 
       // ファイルが選択されている場合はアップロード
       if (selectedFile) {
-        mediaUrl = await uploadFile(selectedFile)
-        if (!mediaUrl) {
+        mediaObjectPath = await uploadFile(selectedFile)
+        if (!mediaObjectPath) {
           setError('ファイルのアップロードに失敗しました。もう一度お試しください。')
           setIsSubmitting(false)
           return
@@ -134,7 +118,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         sender.trim(), 
         message.trim(), 
         birthdayPerson,
-        mediaUrl || undefined
+        mediaObjectPath || undefined
       )
 
       if (success) {
