@@ -1,0 +1,1 @@
+-- Seed data is intentionally empty. Birthdays are managed by the database administrator.

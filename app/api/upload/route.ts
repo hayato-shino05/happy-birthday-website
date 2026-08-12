@@ -1,100 +1,78 @@
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase/client'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    const file = formData.get('file') as File | null
+    const file = formData.get('file')
+    const sender = formData.get('sender')
+    const birthdayPerson = formData.get('birthday_person')
+    const description = formData.get('description')
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: 'ファイルが必要です' }, { status: 400 })
     }
 
-    // ファイルサイズを検証（最大50MB）
-    const maxSize = 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File size exceeds 50MB limit' }, { status: 400 })
+    if (typeof sender !== 'string' || !sender.trim() || sender.trim().length > 100) {
+      return NextResponse.json({ error: '送信者名が無効です' }, { status: 400 })
     }
 
-    // ファイル種別を検証
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/jfif',
-      'image/pjpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'video/mp4',
-      'video/webm',
-      'video/ogg',
-    ]
-    
-    const originalExt = file.name.split('.').pop()?.toLowerCase()
-    const isJfif = originalExt === 'jfif'
-    
-    if (!allowedTypes.includes(file.type) && !isJfif) {
-      return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 })
+    if (typeof birthdayPerson === 'string' && birthdayPerson.trim().length > 100) {
+      return NextResponse.json({ error: '誕生日の名前が無効です' }, { status: 400 })
     }
 
-    const supabase = getSupabase()
-    // 一意なファイル名を生成
+    if (typeof description === 'string' && description.length > 1000) {
+      return NextResponse.json({ error: '説明が長すぎます' }, { status: 400 })
+    }
 
-    const fileExt = originalExt === 'jfif' ? 'jpg' : originalExt
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-    const filePath = `uploads/${fileName}`
+    const validation = validateCommunityMediaFile(file)
+    const mediaKind = getMediaKind(file.type)
+    if (!validation.valid || !mediaKind) {
+      return NextResponse.json(
+        { error: validation.valid ? 'サポートされていないファイル形式です' : validation.error },
+        { status: 400 }
+      )
+    }
 
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
-    const contentType = isJfif ? 'image/jpeg' : file.type
-
+    const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
+    const objectPath = `${mediaKind}s/${randomUUID()}.${extension}`
+    const supabase = getSupabaseAdmin()
     const { error: uploadError } = await supabase.storage
-      .from('media')
-      .upload(filePath, buffer, {
-        contentType,
+      .from('community-media')
+      .upload(objectPath, Buffer.from(await file.arrayBuffer()), {
+        contentType: file.type,
         upsert: false,
       })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
+      return NextResponse.json({ error: 'ファイルを保存できませんでした' }, { status: 500 })
     }
 
-    // 公開URLを取得
-    const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath)
-
-    // ファイル種別を判定
-    const fileType = file.type.startsWith('video/') ? 'video' : 'image'
-
-    // データベースにレコードを登録
     const { data, error: insertError } = await supabase
-      .from('media_files')
+      .from('media_submissions')
       .insert({
-        file_name: file.name,
-        file_path: urlData.publicUrl,
-        file_type: fileType,
-        file_size: file.size,
+        sender: sender.trim(),
+        object_path: objectPath,
+        media_kind: mediaKind,
+        mime_type: file.type,
+        original_name: file.name,
+        size_bytes: file.size,
+        birthday_person: typeof birthdayPerson === 'string' && birthdayPerson.trim() ? birthdayPerson.trim() : null,
+        description: typeof description === 'string' && description.trim() ? description.trim() : null,
       })
       .select()
       .single()
 
     if (insertError) {
-      console.error('Database insert error:', insertError)
-      return NextResponse.json({ error: 'Failed to save file record' }, { status: 500 })
+      await supabase.storage.from('community-media').remove([objectPath])
+      return NextResponse.json({ error: 'メディア情報を保存できませんでした' }, { status: 500 })
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-      url: urlData.publicUrl,
-    })
-  } catch (error) {
-    console.error('Upload API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)
+    return NextResponse.json({ success: true, data: { ...data, media_url: urlData.publicUrl } }, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: 'アップロード中に問題が発生しました' }, { status: 500 })
   }
-}
-
-export async function GET() {
-  return NextResponse.json({ message: 'Upload API - Use POST to upload files' })
 }
