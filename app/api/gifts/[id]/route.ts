@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabase } from '@/lib/supabase/client'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -8,7 +8,7 @@ interface RouteParams {
 export async function GET(_: Request, { params }: RouteParams) {
   try {
     const { id } = await params
-    const { data, error } = await getSupabaseAdmin()
+    const { data, error } = await getSupabase()
       .from('virtual_gifts')
       .select('*')
       .eq('id', id)
