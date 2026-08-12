@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAudioRecorder } from '@/lib/hooks/useAudioRecorder'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 
 interface AudioRecorderProps {
   birthdayPerson?: string
@@ -36,17 +37,14 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
     setUploadError(null)
 
     try {
-      const formData = new FormData()
-      formData.set('file', new File([audioBlob], `audio_${Date.now()}.webm`, { type: audioBlob.type || 'audio/webm' }))
-      formData.set('sender', sender.trim())
-      if (birthdayPerson) formData.set('birthday_person', birthdayPerson)
-
-      const response = await fetch('/api/upload', { method: 'POST', body: formData })
-      const payload = await response.json()
-      if (!response.ok) throw new Error(payload.error)
+      const media = await uploadCommunityMedia({
+        file: new File([audioBlob], `audio_${Date.now()}.webm`, { type: audioBlob.type || 'audio/webm' }),
+        sender: sender.trim(),
+        birthdayPerson,
+      })
 
       setUploadSuccess(true)
-      onRecorded?.(payload.data.media_url)
+      onRecorded?.(media.media_url)
 
       setTimeout(() => {
         resetRecording()

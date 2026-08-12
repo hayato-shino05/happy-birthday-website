@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useVideoRecorder } from '@/lib/hooks/useVideoRecorder'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 
 interface VideoRecorderProps {
   birthdayPerson?: string
@@ -46,17 +47,14 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
     setUploadError(null)
 
     try {
-      const formData = new FormData()
-      formData.set('file', new File([videoBlob], `video_${Date.now()}.webm`, { type: videoBlob.type || 'video/webm' }))
-      formData.set('sender', sender.trim())
-      if (birthdayPerson) formData.set('birthday_person', birthdayPerson)
-
-      const response = await fetch('/api/upload', { method: 'POST', body: formData })
-      const payload = await response.json()
-      if (!response.ok) throw new Error(payload.error)
+      const media = await uploadCommunityMedia({
+        file: new File([videoBlob], `video_${Date.now()}.webm`, { type: videoBlob.type || 'video/webm' }),
+        sender: sender.trim(),
+        birthdayPerson,
+      })
 
       setUploadSuccess(true)
-      onRecorded?.(payload.data.media_url)
+      onRecorded?.(media.media_url)
 
       setTimeout(() => {
         resetRecording()

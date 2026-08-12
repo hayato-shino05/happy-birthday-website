@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { CameraCapture } from './CameraCapture'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import { Icon } from '@/components/ui/Icon'
 
 interface MessageFormProps {
@@ -74,19 +75,19 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   }
 
   const uploadFile = async (file: File): Promise<string | null> => {
-    const formData = new FormData()
-    formData.set('file', file)
-    formData.set('sender', sender.trim())
-    if (birthdayPerson) formData.set('birthday_person', birthdayPerson)
-
     setUploadProgress(10)
-    const response = await fetch('/api/upload', { method: 'POST', body: formData })
-    const payload = await response.json()
 
-    if (!response.ok) return null
-
-    setUploadProgress(100)
-    return payload.data.object_path as string
+    try {
+      const media = await uploadCommunityMedia({
+        file,
+        sender: sender.trim(),
+        birthdayPerson,
+      })
+      setUploadProgress(100)
+      return media.object_path
+    } catch {
+      return null
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
