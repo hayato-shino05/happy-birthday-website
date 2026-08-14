@@ -156,7 +156,7 @@ describe('File Upload Validation', () => {
     })
 
     expect(result.valid).toBe(false)
-    expect(result.error).toContain('không được hỗ trợ')
+    expect(result.error).toContain('サポートされていない')
   })
 })
 

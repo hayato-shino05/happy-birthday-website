@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
-import { getSupabase } from '@/lib/supabase/client'
 import { CameraCapture } from './CameraCapture'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import { Icon } from '@/components/ui/Icon'
 
 interface MessageFormProps {
@@ -75,32 +75,17 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   }
 
   const uploadFile = async (file: File): Promise<string | null> => {
+    setUploadProgress(10)
+
     try {
-      const supabase = getSupabase()
-      const isVideo = file.type.startsWith('video/')
-      // メッセージからのすべてのメディアを'video'バケットに保存（'media'バケットはアルバム専用）
-      const bucket = 'video'
-      const ext = file.name.split('.').pop()
-      const fileName = `${isVideo ? 'video' : 'image'}_${Date.now()}.${ext}`
-
-      setUploadProgress(10)
-
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(fileName, file)
-
-      if (uploadError) throw uploadError
-
-      setUploadProgress(80)
-
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(fileName)
-
+      const media = await uploadCommunityMedia({
+        file,
+        sender: sender.trim(),
+        birthdayPerson,
+      })
       setUploadProgress(100)
-      return urlData.publicUrl
-    } catch (err) {
-      console.error('Upload error:', err)
+      return media.object_path
+    } catch {
       return null
     }
   }
@@ -117,12 +102,12 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     setUploadProgress(0)
 
     try {
-      let mediaUrl: string | null = null
+      let mediaObjectPath: string | null = null
 
       // ファイルが選択されている場合はアップロード
       if (selectedFile) {
-        mediaUrl = await uploadFile(selectedFile)
-        if (!mediaUrl) {
+        mediaObjectPath = await uploadFile(selectedFile)
+        if (!mediaObjectPath) {
           setError('ファイルのアップロードに失敗しました。もう一度お試しください。')
           setIsSubmitting(false)
           return
@@ -134,7 +119,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         sender.trim(), 
         message.trim(), 
         birthdayPerson,
-        mediaUrl || undefined
+        mediaObjectPath || undefined
       )
 
       if (success) {

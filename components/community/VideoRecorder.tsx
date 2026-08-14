@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useVideoRecorder } from '@/lib/hooks/useVideoRecorder'
-import { getSupabase } from '@/lib/supabase/client'
-import { generateVideoThumbnail, uploadThumbnail } from '@/lib/utils/videoThumbnail'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 
 interface VideoRecorderProps {
   birthdayPerson?: string
@@ -48,41 +47,14 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
     setUploadError(null)
 
     try {
-      const supabase = getSupabase()
-      const fileName = `video_${Date.now()}.webm`
-
-      const { error: uploadErr } = await supabase.storage
-        .from('video-messages')
-        .upload(fileName, videoBlob, {
-          contentType: 'video/webm',
-        })
-
-      if (uploadErr) throw uploadErr
-
-      const { data: urlData } = supabase.storage
-        .from('video-messages')
-        .getPublicUrl(fileName)
-
-      // サムネイルを生成してアップロード
-      let thumbnailUrl: string | null = null
-      const thumbnailBlob = await generateVideoThumbnail(videoBlob)
-      if (thumbnailBlob) {
-        const thumbFileName = `thumb_${Date.now()}.jpg`
-        thumbnailUrl = await uploadThumbnail(thumbnailBlob, thumbFileName, supabase)
-      }
-
-      const { error: dbError } = await supabase.from('video_messages').insert({
+      const media = await uploadCommunityMedia({
+        file: new File([videoBlob], `video_${Date.now()}.webm`, { type: videoBlob.type || 'video/webm' }),
         sender: sender.trim(),
-        video_url: urlData.publicUrl,
-        thumbnail_url: thumbnailUrl,
-        duration,
-        birthday_person: birthdayPerson,
+        birthdayPerson,
       })
 
-      if (dbError) throw dbError
-
       setUploadSuccess(true)
-      onRecorded?.(urlData.publicUrl)
+      onRecorded?.(media.media_url)
 
       setTimeout(() => {
         resetRecording()

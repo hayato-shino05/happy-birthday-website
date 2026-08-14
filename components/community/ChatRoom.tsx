@@ -6,7 +6,7 @@ import { getSupabase } from '@/lib/supabase/client'
 interface ChatMessage {
   id: number
   sender: string
-  text: string
+  message: string
   created_at: string
 }
 
@@ -117,7 +117,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
     const messageData: ChatMessage = {
       id: Date.now(),
       sender: userName,
-      text: newMessage.trim(),
+      message: newMessage.trim(),
       created_at: new Date().toISOString(),
     }
 
@@ -132,7 +132,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         .from('chat_messages')
         .insert({
           sender: userName,
-          text: newMessage.trim(),
+          message: newMessage.trim(),
         })
 
       if (error) throw error
@@ -224,7 +224,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
                     className={`chat-message ${isMe ? 'chat-message--sender' : 'chat-message--receiver'}`}
                   >
                     <div className="chat-message__sender">{msg.sender}</div>
-                    {msg.text}
+                    {msg.message}
                     <div className="chat-message__time">{formatTime(msg.created_at)}</div>
                   </div>
                 )

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAudioRecorder } from '@/lib/hooks/useAudioRecorder'
-import { getSupabase } from '@/lib/supabase/client'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 
 interface AudioRecorderProps {
   birthdayPerson?: string
@@ -37,37 +37,15 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
     setUploadError(null)
 
     try {
-      const supabase = getSupabase()
-      const fileName = `audio_${Date.now()}.webm`
-
-      // Supabase Storage にアップロード
-      const { data: uploadData, error: uploadErr } = await supabase.storage
-        .from('audio-messages')
-        .upload(fileName, audioBlob, {
-          contentType: audioBlob.type,
-        })
-
-      if (uploadErr) throw uploadErr
-
-      // 公開URLを取得
-      const { data: urlData } = supabase.storage
-        .from('audio-messages')
-        .getPublicUrl(fileName)
-
-      // データベースに保存
-      const { error: dbError } = await supabase.from('audio_messages').insert({
+      const media = await uploadCommunityMedia({
+        file: new File([audioBlob], `audio_${Date.now()}.webm`, { type: audioBlob.type || 'audio/webm' }),
         sender: sender.trim(),
-        audio_url: urlData.publicUrl,
-        duration,
-        birthday_person: birthdayPerson,
+        birthdayPerson,
       })
 
-      if (dbError) throw dbError
-
       setUploadSuccess(true)
-      onRecorded?.(urlData.publicUrl)
+      onRecorded?.(media.media_url)
 
-      // 成功後に状態をリセット
       setTimeout(() => {
         resetRecording()
         setSender('')

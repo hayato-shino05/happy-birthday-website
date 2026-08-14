@@ -49,7 +49,7 @@ export interface MediaFile {
   id: number
   file_name: string
   file_path: string
-  file_type: 'image' | 'video'
+  file_type: 'image' | 'video' | 'audio'
   file_size: number
   width?: number
   height?: number

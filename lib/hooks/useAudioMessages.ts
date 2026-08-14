@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 
 export interface AudioMessage {
@@ -9,6 +9,15 @@ export interface AudioMessage {
   audio_url: string
   duration: number
   birthday_person?: string
+  created_at: string
+}
+
+interface AudioSubmission {
+  id: number
+  sender: string
+  object_path: string
+  duration_seconds: number | null
+  birthday_person: string | null
   created_at: string
 }
 
@@ -24,18 +33,24 @@ export function useAudioMessages(birthdayPerson?: string) {
     try {
       const supabase = getSupabase()
       let query = supabase
-        .from('audio_messages')
-        .select('*')
+        .from('media_submissions')
+        .select('id, sender, object_path, duration_seconds, birthday_person, created_at')
+        .eq('media_kind', 'audio')
         .order('created_at', { ascending: false })
 
-      if (birthdayPerson) {
-        query = query.eq('birthday_person', birthdayPerson)
-      }
+      if (birthdayPerson) query = query.eq('birthday_person', birthdayPerson)
 
       const { data, error: fetchError } = await query
-
       if (fetchError) throw fetchError
-      setMessages(data || [])
+
+      setMessages(((data || []) as AudioSubmission[]).map((message) => ({
+        id: message.id,
+        sender: message.sender,
+        audio_url: supabase.storage.from('community-media').getPublicUrl(message.object_path).data.publicUrl,
+        duration: message.duration_seconds ?? 0,
+        birthday_person: message.birthday_person ?? undefined,
+        created_at: message.created_at,
+      })))
     } catch {
       setError('音声メッセージを読み込めません')
     } finally {
@@ -43,31 +58,9 @@ export function useAudioMessages(birthdayPerson?: string) {
     }
   }, [birthdayPerson])
 
-  const deleteMessage = useCallback(async (id: number) => {
-    try {
-      const supabase = getSupabase()
-      const { error: deleteError } = await supabase
-        .from('audio_messages')
-        .delete()
-        .eq('id', id)
-
-      if (deleteError) throw deleteError
-      setMessages(prev => prev.filter(m => m.id !== id))
-      return true
-    } catch {
-      return false
-    }
-  }, [])
-
   useEffect(() => {
-    fetchMessages()
+    void fetchMessages()
   }, [fetchMessages])
 
-  return {
-    messages,
-    loading,
-    error,
-    refetch: fetchMessages,
-    deleteMessage,
-  }
+  return { messages, loading, error, refetch: fetchMessages }
 }
