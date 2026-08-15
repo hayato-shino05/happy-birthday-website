@@ -70,11 +70,12 @@ function interpolate(value: string, params?: Record<string, string | number>): s
 export function translate(
   locale: Locale | string,
   key: TranslationKey,
+  defaultLocale: Locale,
   params?: Record<string, string | number>,
 ): string {
   const requested = normalizeLocale(locale)
   const primary = localePacks.find((pack) => pack.locale === requested)
-  const fallback = localePacks.find((pack) => pack.locale === DEFAULT_LOCALE)
+  const fallback = localePacks.find((pack) => pack.locale === defaultLocale)
   const value = primary?.translations[key] ?? fallback?.translations[key]
   return interpolate(value ?? key, params)
 }

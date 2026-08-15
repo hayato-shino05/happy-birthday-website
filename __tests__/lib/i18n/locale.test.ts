@@ -19,7 +19,11 @@ describe('locale resolution', () => {
     })
   })
 
+  it('uses the explicit default locale for fallback', () => {
+    expect(translate('fr-FR', 'loading' as TranslationKey, 'en-US')).toBe('Loading...')
+  })
+
   it('does not turn a missing translation into an empty string', () => {
-    expect(translate('ja-JP', 'missing.key' as TranslationKey)).toBe('missing.key')
+    expect(translate('ja-JP', 'missing.key' as TranslationKey, 'ja-JP')).toBe('missing.key')
   })
 })

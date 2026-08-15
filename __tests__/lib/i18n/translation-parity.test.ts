@@ -21,9 +21,25 @@ describe('translation parity', () => {
       { locale: 'ja-JP', translations: { loading: '読み込み中' } },
     ])).toThrow('duplicate locale')
 
+    const completeTranslations: Record<string, string> = { ...localePacks[0].translations }
+    const reorderedTranslations = Object.fromEntries(
+      [...translationKeys].reverse().map((key) => [key, completeTranslations[key]]),
+    )
     expect(() => validateTranslationPacks([
-      { locale: 'ja-JP', translations: { loading: '読み込み中' } },
-      { locale: 'en-US', translations: { error: 'Error' } },
+      { locale: 'ja-JP', translations: completeTranslations },
+      { locale: 'en-US', translations: reorderedTranslations },
+    ])).not.toThrow()
+
+    const missingTranslations = { ...completeTranslations }
+    delete missingTranslations[translationKeys[0]]
+    expect(() => validateTranslationPacks([
+      { locale: 'ja-JP', translations: completeTranslations },
+      { locale: 'en-US', translations: missingTranslations },
+    ])).toThrow('translation keys')
+
+    expect(() => validateTranslationPacks([
+      { locale: 'ja-JP', translations: completeTranslations },
+      { locale: 'en-US', translations: { ...completeTranslations, extraKey: '余分' } },
     ])).toThrow('translation keys')
   })
 })

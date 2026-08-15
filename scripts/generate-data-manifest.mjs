@@ -133,6 +133,7 @@ async function collectLocales(root) {
   const locales = []
   const seen = new Set()
   for (const file of files) {
+    if (file.endsWith('keys.json')) continue
     const value = await readJson(file)
     const path = relative(root, file)
     assertRequired(value, ['locale', 'translations'], path)
@@ -152,6 +153,16 @@ async function readVisualThemeKeys(root) {
   return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((entry) => entry[1]).sort()
 }
 
+async function readTranslationKeys(root) {
+  const keys = await readJson(join(root, 'data', 'i18n', 'keys.json'))
+  if (!Array.isArray(keys) || keys.length === 0 || keys.some((key) => typeof key !== 'string' || key.length === 0)) {
+    fail('data/i18n/keys.json は空でない string 配列である必要があります')
+  }
+  const sorted = [...keys].sort()
+  if (new Set(sorted).size !== sorted.length) fail('data/i18n/keys.json に重複 key があります')
+  return sorted
+}
+
 function validateThemeKeys(packs, themeKeys) {
   const available = new Set(themeKeys)
   for (const pack of packs) {
@@ -159,9 +170,8 @@ function validateThemeKeys(packs, themeKeys) {
   }
 }
 
-function validateLocaleKeys(locales) {
+function validateLocaleKeys(locales, canonicalKeys) {
   if (locales.length === 0) fail('locale pack がありません')
-  const canonicalKeys = Object.keys(locales[0].translations).sort()
   for (const locale of locales) {
     const keys = Object.keys(locale.translations).sort()
     if (JSON.stringify(keys) !== JSON.stringify(canonicalKeys)) {
@@ -171,7 +181,6 @@ function validateLocaleKeys(locales) {
       fail(`translation value が空または不正です: ${locale.locale}`)
     }
   }
-  return canonicalKeys
 }
 
 function generatedContents(packs, locales, themeKeys, translationKeys) {
@@ -227,7 +236,8 @@ async function generate(root) {
   validateSchemaDefinition(i18nSchema, 'i18n.schema.json', ['locale', 'translations'])
   const packs = await collectFestivalPacks(root)
   const locales = await collectLocales(root)
-  const translationKeys = validateLocaleKeys(locales)
+  const translationKeys = await readTranslationKeys(root)
+  validateLocaleKeys(locales, translationKeys)
   const themeKeys = await readVisualThemeKeys(root)
   validateThemeKeys(packs, themeKeys)
   return generatedContents(packs, locales, themeKeys, translationKeys)
