@@ -4,8 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { locales } from '@/data/generated/locales'
 import { DEFAULT_LOCALE, normalizeLocale, resolveLocale, translate } from './resolveLocale'
 import type { Language, Locale, TranslationKey } from './types'
-
-export const LANGUAGE_COOKIE_NAME = 'birthday-locale'
+import { LANGUAGE_COOKIE_NAME } from './cookie'
 
 interface LanguageContextType {
   language: Language
