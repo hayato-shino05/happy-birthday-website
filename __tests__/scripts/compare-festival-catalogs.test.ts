@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -28,75 +28,87 @@ const pack = (id: string, locale = 'ja') => ({
 describe('compare-festival-catalogs CLI', () => {
   it('writes deterministic categorized JSON without a timestamp', () => {
     const directory = mkdtempSync(join(tmpdir(), 'festival-parity-'))
-    const productionPath = join(directory, 'production.json')
-    const openSourcePath = join(directory, 'opensource.json')
-    const outputPath = join(directory, 'report.json')
-    writeFileSync(productionPath, JSON.stringify({ catalog: [pack('shared')] }))
-    writeFileSync(openSourcePath, JSON.stringify({ catalog: [pack('shared')] }))
+    try {
+      const productionPath = join(directory, 'production.json')
+      const openSourcePath = join(directory, 'opensource.json')
+      const outputPath = join(directory, 'report.json')
+      writeFileSync(productionPath, JSON.stringify({ catalog: [pack('shared')] }))
+      writeFileSync(openSourcePath, JSON.stringify({ catalog: [pack('shared')] }))
 
-    execFileSync(process.execPath, [
-      script,
-      '--production', productionPath,
-      '--opensource', openSourcePath,
-      '--output', outputPath,
-    ])
+      execFileSync(process.execPath, [
+        script,
+        '--production', productionPath,
+        '--opensource', openSourcePath,
+        '--output', outputPath,
+      ])
 
-    const report = JSON.parse(readFileSync(outputPath, 'utf8'))
-    expect(report).toEqual({
-      shared: [{ id: 'shared' }],
-      productionOnly: [],
-      openSourceOnly: [],
-      sameDateDifferentContent: [],
-      duplicateIds: [],
-      calendarRuleMismatch: [],
-      localeCoverageMismatch: [],
-      themeReferenceMismatch: [],
-      runtimeContractMismatch: [],
-    })
-    expect(JSON.stringify(report)).not.toContain('timestamp')
+      const report = JSON.parse(readFileSync(outputPath, 'utf8'))
+      expect(report).toEqual({
+        shared: [{ id: 'shared' }],
+        productionOnly: [],
+        openSourceOnly: [],
+        sameDateDifferentContent: [],
+        duplicateIds: [],
+        calendarRuleMismatch: [],
+        localeCoverageMismatch: [],
+        themeReferenceMismatch: [],
+        runtimeContractMismatch: [],
+      })
+      expect(JSON.stringify(report)).not.toContain('timestamp')
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
   })
 
   it('rejects ID-only snapshots instead of reporting empty parity', () => {
     const directory = mkdtempSync(join(tmpdir(), 'festival-parity-'))
-    const productionPath = join(directory, 'production.json')
-    const openSourcePath = join(directory, 'opensource.json')
-    const outputPath = join(directory, 'report.json')
-    writeFileSync(productionPath, JSON.stringify({ events: ['shared'] }))
-    writeFileSync(openSourcePath, JSON.stringify({ events: [pack('shared')] }))
+    try {
+      const productionPath = join(directory, 'production.json')
+      const openSourcePath = join(directory, 'opensource.json')
+      const outputPath = join(directory, 'report.json')
+      writeFileSync(productionPath, JSON.stringify({ events: ['shared'] }))
+      writeFileSync(openSourcePath, JSON.stringify({ events: [pack('shared')] }))
 
-    expect(() => execFileSync(process.execPath, [
-      script,
-      '--production', productionPath,
-      '--opensource', openSourcePath,
-      '--output', outputPath,
-    ])).toThrow(/malformed festival pack/)
+      expect(() => execFileSync(process.execPath, [
+        script,
+        '--production', productionPath,
+        '--opensource', openSourcePath,
+        '--output', outputPath,
+      ])).toThrow(/malformed festival pack/)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
   })
 
   it('classifies runtime drift with the same category as the library contract', () => {
     const directory = mkdtempSync(join(tmpdir(), 'festival-parity-'))
-    const productionPath = join(directory, 'production.json')
-    const openSourcePath = join(directory, 'opensource.json')
-    const outputPath = join(directory, 'report.json')
-    writeFileSync(productionPath, JSON.stringify({
-      catalog: [pack('runtime-diff'), pack('identity-diff', 'ja')],
-    }))
-    writeFileSync(openSourcePath, JSON.stringify({
-      catalog: [
-        { ...pack('runtime-diff'), enabled: false },
-        { ...pack('identity-diff', 'ja'), country: 'us' },
-      ],
-    }))
+    try {
+      const productionPath = join(directory, 'production.json')
+      const openSourcePath = join(directory, 'opensource.json')
+      const outputPath = join(directory, 'report.json')
+      writeFileSync(productionPath, JSON.stringify({
+        catalog: [pack('runtime-diff'), pack('identity-diff', 'ja')],
+      }))
+      writeFileSync(openSourcePath, JSON.stringify({
+        catalog: [
+          { ...pack('runtime-diff'), enabled: false },
+          { ...pack('identity-diff', 'ja'), country: 'us' },
+        ],
+      }))
 
-    execFileSync(process.execPath, [
-      script,
-      '--production', productionPath,
-      '--opensource', openSourcePath,
-      '--output', outputPath,
-    ])
+      execFileSync(process.execPath, [
+        script,
+        '--production', productionPath,
+        '--opensource', openSourcePath,
+        '--output', outputPath,
+      ])
 
-    const report = JSON.parse(readFileSync(outputPath, 'utf8'))
-    expect(report.runtimeContractMismatch).toEqual([{ id: 'runtime-diff' }])
-    expect(report.sameDateDifferentContent).toEqual([{ id: 'identity-diff' }])
-    expect(report.shared).toEqual([])
+      const report = JSON.parse(readFileSync(outputPath, 'utf8'))
+      expect(report.runtimeContractMismatch).toEqual([{ id: 'runtime-diff' }])
+      expect(report.sameDateDifferentContent).toEqual([{ id: 'identity-diff' }])
+      expect(report.shared).toEqual([])
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
   })
 })
