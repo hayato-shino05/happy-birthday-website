@@ -1,0 +1,10 @@
+{
+  "shared": [],
+  "productionOnly": [],
+  "openSourceOnly": [],
+  "sameDateDifferentContent": [],
+  "duplicateIds": [],
+  "calendarRuleMismatch": [],
+  "localeCoverageMismatch": [],
+  "themeReferenceMismatch": []
+}
