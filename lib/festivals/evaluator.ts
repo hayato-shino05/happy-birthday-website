@@ -47,7 +47,8 @@ function isActiveYearlyRule(rule: GregorianYearlyRule, now: Date): boolean {
 }
 
 function compareEvaluations(left: FestivalEvaluation, right: FestivalEvaluation): number {
-  return right.pack.priority - left.pack.priority || left.pack.id.localeCompare(right.pack.id)
+  return right.pack.priority - left.pack.priority ||
+    (left.pack.id < right.pack.id ? -1 : left.pack.id > right.pack.id ? 1 : 0)
 }
 
 export function evaluateFestivalPacks(

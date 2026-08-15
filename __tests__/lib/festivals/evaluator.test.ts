@@ -102,4 +102,13 @@ describe('evaluateFestivalPacks', () => {
 
     expect(evaluateFestivalPacks([malformedLunarYearly], new Date('2024-12-31T14:30:00.000Z'))[0].status).toBe('unsupported-calendar')
   })
+
+  it('uses code-unit order for equal-priority IDs', () => {
+    const result = evaluateFestivalPacks([
+      pack({ id: 'ä', priority: 20 }),
+      pack({ id: 'z', priority: 20 }),
+    ], new Date('2024-12-31T14:30:00.000Z'))
+
+    expect(result.map(({ pack: item }) => item.id)).toEqual(['z', 'ä'])
+  })
 })
