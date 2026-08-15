@@ -171,28 +171,36 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
       pending: true,
     }
 
-    // 先行して画面を更新する
     setMessages(prev => [...prev, messageData])
     setNewMessage('')
     setLoading(true)
 
     try {
       const supabase = getSupabase()
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('chat_messages')
         .insert({
           sender: userName,
           message: trimmedMessage,
         })
+        .select('*')
+        .single()
 
       if (error) throw error
+      const insertedMessage = parseChatMessage(data)
+      setMessages((prev) => prev.map((item) => item.id === messageData.id ? insertedMessage ?? { ...messageData, pending: false } : item))
     } catch {
-      // フォールバックとしてlocalStorageへ保存する
-      const fallbackMessage = { ...messageData, pending: false }
-      setMessages((prev) => prev.map((item) => item.id === messageData.id ? fallbackMessage : item))
-      const chatMessages = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]')
-      chatMessages.push(fallbackMessage)
-      localStorage.setItem('birthdayChatMessages', JSON.stringify(chatMessages))
+      setTimeout(() => {
+        const fallbackMessage = { ...messageData, pending: false }
+        setMessages((prev) => {
+          const current = prev.find((item) => item.id === messageData.id)
+          if (!current || !current.pending) return prev
+          const chatMessages = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]')
+          chatMessages.push(fallbackMessage)
+          localStorage.setItem('birthdayChatMessages', JSON.stringify(chatMessages))
+          return prev.map((item) => item.id === messageData.id ? fallbackMessage : item)
+        })
+      }, 3000)
     } finally {
       setLoading(false)
     }

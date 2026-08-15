@@ -57,6 +57,9 @@ function isFestivalPack(value: unknown): value is FestivalPack {
     typeof record.locale === 'string' &&
     typeof record.category === 'string' &&
     typeof record.name === 'string' &&
+    typeof record.enabled === 'boolean' &&
+    typeof record.status === 'string' &&
+    typeof record.priority === 'number' &&
     typeof dateRule === 'object' && dateRule !== null && !Array.isArray(dateRule) &&
     typeof (dateRule as Record<string, unknown>).calendar === 'string' &&
     typeof (dateRule as Record<string, unknown>).recurrence === 'string'

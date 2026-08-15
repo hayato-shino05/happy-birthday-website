@@ -115,8 +115,8 @@ function validateDateRule(rule, path) {
       if (![month, startDay, endDay].every(Number.isInteger) || month < 1 || month > 12 || startDay < 1 || startDay > 31 || endDay < 1 || endDay > 31 || startDay > endDay) {
         fail(`${path}.ranges[${index}] が不正です`)
       }
-      validateMonthDay(month, startDay, `${path}.ranges[${index}].startDay`)
-      validateMonthDay(month, endDay, `${path}.ranges[${index}].endDay`)
+      validateMonthDay(month, startDay, `${path}.ranges[${index}].startDay`, 2023)
+      validateMonthDay(month, endDay, `${path}.ranges[${index}].endDay`, 2023)
     }
     return
   }
@@ -191,19 +191,28 @@ async function collectFestivalPacks(root) {
   for (const pack of packs) {
     const existing = byId.get(pack.id)
     if (!existing) {
-      byId.set(pack.id, pack)
+      byId.set(pack.id, {
+        pack,
+        locales: new Set([pack.locale]),
+      })
       continue
     }
-    const sameIdentity = existing.country === pack.country &&
-      existing.region === pack.region &&
-      existing.category === pack.category &&
-      stableJson(existing.dateRule) === stableJson(pack.dateRule)
-    const sameRuntimeContract = existing.enabled === pack.enabled &&
-      existing.status === pack.status &&
-      existing.priority === pack.priority &&
-      existing.themeKey === pack.themeKey
-    if (!sameIdentity || !sameRuntimeContract || existing.locale === pack.locale) {
+    const sameIdentity = existing.pack.country === pack.country &&
+      existing.pack.region === pack.region &&
+      existing.pack.category === pack.category &&
+      stableJson(existing.pack.dateRule) === stableJson(pack.dateRule)
+    const sameRuntimeContract = existing.pack.enabled === pack.enabled &&
+      existing.pack.status === pack.status &&
+      existing.pack.priority === pack.priority &&
+      existing.pack.themeKey === pack.themeKey
+    if (!sameIdentity || !sameRuntimeContract || existing.locales.has(pack.locale)) {
       fail(`festival pack の ID が重複しています: ${pack.id}`)
+    }
+    existing.locales.add(pack.locale)
+  }
+  for (const [id, group] of byId.entries()) {
+    for (const locale of SUPPORTED_LOCALES) {
+      if (!group.locales.has(locale)) fail(`festival pack に locale が不足しています: ${id}:${locale}`)
     }
   }
   return packs.sort((left, right) => left.id.localeCompare(right.id) || left.locale.localeCompare(right.locale))
@@ -297,31 +306,44 @@ async function writeAtomically(root, contents) {
       backup: `${target}.${process.pid}.bak`,
       content,
       installed: false,
+      backedUp: false,
     }
   })
-  for (const entry of entries) {
-    await mkdir(dirname(entry.target), { recursive: true })
-    await writeFile(entry.temporary, entry.content)
-  }
+
   try {
     for (const entry of entries) {
+      await mkdir(dirname(entry.target), { recursive: true })
+      await writeFile(entry.temporary, entry.content)
+    }
+    for (const entry of entries) {
       if (existsSync(entry.target)) {
+        await rm(entry.backup, { force: true })
         await rename(entry.target, entry.backup)
+        entry.backedUp = true
       }
     }
     for (const entry of entries) {
       await rename(entry.temporary, entry.target)
       entry.installed = true
     }
-    for (const entry of entries) await rm(entry.backup, { force: true })
   } catch (error) {
     for (const entry of entries) {
-      if (entry.installed && existsSync(entry.target)) await rm(entry.target, { force: true })
-      if (existsSync(entry.backup)) await rename(entry.backup, entry.target)
       await rm(entry.temporary, { force: true })
+      if (entry.installed && existsSync(entry.target)) await rm(entry.target, { force: true })
+      if (entry.backedUp && existsSync(entry.backup)) await rename(entry.backup, entry.target)
     }
     throw error
   }
+
+  const cleanupErrors = []
+  for (const entry of entries) {
+    try {
+      await rm(entry.backup, { force: true })
+    } catch (error) {
+      cleanupErrors.push(error instanceof Error ? error.message : String(error))
+    }
+  }
+  if (cleanupErrors.length > 0) fail(cleanupErrors.join('\n'))
 }
 
 async function generate(root) {

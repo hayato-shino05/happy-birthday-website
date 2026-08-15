@@ -118,5 +118,39 @@
     "status": {"enum": ["enabled", "disabled", "unsupported-calendar"]},
     "priority": {"type": "integer", "minimum": 0},
     "themeKey": {"type": "string", "minLength": 1}
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {"const": "unsupported-calendar"}
+        }
+      },
+      "then": {
+        "properties": {
+          "dateRule": {
+            "properties": {
+              "calendar": {"const": "lunar"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "dateRule": {
+            "properties": {
+              "calendar": {"const": "lunar"}
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {"const": "unsupported-calendar"}
+        }
+      }
+    }
+  ]
 }

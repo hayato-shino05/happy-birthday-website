@@ -43,6 +43,14 @@ afterEach(() => {
 })
 
 describe('collectSnapshot', () => {
+  const withOption = (args: string[], flag: string, value: string): string[] => {
+    const index = args.indexOf(flag)
+    if (index < 0) throw new Error(`missing flag: ${flag}`)
+    const next = [...args]
+    next[index + 1] = value
+    return next
+  }
+
   it('records clean commit metadata and excludes dirty or sensitive paths', async () => {
     const productionRoot = createRepository()
     writeTrackedFixture(productionRoot)
@@ -88,7 +96,7 @@ describe('collectSnapshot', () => {
     expect(snapshot.production.themes).toEqual(['spring'])
   })
 
-  it('regenerates existing outputs and preserves them when collection fails', () => {
+  it('regenerates existing outputs and preserves existing files when collection stops before writing', () => {
     const productionRoot = createRepository()
     writeTrackedFixture(productionRoot)
     execFileSync('git', ['-C', productionRoot, 'add', '.'])
@@ -129,8 +137,7 @@ describe('collectSnapshot', () => {
     expect(allowlist.excludedPaths.dirty).not.toContain('data/festivals/jp/ja.json')
 
     writeFileSync(productionOutput, '{"keep":true}\n')
-    const failingArgs = [...args]
-    failingArgs[4] = 'missing-commit'
+    const failingArgs = withOption(args, '--production-commit', 'missing-commit')
     expect(() => execFileSync(process.execPath, failingArgs)).toThrow()
     expect(JSON.parse(readFileSync(productionOutput, 'utf8'))).toEqual({ keep: true })
   })

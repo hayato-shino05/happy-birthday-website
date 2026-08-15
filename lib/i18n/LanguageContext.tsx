@@ -5,6 +5,8 @@ import { locales } from '@/data/generated/locales'
 import { DEFAULT_LOCALE, normalizeLocale, resolveLocale, translate } from './resolveLocale'
 import type { Language, Locale, TranslationKey } from './types'
 
+const LANGUAGE_COOKIE_NAME = 'birthday-locale'
+
 interface LanguageContextType {
   language: Language
   locale: Locale
@@ -15,14 +17,21 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 // 言語プロバイダー
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const initialLocale = resolveLocale(DEFAULT_LOCALE, locales, DEFAULT_LOCALE).locale
-  const [locale, setLocale] = useState<Locale>(initialLocale)
+export function LanguageProvider({
+  children,
+  initialLocale = DEFAULT_LOCALE,
+}: {
+  children: ReactNode
+  initialLocale?: Locale
+}) {
+  const resolvedInitialLocale = resolveLocale(initialLocale, locales, DEFAULT_LOCALE).locale
+  const [locale, setLocale] = useState<Locale>(resolvedInitialLocale)
 
   const setLanguage = useCallback((requestedLanguage: Language | Locale) => {
     const requestedLocale = normalizeLocale(requestedLanguage)
     const resolved = resolveLocale(requestedLocale, locales, DEFAULT_LOCALE)
     setLocale(resolved.locale)
+    document.cookie = `${LANGUAGE_COOKIE_NAME}=${resolved.locale}; path=/; max-age=31536000; samesite=lax`
   }, [])
 
   const language: Language = locale.startsWith('ja') ? 'ja' : 'en'

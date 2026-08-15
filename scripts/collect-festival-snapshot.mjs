@@ -21,13 +21,13 @@ function getDirtyFiles(root) {
   if (!existsSync(resolve(root, '.git'))) return []
   const output = execFileSync(
     'git',
-    ['-C', root, 'status', '--porcelain', '--untracked-files=all'],
+    ['-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'],
     { encoding: 'utf8' },
   )
   return output
-    .split(/\r?\n/)
+    .split('\0')
     .filter(Boolean)
-    .map((line) => line.slice(3).replace(/^"|"$/g, '').trim())
+    .map((entry) => entry.slice(3))
     .filter(Boolean)
 }
 
@@ -55,12 +55,32 @@ function readTrackedJson(root, commit, relativePath) {
   }
 }
 
+function isFestivalPack(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const record = value
+  const dateRule = record.dateRule
+  return typeof record.id === 'string' &&
+    typeof record.country === 'string' &&
+    typeof record.locale === 'string' &&
+    typeof record.category === 'string' &&
+    typeof record.name === 'string' &&
+    typeof record.enabled === 'boolean' &&
+    typeof record.status === 'string' &&
+    typeof record.priority === 'number' &&
+    typeof dateRule === 'object' && dateRule !== null && !Array.isArray(dateRule) &&
+    typeof dateRule.calendar === 'string' &&
+    typeof dateRule.recurrence === 'string'
+}
+
 function readFestivalPacks(root, commit, trackedFiles) {
   const packs = []
   for (const relativePath of trackedFiles.filter((path) => path.startsWith('data/festivals/') && path.endsWith('.json'))) {
     const value = readTrackedJson(root, commit, relativePath)
     if (!Array.isArray(value)) throw new Error(`festival pack は配列である必要があります: ${relativePath}`)
-    packs.push(...value)
+    for (const [index, pack] of value.entries()) {
+      if (!isFestivalPack(pack)) throw new Error(`festival pack が不正です: ${relativePath}[${index}]`)
+      packs.push(pack)
+    }
   }
   return packs
 }
@@ -93,37 +113,59 @@ function extractObjectKeys(source, marker) {
   let quote = null
   let escaped = false
   let token = ''
+  let quotedToken = ''
+  let quotedDepth = 0
+  let afterQuotedToken = false
 
   for (let index = openingBrace; index < source.length; index += 1) {
     const character = source[index]
     if (quote) {
-      if (escaped) escaped = false
-      else if (character === '\\') escaped = true
-      else if (character === quote) quote = null
+      if (escaped) {
+        escaped = false
+        if (quotedDepth === depth) quotedToken += character
+      } else if (character === '\\') {
+        escaped = true
+      } else if (character === quote) {
+        quote = null
+        if (quotedDepth === depth) afterQuotedToken = quotedToken.length > 0
+      } else if (quotedDepth === depth) {
+        quotedToken += character
+      }
       continue
     }
     if (character === '"' || character === "'" || character === '`') {
       quote = character
+      quotedDepth = depth
+      quotedToken = depth === 1 ? '' : quotedToken
       continue
     }
     if (character === '{') {
       depth += 1
       token = ''
+      quotedToken = ''
+      afterQuotedToken = false
       continue
     }
     if (character === '}') {
       depth -= 1
       if (depth === 0) break
       token = ''
+      quotedToken = ''
+      afterQuotedToken = false
       continue
     }
     if (depth === 1) {
       if (/[$\w-]/.test(character)) token += character
       else if (character === ':') {
-        if (token && !keys.includes(token)) keys.push(token)
+        const key = token || (afterQuotedToken ? quotedToken : '')
+        if (key && !keys.includes(key)) keys.push(key)
         token = ''
+        quotedToken = ''
+        afterQuotedToken = false
       } else if (!/\s/.test(character)) {
         token = ''
+        quotedToken = ''
+        afterQuotedToken = false
       }
     }
   }

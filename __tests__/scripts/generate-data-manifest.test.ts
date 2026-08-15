@@ -64,8 +64,10 @@ afterEach(() => {
 describe('generate-data-manifest', () => {
   it('discovers packs and writes deterministic generated manifests', () => {
     const root = createFixture()
-    writePack(root, 'z.json', 'z-event')
-    writePack(root, 'a.json', 'a-event')
+    writePack(root, 'z-ja.json', 'z-event', 'hanami', 'ja')
+    writePack(root, 'z-en.json', 'z-event', 'hanami', 'en')
+    writePack(root, 'a-ja.json', 'a-event', 'hanami', 'ja')
+    writePack(root, 'a-en.json', 'a-event', 'hanami', 'en')
     writeFileSync(join(root, 'data', 'i18n', 'ja.json'), JSON.stringify({ locale: 'ja', translations: { title: '誕生日' } }))
 
     runGenerator(root, '--write')
@@ -104,15 +106,16 @@ describe('generate-data-manifest', () => {
     expect(existsSync(join(root, 'data', 'generated', 'locales.ts'))).toBe(false)
   })
 
-  it('rejects duplicate IDs and preserves existing manifests', () => {
+  it('rejects duplicate locale variants and preserves existing manifests', () => {
     const root = createFixture()
-    writePack(root, 'a.json', 'same-event')
+    writePack(root, 'ja.json', 'same-event', 'hanami', 'ja')
+    writePack(root, 'en.json', 'same-event', 'hanami', 'en')
     runGenerator(root, '--write')
     const outputPath = join(root, 'data', 'generated', 'festival-packs.ts')
     const previous = readFileSync(outputPath, 'utf8')
-    writePack(root, 'b.json', 'same-event')
+    writePack(root, 'duplicate-ja.json', 'same-event', 'hanami', 'ja')
 
-    expect(() => runGenerator(root, '--write')).toThrow()
+    expect(() => runGenerator(root, '--write')).toThrow(/ID が重複/)
     expect(readFileSync(outputPath, 'utf8')).toBe(previous)
   })
 
@@ -127,16 +130,45 @@ describe('generate-data-manifest', () => {
     expect(festivalManifest.match(/"id": "same-event"/g)).toHaveLength(2)
   })
 
+  it('rejects duplicate locale variants even when the third record matches the first locale only by id', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', 'same-event', 'hanami', 'ja')
+    writePack(root, 'en.json', 'same-event', 'hanami', 'en')
+    writePack(root, 'ja-duplicate.json', 'same-event', 'hanami', 'ja')
+
+    expect(() => runGenerator(root, '--write')).toThrow(/ID が重複/)
+  })
+
+  it('rejects festival ids that do not provide every supported locale', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', 'same-event', 'hanami', 'ja')
+
+    expect(() => runGenerator(root, '--write')).toThrow(/locale が不足しています/)
+  })
+
   it('rejects impossible range endpoints before writing', () => {
     const root = createFixture()
-    writePack(root, 'a.json', 'invalid-date')
-    const path = join(root, 'data', 'festivals', 'jp', 'a.json')
+    writePack(root, 'a-ja.json', 'invalid-date', 'hanami', 'ja')
+    writePack(root, 'a-en.json', 'invalid-date', 'hanami', 'en')
+    const path = join(root, 'data', 'festivals', 'jp', 'a-ja.json')
     const value = JSON.parse(readFileSync(path, 'utf8'))
     value[0].dateRule.ranges = [{ month: 2, startDay: 30, endDay: 30 }]
     writeFileSync(path, JSON.stringify(value))
 
     expect(() => runGenerator(root, '--write')).toThrow(/ranges.*不正/)
     expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
+  })
+
+  it('rejects yearly ranges that include leap-day-only dates', () => {
+    const root = createFixture()
+    writePack(root, 'a-ja.json', 'invalid-leap-day', 'hanami', 'ja')
+    writePack(root, 'a-en.json', 'invalid-leap-day', 'hanami', 'en')
+    const path = join(root, 'data', 'festivals', 'jp', 'a-ja.json')
+    const value = JSON.parse(readFileSync(path, 'utf8'))
+    value[0].dateRule.ranges = [{ month: 2, startDay: 29, endDay: 29 }]
+    writeFileSync(path, JSON.stringify(value))
+
+    expect(() => runGenerator(root, '--write')).toThrow(/startDay が不正/)
   })
 
   it('rejects malformed lunar payload fields and localized runtime drift', () => {
@@ -168,8 +200,9 @@ describe('generate-data-manifest', () => {
 
   it('rejects unknown pack and dateRule keys before writing', () => {
     const root = createFixture()
-    writePack(root, 'a.json', 'invalid-event')
-    const path = join(root, 'data', 'festivals', 'jp', 'a.json')
+    writePack(root, 'a-ja.json', 'invalid-event', 'hanami', 'ja')
+    writePack(root, 'a-en.json', 'invalid-event', 'hanami', 'en')
+    const path = join(root, 'data', 'festivals', 'jp', 'a-ja.json')
     const value = JSON.parse(readFileSync(path, 'utf8'))
     value[0].extra = true
     writeFileSync(path, JSON.stringify(value))
@@ -185,7 +218,8 @@ describe('generate-data-manifest', () => {
 
   it('rejects invalid packs and unknown theme keys before writing', () => {
     const root = createFixture()
-    writePack(root, 'a.json', 'invalid-event', 'unknown-theme')
+    writePack(root, 'a-ja.json', 'invalid-event', 'unknown-theme', 'ja')
+    writePack(root, 'a-en.json', 'invalid-event', 'unknown-theme', 'en')
 
     expect(() => runGenerator(root, '--write')).toThrow(/themeKey/)
     expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
@@ -194,7 +228,8 @@ describe('generate-data-manifest', () => {
   it('rejects an invalid schema before writing any manifest', () => {
     const root = createFixture()
     writeFileSync(join(root, 'data', 'schemas', 'festival-pack.schema.json'), JSON.stringify({ type: 'string' }))
-    writePack(root, 'a.json', 'schema-event')
+    writePack(root, 'a-ja.json', 'schema-event', 'hanami', 'ja')
+    writePack(root, 'a-en.json', 'schema-event', 'hanami', 'en')
 
     expect(() => runGenerator(root, '--write')).toThrow(/festival-pack.schema.json/)
     expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
