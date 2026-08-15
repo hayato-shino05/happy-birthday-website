@@ -63,11 +63,11 @@ describe('compareCatalogs', () => {
     expect(ids(report.shared)).toEqual(['shared'])
     expect(ids(report.productionOnly)).toEqual(['country-jp', 'duplicate', 'prod-only'])
     expect(ids(report.openSourceOnly)).toEqual(['country-us', 'open-only'])
-    expect(ids(report.sameDateDifferentContent)).toEqual(['content-diff'])
-    expect(ids(report.calendarRuleMismatch)).toEqual(['calendar-diff'])
+    expect(ids(report.sameDateDifferentContent)).toEqual(['calendar-diff', 'content-diff', 'locale-gap'])
+    expect(ids(report.calendarRuleMismatch)).toEqual(['calendar-diff', 'locale-gap'])
     expect(ids(report.localeCoverageMismatch)).toEqual(['locale-gap'])
-    expect(ids(report.themeReferenceMismatch)).toEqual(['theme-diff'])
-    expect(ids(report.runtimeContractMismatch)).toEqual([])
+    expect(ids(report.themeReferenceMismatch)).toEqual(['locale-gap', 'theme-diff'])
+    expect(ids(report.runtimeContractMismatch)).toEqual(['locale-gap'])
     expect(ids(report.duplicateIds)).toEqual(['duplicate'])
     expect(ids(report.duplicateIds)).not.toContain('country-jp')
     expect(ids(report.duplicateIds)).not.toContain('country-us')
@@ -131,6 +131,18 @@ describe('compareCatalogs', () => {
     )
 
     expect(report.sameDateDifferentContent).toEqual([{ id: 'identity-diff' }])
+    expect(report.shared).toEqual([])
+  })
+
+  it('reports independent mismatch categories instead of masking drift', () => {
+    const report = compareCatalogs(
+      [pack({ id: 'multi-diff', country: 'jp', themeKey: 'production-theme', enabled: true })],
+      [pack({ id: 'multi-diff', country: 'us', themeKey: 'open-source-theme', enabled: false })],
+    )
+
+    expect(report.themeReferenceMismatch).toEqual([{ id: 'multi-diff' }])
+    expect(report.runtimeContractMismatch).toEqual([{ id: 'multi-diff' }])
+    expect(report.sameDateDifferentContent).toEqual([{ id: 'multi-diff' }])
     expect(report.shared).toEqual([])
   })
 

@@ -151,6 +151,15 @@ describe('generate-data-manifest', () => {
     expect(() => runGenerator(root, '--write')).toThrow(/ID が重複/)
   })
 
+  it('rejects festival ids that contain only whitespace', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', '   ', 'hanami', 'ja')
+    writePack(root, 'en.json', '   ', 'hanami', 'en')
+
+    expect(() => runGenerator(root, '--write')).toThrow(/\.id が不正/)
+    expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
+  })
+
   it('rejects festival ids that do not provide every supported locale', () => {
     const root = createFixture()
     writePack(root, 'ja.json', 'same-event', 'hanami', 'ja')

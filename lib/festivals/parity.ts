@@ -1,4 +1,5 @@
 import type { FestivalPack } from './types'
+import { validateFestivalPack } from './validation'
 
 export interface ParityItem {
   id: string
@@ -51,20 +52,12 @@ function stableJson(value: unknown): string {
 }
 
 function isFestivalPack(value: unknown): value is FestivalPack {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
-  const record = value as Record<string, unknown>
-  const dateRule = record.dateRule
-  return typeof record.id === 'string' &&
-    typeof record.country === 'string' &&
-    typeof record.locale === 'string' &&
-    typeof record.category === 'string' &&
-    typeof record.name === 'string' &&
-    typeof record.enabled === 'boolean' &&
-    typeof record.status === 'string' &&
-    typeof record.priority === 'number' &&
-    typeof dateRule === 'object' && dateRule !== null && !Array.isArray(dateRule) &&
-    typeof (dateRule as Record<string, unknown>).calendar === 'string' &&
-    typeof (dateRule as Record<string, unknown>).recurrence === 'string'
+  try {
+    validateFestivalPack(value)
+    return true
+  } catch {
+    return false
+  }
 }
 
 function readPacks(snapshot: CatalogSnapshot): FestivalPack[] {
@@ -194,19 +187,21 @@ export function compareCatalogs(productionSnapshot: CatalogSnapshot, openSourceS
       continue
     }
     if (hasDuplicate) continue
-    if (localeSet(productionEntries) !== localeSet(openSourceEntries)) {
-      report.localeCoverageMismatch.push({ id })
-    } else if (ruleSet(productionEntries) !== ruleSet(openSourceEntries)) {
-      report.calendarRuleMismatch.push({ id })
-    } else if (themeSet(productionEntries) !== themeSet(openSourceEntries)) {
-      report.themeReferenceMismatch.push({ id })
-    } else if (hasRuntimeMismatch || runtimeContractSet(productionEntries) !== runtimeContractSet(openSourceEntries)) {
-      report.runtimeContractMismatch.push({ id })
-    } else if (identitySet(productionEntries) !== identitySet(openSourceEntries)) {
-      report.sameDateDifferentContent.push({ id })
-    } else if (contentSet(productionEntries) !== contentSet(openSourceEntries)) {
-      report.sameDateDifferentContent.push({ id })
-    } else {
+
+    const hasLocaleCoverageMismatch = localeSet(productionEntries) !== localeSet(openSourceEntries)
+    const hasCalendarRuleMismatch = ruleSet(productionEntries) !== ruleSet(openSourceEntries)
+    const hasThemeReferenceMismatch = themeSet(productionEntries) !== themeSet(openSourceEntries)
+    const runtimeContractMismatchDetected = hasRuntimeMismatch || runtimeContractSet(productionEntries) !== runtimeContractSet(openSourceEntries)
+    const hasIdentityMismatch = identitySet(productionEntries) !== identitySet(openSourceEntries)
+    const hasContentMismatch = contentSet(productionEntries) !== contentSet(openSourceEntries)
+
+    if (hasLocaleCoverageMismatch) report.localeCoverageMismatch.push({ id })
+    if (hasCalendarRuleMismatch) report.calendarRuleMismatch.push({ id })
+    if (hasThemeReferenceMismatch) report.themeReferenceMismatch.push({ id })
+    if (runtimeContractMismatchDetected) report.runtimeContractMismatch.push({ id })
+    if (hasIdentityMismatch || hasContentMismatch) report.sameDateDifferentContent.push({ id })
+    if (!hasLocaleCoverageMismatch && !hasCalendarRuleMismatch && !hasThemeReferenceMismatch &&
+      !runtimeContractMismatchDetected && !hasIdentityMismatch && !hasContentMismatch) {
       report.shared.push({ id })
     }
   }

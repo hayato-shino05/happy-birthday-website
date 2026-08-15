@@ -35,7 +35,6 @@ function VideoCard({ message }: { message: VideoMessage }) {
           className="w-full h-full object-cover"
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          poster={message.thumbnail_url}
         />
 
         {!isPlaying && (

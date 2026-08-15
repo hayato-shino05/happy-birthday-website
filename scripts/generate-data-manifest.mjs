@@ -146,7 +146,7 @@ function validatePack(pack, path) {
   if (!pack || typeof pack !== 'object' || Array.isArray(pack)) fail(`${path} が不正です`)
   assertExactKeys(pack, PACK_KEYS, path)
   assertRequired(pack, ['id', 'country', 'locale', 'category', 'name', 'dateRule', 'enabled', 'status', 'priority'], path)
-  if (typeof pack.id !== 'string' || pack.id.length === 0) fail(`${path}.id が不正です`)
+  if (typeof pack.id !== 'string' || pack.id.trim().length === 0) fail(`${path}.id が不正です`)
   if (typeof pack.country !== 'string' || !COUNTRY_PATTERN.test(pack.country)) fail(`${path}.country が不正です`)
   if (typeof pack.locale !== 'string' || !LOCALE_PATTERN.test(pack.locale)) fail(`${path}.locale が不正です`)
   if (!SUPPORTED_LOCALES.includes(pack.locale)) fail(`${path}.locale は en または ja である必要があります`)
