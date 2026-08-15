@@ -67,7 +67,7 @@ function metadataSet(snapshot: CatalogSnapshot, key: 'locales' | 'themes'): stri
   if (!snapshot || Array.isArray(snapshot) || typeof snapshot !== 'object') return null
   const value = (snapshot as CatalogSnapshotObject)[key]
   if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return null
-  return [...new Set(value)].sort().join('\\u0000')
+  return [...new Set(value)].sort().join('\u0000')
 }
 
 function groupById(packs: readonly FestivalPack[]): Map<string, FestivalPack[]> {
@@ -90,23 +90,30 @@ function localeSet(packs: readonly FestivalPack[]): string {
 }
 
 function themeSet(packs: readonly FestivalPack[]): string {
-  return [...new Set(packs.map(({ themeKey }) => themeKey ?? null))]
-    .map((value) => value ?? '')
+  return packs
+    .map(({ locale, themeKey }) => stableJson({ locale, themeKey: themeKey ?? null }))
     .sort()
     .join('\u0000')
 }
 
 function ruleSet(packs: readonly FestivalPack[]): string {
-  return [...new Set(packs.map(({ dateRule }) => stableJson(dateRule)))].sort().join('\u0000')
+  return packs
+    .map(({ locale, dateRule }) => stableJson({ locale, dateRule }))
+    .sort()
+    .join('\u0000')
 }
 
 function calendarRuleSet(packs: readonly FestivalPack[]): string {
-  return [...new Set(packs.map(({ dateRule }) => `${dateRule.calendar}:${dateRule.recurrence}`))].sort().join('\u0000')
+  return packs
+    .map(({ locale, dateRule }) => `${locale}:${dateRule.calendar}:${dateRule.recurrence}`)
+    .sort()
+    .join('\u0000')
 }
 
 function contentSet(packs: readonly FestivalPack[]): string {
-  return [...packs]
+  return packs
     .map((pack) => stableJson({
+      locale: pack.locale,
       country: pack.country,
       region: pack.region,
       category: pack.category,

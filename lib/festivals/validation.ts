@@ -35,6 +35,17 @@ function asNonEmptyString(value: unknown, path: string): string {
   return value
 }
 
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`
+  if (value && typeof value === 'object') {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
 function validateTimeZone(value: unknown): string {
   const timeZone = asNonEmptyString(value, 'dateRule.timeZone')
   try {
@@ -110,7 +121,7 @@ export function validateDateRule(value: unknown): DateRule {
   }
 
   if (calendar === 'lunar' && recurrence === 'year-specific') {
-    if (record.status !== 'unsupported-calendar' || !('payload' in record) || 'dates' in record) {
+    if (record.status !== 'unsupported-calendar' || !('payload' in record) || 'dates' in record || 'ranges' in record) {
       throw new FestivalPackValidationError('lunar rules require an opaque unsupported-calendar payload')
     }
     return { calendar, recurrence, payload: record.payload, timeZone, status: 'unsupported-calendar' }
@@ -194,8 +205,13 @@ export function validateFestivalPacks(value: unknown): FestivalPack[] {
       existing.country === pack.country &&
       existing.region === pack.region &&
       existing.category === pack.category &&
-      JSON.stringify(existing.dateRule) === JSON.stringify(pack.dateRule)
-    if (!sameEvent || existing.locale === pack.locale) {
+      stableJson(existing.dateRule) === stableJson(pack.dateRule)
+    const sameRuntimeContract =
+      existing.enabled === pack.enabled &&
+      existing.status === pack.status &&
+      existing.priority === pack.priority &&
+      existing.themeKey === pack.themeKey
+    if (!sameEvent || !sameRuntimeContract || existing.locale === pack.locale) {
       throw new FestivalPackValidationError(`duplicate festival pack id: ${pack.id}`)
     }
   }

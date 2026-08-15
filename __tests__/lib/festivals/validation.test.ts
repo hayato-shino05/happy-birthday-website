@@ -94,6 +94,20 @@ describe('validateFestivalPack', () => {
 })
 
 describe('validateFestivalPacks', () => {
+  it('accepts localized variants that share a stable event id', () => {
+    const japanese = { ...validPack, id: 'jp-hanami', locale: 'ja' as const }
+    const english = { ...validPack, id: 'jp-hanami', locale: 'en' as const, name: 'Hanami' }
+
+    expect(validateFestivalPacks([japanese, english])).toEqual([japanese, english])
+  })
+
+  it('rejects localized variants with different runtime contracts', () => {
+    const japanese = { ...validPack, id: 'jp-hanami', locale: 'ja' as const }
+    const english = { ...validPack, id: 'jp-hanami', locale: 'en' as const, enabled: false }
+
+    expect(() => validateFestivalPacks([japanese, english])).toThrow(FestivalPackValidationError)
+  })
+
   it('rejects duplicate global ids', () => {
     const value = fixture('duplicate-id.json')
     expect(() => validateFestivalPacks(value)).toThrow(FestivalPackValidationError)

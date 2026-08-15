@@ -58,20 +58,30 @@ function localeSet(packs) {
 }
 
 function themeSet(packs) {
-  return [...new Set(packs.map(({ themeKey }) => themeKey ?? null))].map((value) => value ?? '').sort().join('\u0000')
+  return packs
+    .map(({ locale, themeKey }) => stableJson({ locale, themeKey: themeKey ?? null }))
+    .sort()
+    .join('\u0000')
 }
 
 function ruleSet(packs) {
-  return [...new Set(packs.map(({ dateRule }) => stableJson(dateRule)))].sort().join('\u0000')
+  return packs
+    .map(({ locale, dateRule }) => stableJson({ locale, dateRule }))
+    .sort()
+    .join('\u0000')
 }
 
 function calendarRuleSet(packs) {
-  return [...new Set(packs.map(({ dateRule }) => `${dateRule.calendar}:${dateRule.recurrence}`))].sort().join('\u0000')
+  return packs
+    .map(({ locale, dateRule }) => `${locale}:${dateRule.calendar}:${dateRule.recurrence}`)
+    .sort()
+    .join('\u0000')
 }
 
 function contentSet(packs) {
-  return [...packs]
+  return packs
     .map((pack) => stableJson({
+      locale: pack.locale,
       country: pack.country,
       region: pack.region,
       category: pack.category,

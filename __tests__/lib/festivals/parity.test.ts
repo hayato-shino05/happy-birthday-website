@@ -72,6 +72,22 @@ describe('compareCatalogs', () => {
     expect(ids(report.duplicateIds)).not.toContain('country-us')
   })
 
+  it('detects content swapped between locale variants', () => {
+    const productionLocalized = [
+      pack({ id: 'localized', locale: 'en', name: 'English name' }),
+      pack({ id: 'localized', locale: 'ja', name: '日本語名' }),
+    ]
+    const openSourceLocalized = [
+      pack({ id: 'localized', locale: 'en', name: '日本語名' }),
+      pack({ id: 'localized', locale: 'ja', name: 'English name' }),
+    ]
+
+    const report = compareCatalogs(productionLocalized, openSourceLocalized)
+
+    expect(report.sameDateDifferentContent).toEqual([{ id: 'localized' }])
+    expect(report.shared).toEqual([])
+  })
+
   it('accepts snapshots that wrap the catalog and metadata', () => {
     const report = compareCatalogs(
       { catalog: [pack({ id: 'wrapped' })], locales: ['ja'], themes: ['shared-theme'] },
