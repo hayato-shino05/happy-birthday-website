@@ -83,6 +83,7 @@ describe('collectSnapshot', () => {
     expect(snapshot.production.events).toEqual([
       expect.objectContaining({ id: 'jp-hanami', locale: 'ja' }),
     ])
+    expect(snapshot.production.seasons).toEqual(['jp-hanami'])
     expect(snapshot.production.locales).toEqual(['ja'])
     expect(snapshot.production.themes).toEqual(['spring'])
   })
@@ -95,6 +96,7 @@ describe('collectSnapshot', () => {
 
     const openSourceRoot = createRepository()
     writeTrackedFixture(openSourceRoot)
+    writeFileSync(join(openSourceRoot, 'data', 'i18n', 'en.json'), JSON.stringify({ locale: 'en', translations: { title: 'Birthday' } }))
     execFileSync('git', ['-C', openSourceRoot, 'add', '.'])
     execFileSync('git', ['-C', openSourceRoot, 'commit', '--quiet', '-m', 'snapshot'])
 
@@ -124,6 +126,7 @@ describe('collectSnapshot', () => {
     expect(allowlist.integrationPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
     expect(allowlist.allowedPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
     expect(allowlist.allowedPaths).not.toContain('data/festivals/jp/notes.txt')
+    expect(allowlist.excludedPaths.dirty).not.toContain('data/festivals/jp/ja.json')
 
     writeFileSync(productionOutput, '{"keep":true}\n')
     const failingArgs = [...args]

@@ -126,4 +126,12 @@ describe('validateFestivalPacks', () => {
     const value = fixture('duplicate-id.json')
     expect(() => validateFestivalPacks(value)).toThrow(FestivalPackValidationError)
   })
+
+  it('rejects a repeated locale variant for the same stable id', () => {
+    const japanese = { ...validPack, id: 'jp-hanami', locale: 'ja' as const }
+    const english = { ...validPack, id: 'jp-hanami', locale: 'en' as const, name: 'Hanami' }
+    const duplicateEnglish = { ...english, description: 'Duplicate locale variant' }
+
+    expect(() => validateFestivalPacks([japanese, english, duplicateEnglish])).toThrow(FestivalPackValidationError)
+  })
 })

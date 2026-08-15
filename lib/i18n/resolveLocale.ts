@@ -14,7 +14,7 @@ type TranslationPack = {
 export const DEFAULT_LOCALE: Locale = 'ja'
 
 export function normalizeLocale(locale: string): string {
-  return locale.trim().toLowerCase().split('-')[0]
+  return locale.trim().toLowerCase().replaceAll('_', '-').split('-')[0]
 }
 
 export function resolveLocale(

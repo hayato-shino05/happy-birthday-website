@@ -202,13 +202,17 @@ export function validateFestivalPacks(value: unknown): FestivalPack[] {
     throw new FestivalPackValidationError('festival packs must be an array')
   }
   const packs = value.map(validateFestivalPack)
-  const ids = new Map<string, FestivalPack>()
+  const ids = new Map<string, Map<string, FestivalPack>>()
   for (const pack of packs) {
-    const existing = ids.get(pack.id)
-    if (!existing) {
-      ids.set(pack.id, pack)
+    const localized = ids.get(pack.id)
+    if (!localized) {
+      ids.set(pack.id, new Map([[pack.locale, pack]]))
       continue
     }
+    if (localized.has(pack.locale)) {
+      throw new FestivalPackValidationError(`duplicate festival pack id: ${pack.id}`)
+    }
+    const existing = localized.values().next().value as FestivalPack
     const sameEvent =
       existing.country === pack.country &&
       existing.region === pack.region &&
@@ -219,9 +223,10 @@ export function validateFestivalPacks(value: unknown): FestivalPack[] {
       existing.status === pack.status &&
       existing.priority === pack.priority &&
       existing.themeKey === pack.themeKey
-    if (!sameEvent || !sameRuntimeContract || existing.locale === pack.locale) {
+    if (!sameEvent || !sameRuntimeContract) {
       throw new FestivalPackValidationError(`duplicate festival pack id: ${pack.id}`)
     }
+    localized.set(pack.locale, pack)
   }
   return packs
 }

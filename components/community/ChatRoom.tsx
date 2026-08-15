@@ -112,7 +112,14 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
           table: 'chat_messages',
         }, (payload) => {
           const message = parseChatMessage(payload.new)
-          if (message) setMessages(prev => [...prev, message])
+          if (!message) return
+          setMessages((prev) => {
+            const lastMessage = prev.at(-1)
+            if (lastMessage && lastMessage.sender === message.sender && lastMessage.message === message.message) {
+              return prev
+            }
+            return [...prev, message]
+          })
         })
         .subscribe()
     } catch {

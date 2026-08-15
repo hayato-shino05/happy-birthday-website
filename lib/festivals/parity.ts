@@ -78,13 +78,6 @@ function readPacks(snapshot: CatalogSnapshot): FestivalPack[] {
   return packs
 }
 
-function metadataSet(snapshot: CatalogSnapshot, key: 'locales' | 'themes'): string | null {
-  if (!snapshot || Array.isArray(snapshot) || typeof snapshot !== 'object') return null
-  const value = (snapshot as CatalogSnapshotObject)[key]
-  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return null
-  return [...new Set(value)].sort().join('\u0000')
-}
-
 function groupById(packs: readonly FestivalPack[]): Map<string, FestivalPack[]> {
   const groups = new Map<string, FestivalPack[]>()
   for (const pack of packs) groups.set(pack.id, [...(groups.get(pack.id) ?? []), pack])
@@ -114,13 +107,6 @@ function themeSet(packs: readonly FestivalPack[]): string {
 function ruleSet(packs: readonly FestivalPack[]): string {
   return packs
     .map(({ locale, dateRule }) => stableJson({ locale, dateRule }))
-    .sort()
-    .join('\u0000')
-}
-
-function calendarRuleSet(packs: readonly FestivalPack[]): string {
-  return packs
-    .map(({ locale, dateRule }) => `${locale}:${dateRule.calendar}:${dateRule.recurrence}`)
     .sort()
     .join('\u0000')
 }
@@ -163,12 +149,6 @@ export function compareCatalogs(productionSnapshot: CatalogSnapshot, openSourceS
   const openSource = readPacks(openSourceSnapshot)
   const productionById = groupById(production)
   const openSourceById = groupById(openSource)
-  const localeMetadataMismatch = metadataSet(productionSnapshot, 'locales') !== null &&
-    metadataSet(openSourceSnapshot, 'locales') !== null &&
-    metadataSet(productionSnapshot, 'locales') !== metadataSet(openSourceSnapshot, 'locales')
-  const themeMetadataMismatch = metadataSet(productionSnapshot, 'themes') !== null &&
-    metadataSet(openSourceSnapshot, 'themes') !== null &&
-    metadataSet(productionSnapshot, 'themes') !== metadataSet(openSourceSnapshot, 'themes')
   const ids = [...new Set([...productionById.keys(), ...openSourceById.keys()])].sort((left, right) => left.localeCompare(right))
   const report: ParityReport = {
     shared: [],
@@ -195,11 +175,11 @@ export function compareCatalogs(productionSnapshot: CatalogSnapshot, openSourceS
       continue
     }
     if (hasDuplicate) continue
-    if (localeSet(productionEntries) !== localeSet(openSourceEntries) || localeMetadataMismatch) {
+    if (localeSet(productionEntries) !== localeSet(openSourceEntries)) {
       report.localeCoverageMismatch.push({ id })
-    } else if (ruleSet(productionEntries) !== ruleSet(openSourceEntries) || calendarRuleSet(productionEntries) !== calendarRuleSet(openSourceEntries)) {
+    } else if (ruleSet(productionEntries) !== ruleSet(openSourceEntries)) {
       report.calendarRuleMismatch.push({ id })
-    } else if (themeSet(productionEntries) !== themeSet(openSourceEntries) || themeMetadataMismatch) {
+    } else if (themeSet(productionEntries) !== themeSet(openSourceEntries)) {
       report.themeReferenceMismatch.push({ id })
     } else if (contentSet(productionEntries) !== contentSet(openSourceEntries)) {
       report.sameDateDifferentContent.push({ id })

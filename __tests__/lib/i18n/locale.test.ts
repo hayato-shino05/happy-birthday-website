@@ -14,6 +14,7 @@ describe('locale resolution', () => {
 
   it('normalizes locale aliases to their primary language', () => {
     expect(normalizeLocale('fr-FR')).toBe('fr')
+    expect(normalizeLocale('ja_JP')).toBe('ja')
     expect(normalizeLocale('JA-jp')).toBe('ja')
     expect(resolveLocale('ja', availableLocales, 'ja')).toEqual({
       locale: 'ja',

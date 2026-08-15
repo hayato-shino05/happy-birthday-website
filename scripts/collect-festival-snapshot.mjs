@@ -174,7 +174,7 @@ function collectSource({ source, root, commit }) {
       priority: 0,
     }))
   const seasons = festivalPacks.length > 0
-    ? festivalPacks.filter((pack) => pack && pack.category === 'season').map((pack) => pack.id).sort()
+    ? [...new Set(festivalPacks.filter((pack) => pack && pack.category === 'season').map((pack) => pack.id))].sort()
     : extractObjectKeys(themeSource, 'SEASON_MONTHS')
   const themes = [...new Set([
     ...extractObjectKeys(themeSource, 'THEMES'),
@@ -264,10 +264,7 @@ function main() {
     openSourceRoot: resolve(options['opensource-root']),
   })
 
-  const allowedPaths = [...new Set([
-    ...snapshot.production.files.included,
-    ...snapshot.openSource.files.included,
-  ])]
+  const allowedPaths = snapshot.production.files.included
     .filter(isIntegrationPath)
     .sort()
 
@@ -285,7 +282,8 @@ function main() {
           environment: snapshot.openSource.files.excluded.filter((path) => /^\.env(?:\.|$)/.test(path)),
           supabase: snapshot.openSource.files.excluded.filter((path) => path === 'supabase' || path.startsWith('supabase/')),
           deployment: snapshot.openSource.files.excluded.filter((path) => /(?:^|\/)(?:deploy|deployment|vercel|netlify)(?:\/|\.|$)/i.test(path)),
-          dirty: getDirtyFiles(resolve(options['opensource-root'])),
+          dirty: getDirtyFiles(resolve(options['opensource-root']))
+            .filter((path) => !allowedPaths.includes(path)),
         },
       },
     },

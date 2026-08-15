@@ -9,7 +9,7 @@
     "id": {"type": "string", "minLength": 1},
     "country": {"type": "string", "pattern": "^[a-z]{2,3}$"},
     "region": {"type": "string", "minLength": 1},
-    "locale": {"type": "string", "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})+$"},
+    "locale": {"type": "string", "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"},
     "category": {"enum": ["festival", "public-holiday", "season"]},
     "name": {"type": "string", "minLength": 1},
     "description": {"type": "string", "minLength": 1},

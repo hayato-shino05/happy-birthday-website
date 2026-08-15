@@ -62,12 +62,14 @@ function stableJson(value) {
   return JSON.stringify(value)
 }
 
-function validateMonthDay(month, day, path) {
+function validateMonthDay(month, day, path, year = 2024) {
   if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(day) || day < 1 || day > 31) {
     fail(`${path} が不正です`)
   }
-  const candidate = new Date(Date.UTC(2024, month - 1, day, 12))
-  if (candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) {
+  const candidate = new Date(0)
+  candidate.setUTCFullYear(year, month - 1, day)
+  candidate.setUTCHours(12, 0, 0, 0)
+  if (candidate.getUTCFullYear() !== year || candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) {
     fail(`${path} が不正です`)
   }
 }
@@ -77,10 +79,11 @@ function validateYearDates(dates, path) {
   const entries = Object.entries(dates)
   if (entries.length === 0) fail(`${path} が不正です`)
   for (const [year, values] of entries) {
+    const numericYear = Number(year)
     if (!/^\d{4}$/.test(year) || !Array.isArray(values) || values.length === 0) fail(`${path}.${year} が不正です`)
     for (const [index, value] of values.entries()) {
       if (!value || typeof value !== 'object') fail(`${path}.${year}[${index}] が不正です`)
-      validateMonthDay(value.month, value.day, `${path}.${year}[${index}]`)
+      validateMonthDay(value.month, value.day, `${path}.${year}[${index}]`, numericYear)
     }
   }
 }
@@ -127,10 +130,10 @@ function validatePack(pack, path) {
   if (typeof pack.locale !== 'string' || !LOCALE_PATTERN.test(pack.locale)) fail(`${path}.locale が不正です`)
   if (!SUPPORTED_LOCALES.includes(pack.locale)) fail(`${path}.locale は en または ja である必要があります`)
   if (!['festival', 'public-holiday', 'season'].includes(pack.category)) fail(`${path}.category が不正です`)
-  if (typeof pack.name !== 'string' || pack.name.length === 0) fail(`${path}.name が不正です`)
-  if (pack.description !== undefined && (typeof pack.description !== 'string' || pack.description.length === 0)) fail(`${path}.description が不正です`)
-  if (pack.region !== undefined && (typeof pack.region !== 'string' || pack.region.length === 0)) fail(`${path}.region が不正です`)
-  if (pack.themeKey !== undefined && (typeof pack.themeKey !== 'string' || pack.themeKey.length === 0)) fail(`${path}.themeKey が不正です`)
+  if (typeof pack.name !== 'string' || pack.name.trim().length === 0) fail(`${path}.name が不正です`)
+  if (pack.description !== undefined && (typeof pack.description !== 'string' || pack.description.trim().length === 0)) fail(`${path}.description が不正です`)
+  if (pack.region !== undefined && (typeof pack.region !== 'string' || pack.region.trim().length === 0)) fail(`${path}.region が不正です`)
+  if (pack.themeKey !== undefined && (typeof pack.themeKey !== 'string' || pack.themeKey.trim().length === 0)) fail(`${path}.themeKey が不正です`)
   if (typeof pack.enabled !== 'boolean') fail(`${path}.enabled が不正です`)
   if (!['enabled', 'disabled', 'unsupported-calendar'].includes(pack.status)) fail(`${path}.status が不正です`)
   if (!Number.isInteger(pack.priority) || pack.priority < 0) fail(`${path}.priority が不正です`)
@@ -268,7 +271,13 @@ function generatedContents(packs, locales, themeKeys, translationKeys) {
 async function writeAtomically(root, contents) {
   const entries = [...contents.entries()].map(([relativePath, content]) => {
     const target = join(root, relativePath)
-    return { target, temporary: `${target}.${process.pid}.tmp`, backup: `${target}.${process.pid}.bak`, content }
+    return {
+      target,
+      temporary: `${target}.${process.pid}.tmp`,
+      backup: `${target}.${process.pid}.bak`,
+      content,
+      installed: false,
+    }
   })
   for (const entry of entries) {
     await mkdir(dirname(entry.target), { recursive: true })
@@ -280,14 +289,15 @@ async function writeAtomically(root, contents) {
         await rename(entry.target, entry.backup)
       }
     }
-    for (const entry of entries) await rename(entry.temporary, entry.target)
+    for (const entry of entries) {
+      await rename(entry.temporary, entry.target)
+      entry.installed = true
+    }
     for (const entry of entries) await rm(entry.backup, { force: true })
   } catch (error) {
     for (const entry of entries) {
-      if (existsSync(entry.backup)) {
-        if (existsSync(entry.target)) await rm(entry.target, { force: true })
-        await rename(entry.backup, entry.target)
-      }
+      if (entry.installed && existsSync(entry.target)) await rm(entry.target, { force: true })
+      if (existsSync(entry.backup)) await rename(entry.backup, entry.target)
       await rm(entry.temporary, { force: true })
     }
     throw error

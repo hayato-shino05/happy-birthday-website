@@ -4,18 +4,8 @@
     "data/festivals/",
     "data/i18n/"
   ],
-  "integrationPaths": [
-    "data/festivals/jp/en.json",
-    "data/festivals/jp/ja.json",
-    "data/i18n/en.json",
-    "data/i18n/ja.json"
-  ],
-  "allowedPaths": [
-    "data/festivals/jp/en.json",
-    "data/festivals/jp/ja.json",
-    "data/i18n/en.json",
-    "data/i18n/ja.json"
-  ],
+  "integrationPaths": [],
+  "allowedPaths": [],
   "excludedPaths": {
     "environment": [
       ".env.example"
@@ -31,12 +21,11 @@
     "dirty": [
       ".env.example",
       "STRUCTURE.md",
-      "__tests__/lib/festivals/evaluator.test.ts",
-      "__tests__/lib/festivals/parity.test.ts",
       "__tests__/lib/festivals/validation.test.ts",
       "__tests__/lib/i18n/locale.test.ts",
       "__tests__/lib/validations.test.ts",
-      "__tests__/scripts/compare-festival-catalogs.test.ts",
+      "__tests__/scripts/collect-festival-snapshot.test.ts",
+      "__tests__/scripts/generate-data-manifest.test.ts",
       "app/globals.css",
       "app/page.tsx",
       "components/community/AudioRecorder.tsx",
@@ -105,15 +94,8 @@
       "components/ui/ThemeIndicator.tsx",
       "components/ui/Toast.tsx",
       "components/ui/TrackSelector.tsx",
-      "data/festivals/jp/en.json",
-      "data/festivals/jp/ja.json",
-      "data/generated/festival-packs.ts",
       "data/schemas/festival-pack.schema.json",
       "database/database.sql",
-      "docs/parity/2026-08-15-festival-allowlist.json",
-      "docs/parity/2026-08-15-opensource-festival-snapshot.json",
-      "docs/parity/2026-08-15-production-festival-snapshot.json",
-      "lib/festivals/evaluator.ts",
       "lib/festivals/parity.ts",
       "lib/festivals/validation.ts",
       "lib/hooks/useAudioRecorder.ts",
@@ -123,7 +105,6 @@
       "lib/stores/uiStore.ts",
       "lib/utils/birthday.ts",
       "scripts/collect-festival-snapshot.mjs",
-      "scripts/compare-festival-catalogs.mjs",
       "scripts/generate-data-manifest.mjs",
       "types/index.ts",
       ".agents/skills/audit-onboarding-proposal/SKILL.md",

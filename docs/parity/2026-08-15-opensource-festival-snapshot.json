@@ -1,6 +1,6 @@
 {
   "source": "openSource",
-  "commit": "9a8aeb64e135762ce58104d2697e0d7e665960b5",
+  "commit": "745b82bee6ac21d11999623b0c3de06e29cae981",
   "files": {
     "included": [
       ".gitignore",
@@ -390,7 +390,7 @@
       "supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql": "Supabase 設定とスキーマ",
       "supabase/seed.sql": "Supabase 設定とスキーマ"
     },
-    "commit": "9a8aeb64e135762ce58104d2697e0d7e665960b5"
+    "commit": "745b82bee6ac21d11999623b0c3de06e29cae981"
   },
   "events": [
     {
@@ -516,7 +516,7 @@
         "timeZone": "Asia/Tokyo",
         "status": "unsupported-calendar"
       },
-      "enabled": true,
+      "enabled": false,
       "status": "unsupported-calendar",
       "priority": 40,
       "themeKey": "tsukimi"
@@ -740,7 +740,7 @@
         "timeZone": "Asia/Tokyo",
         "status": "unsupported-calendar"
       },
-      "enabled": true,
+      "enabled": false,
       "status": "unsupported-calendar",
       "priority": 40,
       "themeKey": "tsukimi"
@@ -843,7 +843,6 @@
     }
   ],
   "seasons": [
-    "jp-hanami",
     "jp-hanami"
   ],
   "locales": [
