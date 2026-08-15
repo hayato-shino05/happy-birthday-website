@@ -51,6 +51,40 @@ function assertTimeZone(timeZone, path) {
   }
 }
 
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`
+  if (value && typeof value === 'object') {
+    return `{${Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
+function validateMonthDay(month, day, path) {
+  if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(day) || day < 1 || day > 31) {
+    fail(`${path} が不正です`)
+  }
+  const candidate = new Date(Date.UTC(2024, month - 1, day, 12))
+  if (candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) {
+    fail(`${path} が不正です`)
+  }
+}
+
+function validateYearDates(dates, path) {
+  if (!dates || typeof dates !== 'object' || Array.isArray(dates)) fail(`${path} が不正です`)
+  const entries = Object.entries(dates)
+  if (entries.length === 0) fail(`${path} が不正です`)
+  for (const [year, values] of entries) {
+    if (!/^\d{4}$/.test(year) || !Array.isArray(values) || values.length === 0) fail(`${path}.${year} が不正です`)
+    for (const [index, value] of values.entries()) {
+      if (!value || typeof value !== 'object') fail(`${path}.${year}[${index}] が不正です`)
+      validateMonthDay(value.month, value.day, `${path}.${year}[${index}]`)
+    }
+  }
+}
+
 function validateDateRule(rule, path) {
   if (!rule || typeof rule !== 'object' || Array.isArray(rule)) fail(`${path} は object である必要があります`)
   assertTimeZone(rule.timeZone, `${path}.timeZone`)
@@ -68,7 +102,7 @@ function validateDateRule(rule, path) {
   }
 
   if (rule.calendar === 'gregorian' && rule.recurrence === 'year-specific') {
-    if (!rule.dates || typeof rule.dates !== 'object' || Array.isArray(rule.dates)) fail(`${path}.dates が不正です`)
+    validateYearDates(rule.dates, `${path}.dates`)
     return
   }
 
@@ -85,6 +119,9 @@ function validatePack(pack, path) {
   if (!SUPPORTED_LOCALES.includes(pack.locale)) fail(`${path}.locale は en または ja である必要があります`)
   if (!['festival', 'public-holiday', 'season'].includes(pack.category)) fail(`${path}.category が不正です`)
   if (typeof pack.name !== 'string' || pack.name.length === 0) fail(`${path}.name が不正です`)
+  if (pack.description !== undefined && (typeof pack.description !== 'string' || pack.description.length === 0)) fail(`${path}.description が不正です`)
+  if (pack.region !== undefined && (typeof pack.region !== 'string' || pack.region.length === 0)) fail(`${path}.region が不正です`)
+  if (pack.themeKey !== undefined && (typeof pack.themeKey !== 'string' || pack.themeKey.length === 0)) fail(`${path}.themeKey が不正です`)
   if (typeof pack.enabled !== 'boolean') fail(`${path}.enabled が不正です`)
   if (!['enabled', 'disabled', 'unsupported-calendar'].includes(pack.status)) fail(`${path}.status が不正です`)
   if (!Number.isInteger(pack.priority) || pack.priority < 0) fail(`${path}.priority が不正です`)
@@ -125,7 +162,7 @@ async function collectFestivalPacks(root) {
       byId.set(pack.id, pack)
       continue
     }
-    const sameIdentity = existing.country === pack.country && existing.region === pack.region && existing.category === pack.category && JSON.stringify(existing.dateRule) === JSON.stringify(pack.dateRule)
+    const sameIdentity = existing.country === pack.country && existing.region === pack.region && existing.category === pack.category && stableJson(existing.dateRule) === stableJson(pack.dateRule)
     if (!sameIdentity || existing.locale === pack.locale) fail(`festival pack の ID が重複しています: ${pack.id}`)
   }
   return packs.sort((left, right) => left.id.localeCompare(right.id) || left.locale.localeCompare(right.locale))
@@ -229,8 +266,10 @@ async function writeAtomically(root, contents) {
     for (const entry of entries) await rm(entry.backup, { force: true })
   } catch (error) {
     for (const entry of entries) {
-      if (existsSync(entry.target)) await rm(entry.target, { force: true })
-      if (existsSync(entry.backup)) await rename(entry.backup, entry.target)
+      if (existsSync(entry.backup)) {
+        if (existsSync(entry.target)) await rm(entry.target, { force: true })
+        await rename(entry.backup, entry.target)
+      }
       await rm(entry.temporary, { force: true })
     }
     throw error

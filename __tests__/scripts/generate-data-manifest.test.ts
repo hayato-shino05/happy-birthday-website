@@ -2,12 +2,14 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const scriptPath = join(process.cwd(), 'scripts', 'generate-data-manifest.mjs')
+const temporaryDirectories: string[] = []
 
 function createFixture(): string {
   const root = mkdtempSync(join(tmpdir(), 'festival-manifest-'))
+  temporaryDirectories.push(root)
   mkdirSync(join(root, 'data', 'festivals', 'jp'), { recursive: true })
   mkdirSync(join(root, 'data', 'i18n'), { recursive: true })
   mkdirSync(join(root, 'data', 'schemas'), { recursive: true })
@@ -52,6 +54,12 @@ function runGenerator(root: string, ...args: string[]): string {
     encoding: 'utf8',
   })
 }
+
+afterEach(() => {
+  for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
 
 describe('generate-data-manifest', () => {
   it('discovers packs and writes deterministic generated manifests', () => {
