@@ -28,6 +28,8 @@ function addLegacyRange(
   if (
     !pack.themeKey ||
     !isVisualThemeKey(pack.themeKey) ||
+    !pack.enabled ||
+    pack.status !== 'enabled' ||
     pack.dateRule.calendar !== 'gregorian' ||
     pack.dateRule.recurrence !== 'yearly'
   ) return
