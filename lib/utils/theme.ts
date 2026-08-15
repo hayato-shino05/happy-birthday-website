@@ -2,23 +2,21 @@ import { festivalPacks } from '@/data/generated/festival-packs'
 import { VISUAL_THEME_KEYS } from '@/config/visualThemes'
 import { THEMES, type ThemeConfig } from '@/config/themes'
 import { evaluateFestivalPacks } from '@/lib/festivals/evaluator'
-import { getLegacyFestivalDates, getLegacySeasonMonths } from '@/lib/festivals/legacyAdapter'
+import { getLegacySeasonMonths } from '@/lib/festivals/legacyAdapter'
 import type { ThemeName } from '@/types'
 
 /**
  * 指定された日付で祭りがアクティブかどうかを確認
  */
 export function isFestivalActive(festivalKey: string, month: number, date: number): boolean {
-  const festivalConfig = getLegacyFestivalDates()[festivalKey]
-  if (!festivalConfig) return false
-
-  if (Array.isArray(festivalConfig)) {
-    return festivalConfig.some(
-      (range) => month === range.month && date >= range.startDate && date <= range.endDate,
-    )
+  if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(date) || date < 1 || date > 31) {
+    return false
   }
 
-  return month === festivalConfig.month && date >= festivalConfig.startDate && date <= festivalConfig.endDate
+  const currentDate = new Date(Date.UTC(2024, month - 1, date, 12))
+  return evaluateFestivalPacks(festivalPacks, currentDate).some(
+    ({ pack, status }) => status === 'active' && pack.themeKey === festivalKey,
+  )
 }
 
 /**
