@@ -88,4 +88,18 @@ describe('evaluateFestivalPacks', () => {
 
     expect(result.map(({ status }) => status)).toEqual(['unsupported-calendar', 'unsupported-calendar'])
   })
+
+  it('rejects a malformed lunar yearly rule as unsupported', () => {
+    const malformedLunarYearly = pack({
+      id: 'lunar-yearly',
+      dateRule: {
+        calendar: 'lunar',
+        recurrence: 'yearly',
+        ranges: [{ month: 12, startDay: 31, endDay: 31 }],
+        timeZone: 'Asia/Tokyo',
+      } as unknown as FestivalPack['dateRule'],
+    })
+
+    expect(evaluateFestivalPacks([malformedLunarYearly], new Date('2024-12-31T14:30:00.000Z'))[0].status).toBe('unsupported-calendar')
+  })
 })

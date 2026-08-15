@@ -1,7 +1,7 @@
 import { festivalPacks } from '@/data/generated/festival-packs'
 import { VISUAL_THEME_KEYS } from '@/config/visualThemes'
 import { THEMES, type ThemeConfig } from '@/config/themes'
-import { evaluateFestivalPacks } from '@/lib/festivals/evaluator'
+import { evaluateFestivalPacks, getInstantForCalendarDate } from '@/lib/festivals/evaluator'
 import { getLegacySeasonMonths } from '@/lib/festivals/legacyAdapter'
 import type { ThemeName } from '@/types'
 
@@ -13,10 +13,19 @@ export function isFestivalActive(festivalKey: string, month: number, date: numbe
     return false
   }
 
-  const currentDate = new Date(Date.UTC(2024, month - 1, date, 12))
-  return evaluateFestivalPacks(festivalPacks, currentDate).some(
-    ({ pack, status }) => status === 'active' && pack.themeKey === festivalKey,
-  )
+  const calendarDate = new Date(Date.UTC(2024, month - 1, date, 12))
+  if (calendarDate.getUTCMonth() !== month - 1 || calendarDate.getUTCDate() !== date) return false
+
+  return festivalPacks.some((pack) => {
+    if (
+      pack.themeKey !== festivalKey ||
+      pack.dateRule.calendar !== 'gregorian' ||
+      pack.dateRule.recurrence !== 'yearly'
+    ) return false
+
+    const currentDate = getInstantForCalendarDate(2024, month, date, pack.dateRule.timeZone)
+    return evaluateFestivalPacks([pack], currentDate)[0]?.status === 'active'
+  })
 }
 
 /**

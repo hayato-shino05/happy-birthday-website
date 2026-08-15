@@ -22,9 +22,21 @@ function getCalendarDate(now: Date, timeZone: string) {
   )
 
   return {
+    year: values.year,
     month: values.month,
     day: values.day,
   }
+}
+
+
+export function getInstantForCalendarDate(year: number, month: number, day: number, timeZone: string): Date {
+  for (let hour = 0; hour < 48; hour += 1) {
+    const candidate = new Date(Date.UTC(year, month - 1, day, hour))
+    const actual = getCalendarDate(candidate, timeZone)
+    if (actual.year === year && actual.month === month && actual.day === day) return candidate
+  }
+
+  throw new RangeError(`Calendar date cannot be represented in timezone: ${timeZone}`)
 }
 
 function isActiveYearlyRule(rule: GregorianYearlyRule, now: Date): boolean {
@@ -44,7 +56,7 @@ export function evaluateFestivalPacks(
 ): FestivalEvaluation[] {
   return packs
     .map((pack): FestivalEvaluation => {
-      if (pack.status === 'unsupported-calendar' || pack.dateRule.recurrence !== 'yearly') {
+      if (pack.dateRule.calendar !== 'gregorian' || pack.dateRule.recurrence !== 'yearly') {
         return { pack, status: 'unsupported-calendar' }
       }
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { isFestivalActive } from '@/lib/utils/theme'
 import { getLegacyFestivalDates, getLegacySeasonMonths } from '@/lib/festivals/legacyAdapter'
 
 describe('legacy festival adapter', () => {
@@ -24,5 +25,11 @@ describe('legacy festival adapter', () => {
       summer: [5, 6, 7, 8],
       autumn: [9, 10, 11],
     })
+  })
+
+  it('rejects impossible Gregorian dates before timezone evaluation', () => {
+    expect(isFestivalActive('christmas', 12, 32)).toBe(false)
+    expect(isFestivalActive('kodomo', 4, 31)).toBe(false)
+    expect(isFestivalActive('hanami', 2, 30)).toBe(false)
   })
 })
