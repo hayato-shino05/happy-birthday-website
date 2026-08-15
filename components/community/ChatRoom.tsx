@@ -7,8 +7,32 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 interface ChatMessage {
   id: number
   sender: string
-  text: string
+  message: string
   created_at: string
+}
+
+function parseChatMessage(value: unknown): ChatMessage | null {
+  if (typeof value !== 'object' || value === null) return null
+  const record = value as Record<string, unknown>
+  const message = typeof record.message === 'string'
+    ? record.message
+    : typeof record.text === 'string'
+      ? record.text
+      : null
+
+  if (
+    typeof record.id !== 'number' ||
+    typeof record.sender !== 'string' ||
+    message === null ||
+    typeof record.created_at !== 'string'
+  ) return null
+
+  return {
+    id: record.id,
+    sender: record.sender,
+    message,
+    created_at: record.created_at,
+  }
 }
 
 interface ChatRoomProps {
@@ -56,12 +80,17 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         if (error.code === '42P01') return
         throw error
       }
-      setMessages(data || [])
+      setMessages(
+        data?.map(parseChatMessage).filter((message): message is ChatMessage => message !== null) ?? [],
+      )
     } catch {
       // フォールバックとしてlocalStorageから読み込む
       const messagesData = localStorage.getItem('birthdayChatMessages')
       if (messagesData) {
-        setMessages(JSON.parse(messagesData))
+        const parsed = JSON.parse(messagesData) as unknown
+        if (Array.isArray(parsed)) {
+          setMessages(parsed.map(parseChatMessage).filter((message): message is ChatMessage => message !== null))
+        }
       }
     }
   }, [])
@@ -82,7 +111,8 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
           schema: 'public',
           table: 'chat_messages',
         }, (payload) => {
-          setMessages(prev => [...prev, payload.new as ChatMessage])
+          const message = parseChatMessage(payload.new)
+          if (message) setMessages(prev => [...prev, message])
         })
         .subscribe()
     } catch {
@@ -119,7 +149,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
     const messageData: ChatMessage = {
       id: Date.now(),
       sender: userName,
-      text: newMessage.trim(),
+      message: newMessage.trim(),
       created_at: new Date().toISOString(),
     }
 
@@ -226,7 +256,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
                     className={`chat-message ${isMe ? 'chat-message--sender' : 'chat-message--receiver'}`}
                   >
                     <div className="chat-message__sender">{msg.sender}</div>
-                    {msg.text}
+                    {msg.message}
                     <div className="chat-message__time">{formatTime(msg.created_at)}</div>
                   </div>
                 )
