@@ -5,7 +5,7 @@ import { dirname, isAbsolute, posix, resolve } from 'node:path'
 const FORBIDDEN_PATH_RULES = [
   { test: (path) => /^\.env(?:\.|$)/.test(path), reason: '環境変数と秘密情報' },
   { test: (path) => path === 'supabase' || path.startsWith('supabase/'), reason: 'Supabase 設定とスキーマ' },
-  { test: (path) => path === '.vercel' || path.startsWith('.vercel/'), reason: 'デプロイ設定または成果物' },
+  { test: (path) => path === '.vercel' || path.startsWith('.vercel/') || /(?:^|\/)(?:deploy|deployment|vercel|netlify)(?:\/|\.|$)/i.test(path), reason: 'デプロイ設定または成果物' },
 ]
 
 function parseArguments(args) {
@@ -72,7 +72,7 @@ export function readIntegrationPaths(allowlist) {
     if (!scopes.some((scope) => typeof scope === 'string' && path.startsWith(scope))) {
       throw new Error(`許可スコープ外の integration path です: ${path}`)
     }
-    if (allowedPaths.length > 0 && !allowedPaths.includes(path)) {
+    if (!allowedPaths.includes(path)) {
       throw new Error(`allowedPaths にない integration path です: ${path}`)
     }
   }
@@ -138,19 +138,24 @@ export function applyProductionAllowlist({ productionRoot, productionCommit, all
     return files
   }
 
-  for (const file of files) writeAtomic(file.destination, readCommitFile(root, resolvedCommit, file.relativePath))
-  process.stdout.write(`適用しました: ${files.length} 件\n`)
-  return files
+  const contents = files.map((file) => ({
+    ...file,
+    content: readCommitFile(root, resolvedCommit, file.relativePath),
+  }))
+  for (const file of contents) writeAtomic(file.destination, file.content)
+  process.stdout.write(`適用しました: ${contents.length} 件\n`)
+  return contents
 }
 
 function main() {
   const options = parseArguments(process.argv.slice(2))
-  requireOptions(options)
   if (options['check-staged']) {
+    if (!options.destination) throw new Error('必須引数がありません: --destination')
     const files = checkStagedFiles(resolve(options.destination))
     process.stdout.write(`staged: ${files.length} 件、禁止対象: 0 件\n`)
     return
   }
+  requireOptions(options)
   applyProductionAllowlist({
     productionRoot: options['production-root'],
     productionCommit: options['production-commit'],

@@ -18,15 +18,21 @@ function createRepository(): string {
 
 function writeTrackedFixture(root: string): void {
   mkdirSync(join(root, 'config'), { recursive: true })
-  mkdirSync(join(root, 'lib', 'i18n'), { recursive: true })
+  mkdirSync(join(root, 'data', 'festivals', 'jp'), { recursive: true })
+  mkdirSync(join(root, 'data', 'i18n'), { recursive: true })
   mkdirSync(join(root, '.claude'), { recursive: true })
   mkdirSync(join(root, '.agents'), { recursive: true })
   mkdirSync(join(root, '.harness-core'), { recursive: true })
+  mkdirSync(join(root, '.vercel'), { recursive: true })
+  mkdirSync(join(root, 'public'), { recursive: true })
   writeFileSync(join(root, '.claude', 'generated.md'), 'generated\n')
   writeFileSync(join(root, '.agents', 'generated.md'), 'generated\n')
   writeFileSync(join(root, '.harness-core', 'generated.md'), 'generated\n')
+  writeFileSync(join(root, '.vercel', 'project.json'), '{}\n')
+  writeFileSync(join(root, 'public', 'vercel.svg'), 'svg\n')
   writeFileSync(join(root, 'config', 'themes.ts'), 'export const THEMES = { spring: {} }\n')
-  writeFileSync(join(root, 'lib', 'i18n', 'translations.ts'), 'export const translations = { ja: { title: "誕生日" } }\n')
+  writeFileSync(join(root, 'data', 'festivals', 'jp', 'ja.json'), JSON.stringify([{ id: 'jp-hanami', country: 'jp', locale: 'ja', category: 'season', name: '花見', dateRule: { calendar: 'gregorian', recurrence: 'yearly', ranges: [{ month: 3, startDay: 20, endDay: 31 }], timeZone: 'Asia/Tokyo' }, enabled: true, status: 'enabled', priority: 10, themeKey: 'spring' }]))
+  writeFileSync(join(root, 'data', 'i18n', 'ja.json'), JSON.stringify({ locale: 'ja', translations: { title: '誕生日' } }))
 }
 
 afterEach(() => {
@@ -68,11 +74,14 @@ describe('collectSnapshot', () => {
     expect(snapshot.production.files.excluded).toContain('.claude/generated.md')
     expect(snapshot.production.files.excluded).toContain('.agents/generated.md')
     expect(snapshot.production.files.excluded).toContain('.harness-core/generated.md')
-    expect(snapshot.production.files.included).not.toContain('config/themes.ts~')
+    expect(snapshot.production.files.excluded).toContain('.vercel/project.json')
+    expect(snapshot.production.files.excluded).toContain('public/vercel.svg')
     expect(snapshot.openSource.files.excluded).toContain('.env.example')
     expect(snapshot.openSource.files.excluded).toContain('supabase/config.toml')
     expect(snapshot.openSource.files.excluded).toContain('supabase/seed.sql')
-    expect(snapshot.production.events).toEqual([])
+    expect(snapshot.production.events).toEqual([
+      expect.objectContaining({ id: 'jp-hanami', locale: 'ja' }),
+    ])
     expect(snapshot.production.locales).toEqual(['ja'])
     expect(snapshot.production.themes).toEqual(['spring'])
   })
@@ -111,7 +120,8 @@ describe('collectSnapshot', () => {
     const allowlist = JSON.parse(readFileSync(allowlistOutput, 'utf8'))
     expect(JSON.parse(readFileSync(productionOutput, 'utf8'))).not.toHaveProperty('stale')
     expect(allowlist.allowedPathScopes).toEqual(['data/festivals/', 'data/i18n/'])
-    expect(allowlist.allowedPaths).toEqual([])
+    expect(allowlist.integrationPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
+    expect(allowlist.allowedPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
 
     writeFileSync(productionOutput, '{"keep":true}\n')
     const failingArgs = [...args]

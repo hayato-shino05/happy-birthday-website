@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path'
 const EXCLUDED_PATH_RULES = [
   { test: (path) => /^\.env(?:\.|$)/.test(path), reason: '環境変数と秘密情報' },
   { test: (path) => path === 'supabase' || path.startsWith('supabase/'), reason: 'Supabase 設定とスキーマ' },
-  { test: (path) => /(?:^|\/)(?:deploy|deployment|vercel|netlify)(?:\/|\.|$)/i.test(path), reason: 'デプロイ設定または成果物' },
+  { test: (path) => path === '.vercel' || path.startsWith('.vercel/') || /(?:^|\/)(?:deploy|deployment|vercel|netlify)(?:\/|\.|$)/i.test(path), reason: 'デプロイ設定または成果物' },
   { test: (path) => /^(?:\.claude|\.agents|\.harness-core)(?:\/|$)/.test(path), reason: 'リポジトリ管理用の生成物' },
 ]
 
@@ -43,6 +43,38 @@ function readTrackedFile(root, commit, relativePath) {
   if (commit) return readAtCommit(root, commit, relativePath)
   const absolutePath = resolve(root, relativePath)
   return existsSync(absolutePath) ? readFileSync(absolutePath, 'utf8') : ''
+}
+
+function readTrackedJson(root, commit, relativePath) {
+  const source = readTrackedFile(root, commit, relativePath)
+  if (!source) return null
+  try {
+    return JSON.parse(source)
+  } catch {
+    throw new Error(`JSON を読み込めません: ${relativePath}`)
+  }
+}
+
+function readFestivalPacks(root, commit, trackedFiles) {
+  const packs = []
+  for (const relativePath of trackedFiles.filter((path) => path.startsWith('data/festivals/') && path.endsWith('.json'))) {
+    const value = readTrackedJson(root, commit, relativePath)
+    if (!Array.isArray(value)) throw new Error(`festival pack は配列である必要があります: ${relativePath}`)
+    packs.push(...value)
+  }
+  return packs
+}
+
+function readLocales(root, commit, trackedFiles) {
+  const locales = []
+  for (const relativePath of trackedFiles.filter((path) => path.startsWith('data/i18n/') && path.endsWith('.json') && !path.endsWith('/keys.json'))) {
+    const value = readTrackedJson(root, commit, relativePath)
+    if (!value || typeof value !== 'object' || Array.isArray(value) || typeof value.locale !== 'string') {
+      throw new Error(`locale pack が不正です: ${relativePath}`)
+    }
+    locales.push(value.locale)
+  }
+  return [...new Set(locales)].sort()
 }
 
 function extractObjectKeys(source, marker) {
@@ -121,11 +153,14 @@ function buildFiles(root, commit, trackedFiles) {
 function collectSource({ source, root, commit }) {
   const trackedFiles = getTrackedFiles(root, commit)
   const themeSource = readTrackedFile(root, commit, 'config/themes.ts')
-  const translationSource = readTrackedFile(root, commit, 'lib/i18n/translations.ts')
-  const events = extractObjectKeys(themeSource, 'FESTIVAL_DATES')
-  const seasons = extractObjectKeys(themeSource, 'SEASON_MONTHS')
-  const themes = extractObjectKeys(themeSource, 'THEMES')
-  const locales = extractObjectKeys(translationSource, 'translations')
+  const festivalPacks = readFestivalPacks(root, commit, trackedFiles)
+  const events = festivalPacks
+  const seasons = festivalPacks.filter((pack) => pack && pack.category === 'season').map((pack) => pack.id).sort()
+  const themes = [...new Set([
+    ...extractObjectKeys(themeSource, 'THEMES'),
+    ...festivalPacks.map((pack) => pack?.themeKey).filter((themeKey) => typeof themeKey === 'string'),
+  ])].sort()
+  const locales = readLocales(root, commit, trackedFiles)
 
   return {
     source,
@@ -206,6 +241,7 @@ function main() {
   writeJson(options.allowlist, {
     version: 1,
     allowedPathScopes: ['data/festivals/', 'data/i18n/'],
+    integrationPaths: allowedPaths,
     allowedPaths,
     excludedPaths: {
       environment: snapshot.openSource.files.excluded.filter((path) => /^\.env(?:\.|$)/.test(path)),
