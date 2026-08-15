@@ -53,6 +53,12 @@ describe('validateDateRule', () => {
     })
   })
 
+  it('rejects unsupported-calendar status on a Gregorian pack', () => {
+    expect(() => validateFestivalPack({ ...validPack, status: 'unsupported-calendar' })).toThrow(
+      FestivalPackValidationError
+    )
+  })
+
   it('rejects a lunar rule that includes Gregorian month and day fields', () => {
     expect(() =>
       validateDateRule({

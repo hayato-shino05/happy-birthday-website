@@ -154,6 +154,13 @@ export function validateFestivalPack(value: unknown): FestivalPack {
   const themeKey = record.themeKey === undefined
     ? undefined
     : asNonEmptyString(record.themeKey, 'themeKey')
+  const dateRule = validateDateRule(record.dateRule)
+  if (record.status === 'unsupported-calendar' && dateRule.calendar !== 'lunar') {
+    throw new FestivalPackValidationError('unsupported-calendar status requires a lunar date rule')
+  }
+  if (dateRule.calendar === 'lunar' && record.status !== 'unsupported-calendar') {
+    throw new FestivalPackValidationError('lunar date rules require unsupported-calendar status')
+  }
 
   return {
     id,
@@ -163,7 +170,7 @@ export function validateFestivalPack(value: unknown): FestivalPack {
     category: record.category as EventCategory,
     name,
     ...(description ? { description } : {}),
-    dateRule: validateDateRule(record.dateRule),
+    dateRule,
     enabled: record.enabled,
     status: record.status as EventStatus,
     priority: record.priority,
@@ -176,12 +183,21 @@ export function validateFestivalPacks(value: unknown): FestivalPack[] {
     throw new FestivalPackValidationError('festival packs must be an array')
   }
   const packs = value.map(validateFestivalPack)
-  const ids = new Set<string>()
+  const ids = new Map<string, FestivalPack>()
   for (const pack of packs) {
-    if (ids.has(pack.id)) {
+    const existing = ids.get(pack.id)
+    if (!existing) {
+      ids.set(pack.id, pack)
+      continue
+    }
+    const sameEvent =
+      existing.country === pack.country &&
+      existing.region === pack.region &&
+      existing.category === pack.category &&
+      JSON.stringify(existing.dateRule) === JSON.stringify(pack.dateRule)
+    if (!sameEvent || existing.locale === pack.locale) {
       throw new FestivalPackValidationError(`duplicate festival pack id: ${pack.id}`)
     }
-    ids.add(pack.id)
   }
   return packs
 }

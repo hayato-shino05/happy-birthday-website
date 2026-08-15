@@ -1,6 +1,6 @@
 [
   {
-    "id": "jp-christmas-en-us",
+    "id": "jp-christmas-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "festival",
@@ -13,7 +13,7 @@
     "themeKey": "christmas"
   },
   {
-    "id": "jp-halloween-en-us",
+    "id": "jp-halloween-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "festival",
@@ -26,7 +26,7 @@
     "themeKey": "halloween"
   },
   {
-    "id": "jp-hanami-en-us",
+    "id": "jp-hanami-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "season",
@@ -39,7 +39,7 @@
     "themeKey": "hanami"
   },
   {
-    "id": "jp-obon-en-us",
+    "id": "jp-obon-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "festival",
@@ -52,7 +52,7 @@
     "themeKey": "obon"
   },
   {
-    "id": "jp-tsukimi-en-us",
+    "id": "jp-tsukimi-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "festival",
@@ -65,7 +65,7 @@
     "themeKey": "tsukimi"
   },
   {
-    "id": "jp-tanabata-en-us",
+    "id": "jp-tanabata-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "festival",
@@ -78,7 +78,7 @@
     "themeKey": "tanabata"
   },
   {
-    "id": "jp-shogatsu-en-us",
+    "id": "jp-shogatsu-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "public-holiday",
@@ -91,7 +91,7 @@
     "themeKey": "shogatsu"
   },
   {
-    "id": "jp-kodomo-en-us",
+    "id": "jp-kodomo-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "public-holiday",
@@ -104,7 +104,7 @@
     "themeKey": "kodomo"
   },
   {
-    "id": "jp-bunka-en-us",
+    "id": "jp-bunka-ja-jp",
     "country": "jp",
     "locale": "en-US",
     "category": "public-holiday",
