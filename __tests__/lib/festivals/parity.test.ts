@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FestivalPack } from '@/lib/festivals/types'
-import { compareCatalogs } from '@/lib/festivals/parity'
+import { compareCatalogs, type ParityItem } from '@/lib/festivals/parity'
 
 const pack = (overrides: Partial<FestivalPack> = {}): FestivalPack => ({
   id: 'shared',
@@ -35,6 +35,8 @@ const production = [
   pack({ id: 'country-jp', country: 'jp', name: 'Japan event' }),
 ]
 
+const ids = (items: readonly ParityItem[]): string[] => items.map((item: ParityItem) => item.id)
+
 const openSource = [
   pack(),
   pack({ id: 'open-only', name: 'Open source only' }),
@@ -58,16 +60,16 @@ describe('compareCatalogs', () => {
   it('returns all eight stable categories and does not infer duplicate ids from dates', () => {
     const report = compareCatalogs(production, openSource)
 
-    expect(report.shared.map(({ id }) => id)).toEqual(['shared'])
-    expect(report.productionOnly.map(({ id }) => id)).toEqual(['country-jp', 'duplicate', 'prod-only'])
-    expect(report.openSourceOnly.map(({ id }) => id)).toEqual(['country-us', 'open-only'])
-    expect(report.sameDateDifferentContent.map(({ id }) => id)).toEqual(['content-diff'])
-    expect(report.calendarRuleMismatch.map(({ id }) => id)).toEqual(['calendar-diff'])
-    expect(report.localeCoverageMismatch.map(({ id }) => id)).toEqual(['locale-gap'])
-    expect(report.themeReferenceMismatch.map(({ id }) => id)).toEqual(['theme-diff'])
-    expect(report.duplicateIds.map(({ id }) => id)).toEqual(['duplicate'])
-    expect(report.duplicateIds.map(({ id }) => id)).not.toContain('country-jp')
-    expect(report.duplicateIds.map(({ id }) => id)).not.toContain('country-us')
+    expect(ids(report.shared)).toEqual(['shared'])
+    expect(ids(report.productionOnly)).toEqual(['country-jp', 'duplicate', 'prod-only'])
+    expect(ids(report.openSourceOnly)).toEqual(['country-us', 'open-only'])
+    expect(ids(report.sameDateDifferentContent)).toEqual(['content-diff'])
+    expect(ids(report.calendarRuleMismatch)).toEqual(['calendar-diff'])
+    expect(ids(report.localeCoverageMismatch)).toEqual(['locale-gap'])
+    expect(ids(report.themeReferenceMismatch)).toEqual(['theme-diff'])
+    expect(ids(report.duplicateIds)).toEqual(['duplicate'])
+    expect(ids(report.duplicateIds)).not.toContain('country-jp')
+    expect(ids(report.duplicateIds)).not.toContain('country-us')
   })
 
   it('accepts snapshots that wrap the catalog and metadata', () => {
