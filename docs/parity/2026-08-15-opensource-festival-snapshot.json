@@ -1,6 +1,6 @@
 {
   "source": "openSource",
-  "commit": "e5a0c3399dde125f7af2152c4714f50f01c5af7f",
+  "commit": "d2e36a9118707054b08bc7ef0ccf0843912ac5ae",
   "files": {
     "included": [
       ".gitignore",
@@ -357,7 +357,7 @@
       "supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql": "Supabase 設定とスキーマ",
       "supabase/seed.sql": "Supabase 設定とスキーマ"
     },
-    "commit": "e5a0c3399dde125f7af2152c4714f50f01c5af7f"
+    "commit": "d2e36a9118707054b08bc7ef0ccf0843912ac5ae"
   },
   "events": [
     "bunka",
