@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -19,6 +19,12 @@ function createRepository(): string {
 function writeTrackedFixture(root: string): void {
   mkdirSync(join(root, 'config'), { recursive: true })
   mkdirSync(join(root, 'lib', 'i18n'), { recursive: true })
+  mkdirSync(join(root, '.claude'), { recursive: true })
+  mkdirSync(join(root, '.agents'), { recursive: true })
+  mkdirSync(join(root, '.harness-core'), { recursive: true })
+  writeFileSync(join(root, '.claude', 'generated.md'), 'generated\n')
+  writeFileSync(join(root, '.agents', 'generated.md'), 'generated\n')
+  writeFileSync(join(root, '.harness-core', 'generated.md'), 'generated\n')
   writeFileSync(join(root, 'config', 'themes.ts'), 'export const THEMES = { spring: {} }\n')
   writeFileSync(join(root, 'lib', 'i18n', 'translations.ts'), 'export const translations = { ja: { title: "誕生日" } }\n')
 }
@@ -59,6 +65,9 @@ describe('collectSnapshot', () => {
     expect(snapshot.production.commit).toBeDefined()
     expect(snapshot.production.files.included).toContain('config/themes.ts')
     expect(snapshot.production.files.excluded).toContain('.env')
+    expect(snapshot.production.files.excluded).toContain('.claude/generated.md')
+    expect(snapshot.production.files.excluded).toContain('.agents/generated.md')
+    expect(snapshot.production.files.excluded).toContain('.harness-core/generated.md')
     expect(snapshot.production.files.included).not.toContain('config/themes.ts~')
     expect(snapshot.openSource.files.excluded).toContain('.env.example')
     expect(snapshot.openSource.files.excluded).toContain('supabase/config.toml')
@@ -66,5 +75,48 @@ describe('collectSnapshot', () => {
     expect(snapshot.production.events).toEqual([])
     expect(snapshot.production.locales).toEqual(['ja'])
     expect(snapshot.production.themes).toEqual(['spring'])
+  })
+
+  it('regenerates existing outputs and preserves them when collection fails', () => {
+    const productionRoot = createRepository()
+    writeTrackedFixture(productionRoot)
+    execFileSync('git', ['-C', productionRoot, 'add', '.'])
+    execFileSync('git', ['-C', productionRoot, 'commit', '--quiet', '-m', 'snapshot'])
+
+    const openSourceRoot = createRepository()
+    writeTrackedFixture(openSourceRoot)
+    execFileSync('git', ['-C', openSourceRoot, 'add', '.'])
+    execFileSync('git', ['-C', openSourceRoot, 'commit', '--quiet', '-m', 'snapshot'])
+
+    const outputRoot = mkdtempSync(join(tmpdir(), 'festival-output-'))
+    temporaryDirectories.push(outputRoot)
+    const scriptPath = join(process.cwd(), 'scripts', 'collect-festival-snapshot.mjs')
+    const productionOutput = join(outputRoot, 'production.json')
+    const openSourceOutput = join(outputRoot, 'opensource.json')
+    const allowlistOutput = join(outputRoot, 'allowlist.json')
+    const args = [
+      scriptPath,
+      '--production-root', productionRoot,
+      '--production-commit', 'HEAD',
+      '--opensource-root', openSourceRoot,
+      '--production-output', productionOutput,
+      '--opensource-output', openSourceOutput,
+      '--allowlist', allowlistOutput,
+    ]
+
+    execFileSync(process.execPath, args)
+    writeFileSync(productionOutput, '{"stale":true}\n')
+    execFileSync(process.execPath, args)
+
+    const allowlist = JSON.parse(readFileSync(allowlistOutput, 'utf8'))
+    expect(JSON.parse(readFileSync(productionOutput, 'utf8'))).not.toHaveProperty('stale')
+    expect(allowlist.allowedPathScopes).toEqual(['data/festivals/', 'data/i18n/'])
+    expect(allowlist.allowedPaths).toEqual([])
+
+    writeFileSync(productionOutput, '{"keep":true}\n')
+    const failingArgs = [...args]
+    failingArgs[4] = 'missing-commit'
+    expect(() => execFileSync(process.execPath, failingArgs)).toThrow()
+    expect(JSON.parse(readFileSync(productionOutput, 'utf8'))).toEqual({ keep: true })
   })
 })

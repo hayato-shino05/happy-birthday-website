@@ -1,11 +1,12 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
 const EXCLUDED_PATH_RULES = [
   { test: (path) => /^\.env(?:\.|$)/.test(path), reason: '環境変数と秘密情報' },
   { test: (path) => path === 'supabase' || path.startsWith('supabase/'), reason: 'Supabase 設定とスキーマ' },
   { test: (path) => /(?:^|\/)(?:deploy|deployment|vercel|netlify)(?:\/|\.|$)/i.test(path), reason: 'デプロイ設定または成果物' },
+  { test: (path) => /^(?:\.claude|\.agents|\.harness-core)(?:\/|$)/.test(path), reason: 'リポジトリ管理用の生成物' },
 ]
 
 function runGit(root, args) {
@@ -163,9 +164,20 @@ function parseArguments(argumentsList) {
 function writeJson(path, value) {
   const absolutePath = resolve(path)
   mkdirSync(dirname(absolutePath), { recursive: true })
-  const temporaryPath = `${absolutePath}.tmp`
+  const temporaryPath = `${absolutePath}.${process.pid}.tmp`
+  const backupPath = `${absolutePath}.${process.pid}.bak`
   writeFileSync(temporaryPath, `${JSON.stringify(value, null, 2)}\n`)
-  renameSync(temporaryPath, absolutePath)
+
+  try {
+    rmSync(backupPath, { force: true })
+    if (existsSync(absolutePath)) renameSync(absolutePath, backupPath)
+    renameSync(temporaryPath, absolutePath)
+    rmSync(backupPath, { force: true })
+  } catch (error) {
+    if (!existsSync(absolutePath) && existsSync(backupPath)) renameSync(backupPath, absolutePath)
+    rmSync(temporaryPath, { force: true })
+    throw error
+  }
 }
 
 function main() {
@@ -184,9 +196,17 @@ function main() {
 
   writeJson(options['production-output'], snapshot.production)
   writeJson(options['opensource-output'], snapshot.openSource)
+  const allowedPaths = [...new Set([
+    ...snapshot.production.files.included,
+    ...snapshot.openSource.files.included,
+  ])]
+    .filter((path) => path.startsWith('data/festivals/') || path.startsWith('data/i18n/'))
+    .sort()
+
   writeJson(options.allowlist, {
     version: 1,
-    allowedPaths: snapshot.openSource.files.included.filter((path) => path.startsWith('data/')),
+    allowedPathScopes: ['data/festivals/', 'data/i18n/'],
+    allowedPaths,
     excludedPaths: {
       environment: snapshot.openSource.files.excluded.filter((path) => /^\.env(?:\.|$)/.test(path)),
       supabase: snapshot.openSource.files.excluded.filter((path) => path === 'supabase' || path.startsWith('supabase/')),

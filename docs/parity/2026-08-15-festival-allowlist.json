@@ -1,5 +1,9 @@
 {
   "version": 1,
+  "allowedPathScopes": [
+    "data/festivals/",
+    "data/i18n/"
+  ],
   "allowedPaths": [],
   "excludedPaths": {
     "environment": [
@@ -17,6 +21,7 @@
       ".env.example",
       "STRUCTURE.md",
       "__tests__/lib/validations.test.ts",
+      "__tests__/scripts/collect-festival-snapshot.test.ts",
       "app/globals.css",
       "components/community/CameraCapture.tsx",
       "components/community/ChatRoom.tsx",
@@ -27,9 +32,12 @@
       "components/ui/ShareButton.tsx",
       "components/ui/TrackSelector.tsx",
       "database/database.sql",
+      "docs/parity/2026-08-15-opensource-festival-snapshot.json",
+      "docs/parity/2026-08-15-production-festival-snapshot.json",
       "lib/hooks/useAudioRecorder.ts",
       "lib/utils/birthday.ts",
       "lib/utils/theme.ts",
+      "scripts/collect-festival-snapshot.mjs",
       "types/index.ts",
       ".agents/skills/audit-onboarding-proposal/SKILL.md",
       ".agents/skills/audit-onboarding-proposal/agents/openai.yaml",
@@ -107,14 +115,11 @@
       ".harness-core/manifest.json",
       "AGENTS.md",
       "CLAUDE.md",
-      "__tests__/scripts/collect-festival-snapshot.test.ts",
       "docs/README.md",
       "docs/WORKFLOW.md",
       "docs/audit/report.html",
       "docs/audit/report.json",
       "docs/decisions/README.md",
-      "docs/parity/2026-08-15-opensource-festival-snapshot.json",
-      "docs/parity/2026-08-15-production-festival-snapshot.json",
       "docs/plans/README.md",
       "docs/plans/active/README.md",
       "docs/plans/completed/README.md",
@@ -136,8 +141,7 @@
       "docs/templates/application-runbook.md",
       "docs/templates/decision.md",
       "docs/templates/exec-plan.md",
-      "docs/templates/harness-improvement.md",
-      "scripts/collect-festival-snapshot.mjs"
+      "docs/templates/harness-improvement.md"
     ]
   }
 }
