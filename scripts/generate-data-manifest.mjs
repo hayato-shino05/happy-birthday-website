@@ -1,14 +1,9 @@
-import { readFile, readdir, rename, rm, writeFile, access } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 
 const LOCALE_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})+$/
 const COUNTRY_PATTERN = /^[a-z]{2,3}$/
-const GENERATED_FILES = [
-  'data/generated/festival-packs.ts',
-  'data/generated/locales.ts',
-  'data/generated/themes.ts',
-]
 
 function fail(message) {
   throw new Error(message)
@@ -100,7 +95,16 @@ async function readSchema(root, name) {
   return readJson(schemaPath)
 }
 
-async function collectFestivalPacks(root, festivalSchema) {
+function validateSchemaDefinition(schema, name, required) {
+  if (!schema || schema.type !== 'object' || !Array.isArray(schema.required)) {
+    fail(`${name} は object schema と required 配列を定義する必要があります`)
+  }
+  for (const key of required) {
+    if (!schema.required.includes(key)) fail(`${name}.required に ${key} がありません`)
+  }
+}
+
+async function collectFestivalPacks(root) {
   const files = await listJsonFiles(join(root, 'data', 'festivals'))
   const packs = []
   for (const file of files) {
@@ -124,7 +128,7 @@ async function collectFestivalPacks(root, festivalSchema) {
   return packs.sort((left, right) => left.id.localeCompare(right.id) || left.locale.localeCompare(right.locale))
 }
 
-async function collectLocales(root, i18nSchema) {
+async function collectLocales(root) {
   const files = await listJsonFiles(join(root, 'data', 'i18n'))
   const locales = []
   const seen = new Set()
@@ -155,15 +159,20 @@ function validateThemeKeys(packs, themeKeys) {
   }
 }
 
-function renderExport(name, value) {
-  return `export const ${name} = ${JSON.stringify(value, null, 2)} as const\n`
-}
-
 function generatedContents(packs, locales, themeKeys) {
   return new Map([
-    ['data/generated/festival-packs.ts', renderExport('festivalPacks', packs)],
-    ['data/generated/locales.ts', `${renderExport('localePacks', locales)}${renderExport('locales', locales.map(({ locale }) => locale))}`],
-    ['data/generated/themes.ts', renderExport('themes', themeKeys)],
+    [
+      'data/generated/festival-packs.ts',
+      `import type { FestivalPack } from '@/lib/festivals/types'\n\nexport const festivalPacks = ${JSON.stringify(packs, null, 2)} as const satisfies readonly FestivalPack[]\n`,
+    ],
+    [
+      'data/generated/locales.ts',
+      `import type { Locale } from '@/lib/festivals/types'\n\nexport type GeneratedLocalePack = {\n  readonly locale: Locale\n  readonly translations: Readonly<Record<string, string>>\n}\n\nexport const localePacks = ${JSON.stringify(locales, null, 2)} as const satisfies readonly GeneratedLocalePack[]\n\nexport const locales = ${JSON.stringify(locales.map(({ locale }) => locale), null, 2)} as const satisfies readonly Locale[]\n`,
+    ],
+    [
+      'data/generated/themes.ts',
+      `export const themes = ${JSON.stringify(themeKeys, null, 2)} as const satisfies readonly string[]\n`,
+    ],
   ])
 }
 
@@ -173,7 +182,7 @@ async function writeAtomically(root, contents) {
     return { target, temporary: `${target}.${process.pid}.tmp`, backup: `${target}.${process.pid}.bak`, content }
   })
   for (const entry of entries) {
-    await import('node:fs/promises').then(({ mkdir }) => mkdir(dirname(entry.target), { recursive: true }))
+    await mkdir(dirname(entry.target), { recursive: true })
     await writeFile(entry.temporary, entry.content)
   }
   try {
@@ -199,8 +208,10 @@ async function generate(root) {
     readSchema(root, 'festival-pack.schema.json'),
     readSchema(root, 'i18n.schema.json'),
   ])
-  const packs = await collectFestivalPacks(root, festivalSchema)
-  const locales = await collectLocales(root, i18nSchema)
+  validateSchemaDefinition(festivalSchema, 'festival-pack.schema.json', ['id', 'country', 'locale', 'category', 'name', 'dateRule'])
+  validateSchemaDefinition(i18nSchema, 'i18n.schema.json', ['locale', 'translations'])
+  const packs = await collectFestivalPacks(root)
+  const locales = await collectLocales(root)
   const themeKeys = await readVisualThemeKeys(root)
   validateThemeKeys(packs, themeKeys)
   return generatedContents(packs, locales, themeKeys)

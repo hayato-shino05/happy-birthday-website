@@ -13,8 +13,8 @@ function createFixture(): string {
   mkdirSync(join(root, 'data', 'schemas'), { recursive: true })
   mkdirSync(join(root, 'config'), { recursive: true })
   writeFileSync(join(root, 'config', 'visualThemes.ts'), "export const VISUAL_THEME_KEYS = ['hanami', 'spring'] as const\n")
-  writeFileSync(join(root, 'data', 'schemas', 'festival-pack.schema.json'), '{}\n')
-  writeFileSync(join(root, 'data', 'schemas', 'i18n.schema.json'), '{}\n')
+  writeFileSync(join(root, 'data', 'schemas', 'festival-pack.schema.json'), JSON.stringify({ type: 'object', required: ['id', 'country', 'locale', 'category', 'name', 'dateRule'] }))
+  writeFileSync(join(root, 'data', 'schemas', 'i18n.schema.json'), JSON.stringify({ type: 'object', required: ['locale', 'translations'] }))
   return root
 }
 
@@ -84,6 +84,15 @@ describe('generate-data-manifest', () => {
     writePack(root, 'a.json', 'invalid-event', 'unknown-theme')
 
     expect(() => runGenerator(root, '--write')).toThrow(/themeKey/)
+    expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
+  })
+
+  it('rejects an invalid schema before writing any manifest', () => {
+    const root = createFixture()
+    writeFileSync(join(root, 'data', 'schemas', 'festival-pack.schema.json'), JSON.stringify({ type: 'string' }))
+    writePack(root, 'a.json', 'schema-event')
+
+    expect(() => runGenerator(root, '--write')).toThrow(/festival-pack.schema.json/)
     expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
   })
 })

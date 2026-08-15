@@ -1,3 +1,5 @@
+import type { FestivalPack } from '@/lib/festivals/types'
+
 export const festivalPacks = [
   {
     "id": "jp-bunka-ja-jp",
@@ -447,4 +449,4 @@ export const festivalPacks = [
     "priority": 40,
     "themeKey": "tsukimi"
   }
-] as const
+] as const satisfies readonly FestivalPack[]

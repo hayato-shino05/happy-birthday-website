@@ -12,4 +12,4 @@ export const themes = [
   "tanabata",
   "tsukimi",
   "winter"
-] as const
+] as const satisfies readonly string[]
