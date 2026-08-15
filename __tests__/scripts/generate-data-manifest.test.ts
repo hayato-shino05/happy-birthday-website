@@ -15,7 +15,7 @@ function createFixture(): string {
   mkdirSync(join(root, 'data', 'schemas'), { recursive: true })
   mkdirSync(join(root, 'config'), { recursive: true })
   writeFileSync(join(root, 'config', 'visualThemes.ts'), "export const VISUAL_THEME_KEYS = ['hanami', 'spring'] as const\n")
-  writeFileSync(join(root, 'data', 'schemas', 'festival-pack.schema.json'), JSON.stringify({ type: 'object', required: ['id', 'country', 'locale', 'category', 'name', 'dateRule'] }))
+  writeFileSync(join(root, 'data', 'schemas', 'festival-pack.schema.json'), JSON.stringify({ type: 'object', required: ['id', 'country', 'locale', 'category', 'name', 'dateRule', 'enabled', 'status', 'priority'] }))
   writeFileSync(join(root, 'data', 'schemas', 'i18n.schema.json'), JSON.stringify({ type: 'object', required: ['locale', 'translations'] }))
   writeFileSync(join(root, 'data', 'i18n', 'keys.json'), JSON.stringify(['title']))
   for (const [fileName, locale] of [['en', 'en'], ['ja', 'ja']] as const) {
@@ -125,6 +125,62 @@ describe('generate-data-manifest', () => {
 
     const festivalManifest = readFileSync(join(root, 'data', 'generated', 'festival-packs.ts'), 'utf8')
     expect(festivalManifest.match(/"id": "same-event"/g)).toHaveLength(2)
+  })
+
+  it('rejects impossible range endpoints before writing', () => {
+    const root = createFixture()
+    writePack(root, 'a.json', 'invalid-date')
+    const path = join(root, 'data', 'festivals', 'jp', 'a.json')
+    const value = JSON.parse(readFileSync(path, 'utf8'))
+    value[0].dateRule.ranges = [{ month: 2, startDay: 30, endDay: 30 }]
+    writeFileSync(path, JSON.stringify(value))
+
+    expect(() => runGenerator(root, '--write')).toThrow(/ranges.*不正/)
+    expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
+  })
+
+  it('rejects malformed lunar payload fields and localized runtime drift', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', 'same-event', 'hanami', 'ja')
+    writePack(root, 'en.json', 'same-event', 'hanami', 'en')
+    const lunarPath = join(root, 'data', 'festivals', 'jp', 'ja.json')
+    const lunar = JSON.parse(readFileSync(lunarPath, 'utf8'))
+    lunar[0].dateRule = {
+      calendar: 'lunar',
+      recurrence: 'year-specific',
+      payload: { source: 'test' },
+      ranges: [{ month: 1, startDay: 1, endDay: 1 }],
+      timeZone: 'Asia/Tokyo',
+      status: 'unsupported-calendar',
+    }
+    writeFileSync(lunarPath, JSON.stringify(lunar))
+    expect(() => runGenerator(root, '--write')).toThrow(/calendar と recurrence/)
+
+    const validRoot = createFixture()
+    writePack(validRoot, 'ja.json', 'same-event', 'hanami', 'ja')
+    writePack(validRoot, 'en.json', 'same-event', 'hanami', 'en')
+    const driftPath = join(validRoot, 'data', 'festivals', 'jp', 'en.json')
+    const drift = JSON.parse(readFileSync(driftPath, 'utf8'))
+    drift[0].enabled = false
+    writeFileSync(driftPath, JSON.stringify(drift))
+    expect(() => runGenerator(validRoot, '--write')).toThrow(/ID が重複/)
+  })
+
+  it('rejects unknown pack and dateRule keys before writing', () => {
+    const root = createFixture()
+    writePack(root, 'a.json', 'invalid-event')
+    const path = join(root, 'data', 'festivals', 'jp', 'a.json')
+    const value = JSON.parse(readFileSync(path, 'utf8'))
+    value[0].extra = true
+    writeFileSync(path, JSON.stringify(value))
+
+    expect(() => runGenerator(root, '--write')).toThrow(/extra/)
+
+    delete value[0].extra
+    value[0].dateRule.extra = true
+    writeFileSync(path, JSON.stringify(value))
+    expect(() => runGenerator(root, '--write')).toThrow(/dateRule\.extra/)
+    expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
   })
 
   it('rejects invalid packs and unknown theme keys before writing', () => {

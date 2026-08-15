@@ -76,6 +76,18 @@ describe('validateDateRule', () => {
     ).toThrow(FestivalPackValidationError)
   })
 
+  it('rejects unknown dateRule keys', () => {
+    expect(() =>
+      validateDateRule({
+        calendar: 'gregorian',
+        recurrence: 'yearly',
+        ranges: [{ month: 3, startDay: 20, endDay: 31 }],
+        timeZone: 'Asia/Tokyo',
+        extra: true,
+      })
+    ).toThrow(FestivalPackValidationError)
+  })
+
   it('rejects February 29 in a non-leap year', () => {
     expect(() => validateDateRule({
       calendar: 'gregorian',
@@ -98,6 +110,7 @@ describe('validateFestivalPack', () => {
     ['invalid category', { ...validPack, category: 'holiday' }],
     ['invalid status', { ...validPack, status: 'unknown' }],
     ['invalid priority', { ...validPack, priority: -1 }],
+    ['unknown pack key', { ...validPack, extra: true }],
   ])('rejects %s', (_, value) => {
     expect(() => validateFestivalPack(value)).toThrow(FestivalPackValidationError)
   })

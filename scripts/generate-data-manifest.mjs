@@ -6,6 +6,12 @@ const LOCALE_PATTERN = /^[A-Za-z]{2,3}$/
 const COUNTRY_PATTERN = /^[a-z]{2,3}$/
 const SUPPORTED_LOCALES = ['en', 'ja']
 const LOCALE_FILE_NAMES = { 'en': 'en.json', 'ja': 'ja.json' }
+const PACK_KEYS = new Set(['id', 'country', 'region', 'locale', 'category', 'name', 'description', 'dateRule', 'enabled', 'status', 'priority', 'themeKey'])
+const YEARLY_RULE_KEYS = new Set(['calendar', 'recurrence', 'ranges', 'timeZone'])
+const YEAR_SPECIFIC_RULE_KEYS = new Set(['calendar', 'recurrence', 'dates', 'timeZone'])
+const LUNAR_RULE_KEYS = new Set(['calendar', 'recurrence', 'payload', 'timeZone', 'status'])
+const RANGE_KEYS = new Set(['month', 'startDay', 'endDay'])
+const DATE_KEYS = new Set(['month', 'day'])
 
 function fail(message) {
   throw new Error(message)
@@ -39,6 +45,12 @@ async function listJsonFiles(root) {
 function assertRequired(record, required, path) {
   for (const key of required) {
     if (!(key in record)) fail(`${path} に ${key} がありません`)
+  }
+}
+
+function assertExactKeys(record, allowedKeys, path) {
+  for (const key of Object.keys(record)) {
+    if (!allowedKeys.has(key)) fail(`${path}.${key} は未対応です`)
   }
 }
 
@@ -83,6 +95,7 @@ function validateYearDates(dates, path) {
     if (!/^\d{4}$/.test(year) || !Array.isArray(values) || values.length === 0) fail(`${path}.${year} が不正です`)
     for (const [index, value] of values.entries()) {
       if (!value || typeof value !== 'object') fail(`${path}.${year}[${index}] が不正です`)
+      assertExactKeys(value, DATE_KEYS, `${path}.${year}[${index}]`)
       validateMonthDay(value.month, value.day, `${path}.${year}[${index}]`, numericYear)
     }
   }
@@ -93,9 +106,11 @@ function validateDateRule(rule, path) {
   assertTimeZone(rule.timeZone, `${path}.timeZone`)
 
   if (rule.calendar === 'gregorian' && rule.recurrence === 'yearly') {
+    assertExactKeys(rule, YEARLY_RULE_KEYS, path)
     if (!Array.isArray(rule.ranges) || rule.ranges.length === 0) fail(`${path}.ranges は空にできません`)
     for (const [index, range] of rule.ranges.entries()) {
       if (!range || typeof range !== 'object') fail(`${path}.ranges[${index}] が不正です`)
+      assertExactKeys(range, RANGE_KEYS, `${path}.ranges[${index}]`)
       const { month, startDay, endDay } = range
       if (![month, startDay, endDay].every(Number.isInteger) || month < 1 || month > 12 || startDay < 1 || startDay > 31 || endDay < 1 || endDay > 31 || startDay > endDay) {
         fail(`${path}.ranges[${index}] が不正です`)
@@ -107,6 +122,7 @@ function validateDateRule(rule, path) {
   }
 
   if (rule.calendar === 'gregorian' && rule.recurrence === 'year-specific') {
+    assertExactKeys(rule, YEAR_SPECIFIC_RULE_KEYS, path)
     validateYearDates(rule.dates, `${path}.dates`)
     return
   }
@@ -118,12 +134,16 @@ function validateDateRule(rule, path) {
     'payload' in rule &&
     !('dates' in rule) &&
     !('ranges' in rule)
-  ) return
+  ) {
+    assertExactKeys(rule, LUNAR_RULE_KEYS, path)
+    return
+  }
   fail(`${path} の calendar と recurrence の組み合わせが不正です`)
 }
 
 function validatePack(pack, path) {
   if (!pack || typeof pack !== 'object' || Array.isArray(pack)) fail(`${path} が不正です`)
+  assertExactKeys(pack, PACK_KEYS, path)
   assertRequired(pack, ['id', 'country', 'locale', 'category', 'name', 'dateRule', 'enabled', 'status', 'priority'], path)
   if (typeof pack.id !== 'string' || pack.id.length === 0) fail(`${path}.id が不正です`)
   if (typeof pack.country !== 'string' || !COUNTRY_PATTERN.test(pack.country)) fail(`${path}.country が不正です`)
@@ -309,7 +329,7 @@ async function generate(root) {
     readSchema(root, 'festival-pack.schema.json'),
     readSchema(root, 'i18n.schema.json'),
   ])
-  validateSchemaDefinition(festivalSchema, 'festival-pack.schema.json', ['id', 'country', 'locale', 'category', 'name', 'dateRule'])
+  validateSchemaDefinition(festivalSchema, 'festival-pack.schema.json', ['id', 'country', 'locale', 'category', 'name', 'dateRule', 'enabled', 'status', 'priority'])
   validateSchemaDefinition(i18nSchema, 'i18n.schema.json', ['locale', 'translations'])
   const packs = await collectFestivalPacks(root)
   const locales = await collectLocales(root)

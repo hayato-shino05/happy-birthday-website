@@ -9,6 +9,7 @@ interface ChatMessage {
   sender: string
   message: string
   created_at: string
+  pending?: boolean
 }
 
 function parseChatMessage(value: unknown): ChatMessage | null {
@@ -114,8 +115,16 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
           const message = parseChatMessage(payload.new)
           if (!message) return
           setMessages((prev) => {
-            const lastMessage = prev.at(-1)
-            if (lastMessage && lastMessage.sender === message.sender && lastMessage.message === message.message) {
+            const pendingIndex = prev.findIndex((item) =>
+              item.pending &&
+              item.sender === message.sender &&
+              item.message === message.message &&
+              Math.abs(new Date(item.created_at).getTime() - new Date(message.created_at).getTime()) <= 30000,
+            )
+            if (pendingIndex >= 0) {
+              return prev.map((item, index) => index === pendingIndex ? message : item)
+            }
+            if (prev.some((item) => item.id === message.id && !item.pending)) {
               return prev
             }
             return [...prev, message]
@@ -151,13 +160,15 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
   }
 
   const handleSend = async () => {
-    if (!newMessage.trim() || loading) return
+    const trimmedMessage = newMessage.trim()
+    if (!trimmedMessage || loading) return
 
     const messageData: ChatMessage = {
       id: Date.now(),
       sender: userName,
-      message: newMessage.trim(),
+      message: trimmedMessage,
       created_at: new Date().toISOString(),
+      pending: true,
     }
 
     // 先行して画面を更新する
@@ -171,14 +182,16 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         .from('chat_messages')
         .insert({
           sender: userName,
-          message: newMessage.trim(),
+          message: trimmedMessage,
         })
 
       if (error) throw error
     } catch {
       // フォールバックとしてlocalStorageへ保存する
+      const fallbackMessage = { ...messageData, pending: false }
+      setMessages((prev) => prev.map((item) => item.id === messageData.id ? fallbackMessage : item))
       const chatMessages = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]')
-      chatMessages.push(messageData)
+      chatMessages.push(fallbackMessage)
       localStorage.setItem('birthdayChatMessages', JSON.stringify(chatMessages))
     } finally {
       setLoading(false)

@@ -13,6 +13,12 @@ const EVENT_STATUSES = new Set<EventStatus>(['enabled', 'disabled', 'unsupported
 const LOCALE_PATTERN = /^(en|ja)$/
 const COUNTRY_PATTERN = /^[a-z]{2,3}$/
 const YEAR_PATTERN = /^\d{4}$/
+const PACK_KEYS = new Set(['id', 'country', 'region', 'locale', 'category', 'name', 'description', 'dateRule', 'enabled', 'status', 'priority', 'themeKey'])
+const YEARLY_RULE_KEYS = new Set(['calendar', 'recurrence', 'ranges', 'timeZone'])
+const YEAR_SPECIFIC_RULE_KEYS = new Set(['calendar', 'recurrence', 'dates', 'timeZone'])
+const LUNAR_RULE_KEYS = new Set(['calendar', 'recurrence', 'payload', 'timeZone', 'status'])
+const RANGE_KEYS = new Set(['month', 'startDay', 'endDay'])
+const DATE_KEYS = new Set(['month', 'day'])
 
 export class FestivalPackValidationError extends Error {
   constructor(message: string) {
@@ -33,6 +39,14 @@ function asNonEmptyString(value: unknown, path: string): string {
     throw new FestivalPackValidationError(`${path} must be a non-empty string`)
   }
   return value
+}
+
+function assertExactKeys(record: Record<string, unknown>, allowedKeys: Set<string>, path: string): void {
+  for (const key of Object.keys(record)) {
+    if (!allowedKeys.has(key)) {
+      throw new FestivalPackValidationError(`${path}.${key} is not allowed`)
+    }
+  }
 }
 
 function stableJson(value: unknown): string {
@@ -79,6 +93,7 @@ function validateRanges(value: unknown): GregorianRange[] {
 
   return value.map((range, index) => {
     const record = asRecord(range, `dateRule.ranges[${index}]`)
+    assertExactKeys(record, RANGE_KEYS, `dateRule.ranges[${index}]`)
     const month = record.month
     const startDay = record.startDay
     const endDay = record.endDay
@@ -109,6 +124,7 @@ function validateYearDates(value: unknown): Record<string, GregorianDate[]> {
     }
     return [year, values.map((item, index) => {
       const record = asRecord(item, `dateRule.dates[${year}][${index}]`)
+      assertExactKeys(record, DATE_KEYS, `dateRule.dates[${year}][${index}]`)
       return validateMonthDay(record.month, record.day, `dateRule.dates[${year}][${index}]`, Number(year))
     })]
   }))
@@ -121,14 +137,17 @@ export function validateDateRule(value: unknown): DateRule {
   const timeZone = validateTimeZone(record.timeZone)
 
   if (calendar === 'gregorian' && recurrence === 'yearly') {
+    assertExactKeys(record, YEARLY_RULE_KEYS, 'dateRule')
     return { calendar, recurrence, ranges: validateRanges(record.ranges), timeZone }
   }
 
   if (calendar === 'gregorian' && recurrence === 'year-specific') {
+    assertExactKeys(record, YEAR_SPECIFIC_RULE_KEYS, 'dateRule')
     return { calendar, recurrence, dates: validateYearDates(record.dates), timeZone }
   }
 
   if (calendar === 'lunar' && recurrence === 'year-specific') {
+    assertExactKeys(record, LUNAR_RULE_KEYS, 'dateRule')
     if (record.status !== 'unsupported-calendar' || !('payload' in record) || 'dates' in record || 'ranges' in record) {
       throw new FestivalPackValidationError('lunar rules require an opaque unsupported-calendar payload')
     }
@@ -140,6 +159,7 @@ export function validateDateRule(value: unknown): DateRule {
 
 export function validateFestivalPack(value: unknown): FestivalPack {
   const record = asRecord(value, 'festivalPack')
+  assertExactKeys(record, PACK_KEYS, 'festivalPack')
   const id = asNonEmptyString(record.id, 'id')
   const country = asNonEmptyString(record.country, 'country')
   const locale = asNonEmptyString(record.locale, 'locale')
