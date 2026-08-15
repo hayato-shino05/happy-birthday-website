@@ -39,40 +39,6 @@ export interface ThemeConfig {
   effects: ThemeEffect[]
 }
 
-// 祭りの日付設定
-export interface FestivalDate {
-  month: number
-  startDate: number
-  endDate: number
-}
-
-export const FESTIVAL_DATES: Record<string, FestivalDate | FestivalDate[]> = {
-  christmas: { month: 12, startDate: 20, endDate: 25 },
-  halloween: { month: 10, startDate: 28, endDate: 31 },
-  hanami: [
-    { month: 3, startDate: 20, endDate: 31 },
-    { month: 4, startDate: 1, endDate: 30 },
-    { month: 5, startDate: 1, endDate: 10 },
-  ],
-  obon: { month: 8, startDate: 13, endDate: 16 },
-  tsukimi: [
-    { month: 9, startDate: 15, endDate: 30 },
-    { month: 10, startDate: 1, endDate: 15 },
-  ],
-  tanabata: { month: 7, startDate: 1, endDate: 7 },
-  shogatsu: { month: 1, startDate: 1, endDate: 7 },
-  kodomo: { month: 5, startDate: 1, endDate: 5 },
-  bunka: { month: 11, startDate: 1, endDate: 7 },
-}
-
-// 月ごとの季節設定
-export const SEASON_MONTHS: Record<string, number[]> = {
-  winter: [12, 1],
-  spring: [2, 3, 4],
-  summer: [5, 6, 7, 8],
-  autumn: [9, 10, 11],
-}
-
 export const THEMES: Record<ThemeName, ThemeConfig> = {
   spring: {
     name: 'spring',

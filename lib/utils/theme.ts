@@ -1,61 +1,46 @@
-// テーマユーティリティ関数
-import { FESTIVAL_DATES, SEASON_MONTHS, THEMES, type ThemeConfig } from '@/config/themes'
+import { festivalPacks } from '@/data/generated/festival-packs'
+import { VISUAL_THEME_KEYS } from '@/config/visualThemes'
+import { THEMES, type ThemeConfig } from '@/config/themes'
+import { evaluateFestivalPacks } from '@/lib/festivals/evaluator'
+import { getLegacyFestivalDates, getLegacySeasonMonths } from '@/lib/festivals/legacyAdapter'
 import type { ThemeName } from '@/types'
 
 /**
  * 指定された日付で祭りがアクティブかどうかを確認
  */
 export function isFestivalActive(festivalKey: string, month: number, date: number): boolean {
-  const festivalConfig = FESTIVAL_DATES[festivalKey]
+  const festivalConfig = getLegacyFestivalDates()[festivalKey]
   if (!festivalConfig) return false
 
-  // 複数月にまたがる祭りの配列を処理
   if (Array.isArray(festivalConfig)) {
     return festivalConfig.some(
-      (range) => month === range.month && date >= range.startDate && date <= range.endDate
+      (range) => month === range.month && date >= range.startDate && date <= range.endDate,
     )
   }
 
-  // 単一月の祭り期間を処理
-  return (
-    month === festivalConfig.month && date >= festivalConfig.startDate && date <= festivalConfig.endDate
-  )
+  return month === festivalConfig.month && date >= festivalConfig.startDate && date <= festivalConfig.endDate
 }
 
 /**
  * 現在の日付に基づいて季節と祭りを検出
  */
 export function detectSeasonAndFestival(currentDate: Date = new Date()): ThemeName {
-  const month = currentDate.getMonth() + 1 // 月は1-12
-  const date = currentDate.getDate()
+  const activeFestival = evaluateFestivalPacks(festivalPacks, currentDate).find(
+    ({ pack, status }) =>
+      status === 'active' &&
+      pack.themeKey !== undefined &&
+      (VISUAL_THEME_KEYS as readonly string[]).includes(pack.themeKey),
+  )
+  if (activeFestival?.pack.themeKey) return activeFestival.pack.themeKey as ThemeName
 
-  // 国際的な祭りと日本の祭りを優先して判定する
-  const festivals: ThemeName[] = [
-    'christmas',
-    'halloween',
-    'hanami',
-    'obon',
-    'tsukimi',
-    'tanabata',
-    'shogatsu',
-    'kodomo',
-    'bunka',
-  ]
+  const month = currentDate.getMonth() + 1
+  const seasonMonths = getLegacySeasonMonths()
+  if (seasonMonths.winter.includes(month)) return 'winter'
+  if (seasonMonths.spring.includes(month)) return 'spring'
+  if (seasonMonths.summer.includes(month)) return 'summer'
+  if (seasonMonths.autumn.includes(month)) return 'autumn'
 
-  for (const festival of festivals) {
-    if (isFestivalActive(festival, month, date)) {
-      return festival
-    }
-  }
-
-  // 祭りがない場合は季節で判定
-  // 正確性を確保するため特定の順序でチェック
-  if (SEASON_MONTHS.winter.includes(month)) return 'winter'
-  if (SEASON_MONTHS.spring.includes(month)) return 'spring'
-  if (SEASON_MONTHS.summer.includes(month)) return 'summer'
-  if (SEASON_MONTHS.autumn.includes(month)) return 'autumn'
-
-  return 'spring' // デフォルト
+  return 'spring'
 }
 
 /**
