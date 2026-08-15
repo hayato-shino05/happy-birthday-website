@@ -46,6 +46,10 @@ describe('validateDateRule', () => {
     expect(() => validateDateRule(value)).toThrow(FestivalPackValidationError)
   })
 
+  it('rejects the invalid-date fixture', () => {
+    expect(() => validateFestivalPack(fixture('invalid-date-rule.json'))).toThrow(FestivalPackValidationError)
+  })
+
   it('accepts an unsupported lunar rule without Gregorian fields', () => {
     const value = fixture('unsupported-calendar.json')
     expect(validateDateRule((value as FestivalPack).dateRule)).toMatchObject({
@@ -70,6 +74,15 @@ describe('validateDateRule', () => {
         status: 'unsupported-calendar',
       })
     ).toThrow(FestivalPackValidationError)
+  })
+
+  it('rejects February 29 in a non-leap year', () => {
+    expect(() => validateDateRule({
+      calendar: 'gregorian',
+      recurrence: 'year-specific',
+      dates: { '2025': [{ month: 2, day: 29 }] },
+      timeZone: 'Asia/Tokyo',
+    })).toThrow(FestivalPackValidationError)
   })
 })
 

@@ -11,17 +11,10 @@ type TranslationPack = {
   translations: Readonly<Record<string, string>>
 }
 
-const LEGACY_LOCALE_MAP: Record<Language, Locale> = {
-  en: 'en',
-  ja: 'ja',
-}
-
 export const DEFAULT_LOCALE: Locale = 'ja'
 
 export function normalizeLocale(locale: string): string {
-  const normalized = locale.trim().toLowerCase()
-  const language = normalized.split('-')[0]
-  return LEGACY_LOCALE_MAP[language as Language] ?? normalized
+  return locale.trim().toLowerCase().split('-')[0]
 }
 
 export function resolveLocale(

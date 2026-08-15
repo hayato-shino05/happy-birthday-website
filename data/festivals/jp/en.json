@@ -59,7 +59,7 @@
     "name": "Tsukimi",
     "description": "An autumn observance for viewing the moon.",
     "dateRule": {"calendar": "lunar", "recurrence": "year-specific", "payload": {"calendarSystem": "traditional-lunar", "source": "catalog-review"}, "timeZone": "Asia/Tokyo", "status": "unsupported-calendar"},
-    "enabled": true,
+    "enabled": false,
     "status": "unsupported-calendar",
     "priority": 40,
     "themeKey": "tsukimi"

@@ -11,18 +11,19 @@ function getCalendarDate(now: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat('en', {
     timeZone,
     year: 'numeric',
+    era: 'short',
     month: 'numeric',
     day: 'numeric',
   }).formatToParts(now)
 
   const values = Object.fromEntries(
     parts
-      .filter(({ type }) => type === 'year' || type === 'month' || type === 'day')
-      .map(({ type, value }) => [type, Number(value)]),
-  )
+      .filter(({ type }) => type === 'year' || type === 'month' || type === 'day' || type === 'era')
+      .map(({ type, value }) => [type, type === 'era' ? value : Number(value)]),
+  ) as { year: number; month: number; day: number; era?: string }
 
   return {
-    year: values.year,
+    year: values.era === 'BC' ? 1 - values.year : values.year,
     month: values.month,
     day: values.day,
   }

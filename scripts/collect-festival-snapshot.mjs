@@ -65,9 +65,14 @@ function readFestivalPacks(root, commit, trackedFiles) {
   return packs
 }
 
+function isIntegrationPath(path) {
+  return (path.startsWith('data/festivals/') && path.endsWith('.json')) ||
+    (path.startsWith('data/i18n/') && path.endsWith('.json') && !path.endsWith('/keys.json'))
+}
+
 function readLocales(root, commit, trackedFiles) {
   const locales = []
-  for (const relativePath of trackedFiles.filter((path) => path.startsWith('data/i18n/') && path.endsWith('.json') && !path.endsWith('/keys.json'))) {
+  for (const relativePath of trackedFiles.filter((path) => isIntegrationPath(path) && path.startsWith('data/i18n/'))) {
     const value = readTrackedJson(root, commit, relativePath)
     if (!value || typeof value !== 'object' || Array.isArray(value) || typeof value.locale !== 'string') {
       throw new Error(`locale pack が不正です: ${relativePath}`)
@@ -154,8 +159,23 @@ function collectSource({ source, root, commit }) {
   const trackedFiles = getTrackedFiles(root, commit)
   const themeSource = readTrackedFile(root, commit, 'config/themes.ts')
   const festivalPacks = readFestivalPacks(root, commit, trackedFiles)
-  const events = festivalPacks
-  const seasons = festivalPacks.filter((pack) => pack && pack.category === 'season').map((pack) => pack.id).sort()
+  const legacyEventIds = extractObjectKeys(themeSource, 'FESTIVAL_DATES')
+  const events = festivalPacks.length > 0
+    ? festivalPacks
+    : legacyEventIds.map((id) => ({
+      id,
+      country: 'legacy',
+      locale: 'und',
+      category: 'festival',
+      name: id,
+      dateRule: { calendar: 'legacy', recurrence: 'legacy' },
+      enabled: true,
+      status: 'enabled',
+      priority: 0,
+    }))
+  const seasons = festivalPacks.length > 0
+    ? festivalPacks.filter((pack) => pack && pack.category === 'season').map((pack) => pack.id).sort()
+    : extractObjectKeys(themeSource, 'SEASON_MONTHS')
   const themes = [...new Set([
     ...extractObjectKeys(themeSource, 'THEMES'),
     ...festivalPacks.map((pack) => pack?.themeKey).filter((themeKey) => typeof themeKey === 'string'),
@@ -196,21 +216,36 @@ function parseArguments(argumentsList) {
   return options
 }
 
-function writeJson(path, value) {
-  const absolutePath = resolve(path)
-  mkdirSync(dirname(absolutePath), { recursive: true })
-  const temporaryPath = `${absolutePath}.${process.pid}.tmp`
-  const backupPath = `${absolutePath}.${process.pid}.bak`
-  writeFileSync(temporaryPath, `${JSON.stringify(value, null, 2)}\n`)
+function writeJsonBatch(entries) {
+  const files = entries.map(({ path, value }) => {
+    const absolutePath = resolve(path)
+    mkdirSync(dirname(absolutePath), { recursive: true })
+    return {
+      absolutePath,
+      backupPath: `${absolutePath}.${process.pid}.bak`,
+      temporaryPath: `${absolutePath}.${process.pid}.tmp`,
+      content: `${JSON.stringify(value, null, 2)}\n`,
+      installed: false,
+    }
+  })
 
   try {
-    rmSync(backupPath, { force: true })
-    if (existsSync(absolutePath)) renameSync(absolutePath, backupPath)
-    renameSync(temporaryPath, absolutePath)
-    rmSync(backupPath, { force: true })
+    for (const file of files) {
+      writeFileSync(file.temporaryPath, file.content)
+      rmSync(file.backupPath, { force: true })
+    }
+    for (const file of files) {
+      if (existsSync(file.absolutePath)) renameSync(file.absolutePath, file.backupPath)
+      renameSync(file.temporaryPath, file.absolutePath)
+      file.installed = true
+    }
+    for (const file of files) rmSync(file.backupPath, { force: true })
   } catch (error) {
-    if (!existsSync(absolutePath) && existsSync(backupPath)) renameSync(backupPath, absolutePath)
-    rmSync(temporaryPath, { force: true })
+    for (const file of files) {
+      if (file.installed && existsSync(file.absolutePath)) rmSync(file.absolutePath, { force: true })
+      if (existsSync(file.backupPath)) renameSync(file.backupPath, file.absolutePath)
+      rmSync(file.temporaryPath, { force: true })
+    }
     throw error
   }
 }
@@ -229,27 +264,32 @@ function main() {
     openSourceRoot: resolve(options['opensource-root']),
   })
 
-  writeJson(options['production-output'], snapshot.production)
-  writeJson(options['opensource-output'], snapshot.openSource)
   const allowedPaths = [...new Set([
     ...snapshot.production.files.included,
     ...snapshot.openSource.files.included,
   ])]
-    .filter((path) => path.startsWith('data/festivals/') || path.startsWith('data/i18n/'))
+    .filter(isIntegrationPath)
     .sort()
 
-  writeJson(options.allowlist, {
-    version: 1,
-    allowedPathScopes: ['data/festivals/', 'data/i18n/'],
-    integrationPaths: allowedPaths,
-    allowedPaths,
-    excludedPaths: {
-      environment: snapshot.openSource.files.excluded.filter((path) => /^\.env(?:\.|$)/.test(path)),
-      supabase: snapshot.openSource.files.excluded.filter((path) => path === 'supabase' || path.startsWith('supabase/')),
-      deployment: snapshot.openSource.files.excluded.filter((path) => /(?:^|\/)(?:deploy|deployment|vercel|netlify)(?:\/|\.|$)/i.test(path)),
-      dirty: getDirtyFiles(resolve(options['opensource-root'])),
+  writeJsonBatch([
+    { path: options['production-output'], value: snapshot.production },
+    { path: options['opensource-output'], value: snapshot.openSource },
+    {
+      path: options.allowlist,
+      value: {
+        version: 1,
+        allowedPathScopes: ['data/festivals/', 'data/i18n/'],
+        integrationPaths: allowedPaths,
+        allowedPaths,
+        excludedPaths: {
+          environment: snapshot.openSource.files.excluded.filter((path) => /^\.env(?:\.|$)/.test(path)),
+          supabase: snapshot.openSource.files.excluded.filter((path) => path === 'supabase' || path.startsWith('supabase/')),
+          deployment: snapshot.openSource.files.excluded.filter((path) => /(?:^|\/)(?:deploy|deployment|vercel|netlify)(?:\/|\.|$)/i.test(path)),
+          dirty: getDirtyFiles(resolve(options['opensource-root'])),
+        },
+      },
     },
-  })
+  ])
 }
 
 if (process.argv[1]?.replaceAll('\\', '/').endsWith('/collect-festival-snapshot.mjs')) main()

@@ -32,6 +32,7 @@ function writeTrackedFixture(root: string): void {
   writeFileSync(join(root, 'public', 'vercel.svg'), 'svg\n')
   writeFileSync(join(root, 'config', 'themes.ts'), 'export const THEMES = { spring: {} }\n')
   writeFileSync(join(root, 'data', 'festivals', 'jp', 'ja.json'), JSON.stringify([{ id: 'jp-hanami', country: 'jp', locale: 'ja', category: 'season', name: '花見', dateRule: { calendar: 'gregorian', recurrence: 'yearly', ranges: [{ month: 3, startDay: 20, endDay: 31 }], timeZone: 'Asia/Tokyo' }, enabled: true, status: 'enabled', priority: 10, themeKey: 'spring' }]))
+  writeFileSync(join(root, 'data', 'festivals', 'jp', 'notes.txt'), 'not a data pack\n')
   writeFileSync(join(root, 'data', 'i18n', 'ja.json'), JSON.stringify({ locale: 'ja', translations: { title: '誕生日' } }))
 }
 
@@ -122,6 +123,7 @@ describe('collectSnapshot', () => {
     expect(allowlist.allowedPathScopes).toEqual(['data/festivals/', 'data/i18n/'])
     expect(allowlist.integrationPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
     expect(allowlist.allowedPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
+    expect(allowlist.allowedPaths).not.toContain('data/festivals/jp/notes.txt')
 
     writeFileSync(productionOutput, '{"keep":true}\n')
     const failingArgs = [...args]

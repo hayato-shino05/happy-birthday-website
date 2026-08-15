@@ -96,4 +96,11 @@ describe('compareCatalogs', () => {
 
     expect(report.shared).toEqual([{ id: 'wrapped' }])
   })
+
+  it('rejects malformed snapshot entries instead of dropping them', () => {
+    expect(() => compareCatalogs(
+      { events: [{ id: 'broken' }] },
+      { events: [pack({ id: 'broken' })] },
+    )).toThrow(/malformed festival pack/)
+  })
 })

@@ -164,7 +164,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         .from('chat_messages')
         .insert({
           sender: userName,
-          text: newMessage.trim(),
+          message: newMessage.trim(),
         })
 
       if (error) throw error

@@ -112,10 +112,10 @@ describe('evaluateFestivalPacks', () => {
     expect(result.map(({ pack: item }) => item.id)).toEqual(['z', 'ä'])
   })
 
-  it('represents years below 100 without remapping to 19xx', () => {
-    const instant = getInstantForCalendarDate(42, 1, 2, 'UTC')
+  it.each([0, 42])('represents year %s without remapping to the Common Era', (year) => {
+    const instant = getInstantForCalendarDate(year, 1, 2, 'UTC')
 
-    expect(instant.getUTCFullYear()).toBe(42)
+    expect(instant.getUTCFullYear()).toBe(year)
     expect(instant.getUTCMonth()).toBe(0)
     expect(instant.getUTCDate()).toBe(2)
   })

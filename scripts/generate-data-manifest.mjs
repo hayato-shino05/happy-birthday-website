@@ -97,6 +97,8 @@ function validateDateRule(rule, path) {
       if (![month, startDay, endDay].every(Number.isInteger) || month < 1 || month > 12 || startDay < 1 || startDay > 31 || endDay < 1 || endDay > 31 || startDay > endDay) {
         fail(`${path}.ranges[${index}] が不正です`)
       }
+      validateMonthDay(month, startDay, `${path}.ranges[${index}].startDay`)
+      validateMonthDay(month, endDay, `${path}.ranges[${index}].endDay`)
     }
     return
   }
@@ -106,7 +108,14 @@ function validateDateRule(rule, path) {
     return
   }
 
-  if (rule.calendar === 'lunar' && rule.recurrence === 'year-specific' && rule.status === 'unsupported-calendar' && 'payload' in rule) return
+  if (
+    rule.calendar === 'lunar' &&
+    rule.recurrence === 'year-specific' &&
+    rule.status === 'unsupported-calendar' &&
+    'payload' in rule &&
+    !('dates' in rule) &&
+    !('ranges' in rule)
+  ) return
   fail(`${path} の calendar と recurrence の組み合わせが不正です`)
 }
 
@@ -162,8 +171,17 @@ async function collectFestivalPacks(root) {
       byId.set(pack.id, pack)
       continue
     }
-    const sameIdentity = existing.country === pack.country && existing.region === pack.region && existing.category === pack.category && stableJson(existing.dateRule) === stableJson(pack.dateRule)
-    if (!sameIdentity || existing.locale === pack.locale) fail(`festival pack の ID が重複しています: ${pack.id}`)
+    const sameIdentity = existing.country === pack.country &&
+      existing.region === pack.region &&
+      existing.category === pack.category &&
+      stableJson(existing.dateRule) === stableJson(pack.dateRule)
+    const sameRuntimeContract = existing.enabled === pack.enabled &&
+      existing.status === pack.status &&
+      existing.priority === pack.priority &&
+      existing.themeKey === pack.themeKey
+    if (!sameIdentity || !sameRuntimeContract || existing.locale === pack.locale) {
+      fail(`festival pack の ID が重複しています: ${pack.id}`)
+    }
   }
   return packs.sort((left, right) => left.id.localeCompare(right.id) || left.locale.localeCompare(right.locale))
 }

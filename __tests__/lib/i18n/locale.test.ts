@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveLocale, translate } from '@/lib/i18n/resolveLocale'
+import { normalizeLocale, resolveLocale, translate } from '@/lib/i18n/resolveLocale'
 import type { TranslationKey } from '@/lib/i18n/types'
 
 const availableLocales = ['en', 'ja'] as const
@@ -12,7 +12,9 @@ describe('locale resolution', () => {
     })
   })
 
-  it('normalizes legacy short locale codes', () => {
+  it('normalizes locale aliases to their primary language', () => {
+    expect(normalizeLocale('fr-FR')).toBe('fr')
+    expect(normalizeLocale('JA-jp')).toBe('ja')
     expect(resolveLocale('ja', availableLocales, 'ja')).toEqual({
       locale: 'ja',
       usedFallback: false,

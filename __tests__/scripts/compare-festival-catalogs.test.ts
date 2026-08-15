@@ -54,4 +54,20 @@ describe('compare-festival-catalogs CLI', () => {
     })
     expect(JSON.stringify(report)).not.toContain('timestamp')
   })
+
+  it('rejects ID-only snapshots instead of reporting empty parity', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'festival-parity-'))
+    const productionPath = join(directory, 'production.json')
+    const openSourcePath = join(directory, 'opensource.json')
+    const outputPath = join(directory, 'report.json')
+    writeFileSync(productionPath, JSON.stringify({ events: ['shared'] }))
+    writeFileSync(openSourcePath, JSON.stringify({ events: [pack('shared')] }))
+
+    expect(() => execFileSync(process.execPath, [
+      script,
+      '--production', productionPath,
+      '--opensource', openSourcePath,
+      '--output', outputPath,
+    ])).toThrow(/malformed festival pack/)
+  })
 })

@@ -422,7 +422,7 @@ export const festivalPacks = [
       "timeZone": "Asia/Tokyo",
       "status": "unsupported-calendar"
     },
-    "enabled": true,
+    "enabled": false,
     "status": "unsupported-calendar",
     "priority": 40,
     "themeKey": "tsukimi"
@@ -444,7 +444,7 @@ export const festivalPacks = [
       "timeZone": "Asia/Tokyo",
       "status": "unsupported-calendar"
     },
-    "enabled": true,
+    "enabled": false,
     "status": "unsupported-calendar",
     "priority": 40,
     "themeKey": "tsukimi"

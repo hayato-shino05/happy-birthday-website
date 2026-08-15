@@ -59,7 +59,7 @@
     "name": "月見",
     "description": "月を眺める秋の行事です。",
     "dateRule": {"calendar": "lunar", "recurrence": "year-specific", "payload": {"calendarSystem": "traditional-lunar", "source": "catalog-review"}, "timeZone": "Asia/Tokyo", "status": "unsupported-calendar"},
-    "enabled": true,
+    "enabled": false,
     "status": "unsupported-calendar",
     "priority": 40,
     "themeKey": "tsukimi"

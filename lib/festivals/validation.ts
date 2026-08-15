@@ -56,15 +56,17 @@ function validateTimeZone(value: unknown): string {
   return timeZone
 }
 
-function validateMonthDay(month: unknown, day: unknown, path: string): GregorianDate {
+function validateMonthDay(month: unknown, day: unknown, path: string, year = 2024): GregorianDate {
   if (
     typeof month !== 'number' || !Number.isInteger(month) || month < 1 || month > 12 ||
     typeof day !== 'number' || !Number.isInteger(day) || day < 1 || day > 31
   ) {
     throw new FestivalPackValidationError(`${path} must contain a valid month and day`)
   }
-  const candidate = new Date(Date.UTC(2024, month - 1, day, 12))
-  if (candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) {
+  const candidate = new Date(0)
+  candidate.setUTCFullYear(year, month - 1, day)
+  candidate.setUTCHours(12, 0, 0, 0)
+  if (candidate.getUTCFullYear() !== year || candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) {
     throw new FestivalPackValidationError(`${path} must contain a valid month and day`)
   }
   return { month, day }
@@ -107,7 +109,7 @@ function validateYearDates(value: unknown): Record<string, GregorianDate[]> {
     }
     return [year, values.map((item, index) => {
       const record = asRecord(item, `dateRule.dates[${year}][${index}]`)
-      return validateMonthDay(record.month, record.day, `dateRule.dates[${year}][${index}]`)
+      return validateMonthDay(record.month, record.day, `dateRule.dates[${year}][${index}]`, Number(year))
     })]
   }))
 }

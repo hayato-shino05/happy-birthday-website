@@ -24,23 +24,37 @@ function stableJson(value) {
 }
 
 function isFestivalPack(value) {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value) && typeof value.id === 'string'
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const dateRule = value.dateRule
+  return typeof value.id === 'string' &&
+    typeof value.country === 'string' &&
+    typeof value.locale === 'string' &&
+    typeof value.category === 'string' &&
+    typeof value.name === 'string' &&
+    dateRule && typeof dateRule === 'object' && !Array.isArray(dateRule) &&
+    typeof dateRule.calendar === 'string' &&
+    typeof dateRule.recurrence === 'string'
 }
 
 function readPacks(snapshot) {
-  if (Array.isArray(snapshot)) return snapshot.filter(isFestivalPack)
   if (!snapshot || typeof snapshot !== 'object') throw new TypeError('catalog snapshot must be an object or array')
-  for (const key of ['catalog', 'packs', 'festivals', 'events']) {
-    if (Array.isArray(snapshot[key])) return snapshot[key].filter(isFestivalPack)
-  }
-  return []
+  const values = Array.isArray(snapshot)
+    ? snapshot
+    : ['catalog', 'packs', 'festivals', 'events']
+      .map((key) => snapshot[key])
+      .find(Array.isArray)
+  if (!values) return []
+  return values.map((value, index) => {
+    if (!isFestivalPack(value)) throw new TypeError(`catalog snapshot contains malformed festival pack at index ${index}`)
+    return value
+  })
 }
 
 function metadataSet(snapshot, key) {
   if (!snapshot || Array.isArray(snapshot) || typeof snapshot !== 'object') return null
   const value = snapshot[key]
   if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return null
-  return [...new Set(value)].sort().join('\\u0000')
+  return [...new Set(value)].sort().join('\u0000')
 }
 
 function groupById(packs) {
@@ -126,7 +140,8 @@ export function compareCatalogs(productionSnapshot, openSourceSnapshot) {
   for (const id of ids) {
     const productionEntries = productionById.get(id) ?? []
     const openSourceEntries = openSourceById.get(id) ?? []
-    if (hasDuplicateId(productionEntries) || hasDuplicateId(openSourceEntries)) report.duplicateIds.push({ id })
+    const hasDuplicate = hasDuplicateId(productionEntries) || hasDuplicateId(openSourceEntries)
+    if (hasDuplicate) report.duplicateIds.push({ id })
     if (productionEntries.length === 0) {
       report.openSourceOnly.push({ id })
       continue
@@ -135,6 +150,7 @@ export function compareCatalogs(productionSnapshot, openSourceSnapshot) {
       report.productionOnly.push({ id })
       continue
     }
+    if (hasDuplicate) continue
     if (localeSet(productionEntries) !== localeSet(openSourceEntries) || localeMetadataMismatch) report.localeCoverageMismatch.push({ id })
     else if (ruleSet(productionEntries) !== ruleSet(openSourceEntries) || calendarRuleSet(productionEntries) !== calendarRuleSet(openSourceEntries)) report.calendarRuleMismatch.push({ id })
     else if (themeSet(productionEntries) !== themeSet(openSourceEntries) || themeMetadataMismatch) report.themeReferenceMismatch.push({ id })

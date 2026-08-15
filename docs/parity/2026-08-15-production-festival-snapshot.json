@@ -1253,18 +1253,174 @@
     "commit": "b5e1376"
   },
   "events": [
-    "bunka",
-    "christmas",
-    "halloween",
-    "hanami",
-    "hungVuong",
-    "kodomo",
-    "obon",
-    "shogatsu",
-    "tanabata",
-    "tet",
-    "trungThu",
-    "tsukimi"
+    {
+      "id": "bunka",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "bunka",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "christmas",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "christmas",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "halloween",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "halloween",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "hanami",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "hanami",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "hungVuong",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "hungVuong",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "kodomo",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "kodomo",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "obon",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "obon",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "shogatsu",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "shogatsu",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "tanabata",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "tanabata",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "tet",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "tet",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "trungThu",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "trungThu",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    },
+    {
+      "id": "tsukimi",
+      "country": "legacy",
+      "locale": "und",
+      "category": "festival",
+      "name": "tsukimi",
+      "dateRule": {
+        "calendar": "legacy",
+        "recurrence": "legacy"
+      },
+      "enabled": true,
+      "status": "enabled",
+      "priority": 0
+    }
   ],
   "seasons": [
     "autumn",
@@ -1272,11 +1428,7 @@
     "summer",
     "winter"
   ],
-  "locales": [
-    "en",
-    "ja",
-    "vi"
-  ],
+  "locales": [],
   "themes": [
     "autumn",
     "bunka",
