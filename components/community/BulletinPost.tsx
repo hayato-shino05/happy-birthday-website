@@ -11,7 +11,7 @@ interface BulletinPostProps {
 }
 
 export default function BulletinPost({ post, onLike, onReply }: BulletinPostProps) {
-  const { locale } = useLanguage()
+  const { locale, t } = useLanguage()
   const [liked, setLiked] = useState(false)
   const [liking, setLiking] = useState(false)
   const [localLikes, setLocalLikes] = useState(post.likes)
@@ -53,14 +53,18 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
     setLiked(true)
     setLocalLikes(prev => prev + 1)
 
-    const success = await onLike(post.id)
-
-    if (!success) {
+    try {
+      const success = await onLike(post.id)
+      if (!success) {
+        setLiked(false)
+        setLocalLikes(prev => prev - 1)
+      }
+    } catch {
       setLiked(false)
       setLocalLikes(prev => prev - 1)
+    } finally {
+      setLiking(false)
     }
-
-    setLiking(false)
   }
 
   return (
@@ -138,7 +142,7 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
           ) : (
             <img
               src={post.media_url}
-              alt="Media"
+              alt={locale === 'ja' ? 'メディア' : 'Media'}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           )}

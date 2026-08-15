@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   robots: 'index, follow',
   openGraph: {
     type: 'website',
-    locale: 'ja',
-    alternateLocale: ['en'],
+    locale: 'ja_JP',
+    alternateLocale: ['en_US'],
     url: 'https://happy-birthday.vercel.app',
     siteName: 'Happy Birthday',
     title: 'Happy Birthday | お誕生日おめでとう',
