@@ -63,6 +63,10 @@ function validateMonthDay(month: unknown, day: unknown, path: string): Gregorian
   ) {
     throw new FestivalPackValidationError(`${path} must contain a valid month and day`)
   }
+  const candidate = new Date(Date.UTC(2024, month - 1, day, 12))
+  if (candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) {
+    throw new FestivalPackValidationError(`${path} must contain a valid month and day`)
+  }
   return { month, day }
 }
 
@@ -84,6 +88,8 @@ function validateRanges(value: unknown): GregorianRange[] {
     ) {
       throw new FestivalPackValidationError(`dateRule.ranges[${index}] is invalid`)
     }
+    validateMonthDay(month, startDay, `dateRule.ranges[${index}].startDay`)
+    validateMonthDay(month, endDay, `dateRule.ranges[${index}].endDay`)
     return { month, startDay, endDay }
   })
 }

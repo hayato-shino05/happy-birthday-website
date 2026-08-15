@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateFestivalPacks } from '@/lib/festivals/evaluator'
+import { evaluateFestivalPacks, getInstantForCalendarDate } from '@/lib/festivals/evaluator'
 import type { FestivalPack } from '@/lib/festivals/types'
 
 function pack(overrides: Partial<FestivalPack> = {}): FestivalPack {
@@ -110,5 +110,13 @@ describe('evaluateFestivalPacks', () => {
     ], new Date('2024-12-31T14:30:00.000Z'))
 
     expect(result.map(({ pack: item }) => item.id)).toEqual(['z', 'ä'])
+  })
+
+  it('represents years below 100 without remapping to 19xx', () => {
+    const instant = getInstantForCalendarDate(42, 1, 2, 'UTC')
+
+    expect(instant.getUTCFullYear()).toBe(42)
+    expect(instant.getUTCMonth()).toBe(0)
+    expect(instant.getUTCDate()).toBe(2)
   })
 })

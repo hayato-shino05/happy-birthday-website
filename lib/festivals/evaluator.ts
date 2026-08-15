@@ -31,7 +31,9 @@ function getCalendarDate(now: Date, timeZone: string) {
 
 export function getInstantForCalendarDate(year: number, month: number, day: number, timeZone: string): Date {
   for (let hour = 0; hour < 48; hour += 1) {
-    const candidate = new Date(Date.UTC(year, month - 1, day, hour))
+    const candidate = new Date(0)
+    candidate.setUTCFullYear(year, month - 1, day)
+    candidate.setUTCHours(hour, 0, 0, 0)
     const actual = getCalendarDate(candidate, timeZone)
     if (actual.year === year && actual.month === month && actual.day === day) return candidate
   }

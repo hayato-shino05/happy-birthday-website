@@ -38,6 +38,7 @@ describe('validateDateRule', () => {
     ['startDay after endDay', { ...validPack.dateRule, ranges: [{ month: 3, startDay: 31, endDay: 20 }] }],
     ['month outside range', { ...validPack.dateRule, ranges: [{ month: 13, startDay: 1, endDay: 2 }] }],
     ['day outside range', { ...validPack.dateRule, ranges: [{ month: 3, startDay: 0, endDay: 2 }] }],
+    ['impossible calendar date', { ...validPack.dateRule, ranges: [{ month: 2, startDay: 30, endDay: 30 }] }],
     ['empty ranges', { ...validPack.dateRule, ranges: [] }],
     ['invalid timezone', { ...validPack.dateRule, timeZone: 'Mars/Olympus' }],
     ['invalid recurrence', { ...validPack.dateRule, recurrence: 'monthly' }],
