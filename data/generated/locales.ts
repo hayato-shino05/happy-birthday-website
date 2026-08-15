@@ -1,8 +1,63 @@
 import type { Locale } from '@/lib/festivals/types'
 
+export const translationKeys = [
+  "allWishesComeTrue",
+  "birthdayCalendar",
+  "birthdayQuiz",
+  "birthdaySong",
+  "birthdayWish",
+  "blowCandles",
+  "blowToMic",
+  "bulletinBoard",
+  "calendarInstructions",
+  "congratulations",
+  "countdownTitle",
+  "days",
+  "daysLeft",
+  "english",
+  "error",
+  "gameLose",
+  "gameRestart",
+  "gameScore",
+  "gameStart",
+  "gameTime",
+  "gameWin",
+  "groupChat",
+  "happyBirthday",
+  "hours",
+  "inviteFriends",
+  "japanese",
+  "language",
+  "loading",
+  "memoryGame",
+  "memoryGameInstructions",
+  "minutes",
+  "noBirthdayData",
+  "noData",
+  "notificationBirthdaySoon",
+  "notificationBirthdayToday",
+  "notificationCopied",
+  "notificationNewMessage",
+  "notificationSaveFailed",
+  "notificationSaveSuccess",
+  "notificationShared",
+  "notificationUploadFailed",
+  "notificationUploadSuccess",
+  "puzzleGame",
+  "puzzleGameInstructions",
+  "quizInstructions",
+  "seconds",
+  "selectMusic",
+  "sendMessage",
+  "useMicrophone",
+  "viewAlbum"
+] as const
+
+export type GeneratedTranslationKey = (typeof translationKeys)[number]
+
 export type GeneratedLocalePack = {
   readonly locale: Locale
-  readonly translations: Readonly<Record<string, string>>
+  readonly translations: Readonly<Record<GeneratedTranslationKey, string>>
 }
 
 export const localePacks = [

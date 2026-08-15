@@ -159,7 +159,22 @@ function validateThemeKeys(packs, themeKeys) {
   }
 }
 
-function generatedContents(packs, locales, themeKeys) {
+function validateLocaleKeys(locales) {
+  if (locales.length === 0) fail('locale pack がありません')
+  const canonicalKeys = Object.keys(locales[0].translations).sort()
+  for (const locale of locales) {
+    const keys = Object.keys(locale.translations).sort()
+    if (JSON.stringify(keys) !== JSON.stringify(canonicalKeys)) {
+      fail(`translation keys が一致しません: ${locale.locale}`)
+    }
+    if (keys.some((key) => typeof locale.translations[key] !== 'string' || locale.translations[key].length === 0)) {
+      fail(`translation value が空または不正です: ${locale.locale}`)
+    }
+  }
+  return canonicalKeys
+}
+
+function generatedContents(packs, locales, themeKeys, translationKeys) {
   return new Map([
     [
       'data/generated/festival-packs.ts',
@@ -167,7 +182,7 @@ function generatedContents(packs, locales, themeKeys) {
     ],
     [
       'data/generated/locales.ts',
-      `import type { Locale } from '@/lib/festivals/types'\n\nexport type GeneratedLocalePack = {\n  readonly locale: Locale\n  readonly translations: Readonly<Record<string, string>>\n}\n\nexport const localePacks = ${JSON.stringify(locales, null, 2)} as const satisfies readonly GeneratedLocalePack[]\n\nexport const locales = ${JSON.stringify(locales.map(({ locale }) => locale), null, 2)} as const satisfies readonly Locale[]\n`,
+      `import type { Locale } from '@/lib/festivals/types'\n\nexport const translationKeys = ${JSON.stringify(translationKeys, null, 2)} as const\n\nexport type GeneratedTranslationKey = (typeof translationKeys)[number]\n\nexport type GeneratedLocalePack = {\n  readonly locale: Locale\n  readonly translations: Readonly<Record<GeneratedTranslationKey, string>>\n}\n\nexport const localePacks = ${JSON.stringify(locales, null, 2)} as const satisfies readonly GeneratedLocalePack[]\n\nexport const locales = ${JSON.stringify(locales.map(({ locale }) => locale), null, 2)} as const satisfies readonly Locale[]\n`,
     ],
     [
       'data/generated/themes.ts',
@@ -212,9 +227,10 @@ async function generate(root) {
   validateSchemaDefinition(i18nSchema, 'i18n.schema.json', ['locale', 'translations'])
   const packs = await collectFestivalPacks(root)
   const locales = await collectLocales(root)
+  const translationKeys = validateLocaleKeys(locales)
   const themeKeys = await readVisualThemeKeys(root)
   validateThemeKeys(packs, themeKeys)
-  return generatedContents(packs, locales, themeKeys)
+  return generatedContents(packs, locales, themeKeys, translationKeys)
 }
 
 async function main() {

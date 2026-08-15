@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { localePacks, locales } from '@/data/generated/locales'
+import { localePacks, locales, translationKeys } from '@/data/generated/locales'
 import { validateTranslationPacks } from '@/lib/i18n/resolveLocale'
 
 const keys = (value: Record<string, string>) => Object.keys(value).sort()
@@ -11,8 +11,8 @@ describe('translation parity', () => {
   })
 
   it('keeps every locale on the same canonical key set', () => {
-    const [first, ...rest] = localePacks
-    for (const pack of rest) expect(keys(pack.translations)).toEqual(keys(first.translations))
+    const canonicalKeys = [...translationKeys].sort()
+    for (const pack of localePacks) expect(keys(pack.translations)).toEqual(canonicalKeys)
   })
 
   it('rejects duplicate locales and mismatched key sets', () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { resolveLocale, translate } from '@/lib/i18n/resolveLocale'
+import type { TranslationKey } from '@/lib/i18n/types'
 
 const availableLocales = ['en-US', 'ja-JP'] as const
 
@@ -19,6 +20,6 @@ describe('locale resolution', () => {
   })
 
   it('does not turn a missing translation into an empty string', () => {
-    expect(translate('ja-JP', 'missing.key')).toBe('missing.key')
+    expect(translate('ja-JP', 'missing.key' as TranslationKey)).toBe('missing.key')
   })
 })

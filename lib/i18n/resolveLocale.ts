@@ -1,8 +1,8 @@
-import { localePacks } from '@/data/generated/locales'
-import type { Language, Locale, TranslationKey } from './types'
+import { localePacks, translationKeys } from '@/data/generated/locales'
+import type { Language, Locale, TranslationDictionary, TranslationKey } from './types'
 
 export interface LocaleResolution {
-  locale: string
+  locale: Locale
   usedFallback: boolean
 }
 
@@ -11,10 +11,12 @@ type TranslationPack = {
   translations: Readonly<Record<string, string>>
 }
 
-const LEGACY_LOCALE_MAP: Record<Language, string> = {
+const LEGACY_LOCALE_MAP: Record<Language, Locale> = {
   en: 'en-US',
   ja: 'ja-JP',
 }
+
+export const DEFAULT_LOCALE: Locale = 'ja-JP'
 
 export function normalizeLocale(locale: string): string {
   return LEGACY_LOCALE_MAP[locale.toLowerCase() as Language] ?? locale
@@ -22,8 +24,8 @@ export function normalizeLocale(locale: string): string {
 
 export function resolveLocale(
   requestedLocale: string,
-  availableLocales: readonly string[],
-  defaultLocale: string,
+  availableLocales: readonly Locale[],
+  defaultLocale: Locale,
 ): LocaleResolution {
   const normalizedRequested = normalizeLocale(requestedLocale)
   const normalizedDefault = normalizeLocale(defaultLocale)
@@ -41,15 +43,18 @@ export function validateTranslationPacks(packs: readonly TranslationPack[]): voi
   if (packs.length === 0) throw new Error('translation packs must not be empty')
 
   const seenLocales = new Set<string>()
-  const canonicalKeys = Object.keys(packs[0].translations).sort()
   for (const pack of packs) {
     if (seenLocales.has(pack.locale)) throw new Error(`duplicate locale: ${pack.locale}`)
     seenLocales.add(pack.locale)
+  }
+
+  const canonicalKeys = [...translationKeys].sort()
+  for (const pack of packs) {
     const keys = Object.keys(pack.translations).sort()
     if (JSON.stringify(keys) !== JSON.stringify(canonicalKeys)) {
       throw new Error(`translation keys do not match: ${pack.locale}`)
     }
-    if (keys.some((key) => pack.translations[key].length === 0)) {
+    if (keys.some((key) => typeof pack.translations[key] !== 'string' || pack.translations[key].length === 0)) {
       throw new Error(`translation values must not be empty: ${pack.locale}`)
     }
   }
@@ -63,17 +68,15 @@ function interpolate(value: string, params?: Record<string, string | number>): s
 }
 
 export function translate(
-  locale: string,
-  key: string,
+  locale: Locale | string,
+  key: TranslationKey,
   params?: Record<string, string | number>,
 ): string {
-  const packs: readonly TranslationPack[] = localePacks
   const requested = normalizeLocale(locale)
-  const defaultLocale = packs.find((pack) => pack.locale === 'ja-JP')?.locale ?? packs[0]?.locale
-  const primary = packs.find((pack) => pack.locale === requested)
-  const fallback = defaultLocale ? packs.find((pack) => pack.locale === defaultLocale) : undefined
+  const primary = localePacks.find((pack) => pack.locale === requested)
+  const fallback = localePacks.find((pack) => pack.locale === DEFAULT_LOCALE)
   const value = primary?.translations[key] ?? fallback?.translations[key]
   return interpolate(value ?? key, params)
 }
 
-export type { Language, Locale, TranslationKey }
+export type { Language, Locale, TranslationDictionary, TranslationKey }
