@@ -1,24 +1,21 @@
 'use client'
 
-import { locales } from '@/data/generated/locales'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
-import type { Locale } from '@/lib/i18n/types'
+import type { Language } from '@/lib/i18n/translations'
 
-function isLocale(value: string): value is Locale {
-  return (locales as readonly string[]).includes(value)
-}
+const languages: { code: Language; label: string; shortLabel: string }[] = [
+  { code: 'en', label: 'English', shortLabel: 'EN' },
+  { code: 'ja', label: '日本語', shortLabel: 'JP' },
+]
 
 export function LanguageSelector() {
-  const { locale, setLanguage, t } = useLanguage()
+  const { language, setLanguage, t } = useLanguage()
 
   return (
     <div className="language-selector">
       <select
-        value={locale}
-        onChange={(event) => {
-          const nextLocale = event.target.value
-          if (isLocale(nextLocale)) setLanguage(nextLocale)
-        }}
+        value={language}
+        onChange={(e) => setLanguage(e.target.value as Language)}
         className="lang-select"
         title={t('language')}
         style={{
@@ -34,24 +31,20 @@ export function LanguageSelector() {
           transition: 'transform 0.3s, box-shadow 0.3s',
           outline: 'none',
         }}
-        onMouseEnter={(event) => {
-          event.currentTarget.style.transform = 'translate(-1px, -1px)'
-          event.currentTarget.style.boxShadow = '3px 3px 0 var(--color-secondary, #D4B08C)'
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translate(-1px, -1px)'
+          e.currentTarget.style.boxShadow = '3px 3px 0 var(--color-secondary, #D4B08C)'
         }}
-        onMouseLeave={(event) => {
-          event.currentTarget.style.transform = 'translate(0, 0)'
-          event.currentTarget.style.boxShadow = '2px 2px 0 var(--color-secondary, #D4B08C)'
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translate(0, 0)'
+          e.currentTarget.style.boxShadow = '2px 2px 0 var(--color-secondary, #D4B08C)'
         }}
       >
-        {locales.map((availableLocale) => {
-          const languageCode = availableLocale.split('-')[0]
-          const label = new Intl.DisplayNames([availableLocale], { type: 'language' }).of(languageCode) ?? availableLocale
-          return (
-            <option key={availableLocale} value={availableLocale}>
-              {label}
-            </option>
-          )
-        })}
+        {languages.map((lang) => (
+          <option key={lang.code} value={lang.code}>
+            {lang.label}
+          </option>
+        ))}
       </select>
     </div>
   )

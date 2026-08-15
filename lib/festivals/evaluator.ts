@@ -8,7 +8,7 @@ export interface FestivalEvaluation {
 }
 
 function getCalendarDate(now: Date, timeZone: string) {
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = new Intl.DateTimeFormat('en', {
     timeZone,
     year: 'numeric',
     month: 'numeric',

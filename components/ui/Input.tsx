@@ -1,6 +1,8 @@
 'use client'
 
 import { forwardRef, InputHTMLAttributes, useState, useId } from 'react'
+import { useOptionalLanguage } from '@/lib/i18n/LanguageContext'
+import { DEFAULT_LOCALE, translate } from '@/lib/i18n/resolveLocale'
 
 type InputSize = 'sm' | 'md' | 'lg'
 type InputVariant = 'default' | 'filled' | 'flushed'
@@ -67,6 +69,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
+    const language = useOptionalLanguage()
+    const clearLabel = language?.t('clear') ?? translate(DEFAULT_LOCALE, 'clear', DEFAULT_LOCALE)
     const [isFocused, setIsFocused] = useState(false)
     const [charCount, setCharCount] = useState(String(value || '').length)
     const inputId = useId()
@@ -81,7 +85,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="w-full">
-        {/* ラベル */}
+
         {label && (
           <label
             htmlFor={inputId}
@@ -94,18 +98,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
 
-        {/* 入力全体のラッパー */}
+
         <div className="relative flex">
-          {/* 左側アドオン */}
+
           {leftAddon && (
             <div className="flex items-center px-4 bg-white/10 border border-r-0 border-white/20 rounded-l-xl text-white/60">
               {leftAddon}
             </div>
           )}
 
-          {/* 入力フィールドのコンテナ */}
+
           <div className="relative flex-1">
-            {/* 左側のアイコン */}
+
             {leftIcon && (
               <div
                 className={`absolute left-3 top-1/2 -translate-y-1/2 text-white/40 transition-colors ${
@@ -116,7 +120,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               </div>
             )}
 
-            {/* 入力フィールド */}
+
             <input
               ref={ref}
               id={inputId}
@@ -145,7 +149,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               {...props}
             />
 
-            {/* 右側のアイコンまたはクリアボタン */}
+
             {(rightIcon || (showClearButton && value)) && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 {showClearButton && value && (
@@ -153,7 +157,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     type="button"
                     onClick={onClear}
                     className="text-white/40 hover:text-white transition-colors cursor-pointer"
-                    aria-label="Clear input"
+                    aria-label={clearLabel}
                   >
                     <svg className={sizeStyle.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -166,7 +170,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               </div>
             )}
 
-            {/* フォーカスリングのアニメーション */}
+
             <div
               className={`absolute inset-0 rounded-xl pointer-events-none transition-opacity duration-200 ${
                 isFocused && !error ? 'opacity-100' : 'opacity-0'
@@ -177,7 +181,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             />
           </div>
 
-          {/* 右側アドオン */}
+
           {rightAddon && (
             <div className="flex items-center px-4 bg-white/10 border border-l-0 border-white/20 rounded-r-xl text-white/60">
               {rightAddon}
@@ -185,7 +189,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {/* 下部のエラー/補足テキストと文字数 */}
+
         <div className="flex items-center justify-between mt-1.5 min-h-[20px]">
           <div className="flex-1">
             {error && (
@@ -225,7 +229,6 @@ Input.displayName = 'Input'
 
 export default Input
 
-// 検索入力用バリアント
 interface SearchInputProps extends Omit<InputProps, 'leftIcon' | 'type'> {
   onSearch?: (value: string) => void
 }
@@ -257,7 +260,6 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 
 SearchInput.displayName = 'SearchInput'
 
-// パスワード入力用バリアント
 export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputProps, 'type' | 'rightIcon'>>(
   (props, ref) => {
     const [showPassword, setShowPassword] = useState(false)

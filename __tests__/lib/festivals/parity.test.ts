@@ -5,7 +5,7 @@ import { compareCatalogs, type ParityItem } from '@/lib/festivals/parity'
 const pack = (overrides: Partial<FestivalPack> = {}): FestivalPack => ({
   id: 'shared',
   country: 'jp',
-  locale: 'ja-JP',
+  locale: 'ja',
   category: 'festival',
   name: 'Shared',
   description: 'Same description',
@@ -27,8 +27,8 @@ const production = [
   pack({ id: 'prod-only', name: 'Production only' }),
   pack({ id: 'content-diff', name: 'Production content' }),
   pack({ id: 'calendar-diff', name: 'Calendar production' }),
-  pack({ id: 'locale-gap', locale: 'ja-JP', name: 'Locale gap' }),
-  pack({ id: 'locale-gap', locale: 'en-US', name: 'Locale gap' }),
+  pack({ id: 'locale-gap', locale: 'ja', name: 'Locale gap' }),
+  pack({ id: 'locale-gap', locale: 'en', name: 'Locale gap' }),
   pack({ id: 'theme-diff', themeKey: 'production-theme' }),
   pack({ id: 'duplicate', name: 'Duplicate one' }),
   pack({ id: 'duplicate', name: 'Duplicate two', description: 'Different duplicate' }),
@@ -51,7 +51,7 @@ const openSource = [
       timeZone: 'Asia/Tokyo',
     },
   }),
-  pack({ id: 'locale-gap', locale: 'ja-JP', name: 'Locale gap' }),
+  pack({ id: 'locale-gap', locale: 'ja', name: 'Locale gap' }),
   pack({ id: 'theme-diff', themeKey: 'open-source-theme' }),
   pack({ id: 'country-us', country: 'us', name: 'United States event' }),
 ]
@@ -74,8 +74,8 @@ describe('compareCatalogs', () => {
 
   it('accepts snapshots that wrap the catalog and metadata', () => {
     const report = compareCatalogs(
-      { catalog: [pack({ id: 'wrapped' })], locales: ['ja-JP'], themes: ['shared-theme'] },
-      { packs: [pack({ id: 'wrapped' })], locales: ['ja-JP'], themes: ['shared-theme'] },
+      { catalog: [pack({ id: 'wrapped' })], locales: ['ja'], themes: ['shared-theme'] },
+      { packs: [pack({ id: 'wrapped' })], locales: ['ja'], themes: ['shared-theme'] },
     )
 
     expect(report.shared).toEqual([{ id: 'wrapped' }])

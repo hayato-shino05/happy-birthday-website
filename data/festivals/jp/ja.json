@@ -1,8 +1,8 @@
 [
   {
-    "id": "jp-christmas-ja-jp",
+    "id": "jp-christmas",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "クリスマス",
     "description": "冬の祝祭シーズンです。",
@@ -13,9 +13,9 @@
     "themeKey": "christmas"
   },
   {
-    "id": "jp-halloween-ja-jp",
+    "id": "jp-halloween",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "ハロウィン",
     "description": "秋の仮装と収穫の祭りです。",
@@ -26,9 +26,9 @@
     "themeKey": "halloween"
   },
   {
-    "id": "jp-hanami-ja-jp",
+    "id": "jp-hanami",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "season",
     "name": "花見",
     "description": "桜を楽しむ春の季節行事です。",
@@ -39,9 +39,9 @@
     "themeKey": "hanami"
   },
   {
-    "id": "jp-obon-ja-jp",
+    "id": "jp-obon",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "お盆",
     "description": "夏に行われる伝統的な行事です。",
@@ -52,9 +52,9 @@
     "themeKey": "obon"
   },
   {
-    "id": "jp-tsukimi-ja-jp",
+    "id": "jp-tsukimi",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "月見",
     "description": "月を眺める秋の行事です。",
@@ -65,9 +65,9 @@
     "themeKey": "tsukimi"
   },
   {
-    "id": "jp-tanabata-ja-jp",
+    "id": "jp-tanabata",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "七夕",
     "description": "願いごとを短冊に託す夏の行事です。",
@@ -78,9 +78,9 @@
     "themeKey": "tanabata"
   },
   {
-    "id": "jp-shogatsu-ja-jp",
+    "id": "jp-shogatsu",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "public-holiday",
     "name": "正月",
     "description": "新年を祝う年始の期間です。",
@@ -91,9 +91,9 @@
     "themeKey": "shogatsu"
   },
   {
-    "id": "jp-kodomo-ja-jp",
+    "id": "jp-kodomo",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "public-holiday",
     "name": "こどもの日",
     "description": "子どもの健やかな成長を願う祝日です。",
@@ -104,9 +104,9 @@
     "themeKey": "kodomo"
   },
   {
-    "id": "jp-bunka-ja-jp",
+    "id": "jp-bunka",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "public-holiday",
     "name": "文化の日",
     "description": "文化を祝い、平和を願う祝日です。",

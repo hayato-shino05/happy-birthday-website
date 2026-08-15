@@ -2,7 +2,7 @@
   {
     "id": "jp-hanami",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "花見",
     "dateRule": {
@@ -18,7 +18,7 @@
   {
     "id": "jp-hanami",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "Hanami",
     "dateRule": {

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { locales } from '@/data/generated/locales'
 import { DEFAULT_LOCALE, normalizeLocale, resolveLocale, translate } from './resolveLocale'
 import type { Language, Locale, TranslationKey } from './types'
@@ -26,6 +26,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const language: Language = locale.startsWith('ja') ? 'ja' : 'en'
+
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
+
   const t = useCallback(
     (key: TranslationKey, params?: Record<string, string | number>): string =>
       translate(locale, key, DEFAULT_LOCALE, params),
@@ -46,4 +51,9 @@ export function useLanguage() {
     throw new Error('useLanguage フックは LanguageProvider 内でのみ使用できます')
   }
   return context
+}
+
+
+export function useOptionalLanguage() {
+  return useContext(LanguageContext)
 }

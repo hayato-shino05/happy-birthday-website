@@ -2,12 +2,14 @@
 
 import { useState, useRef } from 'react'
 import { useAudioMessages, AudioMessage } from '@/lib/hooks/useAudioMessages'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface AudioMessageListProps {
   birthdayPerson?: string
 }
 
 function AudioPlayer({ message }: { message: AudioMessage }) {
+  const { locale } = useLanguage()
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -41,7 +43,7 @@ function AudioPlayer({ message }: { message: AudioMessage }) {
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('ja-JP', {
+    return new Date(dateStr).toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -60,7 +62,7 @@ function AudioPlayer({ message }: { message: AudioMessage }) {
       />
 
       <div className="flex items-center gap-4">
-        {/* 再生ボタン */}
+
         <button
           onClick={togglePlay}
           className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white hover:scale-105 transition-transform cursor-pointer"
@@ -76,14 +78,14 @@ function AudioPlayer({ message }: { message: AudioMessage }) {
           )}
         </button>
 
-        {/* 情報と再生進行状況 */}
+
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
             <span className="font-medium text-white">{message.sender}</span>
             <span className="text-xs text-white/50">{formatDuration(message.duration)}</span>
           </div>
 
-          {/* プログレスバー */}
+
           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-100"
@@ -99,6 +101,7 @@ function AudioPlayer({ message }: { message: AudioMessage }) {
 }
 
 export default function AudioMessageList({ birthdayPerson }: AudioMessageListProps) {
+  const { t } = useLanguage()
   const { messages, loading, error, refetch } = useAudioMessages(birthdayPerson)
 
   if (loading) {
@@ -119,7 +122,7 @@ export default function AudioMessageList({ birthdayPerson }: AudioMessageListPro
           onClick={refetch}
           className="mt-2 px-4 py-2 bg-white/20 rounded-lg text-white mx-auto block cursor-pointer"
         >
-          再試行
+          {t('retry')}
         </button>
       </div>
     )
@@ -131,12 +134,12 @@ export default function AudioMessageList({ birthdayPerson }: AudioMessageListPro
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
         </svg>
-        音声メッセージ ({messages.length})
+        {t('audioWishesCount', { count: messages.length })}
       </h3>
 
       {messages.length === 0 ? (
         <p className="text-white/60 text-center py-4">
-          まだ音声メッセージがありません。最初の人になりましょう！
+          {t('noAudioWishes')}
         </p>
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">

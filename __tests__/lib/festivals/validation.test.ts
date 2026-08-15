@@ -7,7 +7,7 @@ import {
   validateFestivalPack,
   validateFestivalPacks,
 } from '@/lib/festivals/validation'
-import type { FestivalPack } from '@/lib/festivals/types'
+import type { FestivalPack, Locale } from '@/lib/festivals/types'
 
 const fixture = (name: string): unknown =>
   JSON.parse(readFileSync(resolve(__dirname, 'fixtures', name), 'utf8'))
@@ -15,7 +15,7 @@ const fixture = (name: string): unknown =>
 const validPack: FestivalPack = {
   id: 'jp-hanami',
   country: 'jp',
-  locale: 'ja-JP',
+  locale: 'ja',
   category: 'festival',
   name: '花見',
   dateRule: {
@@ -79,7 +79,7 @@ describe('validateFestivalPack', () => {
 
   it.each([
     ['missing id', { ...validPack, id: '' }],
-    ['invalid locale', { ...validPack, locale: 'ja' }],
+    ['invalid locale', { ...validPack, locale: 'fr' as Locale }],
     ['invalid country', { ...validPack, country: 'Japan' }],
     ['invalid category', { ...validPack, category: 'holiday' }],
     ['invalid status', { ...validPack, status: 'unknown' }],

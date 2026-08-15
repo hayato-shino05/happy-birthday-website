@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface ChatMessage {
   id: number
   sender: string
-  message: string
+  text: string
   created_at: string
 }
 
@@ -15,6 +16,7 @@ interface ChatRoomProps {
 }
 
 export function ChatRoom({ onClose }: ChatRoomProps) {
+  const { locale, t } = useLanguage()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [userName, setUserName] = useState('')
@@ -25,15 +27,15 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
 
   // 共有ストレージから保存済みのユーザー名を読み込む
   useEffect(() => {
-    // まず共有ストレージを確認し、その後チャット専用ストレージを確認する
+    // 共有ストレージを優先し、次にチャット専用領域を確認する
     const sharedName = localStorage.getItem('birthday_user_name')
     const chatName = localStorage.getItem('birthdayChatUserName')
     const saved = sharedName || chatName
-    
+
     if (saved) {
       setUserName(saved)
       setIsJoined(true)
-      // Sync to shared storage
+      // 共有ストレージへ同期する
       if (!sharedName && chatName) {
         localStorage.setItem('birthday_user_name', chatName)
       }
@@ -56,7 +58,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
       }
       setMessages(data || [])
     } catch {
-      // 取得に失敗した場合は localStorage から読み込む
+      // フォールバックとしてlocalStorageから読み込む
       const messagesData = localStorage.getItem('birthdayChatMessages')
       if (messagesData) {
         setMessages(JSON.parse(messagesData))
@@ -64,7 +66,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
     }
   }, [])
 
-  // Realtime に購読する
+  // リアルタイム更新を購読する
   useEffect(() => {
     if (!isJoined) return
 
@@ -84,7 +86,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         })
         .subscribe()
     } catch {
-      // Realtime が利用できない場合
+      // リアルタイム更新が利用できない
     }
 
     return () => {
@@ -92,20 +94,20 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         try {
           getSupabase().removeChannel(channel)
         } catch {
-          // Ignore
+          // このエラーは無視する
         }
       }
     }
   }, [isJoined, loadMessages])
 
-  // 自動スクロール
+  // 最新メッセージへ自動スクロールする
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   const handleJoin = () => {
     if (!userName.trim()) return
-    // 互換性のため、両方のストレージに保存する
+    // 互換性のため両方のストレージへ保存する
     localStorage.setItem('birthdayChatUserName', userName.trim())
     localStorage.setItem('birthday_user_name', userName.trim())
     setIsJoined(true)
@@ -117,11 +119,11 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
     const messageData: ChatMessage = {
       id: Date.now(),
       sender: userName,
-      message: newMessage.trim(),
+      text: newMessage.trim(),
       created_at: new Date().toISOString(),
     }
 
-    // 楽観的更新（先に画面だけ更新する）
+    // 先行して画面を更新する
     setMessages(prev => [...prev, messageData])
     setNewMessage('')
     setLoading(true)
@@ -132,12 +134,12 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         .from('chat_messages')
         .insert({
           sender: userName,
-          message: newMessage.trim(),
+          text: newMessage.trim(),
         })
 
       if (error) throw error
     } catch {
-      // 失敗した場合は localStorage に保存してフォールバックする
+      // フォールバックとしてlocalStorageへ保存する
       const chatMessages = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]')
       chatMessages.push(messageData)
       localStorage.setItem('birthdayChatMessages', JSON.stringify(chatMessages))
@@ -147,7 +149,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
   }
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('ja-JP', {
+    return new Date(dateStr).toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
     })
@@ -158,7 +160,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
     return (
       <div className="chat-modal show">
         <div className="chat-header">
-          <h3 className="chat-title">誕生日グループチャット</h3>
+          <h3 className="chat-title">{t('groupChat')}</h3>
           <div className="chat-controls">
             <span className="chat-btn" onClick={onClose}>×</span>
           </div>
@@ -166,13 +168,13 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         <div className="chat-content" style={{ justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ textAlign: 'center', padding: '20px' }}>
             <h4 style={{ marginBottom: '15px', color: 'var(--community-primary)' }}>
-              チャットに参加するには名前を入力してください
+              {t('enterNameToChat')}
             </h4>
             <input
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              placeholder="お名前..."
+              placeholder={`${t('yourName')}...`}
               onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
               className="chat-message-input"
               style={{ marginBottom: '15px', width: '100%' }}
@@ -183,7 +185,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
               className="chat-send-btn"
               style={{ width: '100%', opacity: userName.trim() ? 1 : 0.5 }}
             >
-              チャットに参加
+              {t('joinChat')}
             </button>
           </div>
         </div>
@@ -193,12 +195,12 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
 
   return (
     <div className={`chat-modal show ${isMinimized ? '' : 'chat-modal-expanded'}`}>
-      {/* ヘッダー */}
+
       <div className="chat-header">
-        <h3 className="chat-title">グループチャット</h3>
+        <h3 className="chat-title">{t('groupChat')}</h3>
         <div className="chat-controls">
-          <span 
-            className="chat-btn chat-minimize" 
+          <span
+            className="chat-btn chat-minimize"
             onClick={() => setIsMinimized(!isMinimized)}
           >
             _
@@ -207,13 +209,13 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         </div>
       </div>
 
-      {/* メッセージ一覧 */}
+
       {!isMinimized && (
         <>
           <div className="chat-content">
             {messages.length === 0 ? (
               <p style={{ textAlign: 'center', opacity: 0.6 }}>
-                まだメッセージがありません。会話を始めましょう！
+                {t('startConversation')}
               </p>
             ) : (
               messages.map((msg) => {
@@ -224,7 +226,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
                     className={`chat-message ${isMe ? 'chat-message--sender' : 'chat-message--receiver'}`}
                   >
                     <div className="chat-message__sender">{msg.sender}</div>
-                    {msg.message}
+                    {msg.text}
                     <div className="chat-message__time">{formatTime(msg.created_at)}</div>
                   </div>
                 )
@@ -233,14 +235,14 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 入力エリア */}
+
           <div className="chat-input-area">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="メッセージを入力..."
+              placeholder={t('typeMessage')}
               className="chat-message-input"
             />
             <button

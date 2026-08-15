@@ -55,18 +55,18 @@ describe('production allowlist integration', () => {
     const productionRoot = createRepository()
     mkdirSync(join(productionRoot, 'data', 'festivals', 'jp'), { recursive: true })
     mkdirSync(join(productionRoot, 'supabase'), { recursive: true })
-    writeFileSync(join(productionRoot, 'data', 'festivals', 'jp', 'ja-JP.json'), '{"source":"clean"}\n')
+    writeFileSync(join(productionRoot, 'data', 'festivals', 'jp', 'ja.json'), '{"source":"clean"}\n')
     writeFileSync(join(productionRoot, 'supabase', 'config.toml'), 'secret = true\n')
     const commit = commitRepository(productionRoot)
-    writeFileSync(join(productionRoot, 'data', 'festivals', 'jp', 'ja-JP.json'), '{"source":"dirty"}\n')
+    writeFileSync(join(productionRoot, 'data', 'festivals', 'jp', 'ja.json'), '{"source":"dirty"}\n')
 
     const destination = mkdtempSync(join(tmpdir(), 'production-destination-'))
     temporaryDirectories.push(destination)
     const allowlistPath = join(destination, 'allowlist.json')
     writeFileSync(allowlistPath, JSON.stringify({
       allowedPathScopes: ['data/festivals/'],
-      allowedPaths: ['data/festivals/jp/ja-JP.json'],
-      integrationPaths: ['data/festivals/jp/ja-JP.json'],
+      allowedPaths: ['data/festivals/jp/ja.json'],
+      integrationPaths: ['data/festivals/jp/ja.json'],
       excludedPaths: { supabase: ['supabase/config.toml'] },
     }))
 
@@ -78,10 +78,10 @@ describe('production allowlist integration', () => {
       check: true,
     })
     expect(candidates).toHaveLength(1)
-    expect(existsSync(join(destination, 'data', 'festivals', 'jp', 'ja-JP.json'))).toBe(false)
+    expect(existsSync(join(destination, 'data', 'festivals', 'jp', 'ja.json'))).toBe(false)
 
     applyProductionAllowlist({ productionRoot, productionCommit: commit, allowlistPath, destination })
-    expect(readFileSync(join(destination, 'data', 'festivals', 'jp', 'ja-JP.json'), 'utf8')).toBe('{"source":"clean"}\n')
+    expect(readFileSync(join(destination, 'data', 'festivals', 'jp', 'ja.json'), 'utf8')).toBe('{"source":"clean"}\n')
     expect(existsSync(join(destination, 'supabase', 'config.toml'))).toBe(false)
   })
 

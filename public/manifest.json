@@ -1,7 +1,7 @@
 {
   "name": "Happy Birthday",
   "short_name": "Birthday",
-  "description": "Website chúc mừng sinh nhật với nhiều tính năng thú vị",
+  "description": "お誕生日を祝うためのコミュニティウェブサイト",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",
@@ -22,6 +22,6 @@
     }
   ],
   "categories": ["entertainment", "social"],
-  "lang": "vi",
+  "lang": "ja",
   "dir": "ltr"
 }

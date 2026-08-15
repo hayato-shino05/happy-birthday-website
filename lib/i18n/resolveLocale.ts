@@ -12,14 +12,16 @@ type TranslationPack = {
 }
 
 const LEGACY_LOCALE_MAP: Record<Language, Locale> = {
-  en: 'en-US',
-  ja: 'ja-JP',
+  en: 'en',
+  ja: 'ja',
 }
 
-export const DEFAULT_LOCALE: Locale = 'ja-JP'
+export const DEFAULT_LOCALE: Locale = 'ja'
 
 export function normalizeLocale(locale: string): string {
-  return LEGACY_LOCALE_MAP[locale.toLowerCase() as Language] ?? locale
+  const normalized = locale.trim().toLowerCase()
+  const language = normalized.split('-')[0]
+  return LEGACY_LOCALE_MAP[language as Language] ?? normalized
 }
 
 export function resolveLocale(
@@ -62,7 +64,7 @@ export function validateTranslationPacks(packs: readonly TranslationPack[]): voi
 
 function interpolate(value: string, params?: Record<string, string | number>): string {
   if (!params) return value
-  return value.replace(/\{\{(\w+)\}\}/g, (match, key: string) =>
+  return value.replace(/\{\{?(\w+)\}?\}/g, (match, key: string) =>
     params[key] === undefined ? match : String(params[key]),
   )
 }

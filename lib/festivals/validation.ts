@@ -10,7 +10,7 @@ import type {
 
 const EVENT_CATEGORIES = new Set<EventCategory>(['festival', 'public-holiday', 'season'])
 const EVENT_STATUSES = new Set<EventStatus>(['enabled', 'disabled', 'unsupported-calendar'])
-const LOCALE_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})+$/
+const LOCALE_PATTERN = /^(en|ja)$/
 const COUNTRY_PATTERN = /^[a-z]{2,3}$/
 const YEAR_PATTERN = /^\d{4}$/
 
@@ -38,7 +38,7 @@ function asNonEmptyString(value: unknown, path: string): string {
 function validateTimeZone(value: unknown): string {
   const timeZone = asNonEmptyString(value, 'dateRule.timeZone')
   try {
-    new Intl.DateTimeFormat('en-US', { timeZone }).format()
+    new Intl.DateTimeFormat('en', { timeZone }).format()
   } catch {
     throw new FestivalPackValidationError('dateRule.timeZone must be a valid IANA timezone')
   }
@@ -129,7 +129,7 @@ export function validateFestivalPack(value: unknown): FestivalPack {
     throw new FestivalPackValidationError('country must be a lowercase ISO-style code')
   }
   if (!LOCALE_PATTERN.test(locale)) {
-    throw new FestivalPackValidationError('locale must use BCP-47 format')
+    throw new FestivalPackValidationError('locale must be en or ja')
   }
   if (!EVENT_CATEGORIES.has(record.category as EventCategory)) {
     throw new FestivalPackValidationError('category is invalid')

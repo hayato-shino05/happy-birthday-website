@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 const script = resolve(process.cwd(), 'scripts/compare-festival-catalogs.mjs')
 
-const pack = (id: string, locale = 'ja-JP') => ({
+const pack = (id: string, locale = 'ja') => ({
   id,
   country: 'jp',
   locale,

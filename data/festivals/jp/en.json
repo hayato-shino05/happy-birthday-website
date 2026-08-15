@@ -1,8 +1,8 @@
 [
   {
-    "id": "jp-christmas-ja-jp",
+    "id": "jp-christmas",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Christmas",
     "description": "The winter holiday season.",
@@ -13,9 +13,9 @@
     "themeKey": "christmas"
   },
   {
-    "id": "jp-halloween-ja-jp",
+    "id": "jp-halloween",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Halloween",
     "description": "An autumn festival of costumes and harvest.",
@@ -26,9 +26,9 @@
     "themeKey": "halloween"
   },
   {
-    "id": "jp-hanami-ja-jp",
+    "id": "jp-hanami",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "season",
     "name": "Hanami",
     "description": "A spring seasonal event for enjoying cherry blossoms.",
@@ -39,9 +39,9 @@
     "themeKey": "hanami"
   },
   {
-    "id": "jp-obon-ja-jp",
+    "id": "jp-obon",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Obon",
     "description": "A traditional summer observance.",
@@ -52,9 +52,9 @@
     "themeKey": "obon"
   },
   {
-    "id": "jp-tsukimi-ja-jp",
+    "id": "jp-tsukimi",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Tsukimi",
     "description": "An autumn observance for viewing the moon.",
@@ -65,9 +65,9 @@
     "themeKey": "tsukimi"
   },
   {
-    "id": "jp-tanabata-ja-jp",
+    "id": "jp-tanabata",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Tanabata",
     "description": "A summer event for writing wishes on paper strips.",
@@ -78,9 +78,9 @@
     "themeKey": "tanabata"
   },
   {
-    "id": "jp-shogatsu-ja-jp",
+    "id": "jp-shogatsu",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "public-holiday",
     "name": "Shogatsu",
     "description": "The New Year period.",
@@ -91,9 +91,9 @@
     "themeKey": "shogatsu"
   },
   {
-    "id": "jp-kodomo-ja-jp",
+    "id": "jp-kodomo",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "public-holiday",
     "name": "Children's Day",
     "description": "A holiday wishing for children's healthy growth.",
@@ -104,9 +104,9 @@
     "themeKey": "kodomo"
   },
   {
-    "id": "jp-bunka-ja-jp",
+    "id": "jp-bunka",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "public-holiday",
     "name": "Culture Day",
     "description": "A holiday celebrating culture and peace.",

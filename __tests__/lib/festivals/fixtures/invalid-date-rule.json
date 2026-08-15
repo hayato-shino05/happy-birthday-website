@@ -1,7 +1,7 @@
 {
   "id": "jp-invalid-range",
   "country": "jp",
-  "locale": "ja-JP",
+  "locale": "ja",
   "category": "festival",
   "name": "無効な期間",
   "dateRule": {

@@ -6,7 +6,7 @@ function pack(overrides: Partial<FestivalPack> = {}): FestivalPack {
   return {
     id: 'event',
     country: 'jp',
-    locale: 'ja-JP',
+    locale: 'ja',
     category: 'festival',
     name: 'Event',
     dateRule: {

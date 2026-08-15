@@ -2,9 +2,9 @@ import type { FestivalPack } from '@/lib/festivals/types'
 
 export const festivalPacks = [
   {
-    "id": "jp-bunka-ja-jp",
+    "id": "jp-bunka",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "public-holiday",
     "name": "Culture Day",
     "description": "A holiday celebrating culture and peace.",
@@ -26,9 +26,9 @@ export const festivalPacks = [
     "themeKey": "bunka"
   },
   {
-    "id": "jp-bunka-ja-jp",
+    "id": "jp-bunka",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "public-holiday",
     "name": "文化の日",
     "description": "文化を祝い、平和を願う祝日です。",
@@ -50,9 +50,9 @@ export const festivalPacks = [
     "themeKey": "bunka"
   },
   {
-    "id": "jp-christmas-ja-jp",
+    "id": "jp-christmas",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Christmas",
     "description": "The winter holiday season.",
@@ -74,9 +74,9 @@ export const festivalPacks = [
     "themeKey": "christmas"
   },
   {
-    "id": "jp-christmas-ja-jp",
+    "id": "jp-christmas",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "クリスマス",
     "description": "冬の祝祭シーズンです。",
@@ -98,9 +98,9 @@ export const festivalPacks = [
     "themeKey": "christmas"
   },
   {
-    "id": "jp-halloween-ja-jp",
+    "id": "jp-halloween",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Halloween",
     "description": "An autumn festival of costumes and harvest.",
@@ -122,9 +122,9 @@ export const festivalPacks = [
     "themeKey": "halloween"
   },
   {
-    "id": "jp-halloween-ja-jp",
+    "id": "jp-halloween",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "ハロウィン",
     "description": "秋の仮装と収穫の祭りです。",
@@ -146,9 +146,9 @@ export const festivalPacks = [
     "themeKey": "halloween"
   },
   {
-    "id": "jp-hanami-ja-jp",
+    "id": "jp-hanami",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "season",
     "name": "Hanami",
     "description": "A spring seasonal event for enjoying cherry blossoms.",
@@ -180,9 +180,9 @@ export const festivalPacks = [
     "themeKey": "hanami"
   },
   {
-    "id": "jp-hanami-ja-jp",
+    "id": "jp-hanami",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "season",
     "name": "花見",
     "description": "桜を楽しむ春の季節行事です。",
@@ -214,9 +214,9 @@ export const festivalPacks = [
     "themeKey": "hanami"
   },
   {
-    "id": "jp-kodomo-ja-jp",
+    "id": "jp-kodomo",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "public-holiday",
     "name": "Children's Day",
     "description": "A holiday wishing for children's healthy growth.",
@@ -238,9 +238,9 @@ export const festivalPacks = [
     "themeKey": "kodomo"
   },
   {
-    "id": "jp-kodomo-ja-jp",
+    "id": "jp-kodomo",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "public-holiday",
     "name": "こどもの日",
     "description": "子どもの健やかな成長を願う祝日です。",
@@ -262,9 +262,9 @@ export const festivalPacks = [
     "themeKey": "kodomo"
   },
   {
-    "id": "jp-obon-ja-jp",
+    "id": "jp-obon",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Obon",
     "description": "A traditional summer observance.",
@@ -286,9 +286,9 @@ export const festivalPacks = [
     "themeKey": "obon"
   },
   {
-    "id": "jp-obon-ja-jp",
+    "id": "jp-obon",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "お盆",
     "description": "夏に行われる伝統的な行事です。",
@@ -310,9 +310,9 @@ export const festivalPacks = [
     "themeKey": "obon"
   },
   {
-    "id": "jp-shogatsu-ja-jp",
+    "id": "jp-shogatsu",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "public-holiday",
     "name": "Shogatsu",
     "description": "The New Year period.",
@@ -334,9 +334,9 @@ export const festivalPacks = [
     "themeKey": "shogatsu"
   },
   {
-    "id": "jp-shogatsu-ja-jp",
+    "id": "jp-shogatsu",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "public-holiday",
     "name": "正月",
     "description": "新年を祝う年始の期間です。",
@@ -358,9 +358,9 @@ export const festivalPacks = [
     "themeKey": "shogatsu"
   },
   {
-    "id": "jp-tanabata-ja-jp",
+    "id": "jp-tanabata",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Tanabata",
     "description": "A summer event for writing wishes on paper strips.",
@@ -382,9 +382,9 @@ export const festivalPacks = [
     "themeKey": "tanabata"
   },
   {
-    "id": "jp-tanabata-ja-jp",
+    "id": "jp-tanabata",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "七夕",
     "description": "願いごとを短冊に託す夏の行事です。",
@@ -406,9 +406,9 @@ export const festivalPacks = [
     "themeKey": "tanabata"
   },
   {
-    "id": "jp-tsukimi-ja-jp",
+    "id": "jp-tsukimi",
     "country": "jp",
-    "locale": "en-US",
+    "locale": "en",
     "category": "festival",
     "name": "Tsukimi",
     "description": "An autumn observance for viewing the moon.",
@@ -428,9 +428,9 @@ export const festivalPacks = [
     "themeKey": "tsukimi"
   },
   {
-    "id": "jp-tsukimi-ja-jp",
+    "id": "jp-tsukimi",
     "country": "jp",
-    "locale": "ja-JP",
+    "locale": "ja",
     "category": "festival",
     "name": "月見",
     "description": "月を眺める秋の行事です。",

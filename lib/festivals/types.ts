@@ -2,7 +2,7 @@ export type EventCategory = 'festival' | 'public-holiday' | 'season'
 
 export type EventStatus = 'enabled' | 'disabled' | 'unsupported-calendar'
 
-export type Locale = `${string}-${string}`
+export type Locale = 'en' | 'ja'
 
 export interface GregorianRange {
   month: number

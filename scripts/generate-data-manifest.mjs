@@ -1,9 +1,11 @@
 import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 
-const LOCALE_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})+$/
+const LOCALE_PATTERN = /^[A-Za-z]{2,3}$/
 const COUNTRY_PATTERN = /^[a-z]{2,3}$/
+const SUPPORTED_LOCALES = ['en', 'ja']
+const LOCALE_FILE_NAMES = { 'en': 'en.json', 'ja': 'ja.json' }
 
 function fail(message) {
   throw new Error(message)
@@ -43,7 +45,7 @@ function assertRequired(record, required, path) {
 function assertTimeZone(timeZone, path) {
   if (typeof timeZone !== 'string' || timeZone.length === 0) fail(`${path} は必須です`)
   try {
-    new Intl.DateTimeFormat('en-US', { timeZone }).format()
+    new Intl.DateTimeFormat('en', { timeZone }).format()
   } catch {
     fail(`${path} は IANA timezone である必要があります`)
   }
@@ -80,6 +82,7 @@ function validatePack(pack, path) {
   if (typeof pack.id !== 'string' || pack.id.length === 0) fail(`${path}.id が不正です`)
   if (typeof pack.country !== 'string' || !COUNTRY_PATTERN.test(pack.country)) fail(`${path}.country が不正です`)
   if (typeof pack.locale !== 'string' || !LOCALE_PATTERN.test(pack.locale)) fail(`${path}.locale が不正です`)
+  if (!SUPPORTED_LOCALES.includes(pack.locale)) fail(`${path}.locale は en または ja である必要があります`)
   if (!['festival', 'public-holiday', 'season'].includes(pack.category)) fail(`${path}.category が不正です`)
   if (typeof pack.name !== 'string' || pack.name.length === 0) fail(`${path}.name が不正です`)
   if (typeof pack.enabled !== 'boolean') fail(`${path}.enabled が不正です`)
@@ -138,6 +141,7 @@ async function collectLocales(root) {
     const path = relative(root, file)
     assertRequired(value, ['locale', 'translations'], path)
     if (typeof value.locale !== 'string' || !LOCALE_PATTERN.test(value.locale)) fail(`${path}.locale が不正です`)
+    if (SUPPORTED_LOCALES.includes(value.locale) && LOCALE_FILE_NAMES[value.locale] !== basename(file)) fail(`${path} は ${LOCALE_FILE_NAMES[value.locale]} である必要があります`)
     if (seen.has(value.locale)) fail(`locale が重複しています: ${value.locale}`)
     seen.add(value.locale)
     if (!value.translations || typeof value.translations !== 'object' || Array.isArray(value.translations)) fail(`${path}.translations が不正です`)
@@ -172,7 +176,13 @@ function validateThemeKeys(packs, themeKeys) {
 
 function validateLocaleKeys(locales, canonicalKeys) {
   if (locales.length === 0) fail('locale pack がありません')
+
+  const availableLocales = new Set(locales.map(({ locale }) => locale))
+  for (const supportedLocale of SUPPORTED_LOCALES) {
+    if (!availableLocales.has(supportedLocale)) fail(`supported locale pack が不足しています: ${supportedLocale}`)
+  }
   for (const locale of locales) {
+    if (!SUPPORTED_LOCALES.includes(locale.locale)) fail(`未対応の locale pack です: ${locale.locale}`)
     const keys = Object.keys(locale.translations).sort()
     if (JSON.stringify(keys) !== JSON.stringify(canonicalKeys)) {
       fail(`translation keys が一致しません: ${locale.locale}`)
