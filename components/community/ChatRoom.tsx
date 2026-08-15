@@ -4,12 +4,56 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
-interface ChatMessage {
+export interface ChatMessage {
   id: number
   sender: string
   message: string
   created_at: string
   pending?: boolean
+}
+
+export function appendRealtimeChatMessage(
+  messages: readonly ChatMessage[],
+  message: ChatMessage,
+): ChatMessage[] {
+  if (messages.some((item) => item.id === message.id)) return [...messages]
+  return [...messages, message]
+}
+
+export function mergeLoadedChatMessages(
+  loadedMessages: readonly ChatMessage[],
+  currentMessages: readonly ChatMessage[],
+): ChatMessage[] {
+  const messagesById = new Map<number, ChatMessage>()
+  for (const message of loadedMessages) messagesById.set(message.id, message)
+  for (const message of currentMessages) messagesById.set(message.id, message)
+
+  return [...messagesById.values()].sort((left, right) => {
+    const leftTime = Date.parse(left.created_at)
+    const rightTime = Date.parse(right.created_at)
+    if (Number.isNaN(leftTime) && Number.isNaN(rightTime)) return left.id - right.id
+    if (Number.isNaN(leftTime)) return 1
+    if (Number.isNaN(rightTime)) return -1
+    return leftTime - rightTime || left.id - right.id
+  })
+}
+
+export function reconcileInsertedChatMessage(
+  messages: readonly ChatMessage[],
+  optimisticId: number,
+  insertedMessage: ChatMessage,
+): ChatMessage[] {
+  const hasInsertedMessage = messages.some((item) => item.id === insertedMessage.id && !item.pending)
+  let replacedOptimistic = false
+
+  const reconciled = messages.flatMap((item) => {
+    if (item.id !== optimisticId) return [item]
+    replacedOptimistic = true
+    return hasInsertedMessage ? [] : [insertedMessage]
+  })
+
+  if (replacedOptimistic || hasInsertedMessage) return reconciled
+  return [...reconciled, insertedMessage]
 }
 
 function parseChatMessage(value: unknown): ChatMessage | null {
@@ -36,6 +80,20 @@ function parseChatMessage(value: unknown): ChatMessage | null {
   }
 }
 
+function persistFallbackChatMessage(message: ChatMessage): void {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]') as unknown
+    const storedMessages = Array.isArray(parsed)
+      ? parsed.map(parseChatMessage).filter((item): item is ChatMessage => item !== null)
+      : []
+
+    if (storedMessages.some((item) => item.id === message.id)) return
+    localStorage.setItem('birthdayChatMessages', JSON.stringify([...storedMessages, message]))
+  } catch {
+    return
+  }
+}
+
 interface ChatRoomProps {
   onClose: () => void
 }
@@ -49,6 +107,29 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
   const [isMinimized, setIsMinimized] = useState(false)
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const mountedRef = useRef(false)
+  const messagesRef = useRef<ChatMessage[]>([])
+  const fallbackTimersRef = useRef(new Map<number, ReturnType<typeof setTimeout>>())
+
+  useEffect(() => {
+    mountedRef.current = true
+    const fallbackTimers = fallbackTimersRef.current
+    return () => {
+      mountedRef.current = false
+      for (const [messageId, timer] of fallbackTimers) {
+        clearTimeout(timer)
+        const current = messagesRef.current.find((message) => message.id === messageId)
+        if (current?.pending) {
+          persistFallbackChatMessage({ ...current, pending: false })
+        }
+        fallbackTimers.delete(messageId)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
 
   // 共有ストレージから保存済みのユーザー名を読み込む
   useEffect(() => {
@@ -81,17 +162,25 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         if (error.code === '42P01') return
         throw error
       }
-      setMessages(
-        data?.map(parseChatMessage).filter((message): message is ChatMessage => message !== null) ?? [],
-      )
+      const loadedMessages =
+        data?.map(parseChatMessage).filter((message): message is ChatMessage => message !== null) ?? []
+      if (!mountedRef.current) return
+      setMessages((prev) => mergeLoadedChatMessages(loadedMessages, prev))
     } catch {
       // フォールバックとしてlocalStorageから読み込む
-      const messagesData = localStorage.getItem('birthdayChatMessages')
-      if (messagesData) {
-        const parsed = JSON.parse(messagesData) as unknown
-        if (Array.isArray(parsed)) {
-          setMessages(parsed.map(parseChatMessage).filter((message): message is ChatMessage => message !== null))
+      try {
+        const messagesData = localStorage.getItem('birthdayChatMessages')
+        if (messagesData && mountedRef.current) {
+          const parsed = JSON.parse(messagesData) as unknown
+          if (Array.isArray(parsed)) {
+            const loadedMessages = parsed
+              .map(parseChatMessage)
+              .filter((message): message is ChatMessage => message !== null)
+            setMessages((prev) => mergeLoadedChatMessages(loadedMessages, prev))
+          }
         }
+      } catch {
+        return
       }
     }
   }, [])
@@ -113,22 +202,8 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
           table: 'chat_messages',
         }, (payload) => {
           const message = parseChatMessage(payload.new)
-          if (!message) return
-          setMessages((prev) => {
-            const pendingIndex = prev.findIndex((item) =>
-              item.pending &&
-              item.sender === message.sender &&
-              item.message === message.message &&
-              Math.abs(new Date(item.created_at).getTime() - new Date(message.created_at).getTime()) <= 30000,
-            )
-            if (pendingIndex >= 0) {
-              return prev.map((item, index) => index === pendingIndex ? message : item)
-            }
-            if (prev.some((item) => item.id === message.id && !item.pending)) {
-              return prev
-            }
-            return [...prev, message]
-          })
+          if (!message || !mountedRef.current) return
+          setMessages((prev) => appendRealtimeChatMessage(prev, message))
         })
         .subscribe()
     } catch {
@@ -164,7 +239,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
     if (!trimmedMessage || loading) return
 
     const messageData: ChatMessage = {
-      id: Date.now(),
+      id: -Date.now(),
       sender: userName,
       message: trimmedMessage,
       created_at: new Date().toISOString(),
@@ -188,21 +263,36 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
 
       if (error) throw error
       const insertedMessage = parseChatMessage(data)
-      setMessages((prev) => prev.map((item) => item.id === messageData.id ? insertedMessage ?? { ...messageData, pending: false } : item))
+      if (!insertedMessage) throw new Error('Supabase returned an invalid chat message')
+      const fallbackTimer = fallbackTimersRef.current.get(messageData.id)
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer)
+        fallbackTimersRef.current.delete(messageData.id)
+      }
+      if (mountedRef.current) {
+        setMessages((prev) => reconcileInsertedChatMessage(prev, messageData.id, insertedMessage))
+      }
     } catch {
-      setTimeout(() => {
+      if (!mountedRef.current) {
+        persistFallbackChatMessage({ ...messageData, pending: false })
+        return
+      }
+
+      const fallbackTimer = setTimeout(() => {
+        fallbackTimersRef.current.delete(messageData.id)
+        const current = messagesRef.current.find((item) => item.id === messageData.id)
+        if (!current || !current.pending) return
+
         const fallbackMessage = { ...messageData, pending: false }
-        setMessages((prev) => {
-          const current = prev.find((item) => item.id === messageData.id)
-          if (!current || !current.pending) return prev
-          const chatMessages = JSON.parse(localStorage.getItem('birthdayChatMessages') || '[]')
-          chatMessages.push(fallbackMessage)
-          localStorage.setItem('birthdayChatMessages', JSON.stringify(chatMessages))
-          return prev.map((item) => item.id === messageData.id ? fallbackMessage : item)
-        })
+        persistFallbackChatMessage(fallbackMessage)
+        messagesRef.current = messagesRef.current.map((item) => item.id === messageData.id ? fallbackMessage : item)
+        if (mountedRef.current) {
+          setMessages((prev) => prev.map((item) => item.id === messageData.id ? fallbackMessage : item))
+        }
       }, 3000)
+      fallbackTimersRef.current.set(messageData.id, fallbackTimer)
     } finally {
-      setLoading(false)
+      if (mountedRef.current) setLoading(false)
     }
   }
 

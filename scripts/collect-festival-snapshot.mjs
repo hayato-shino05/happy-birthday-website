@@ -24,11 +24,22 @@ function getDirtyFiles(root) {
     ['-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'],
     { encoding: 'utf8' },
   )
-  return output
-    .split('\0')
-    .filter(Boolean)
-    .map((entry) => entry.slice(3))
-    .filter(Boolean)
+  const dirtyFiles = []
+  const entries = output.split('\0')
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index]
+    if (!entry || entry.length < 3 || entry[2] !== ' ') continue
+    const status = entry.slice(0, 2)
+    const path = entry.slice(3)
+    if (!path) continue
+    dirtyFiles.push(path)
+    if (status.includes('R') || status.includes('C')) {
+      const previousPath = entries[index + 1]
+      if (previousPath) dirtyFiles.push(previousPath)
+      index += 1
+    }
+  }
+  return [...new Set(dirtyFiles)]
 }
 
 function readAtCommit(root, commit, relativePath) {
@@ -261,23 +272,26 @@ function parseArguments(argumentsList) {
 function writeJsonBatch(entries) {
   const files = entries.map(({ path, value }) => {
     const absolutePath = resolve(path)
-    mkdirSync(dirname(absolutePath), { recursive: true })
+    const hadOriginal = existsSync(absolutePath)
     return {
       absolutePath,
       backupPath: `${absolutePath}.${process.pid}.bak`,
       temporaryPath: `${absolutePath}.${process.pid}.tmp`,
       content: `${JSON.stringify(value, null, 2)}\n`,
+      hadOriginal,
+      originalContent: hadOriginal ? readFileSync(absolutePath) : null,
       installed: false,
     }
   })
 
   try {
     for (const file of files) {
+      mkdirSync(dirname(file.absolutePath), { recursive: true })
       writeFileSync(file.temporaryPath, file.content)
       rmSync(file.backupPath, { force: true })
     }
     for (const file of files) {
-      if (existsSync(file.absolutePath)) renameSync(file.absolutePath, file.backupPath)
+      if (file.hadOriginal) renameSync(file.absolutePath, file.backupPath)
       renameSync(file.temporaryPath, file.absolutePath)
       file.installed = true
     }
@@ -286,6 +300,7 @@ function writeJsonBatch(entries) {
     for (const file of files) {
       if (file.installed && existsSync(file.absolutePath)) rmSync(file.absolutePath, { force: true })
       if (existsSync(file.backupPath)) renameSync(file.backupPath, file.absolutePath)
+      else if (file.hadOriginal && file.originalContent !== null) writeFileSync(file.absolutePath, file.originalContent)
       rmSync(file.temporaryPath, { force: true })
     }
     throw error

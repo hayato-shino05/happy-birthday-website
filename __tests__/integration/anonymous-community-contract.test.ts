@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 describe('anonymous community contract', () => {
   it('keeps the public tables read/create-only for anon', () => {
     const migration = readFileSync(join(process.cwd(), 'supabase', 'migrations', '20260812163000_reset_and_create_anonymous_community.sql'), 'utf8')
-    const tables = ['birthdays', 'messages', 'media_submissions', 'virtual_gifts', 'chat_messages', 'bulletin_posts']
+    const tables = ['birthdays', 'messages', 'media_submissions', 'virtual_gifts', 'chat_messages', 'bulletin_posts', 'post_replies']
 
     for (const table of tables) {
       expect(migration).toContain(`create table public.${table}`)

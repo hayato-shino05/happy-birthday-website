@@ -89,6 +89,18 @@ describe('generate-data-manifest', () => {
     expect(existsSync(join(root, 'data', 'generated', 'locales.ts'))).toBe(false)
   })
 
+  it('rejects unknown locale top-level keys before writing', () => {
+    const root = createFixture()
+    writeFileSync(join(root, 'data', 'i18n', 'ja.json'), JSON.stringify({ locale: 'ja', translations: { title: '誕生日' }, extra: true }))
+
+    expect(() => runGenerator(root, '--write')).toThrow(/extra/)
+    expect(existsSync(join(root, 'data', 'generated', 'locales.ts'))).toBe(false)
+  })
+
+  it('reports a missing --root value with a generator diagnostic', () => {
+    expect(() => execFileSync(process.execPath, [scriptPath, '--root'], { encoding: 'utf8' })).toThrow(/`--root` にはパスが必要です/)
+  })
+
   it('rejects missing supported locale packs', () => {
     const root = createFixture()
     rmSync(join(root, 'data', 'i18n', 'en.json'))

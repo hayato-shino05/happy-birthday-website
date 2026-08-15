@@ -57,7 +57,7 @@ const openSource = [
 ]
 
 describe('compareCatalogs', () => {
-  it('returns all eight stable categories and does not infer duplicate ids from dates', () => {
+  it('returns all stable categories and does not infer duplicate ids from dates', () => {
     const report = compareCatalogs(production, openSource)
 
     expect(ids(report.shared)).toEqual(['shared'])
@@ -67,6 +67,7 @@ describe('compareCatalogs', () => {
     expect(ids(report.calendarRuleMismatch)).toEqual(['calendar-diff'])
     expect(ids(report.localeCoverageMismatch)).toEqual(['locale-gap'])
     expect(ids(report.themeReferenceMismatch)).toEqual(['theme-diff'])
+    expect(ids(report.runtimeContractMismatch)).toEqual([])
     expect(ids(report.duplicateIds)).toEqual(['duplicate'])
     expect(ids(report.duplicateIds)).not.toContain('country-jp')
     expect(ids(report.duplicateIds)).not.toContain('country-us')
@@ -102,5 +103,83 @@ describe('compareCatalogs', () => {
       { events: [{ id: 'broken' }] },
       { events: [pack({ id: 'broken' })] },
     )).toThrow(/malformed festival pack/)
+  })
+
+  it('rejects snapshot entries that omit runtime contract fields', () => {
+    expect(() => compareCatalogs(
+      { events: [{ ...pack({ id: 'broken' }), enabled: undefined }] },
+      { events: [pack({ id: 'broken' })] },
+    )).toThrow(/malformed festival pack/)
+  })
+
+  it('does not classify operational drift as localized content', () => {
+    const report = compareCatalogs(
+      [pack({ id: 'runtime-diff', enabled: true })],
+      [pack({ id: 'runtime-diff', enabled: false })],
+    )
+
+    expect(report.shared).toEqual([])
+    expect(report.sameDateDifferentContent).toEqual([])
+    expect(report.runtimeContractMismatch).toEqual([{ id: 'runtime-diff' }])
+    expect(report.duplicateIds).toEqual([])
+  })
+
+  it('classifies identity drift as different content', () => {
+    const report = compareCatalogs(
+      [pack({ id: 'identity-diff', country: 'jp' })],
+      [pack({ id: 'identity-diff', country: 'us' })],
+    )
+
+    expect(report.sameDateDifferentContent).toEqual([{ id: 'identity-diff' }])
+    expect(report.shared).toEqual([])
+  })
+
+  it('rejects locale variants with inconsistent runtime contracts', () => {
+    const report = compareCatalogs(
+      [
+        pack({ id: 'variant-drift', locale: 'en', priority: 10 }),
+        pack({ id: 'variant-drift', locale: 'ja', priority: 20 }),
+      ],
+      [
+        pack({ id: 'variant-drift', locale: 'en', priority: 10 }),
+        pack({ id: 'variant-drift', locale: 'ja', priority: 10 }),
+      ],
+    )
+
+    expect(report.runtimeContractMismatch).toEqual([{ id: 'variant-drift' }])
+    expect(report.duplicateIds).toEqual([])
+    expect(report.shared).toEqual([])
+  })
+
+  it('keeps matching localized variants shared', () => {
+    const report = compareCatalogs(
+      [
+        pack({ id: 'localized-shared', locale: 'en', name: 'English name' }),
+        pack({ id: 'localized-shared', locale: 'ja', name: '日本語名' }),
+      ],
+      [
+        pack({ id: 'localized-shared', locale: 'en', name: 'English name' }),
+        pack({ id: 'localized-shared', locale: 'ja', name: '日本語名' }),
+      ],
+    )
+
+    expect(report.shared).toEqual([{ id: 'localized-shared' }])
+    expect(report.duplicateIds).toEqual([])
+  })
+
+  it('classifies inconsistent intra-catalog identity variants as duplicates', () => {
+    const report = compareCatalogs(
+      [
+        pack({ id: 'identity-duplicate', locale: 'en', country: 'jp' }),
+        pack({ id: 'identity-duplicate', locale: 'ja', country: 'us' }),
+      ],
+      [
+        pack({ id: 'identity-duplicate', locale: 'en', country: 'jp' }),
+        pack({ id: 'identity-duplicate', locale: 'ja', country: 'us' }),
+      ],
+    )
+
+    expect(report.duplicateIds).toEqual([{ id: 'identity-duplicate' }])
+    expect(report.shared).toEqual([])
   })
 })

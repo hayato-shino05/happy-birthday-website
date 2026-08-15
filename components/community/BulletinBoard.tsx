@@ -6,7 +6,7 @@ import BulletinPost from './BulletinPost'
 import PostDetail from './PostDetail'
 
 export default function BulletinBoard() {
-  const { posts, loading, error, refetch } = usePosts()
+  const { posts, loading, error, refetch, likePost } = usePosts()
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
   if (loading) {
@@ -57,6 +57,7 @@ export default function BulletinBoard() {
       <PostDetail
         post={selectedPost}
         onBack={() => setSelectedPost(null)}
+        onLike={likePost}
       />
     )
   }
@@ -103,6 +104,7 @@ export default function BulletinBoard() {
             <BulletinPost
               key={post.id}
               post={post}
+              onLike={likePost}
               onReply={() => setSelectedPost(post)}
             />
           ))}

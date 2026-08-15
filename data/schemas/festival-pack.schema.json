@@ -65,7 +65,12 @@
                   {"if": {"properties": {"startDay": {"const": 28}}}, "then": {"properties": {"endDay": {"minimum": 28}}}},
                   {"if": {"properties": {"startDay": {"const": 29}}}, "then": {"properties": {"endDay": {"minimum": 29}}}},
                   {"if": {"properties": {"startDay": {"const": 30}}}, "then": {"properties": {"endDay": {"minimum": 30}}}},
-                  {"if": {"properties": {"startDay": {"const": 31}}}, "then": {"properties": {"endDay": {"minimum": 31}}}}
+                  {"if": {"properties": {"startDay": {"const": 31}}}, "then": {"properties": {"endDay": {"minimum": 31}}}},
+                  {"if": {"properties": {"month": {"const": 2}}}, "then": {"properties": {"startDay": {"maximum": 28}, "endDay": {"maximum": 28}}}},
+                  {"if": {"properties": {"month": {"const": 4}}}, "then": {"properties": {"startDay": {"maximum": 30}, "endDay": {"maximum": 30}}}},
+                  {"if": {"properties": {"month": {"const": 6}}}, "then": {"properties": {"startDay": {"maximum": 30}, "endDay": {"maximum": 30}}}},
+                  {"if": {"properties": {"month": {"const": 9}}}, "then": {"properties": {"startDay": {"maximum": 30}, "endDay": {"maximum": 30}}}},
+                  {"if": {"properties": {"month": {"const": 11}}}, "then": {"properties": {"startDay": {"maximum": 30}, "endDay": {"maximum": 30}}}}
                 ]
               }
             },
@@ -93,7 +98,14 @@
                   "properties": {
                     "month": {"type": "integer", "minimum": 1, "maximum": 12},
                     "day": {"type": "integer", "minimum": 1, "maximum": 31}
-                  }
+                  },
+                  "allOf": [
+                    {"if": {"properties": {"month": {"const": 2}}}, "then": {"properties": {"day": {"maximum": 29}}}},
+                    {"if": {"properties": {"month": {"const": 4}}}, "then": {"properties": {"day": {"maximum": 30}}}},
+                    {"if": {"properties": {"month": {"const": 6}}}, "then": {"properties": {"day": {"maximum": 30}}}},
+                    {"if": {"properties": {"month": {"const": 9}}}, "then": {"properties": {"day": {"maximum": 30}}}},
+                    {"if": {"properties": {"month": {"const": 11}}}, "then": {"properties": {"day": {"maximum": 30}}}}
+                  ]
                 }
               }
             },

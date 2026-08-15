@@ -5,7 +5,7 @@ import { locales } from '@/data/generated/locales'
 import { DEFAULT_LOCALE, normalizeLocale, resolveLocale, translate } from './resolveLocale'
 import type { Language, Locale, TranslationKey } from './types'
 
-const LANGUAGE_COOKIE_NAME = 'birthday-locale'
+export const LANGUAGE_COOKIE_NAME = 'birthday-locale'
 
 interface LanguageContextType {
   language: Language
@@ -31,7 +31,8 @@ export function LanguageProvider({
     const requestedLocale = normalizeLocale(requestedLanguage)
     const resolved = resolveLocale(requestedLocale, locales, DEFAULT_LOCALE)
     setLocale(resolved.locale)
-    document.cookie = `${LANGUAGE_COOKIE_NAME}=${resolved.locale}; path=/; max-age=31536000; samesite=lax`
+    const secure = window.location.protocol === 'https:' ? '; secure' : ''
+    document.cookie = `${LANGUAGE_COOKIE_NAME}=${resolved.locale}; path=/; max-age=31536000; samesite=lax${secure}`
   }, [])
 
   const language: Language = locale.startsWith('ja') ? 'ja' : 'en'

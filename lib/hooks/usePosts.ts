@@ -11,10 +11,12 @@ export interface Post {
   media_url?: string
   birthday_person: string | null
   created_at: string
+  likes: number
   replies_count?: number
 }
 
-type PostRecord = Omit<Post, 'media_url' | 'replies_count'> & {
+type PostRecord = Omit<Post, 'media_url' | 'replies_count' | 'likes'> & {
+  likes?: number
   post_replies?: { count: number }[]
 }
 
@@ -26,6 +28,7 @@ function toPost(post: PostRecord): Post {
   return {
     ...post,
     media_url: data?.publicUrl,
+    likes: post.likes ?? 0,
     replies_count: post.post_replies?.[0]?.count ?? 0,
   }
 }
@@ -83,6 +86,13 @@ export function usePosts() {
     }
   }, [])
 
+  const likePost = useCallback(async (postId: string) => {
+    setPosts((prev) => prev.map((post) => (
+      post.id === postId ? { ...post, likes: post.likes + 1 } : post
+    )))
+    return true
+  }, [])
+
   useEffect(() => {
     void fetchPosts()
   }, [fetchPosts])
@@ -93,5 +103,6 @@ export function usePosts() {
     error,
     refetch: fetchPosts,
     createPost,
+    likePost,
   }
 }

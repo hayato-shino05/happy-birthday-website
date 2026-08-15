@@ -13,6 +13,7 @@ export interface ParityReport {
   calendarRuleMismatch: ParityItem[]
   localeCoverageMismatch: ParityItem[]
   themeReferenceMismatch: ParityItem[]
+  runtimeContractMismatch: ParityItem[]
 }
 
 export interface CatalogSnapshotObject {
@@ -35,6 +36,7 @@ const REPORT_KEYS: (keyof ParityReport)[] = [
   'calendarRuleMismatch',
   'localeCoverageMismatch',
   'themeReferenceMismatch',
+  'runtimeContractMismatch',
 ]
 
 function stableJson(value: unknown): string {
@@ -87,15 +89,6 @@ function groupById(packs: readonly FestivalPack[]): Map<string, FestivalPack[]> 
   return groups
 }
 
-function eventIdentity(pack: FestivalPack): string {
-  return stableJson({
-    country: pack.country,
-    region: pack.region,
-    category: pack.category,
-    dateRule: pack.dateRule,
-  })
-}
-
 function localeSet(packs: readonly FestivalPack[]): string {
   return [...new Set(packs.map(({ locale }) => locale))].sort().join('\u0000')
 }
@@ -114,21 +107,42 @@ function ruleSet(packs: readonly FestivalPack[]): string {
     .join('\u0000')
 }
 
-function contentSet(packs: readonly FestivalPack[]): string {
+function identitySet(packs: readonly FestivalPack[]): string {
   return packs
-    .map((pack) => stableJson({
-      locale: pack.locale,
-      country: pack.country,
-      region: pack.region,
-      category: pack.category,
-      name: pack.name,
-      description: pack.description,
-      enabled: pack.enabled,
-      status: pack.status,
-      priority: pack.priority,
-    }))
+    .map(({ locale, country, region, category }) => stableJson({ locale, country, region, category }))
     .sort()
     .join('\u0000')
+}
+
+function runtimeContractSet(packs: readonly FestivalPack[]): string {
+  return packs
+    .map(({ locale, enabled, status, priority }) => stableJson({ locale, enabled, status, priority }))
+    .sort()
+    .join('\u0000')
+}
+
+function hasRuntimeContractMismatch(packs: readonly FestivalPack[]): boolean {
+  if (packs.length < 2) return false
+  const runtimeContracts = new Set(
+    packs.map(({ enabled, status, priority }) => stableJson({ enabled, status, priority })),
+  )
+  return runtimeContracts.size > 1
+}
+
+function contentSet(packs: readonly FestivalPack[]): string {
+  return packs
+    .map(({ locale, name, description }) => stableJson({ locale, name, description }))
+    .sort()
+    .join('\u0000')
+}
+
+function eventIdentity(pack: FestivalPack): string {
+  return stableJson({
+    country: pack.country,
+    region: pack.region,
+    category: pack.category,
+    dateRule: pack.dateRule,
+  })
 }
 
 function hasDuplicateId(packs: readonly FestivalPack[]): boolean {
@@ -162,12 +176,14 @@ export function compareCatalogs(productionSnapshot: CatalogSnapshot, openSourceS
     calendarRuleMismatch: [],
     localeCoverageMismatch: [],
     themeReferenceMismatch: [],
+    runtimeContractMismatch: [],
   }
 
   for (const id of ids) {
     const productionEntries = productionById.get(id) ?? []
     const openSourceEntries = openSourceById.get(id) ?? []
     const hasDuplicate = hasDuplicateId(productionEntries) || hasDuplicateId(openSourceEntries)
+    const hasRuntimeMismatch = hasRuntimeContractMismatch(productionEntries) || hasRuntimeContractMismatch(openSourceEntries)
     if (hasDuplicate) report.duplicateIds.push({ id })
     if (productionEntries.length === 0) {
       report.openSourceOnly.push({ id })
@@ -184,6 +200,10 @@ export function compareCatalogs(productionSnapshot: CatalogSnapshot, openSourceS
       report.calendarRuleMismatch.push({ id })
     } else if (themeSet(productionEntries) !== themeSet(openSourceEntries)) {
       report.themeReferenceMismatch.push({ id })
+    } else if (hasRuntimeMismatch || runtimeContractSet(productionEntries) !== runtimeContractSet(openSourceEntries)) {
+      report.runtimeContractMismatch.push({ id })
+    } else if (identitySet(productionEntries) !== identitySet(openSourceEntries)) {
+      report.sameDateDifferentContent.push({ id })
     } else if (contentSet(productionEntries) !== contentSet(openSourceEntries)) {
       report.sameDateDifferentContent.push({ id })
     } else {

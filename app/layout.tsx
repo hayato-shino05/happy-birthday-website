@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { locales } from '@/data/generated/locales'
-import { LanguageProvider } from '@/lib/i18n/LanguageContext'
+import { LANGUAGE_COOKIE_NAME, LanguageProvider } from '@/lib/i18n/LanguageContext'
 import { DEFAULT_LOCALE, resolveLocale } from '@/lib/i18n/resolveLocale'
 import { ThemeProvider } from '@/lib/providers/ThemeProvider'
 import { QueryProvider } from '@/lib/providers/QueryProvider'
@@ -69,7 +69,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const cookieStore = await cookies()
-  const requestedLocale = cookieStore.get('birthday-locale')?.value ?? DEFAULT_LOCALE
+  const requestedLocale = cookieStore.get(LANGUAGE_COOKIE_NAME)?.value ?? DEFAULT_LOCALE
   const locale = resolveLocale(requestedLocale, locales, DEFAULT_LOCALE).locale
   const language = locale.startsWith('ja') ? 'ja' : 'en'
 

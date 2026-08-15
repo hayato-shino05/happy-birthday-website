@@ -6,6 +6,7 @@ const LOCALE_PATTERN = /^[A-Za-z]{2,3}$/
 const COUNTRY_PATTERN = /^[a-z]{2,3}$/
 const SUPPORTED_LOCALES = ['en', 'ja']
 const LOCALE_FILE_NAMES = { 'en': 'en.json', 'ja': 'ja.json' }
+const LOCALE_KEYS = new Set(['locale', 'translations'])
 const PACK_KEYS = new Set(['id', 'country', 'region', 'locale', 'category', 'name', 'description', 'dateRule', 'enabled', 'status', 'priority', 'themeKey'])
 const YEARLY_RULE_KEYS = new Set(['calendar', 'recurrence', 'ranges', 'timeZone'])
 const YEAR_SPECIFIC_RULE_KEYS = new Set(['calendar', 'recurrence', 'dates', 'timeZone'])
@@ -227,6 +228,7 @@ async function collectLocales(root) {
     const value = await readJson(file)
     const path = relative(root, file)
     assertRequired(value, ['locale', 'translations'], path)
+    assertExactKeys(value, LOCALE_KEYS, path)
     if (typeof value.locale !== 'string' || !LOCALE_PATTERN.test(value.locale)) fail(`${path}.locale が不正です`)
     if (SUPPORTED_LOCALES.includes(value.locale) && LOCALE_FILE_NAMES[value.locale] !== basename(file)) fail(`${path} は ${LOCALE_FILE_NAMES[value.locale]} である必要があります`)
     if (seen.has(value.locale)) fail(`locale が重複しています: ${value.locale}`)
@@ -365,7 +367,9 @@ async function generate(root) {
 async function main() {
   const args = process.argv.slice(2)
   const rootIndex = args.indexOf('--root')
-  const root = resolve(rootIndex >= 0 ? args[rootIndex + 1] : process.cwd())
+  const rootArgument = rootIndex >= 0 ? args[rootIndex + 1] : undefined
+  if (rootIndex >= 0 && (!rootArgument || rootArgument.startsWith('--'))) fail('`--root` にはパスが必要です')
+  const root = resolve(rootArgument ?? process.cwd())
   const mode = args.includes('--check') ? 'check' : args.includes('--write') ? 'write' : null
   if (!mode) fail('`--check` または `--write` が必要です')
   const contents = await generate(root)

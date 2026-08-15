@@ -10,6 +10,7 @@ const REPORT_KEYS = [
   'calendarRuleMismatch',
   'localeCoverageMismatch',
   'themeReferenceMismatch',
+  'runtimeContractMismatch',
 ]
 
 function stableJson(value) {
@@ -31,6 +32,9 @@ function isFestivalPack(value) {
     typeof value.locale === 'string' &&
     typeof value.category === 'string' &&
     typeof value.name === 'string' &&
+    typeof value.enabled === 'boolean' &&
+    typeof value.status === 'string' &&
+    typeof value.priority === 'number' &&
     dateRule && typeof dateRule === 'object' && !Array.isArray(dateRule) &&
     typeof dateRule.calendar === 'string' &&
     typeof dateRule.recurrence === 'string'
@@ -50,21 +54,10 @@ function readPacks(snapshot) {
   })
 }
 
-function metadataSet(snapshot, key) {
-  if (!snapshot || Array.isArray(snapshot) || typeof snapshot !== 'object') return null
-  const value = snapshot[key]
-  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return null
-  return [...new Set(value)].sort().join('\u0000')
-}
-
 function groupById(packs) {
   const groups = new Map()
   for (const pack of packs) groups.set(pack.id, [...(groups.get(pack.id) ?? []), pack])
   return groups
-}
-
-function eventIdentity(pack) {
-  return stableJson({ country: pack.country, region: pack.region, category: pack.category, dateRule: pack.dateRule })
 }
 
 function localeSet(packs) {
@@ -85,28 +78,37 @@ function ruleSet(packs) {
     .join('\u0000')
 }
 
-function calendarRuleSet(packs) {
+function identitySet(packs) {
   return packs
-    .map(({ locale, dateRule }) => `${locale}:${dateRule.calendar}:${dateRule.recurrence}`)
+    .map(({ locale, country, region, category }) => stableJson({ locale, country, region, category }))
     .sort()
     .join('\u0000')
 }
 
-function contentSet(packs) {
+function runtimeContractSet(packs) {
   return packs
-    .map((pack) => stableJson({
-      locale: pack.locale,
-      country: pack.country,
-      region: pack.region,
-      category: pack.category,
-      name: pack.name,
-      description: pack.description,
-      enabled: pack.enabled,
-      status: pack.status,
-      priority: pack.priority,
-    }))
+    .map(({ locale, enabled, status, priority }) => stableJson({ locale, enabled, status, priority }))
     .sort()
     .join('\u0000')
+}
+
+function hasRuntimeContractMismatch(packs) {
+  if (packs.length < 2) return false
+  const runtimeContracts = new Set(
+    packs.map(({ enabled, status, priority }) => stableJson({ enabled, status, priority })),
+  )
+  return runtimeContracts.size > 1
+}
+
+function contentSet(packs) {
+  return packs
+    .map(({ locale, name, description }) => stableJson({ locale, name, description }))
+    .sort()
+    .join('\u0000')
+}
+
+function eventIdentity(pack) {
+  return stableJson({ country: pack.country, region: pack.region, category: pack.category, dateRule: pack.dateRule })
 }
 
 function hasDuplicateId(packs) {
@@ -126,14 +128,10 @@ function sorted(items) {
 }
 
 export function compareCatalogs(productionSnapshot, openSourceSnapshot) {
-  const productionById = groupById(readPacks(productionSnapshot))
-  const openSourceById = groupById(readPacks(openSourceSnapshot))
-  const localeMetadataMismatch = metadataSet(productionSnapshot, 'locales') !== null &&
-    metadataSet(openSourceSnapshot, 'locales') !== null &&
-    metadataSet(productionSnapshot, 'locales') !== metadataSet(openSourceSnapshot, 'locales')
-  const themeMetadataMismatch = metadataSet(productionSnapshot, 'themes') !== null &&
-    metadataSet(openSourceSnapshot, 'themes') !== null &&
-    metadataSet(productionSnapshot, 'themes') !== metadataSet(openSourceSnapshot, 'themes')
+  const production = readPacks(productionSnapshot)
+  const openSource = readPacks(openSourceSnapshot)
+  const productionById = groupById(production)
+  const openSourceById = groupById(openSource)
   const ids = [...new Set([...productionById.keys(), ...openSourceById.keys()])].sort((left, right) => left.localeCompare(right))
   const report = Object.fromEntries(REPORT_KEYS.map((key) => [key, []]))
 
@@ -141,6 +139,7 @@ export function compareCatalogs(productionSnapshot, openSourceSnapshot) {
     const productionEntries = productionById.get(id) ?? []
     const openSourceEntries = openSourceById.get(id) ?? []
     const hasDuplicate = hasDuplicateId(productionEntries) || hasDuplicateId(openSourceEntries)
+    const hasRuntimeMismatch = hasRuntimeContractMismatch(productionEntries) || hasRuntimeContractMismatch(openSourceEntries)
     if (hasDuplicate) report.duplicateIds.push({ id })
     if (productionEntries.length === 0) {
       report.openSourceOnly.push({ id })
@@ -151,11 +150,21 @@ export function compareCatalogs(productionSnapshot, openSourceSnapshot) {
       continue
     }
     if (hasDuplicate) continue
-    if (localeSet(productionEntries) !== localeSet(openSourceEntries) || localeMetadataMismatch) report.localeCoverageMismatch.push({ id })
-    else if (ruleSet(productionEntries) !== ruleSet(openSourceEntries) || calendarRuleSet(productionEntries) !== calendarRuleSet(openSourceEntries)) report.calendarRuleMismatch.push({ id })
-    else if (themeSet(productionEntries) !== themeSet(openSourceEntries) || themeMetadataMismatch) report.themeReferenceMismatch.push({ id })
-    else if (contentSet(productionEntries) !== contentSet(openSourceEntries)) report.sameDateDifferentContent.push({ id })
-    else report.shared.push({ id })
+    if (localeSet(productionEntries) !== localeSet(openSourceEntries)) {
+      report.localeCoverageMismatch.push({ id })
+    } else if (ruleSet(productionEntries) !== ruleSet(openSourceEntries)) {
+      report.calendarRuleMismatch.push({ id })
+    } else if (themeSet(productionEntries) !== themeSet(openSourceEntries)) {
+      report.themeReferenceMismatch.push({ id })
+    } else if (hasRuntimeMismatch || runtimeContractSet(productionEntries) !== runtimeContractSet(openSourceEntries)) {
+      report.runtimeContractMismatch.push({ id })
+    } else if (identitySet(productionEntries) !== identitySet(openSourceEntries)) {
+      report.sameDateDifferentContent.push({ id })
+    } else if (contentSet(productionEntries) !== contentSet(openSourceEntries)) {
+      report.sameDateDifferentContent.push({ id })
+    } else {
+      report.shared.push({ id })
+    }
   }
 
   for (const key of REPORT_KEYS) report[key] = sorted(report[key])

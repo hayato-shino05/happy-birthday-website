@@ -71,5 +71,6 @@
   "duplicateIds": [],
   "calendarRuleMismatch": [],
   "localeCoverageMismatch": [],
-  "themeReferenceMismatch": []
+  "themeReferenceMismatch": [],
+  "runtimeContractMismatch": []
 }

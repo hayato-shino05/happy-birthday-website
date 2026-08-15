@@ -96,6 +96,32 @@ describe('collectSnapshot', () => {
     expect(snapshot.production.themes).toEqual(['spring'])
   })
 
+  it('records both paths for a dirty rename without truncating the old path', async () => {
+    const productionRoot = createRepository()
+    writeTrackedFixture(productionRoot)
+    execFileSync('git', ['-C', productionRoot, 'add', '.'])
+    execFileSync('git', ['-C', productionRoot, 'commit', '--quiet', '-m', 'snapshot'])
+
+    const openSourceRoot = createRepository()
+    writeTrackedFixture(openSourceRoot)
+    writeFileSync(join(openSourceRoot, '.env.example'), 'PUBLIC=value\n')
+    execFileSync('git', ['-C', openSourceRoot, 'add', '.'])
+    execFileSync('git', ['-C', openSourceRoot, 'commit', '--quiet', '-m', 'snapshot'])
+    execFileSync('git', ['-C', openSourceRoot, 'mv', '.env.example', '.env.local'])
+
+    const moduleUrl = pathToFileURL(join(process.cwd(), 'scripts', 'collect-festival-snapshot.mjs')).href
+    const { collectSnapshot } = await import(moduleUrl)
+    const snapshot = collectSnapshot({
+      productionRoot,
+      productionCommit: 'HEAD',
+      openSourceRoot,
+    })
+
+    expect(snapshot.openSource.files.excluded).toEqual(expect.arrayContaining(['.env.example', '.env.local']))
+    expect(snapshot.openSource.files.reasons['.env.example']).toBe('環境変数と秘密情報')
+    expect(snapshot.openSource.files.reasons['.env.local']).toBe('環境変数と秘密情報')
+  })
+
   it('regenerates existing outputs and preserves existing files when collection stops before writing', () => {
     const productionRoot = createRepository()
     writeTrackedFixture(productionRoot)
