@@ -260,6 +260,9 @@ happy-birthday-website/
 | `npm run test` | Vitest を 1 回実行します。 |
 | `npm run test:watch` | Vitest を watch mode で実行します。 |
 | `npm run test:coverage` | coverage 付きでテストを実行します。 |
+| `node scripts/apply-production-allowlist.mjs ... --check` | Production の clean commit から allowlist の `integrationPaths` だけを確認します。 |
+
+Production のコードを取り込む場合は、`docs/parity/2026-08-15-festival-allowlist.json` の `integrationPaths` だけを対象にします。`.env`、Supabase、Storage、Realtime、deployment artifact は対象外です。適用前に `--check` を実行し、現在の anonymous community と data pack の境界を維持してください。
 
 ## 関連ドキュメント
 

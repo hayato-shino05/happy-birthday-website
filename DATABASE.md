@@ -44,6 +44,8 @@ migration の適用後に `supabase/seed.sql` を実行すると、誕生日、�
 
 匿名の更新・削除ポリシーは定義していません。`birthdays` は匿名閲覧専用です。入力の文字数、メディア種別、サイズなどの制約は migration の `CHECK` 制約を正本として確認してください。
 
+回帰確認は `__tests__/integration/production-snapshot-regression.test.ts` に固定しています。`birthdays`、`messages`、`media_submissions`、`virtual_gifts`、`chat_messages`、`bulletin_posts` の匿名 read/create-only 境界と `ThemeProvider` の render smoke を、Production の allowlist 統合とは独立に検証します。
+
 ## Storage
 
 公開バケット `community-media` を使用します。1 ファイルの上限は 50 MiB です。許可する MIME type は migration で定義しています。
