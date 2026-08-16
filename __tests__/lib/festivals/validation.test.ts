@@ -88,6 +88,26 @@ describe('validateDateRule', () => {
     ).toThrow(FestivalPackValidationError)
   })
 
+  it('rejects February 29 in a recurring Gregorian range', () => {
+    expect(() => validateDateRule({
+      calendar: 'gregorian',
+      recurrence: 'yearly',
+      ranges: [{ month: 2, startDay: 29, endDay: 29 }],
+      timeZone: 'Asia/Tokyo',
+    })).toThrow(FestivalPackValidationError)
+  })
+
+  it('preserves February 29 for a leap-year-specific Gregorian rule', () => {
+    const rule = {
+      calendar: 'gregorian' as const,
+      recurrence: 'year-specific' as const,
+      dates: { '2024': [{ month: 2, day: 29 }] },
+      timeZone: 'Asia/Tokyo',
+    }
+
+    expect(validateDateRule(rule)).toEqual(rule)
+  })
+
   it('rejects February 29 in a non-leap year', () => {
     expect(() => validateDateRule({
       calendar: 'gregorian',

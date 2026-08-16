@@ -2,26 +2,41 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
+const hasStatement = (statements: string[], pattern: RegExp): boolean =>
+  statements.some((statement) => pattern.test(statement))
+
+const grantPattern = (privilege: string, table: string): RegExp =>
+  new RegExp(`^grant\\s+${privilege}\\s+on\\s+public\\.[^;]*\\b${table}\\b[^;]*\\bto\\s+anon\\s*$`, 'is')
+
+const policyPattern = (table: string, operation: string, clause?: string): RegExp =>
+  new RegExp(
+    `^create\\s+policy\\s+[^;]+\\s+on\\s+public\\.${table}\\s+for\\s+${operation}\\s+to\\s+anon\\b${clause ? `\\s+${clause}` : ''}\\s*$`,
+    'is',
+  )
+
 describe('anonymous community contract', () => {
   it('keeps the public tables read/create-only for anon', () => {
     const migration = readFileSync(join(process.cwd(), 'supabase', 'migrations', '20260812163000_reset_and_create_anonymous_community.sql'), 'utf8')
+    const statements = migration.split(';').map((statement) => statement.trim()).filter(Boolean)
     const tables = ['birthdays', 'messages', 'media_submissions', 'virtual_gifts', 'chat_messages', 'bulletin_posts', 'post_replies']
     const insertTables = ['messages', 'media_submissions', 'virtual_gifts', 'chat_messages', 'bulletin_posts', 'post_replies']
 
     for (const table of tables) {
       expect(migration).toContain(`create table public.${table}`)
       expect(migration).toContain(`alter table public.${table} enable row level security`)
-      expect(migration).toMatch(new RegExp(`grant select on public\\.[^;]*\\b${table}\\b`))
-      expect(migration).toMatch(new RegExp(`create policy .* on public\\.${table}.*for select to anon.*using \\(true\\)`, 's'))
-      expect(migration).not.toMatch(new RegExp(`grant (?:update|delete) on public\\.[^;]*\\b${table}\\b`))
+      expect(hasStatement(statements, grantPattern('select', table))).toBe(true)
+      expect(hasStatement(statements, policyPattern(table, 'select', 'using\\s*\\(true\\)'))).toBe(true)
+      expect(hasStatement(statements, grantPattern('(?:update|delete)', table))).toBe(false)
+      expect(hasStatement(statements, policyPattern(table, '(?:update|delete)'))).toBe(false)
     }
 
     for (const table of insertTables) {
-      expect(migration).toMatch(new RegExp(`create policy .* on public\\.${table}.*for insert to anon.*with check \\(true\\)`, 's'))
+      expect(hasStatement(statements, grantPattern('insert', table))).toBe(true)
+      expect(hasStatement(statements, policyPattern(table, 'insert', 'with\\s+check\\s*\\(true\\)'))).toBe(true)
     }
 
-    expect(migration).toContain('grant insert on public.messages, public.media_submissions, public.virtual_gifts, public.chat_messages, public.bulletin_posts, public.post_replies to anon')
-    expect(migration).not.toMatch(/for (?:update|delete) to anon/)
+    expect(hasStatement(statements, grantPattern('insert', 'birthdays'))).toBe(false)
+    expect(hasStatement(statements, policyPattern('birthdays', 'insert'))).toBe(false)
   })
 
   it('exposes likes through an atomic, narrowly granted RPC', () => {

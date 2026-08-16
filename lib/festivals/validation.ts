@@ -105,8 +105,8 @@ function validateRanges(value: unknown): GregorianRange[] {
     ) {
       throw new FestivalPackValidationError(`dateRule.ranges[${index}] is invalid`)
     }
-    validateMonthDay(month, startDay, `dateRule.ranges[${index}].startDay`)
-    validateMonthDay(month, endDay, `dateRule.ranges[${index}].endDay`)
+    validateMonthDay(month, startDay, `dateRule.ranges[${index}].startDay`, 2023)
+    validateMonthDay(month, endDay, `dateRule.ranges[${index}].endDay`, 2023)
     return { month, startDay, endDay }
   })
 }
