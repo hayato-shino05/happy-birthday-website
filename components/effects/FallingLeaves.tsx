@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface FallingLeavesProps {
   count?: number
@@ -50,9 +51,10 @@ const LEAF_COLORS: LeafColor[] = [
 
 export function FallingLeaves({ count = 40, active = true }: FallingLeavesProps) {
   const [leaves, setLeaves] = useState<Leaf[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
-    if (!active) return
+    if (!active || prefersReducedMotion) return
 
     const leafTypes: Leaf['leafType'][] = ['maple', 'oak', 'ginkgo', 'simple']
 
@@ -144,9 +146,9 @@ export function FallingLeaves({ count = 40, active = true }: FallingLeavesProps)
       if (windGustTimeout) clearTimeout(windGustTimeout)
       clearInterval(cleanupInterval)
     }
-  }, [active, count])
+  }, [active, count, prefersReducedMotion])
 
-  if (!active) return null
+  if (!active || prefersReducedMotion) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
