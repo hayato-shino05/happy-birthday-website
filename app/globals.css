@@ -529,13 +529,13 @@ body.theme-hanami {
     gap: 3px !important;
   }
   
-  /* ゲームボタン - テーマ表示の下（Themeテキストを避けて約100px下） */
+  /* ゲームボタン - モバイルでは下部左に配置 */
   .fixed-bottom-left {
-    bottom: auto;
-    top: 100px;
+    bottom: 60px;
+    top: auto;
     left: 8px;
     right: auto;
-    max-width: calc(70%);
+    max-width: none;
   }
   
   .fixed-bottom-left .games-container {
