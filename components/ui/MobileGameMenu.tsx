@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { Gamepad2, X, Brain, Puzzle, Calendar, HelpCircle } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
 
 const menuButtonStyle: React.CSSProperties = {
+  minWidth: '44px',
+  minHeight: '44px',
   padding: '8px 12px',
   background: '#854D27',
   color: '#FFF9F3',
@@ -26,6 +28,7 @@ const menuButtonStyle: React.CSSProperties = {
 }
 
 const menuItemStyle: React.CSSProperties = {
+  minHeight: '44px',
   padding: '12px 16px',
   background: 'transparent',
   color: '#FFF9F3',
@@ -46,6 +49,8 @@ const menuItemStyle: React.CSSProperties = {
 export function MobileGameMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const menuId = useId()
   const { t } = useLanguage()
   const { openModal } = useUIStore()
 
@@ -56,7 +61,6 @@ export function MobileGameMenu() {
     { id: 'quiz' as const, icon: HelpCircle, label: t('birthdayQuiz') },
   ]
 
-  // 外側をクリックしたらメニューを閉じる
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -64,16 +68,30 @@ export function MobileGameMenu() {
       }
     }
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+        toggleRef.current?.focus()
+      }
+    }
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       document.addEventListener('touchstart', handleClickOutside)
+      document.addEventListener('keydown', handleKeyDown)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
+
+  const handleToggle = () => {
+    setIsOpen((open) => !open)
+  }
+
 
   const handleGameClick = (gameId: 'memoryGame' | 'puzzleGame' | 'calendar' | 'quiz') => {
     openModal(gameId)
@@ -84,11 +102,13 @@ export function MobileGameMenu() {
     <div className="mobile-game-menu" ref={menuRef}>
 
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={toggleRef}
+        onClick={handleToggle}
         style={menuButtonStyle}
         className="mobile-game-toggle"
         aria-label={isOpen ? t('closeGameMenu') : t('openGameMenu')}
         aria-expanded={isOpen}
+        aria-controls={menuId}
       >
         {isOpen ? (
           <X size={16} />
@@ -100,7 +120,7 @@ export function MobileGameMenu() {
 
 
       {isOpen && (
-        <div className="mobile-game-dropdown">
+        <div id={menuId} className="mobile-game-dropdown">
           {games.map((game) => {
             const IconComponent = game.icon
             return (
