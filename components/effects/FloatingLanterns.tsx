@@ -17,6 +17,7 @@ interface LanternColorScheme {
 
 interface Lantern {
   id: number
+  createdAt: number
   x: number
   size: number
   delay: number
@@ -41,6 +42,7 @@ let nextLanternId = 0
 function createLantern(): Lantern {
   return {
     id: nextLanternId++,
+    createdAt: Date.now(),
     x: Math.random() * 90 + 5,
     size: 40 + Math.random() * 20,
     delay: 0,
@@ -78,7 +80,7 @@ export function FloatingLanterns({ count = 15, active = true }: FloatingLanterns
       setLanterns((previous) => {
         const now = Date.now()
         return previous.filter(
-          (lantern) => now - lantern.id < (lantern.duration + lantern.delay) * 1000 + 3000
+          (lantern) => now - lantern.createdAt < (lantern.duration + lantern.delay) * 1000 + 3000
         )
       })
     }, 5000)
