@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface FallingSnowProps {
   count?: number
@@ -20,9 +21,10 @@ interface Snowflake {
 
 export function FallingSnow({ count = 50, active = true }: FallingSnowProps) {
   const [snowflakes, setSnowflakes] = useState<Snowflake[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
-    if (!active) return
+    if (!active || prefersReducedMotion) return
 
     const createSingleSnowflake = (): Snowflake => ({
       id: Date.now() + Math.random() * 10000,
@@ -62,9 +64,9 @@ export function FallingSnow({ count = 50, active = true }: FallingSnowProps) {
       clearInterval(spawnInterval)
       clearInterval(cleanupInterval)
     }
-  }, [active, count])
+  }, [active, count, prefersReducedMotion])
 
-  if (!active) return null
+  if (!active || prefersReducedMotion) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
