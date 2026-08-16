@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface FloatingLanternsProps {
   count?: number
@@ -56,9 +57,10 @@ function createLantern(): Lantern {
 
 export function FloatingLanterns({ count = 15, active = true }: FloatingLanternsProps) {
   const [lanterns, setLanterns] = useState<Lantern[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
-    if (!active) return
+    if (!active || prefersReducedMotion) return
 
     const initialTimeout = setTimeout(() => {
       setLanterns(
@@ -90,9 +92,9 @@ export function FloatingLanterns({ count = 15, active = true }: FloatingLanterns
       clearInterval(spawnInterval)
       clearInterval(cleanupInterval)
     }
-  }, [active, count])
+  }, [active, count, prefersReducedMotion])
 
-  if (!active) return null
+  if (!active || prefersReducedMotion) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden" style={{ opacity: 0.7 }}>
