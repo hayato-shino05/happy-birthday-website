@@ -448,6 +448,53 @@ body.theme-hanami {
   max-width: calc(50% - 250px);
 }
 
+.games-mobile-only {
+  display: none;
+}
+
+.games-desktop-only {
+  display: flex;
+}
+
+.mobile-game-menu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 1001;
+}
+
+.mobile-game-toggle {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.mobile-game-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  min-width: min(220px, calc(100vw - 16px));
+  max-width: calc(100vw - 16px);
+  overflow: hidden;
+  background: #854D27;
+  border: 2px solid #D4B08C;
+  box-shadow: 3px 3px 0 #D4B08C;
+}
+
+.mobile-game-item {
+  min-height: 44px;
+  box-sizing: border-box;
+  justify-content: flex-start;
+}
+
+.mobile-game-item:hover,
+.mobile-game-item:focus-visible {
+  background: rgba(212, 176, 140, 0.25);
+}
+
 .fixed-bottom-center {
   position: fixed;
   bottom: 20px;
@@ -477,6 +524,14 @@ body.theme-hanami {
 
 /* ===== モバイルレイアウト調整（最大768px）===== */
 @media screen and (max-width: 768px) {
+  .games-mobile-only {
+    display: block;
+  }
+
+  .games-desktop-only {
+    display: none !important;
+  }
+
   /* モバイルでアルバムボタンを表示（メッセージボタンの横に配置） */
   .fixed-top-center {
     display: block;
@@ -537,13 +592,13 @@ body.theme-hanami {
     right: auto;
     max-width: none;
   }
-  
+
   .fixed-bottom-left .games-container {
     flex-wrap: wrap;
     gap: 3px;
     justify-content: flex-start;
   }
-  
+
   .fixed-bottom-left .game-button {
     padding: 3px 5px !important;
     font-size: 0.5em !important;
@@ -668,19 +723,19 @@ body.theme-hanami {
   
   /* ゲームボタン - テーマ表示の下（上から約90px） */
   .fixed-bottom-left {
-    bottom: auto;
-    top: 90px;
+    bottom: 60px;
+    top: auto;
     left: 5px;
     right: auto;
     max-width: 65%;
   }
-  
+
   .fixed-bottom-left .games-container {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 2px;
   }
-  
+
   .fixed-bottom-left .game-button {
     padding: 2px 4px !important;
     font-size: 0.45em !important;
