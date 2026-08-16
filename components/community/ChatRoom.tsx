@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { Icon } from '@/components/ui/Icon'
 import { getSupabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -310,7 +311,9 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         <div className="chat-header">
           <h3 className="chat-title">{t('groupChat')}</h3>
           <div className="chat-controls">
-            <span className="chat-btn" onClick={onClose}>×</span>
+            <button type="button" className="chat-btn" onClick={onClose} aria-label="Close chat">
+              <Icon name="X" size={18} />
+            </button>
           </div>
         </div>
         <div className="chat-content" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -353,7 +356,9 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
           >
             _
           </span>
-          <span className="chat-btn" onClick={onClose}>×</span>
+          <button type="button" className="chat-btn" onClick={onClose} aria-label="Close chat">
+            <Icon name="X" size={18} />
+          </button>
         </div>
       </div>
 

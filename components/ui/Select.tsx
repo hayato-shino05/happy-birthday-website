@@ -1,6 +1,7 @@
 'use client'
 
 import { forwardRef, SelectHTMLAttributes } from 'react'
+import { Icon } from '@/components/ui/Icon'
 
 interface SelectOption {
   value: string
@@ -52,9 +53,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
 
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/50">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <Icon name="ChevronDown" size={16} />
           </div>
         </div>
 
