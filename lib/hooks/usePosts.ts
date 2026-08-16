@@ -45,7 +45,7 @@ export function usePosts() {
     try {
       const { data, error: fetchError } = await getSupabase()
         .from('bulletin_posts')
-        .select('id, sender, message, media_object_path, birthday_person, created_at, post_replies(count)')
+        .select('id, sender, message, media_object_path, birthday_person, created_at, likes, post_replies(count)')
         .order('created_at', { ascending: false })
 
       if (fetchError) throw fetchError
@@ -87,8 +87,13 @@ export function usePosts() {
   }, [])
 
   const likePost = useCallback(async (postId: string) => {
+    const { data: likes, error: likeError } = await getSupabase()
+      .rpc('increment_bulletin_post_likes', { p_post_id: postId })
+
+    if (likeError || typeof likes !== 'number') return false
+
     setPosts((prev) => prev.map((post) => (
-      post.id === postId ? { ...post, likes: post.likes + 1 } : post
+      post.id === postId ? { ...post, likes } : post
     )))
     return true
   }, [])

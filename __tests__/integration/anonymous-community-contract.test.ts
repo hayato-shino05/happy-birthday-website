@@ -23,4 +23,16 @@ describe('anonymous community contract', () => {
     expect(migration).toContain('grant insert on public.messages, public.media_submissions, public.virtual_gifts, public.chat_messages, public.bulletin_posts, public.post_replies to anon')
     expect(migration).not.toMatch(/for (?:update|delete) to anon/)
   })
+
+  it('exposes likes through an atomic, narrowly granted RPC', () => {
+    const migration = readFileSync(join(process.cwd(), 'supabase', 'migrations', '20260817000000_add_bulletin_post_likes.sql'), 'utf8')
+
+    expect(migration).toContain('add column likes integer not null default 0')
+    expect(migration).toContain('constraint bulletin_posts_likes_nonnegative check (likes >= 0)')
+    expect(migration).toMatch(/update public\.bulletin_posts[\s\S]*set likes = public\.bulletin_posts\.likes \+ 1[\s\S]*returning public\.bulletin_posts\.likes into new_likes/)
+    expect(migration).toContain('security definer')
+    expect(migration).toContain("set search_path = ''")
+    expect(migration).toContain('revoke execute on function public.increment_bulletin_post_likes(bigint) from public, anon, authenticated, service_role;')
+    expect(migration).toContain('grant execute on function public.increment_bulletin_post_likes(bigint) to anon;')
+  })
 })
