@@ -51,15 +51,6 @@ function stableJson(value: unknown): string {
   return JSON.stringify(value)
 }
 
-function isFestivalPack(value: unknown): value is FestivalPack {
-  try {
-    validateFestivalPack(value)
-    return true
-  } catch {
-    return false
-  }
-}
-
 function readPacks(snapshot: CatalogSnapshot): FestivalPack[] {
   if (!snapshot || typeof snapshot !== 'object') throw new TypeError('catalog snapshot must be an object or array')
   const values = Array.isArray(snapshot)
@@ -70,8 +61,12 @@ function readPacks(snapshot: CatalogSnapshot): FestivalPack[] {
   if (!values) return []
   const packs: FestivalPack[] = []
   for (const [index, value] of values.entries()) {
-    if (!isFestivalPack(value)) throw new TypeError(`catalog snapshot contains malformed festival pack at index ${index}`)
-    packs.push(value)
+    try {
+      packs.push(validateFestivalPack(value))
+    } catch (error) {
+      const reason = error instanceof Error ? `: ${error.message}` : ''
+      throw new TypeError(`catalog snapshot contains malformed festival pack at index ${index}${reason}`, { cause: error })
+    }
   }
   return packs
 }

@@ -24,20 +24,126 @@ function stableJson(value) {
   return JSON.stringify(value)
 }
 
-function isFestivalPack(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
-  const dateRule = value.dateRule
-  return typeof value.id === 'string' &&
-    typeof value.country === 'string' &&
-    typeof value.locale === 'string' &&
-    typeof value.category === 'string' &&
-    typeof value.name === 'string' &&
-    typeof value.enabled === 'boolean' &&
-    typeof value.status === 'string' &&
-    typeof value.priority === 'number' &&
-    dateRule && typeof dateRule === 'object' && !Array.isArray(dateRule) &&
-    typeof dateRule.calendar === 'string' &&
-    typeof dateRule.recurrence === 'string'
+const PACK_KEYS = new Set(['id', 'country', 'region', 'locale', 'category', 'name', 'description', 'dateRule', 'enabled', 'status', 'priority', 'themeKey'])
+const YEARLY_RULE_KEYS = new Set(['calendar', 'recurrence', 'ranges', 'timeZone'])
+const YEAR_SPECIFIC_RULE_KEYS = new Set(['calendar', 'recurrence', 'dates', 'timeZone'])
+const LUNAR_RULE_KEYS = new Set(['calendar', 'recurrence', 'payload', 'timeZone', 'status'])
+const RANGE_KEYS = new Set(['month', 'startDay', 'endDay'])
+const DATE_KEYS = new Set(['month', 'day'])
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function assertRecord(value) {
+  if (!isRecord(value)) throw new TypeError('must be an object')
+  return value
+}
+
+function assertExactKeys(record, allowedKeys) {
+  for (const key of Object.keys(record)) {
+    if (!allowedKeys.has(key)) throw new TypeError(`unknown key: ${key}`)
+  }
+}
+
+function assertNonEmptyString(value) {
+  if (typeof value !== 'string' || value.trim().length === 0) throw new TypeError('must be a non-empty string')
+  return value
+}
+
+function assertMonthDay(month, day, year = 2024) {
+  if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(day) || day < 1 || day > 31) {
+    throw new TypeError('must contain a valid month and day')
+  }
+  const candidate = new Date(0)
+  candidate.setUTCFullYear(year, month - 1, day)
+  candidate.setUTCHours(12, 0, 0, 0)
+  if (candidate.getUTCFullYear() !== year || candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) {
+    throw new TypeError('must contain a valid month and day')
+  }
+}
+
+function assertTimeZone(value) {
+  const timeZone = assertNonEmptyString(value)
+  try {
+    new Intl.DateTimeFormat('en', { timeZone }).format()
+  } catch {
+    throw new TypeError('must be a valid IANA timezone')
+  }
+}
+
+function validateDateRule(value) {
+  const record = assertRecord(value)
+  const { calendar, recurrence } = record
+  assertTimeZone(record.timeZone)
+
+  if (calendar === 'gregorian' && recurrence === 'yearly') {
+    assertExactKeys(record, YEARLY_RULE_KEYS)
+    if (!Array.isArray(record.ranges) || record.ranges.length === 0) throw new TypeError('ranges must not be empty')
+    for (const range of record.ranges) {
+      const rangeRecord = assertRecord(range)
+      assertExactKeys(rangeRecord, RANGE_KEYS)
+      if (!Number.isInteger(rangeRecord.month) || !Number.isInteger(rangeRecord.startDay) ||
+        !Number.isInteger(rangeRecord.endDay) || rangeRecord.startDay > rangeRecord.endDay) {
+        throw new TypeError('range is invalid')
+      }
+      assertMonthDay(rangeRecord.month, rangeRecord.startDay)
+      assertMonthDay(rangeRecord.month, rangeRecord.endDay)
+    }
+    return
+  }
+
+  if (calendar === 'gregorian' && recurrence === 'year-specific') {
+    assertExactKeys(record, YEAR_SPECIFIC_RULE_KEYS)
+    const dates = assertRecord(record.dates)
+    const entries = Object.entries(dates)
+    if (entries.length === 0) throw new TypeError('dates must not be empty')
+    for (const [year, values] of entries) {
+      if (!/^\d{4}$/.test(year) || !Array.isArray(values) || values.length === 0) throw new TypeError('year-specific dates are invalid')
+      for (const date of values) {
+        const dateRecord = assertRecord(date)
+        assertExactKeys(dateRecord, DATE_KEYS)
+        assertMonthDay(dateRecord.month, dateRecord.day, Number(year))
+      }
+    }
+    return
+  }
+
+  if (calendar === 'lunar' && recurrence === 'year-specific') {
+    assertExactKeys(record, LUNAR_RULE_KEYS)
+    if (record.status !== 'unsupported-calendar' || !('payload' in record) || 'dates' in record || 'ranges' in record) {
+      throw new TypeError('lunar rules require an opaque unsupported-calendar payload')
+    }
+    return
+  }
+
+  throw new TypeError('dateRule calendar and recurrence combination is invalid')
+}
+
+export function validateFestivalPack(value) {
+  const record = assertRecord(value)
+  assertExactKeys(record, PACK_KEYS)
+  const country = assertNonEmptyString(record.country)
+  const locale = assertNonEmptyString(record.locale)
+  if (!/^[a-z]{2,3}$/.test(country)) throw new TypeError('country must be a lowercase ISO-style code')
+  if (!/^(en|ja)$/.test(locale)) throw new TypeError('locale must be en or ja')
+  if (!['festival', 'public-holiday', 'season'].includes(record.category)) throw new TypeError('category is invalid')
+  if (!['enabled', 'disabled', 'unsupported-calendar'].includes(record.status)) throw new TypeError('status is invalid')
+  if (typeof record.enabled !== 'boolean') throw new TypeError('enabled must be boolean')
+  if (!Number.isInteger(record.priority) || record.priority < 0) throw new TypeError('priority must be a non-negative integer')
+  assertNonEmptyString(record.id)
+  assertNonEmptyString(record.name)
+  if (record.description !== undefined) assertNonEmptyString(record.description)
+  if (record.region !== undefined) assertNonEmptyString(record.region)
+  if (record.themeKey !== undefined) assertNonEmptyString(record.themeKey)
+  validateDateRule(record.dateRule)
+  if (record.status === 'unsupported-calendar' && record.dateRule.calendar !== 'lunar') {
+    throw new TypeError('unsupported-calendar status requires a lunar date rule')
+  }
+  if (record.dateRule.calendar === 'lunar' && record.status !== 'unsupported-calendar') {
+    throw new TypeError('lunar date rules require unsupported-calendar status')
+  }
+  return record
 }
 
 function readPacks(snapshot) {
@@ -49,8 +155,12 @@ function readPacks(snapshot) {
       .find(Array.isArray)
   if (!values) return []
   return values.map((value, index) => {
-    if (!isFestivalPack(value)) throw new TypeError(`catalog snapshot contains malformed festival pack at index ${index}`)
-    return value
+    try {
+      return validateFestivalPack(value)
+    } catch (error) {
+      const reason = error instanceof Error ? `: ${error.message}` : ''
+      throw new TypeError(`catalog snapshot contains malformed festival pack at index ${index}${reason}`, { cause: error })
+    }
   })
 }
 
@@ -150,19 +260,20 @@ export function compareCatalogs(productionSnapshot, openSourceSnapshot) {
       continue
     }
     if (hasDuplicate) continue
-    if (localeSet(productionEntries) !== localeSet(openSourceEntries)) {
-      report.localeCoverageMismatch.push({ id })
-    } else if (ruleSet(productionEntries) !== ruleSet(openSourceEntries)) {
-      report.calendarRuleMismatch.push({ id })
-    } else if (themeSet(productionEntries) !== themeSet(openSourceEntries)) {
-      report.themeReferenceMismatch.push({ id })
-    } else if (hasRuntimeMismatch || runtimeContractSet(productionEntries) !== runtimeContractSet(openSourceEntries)) {
-      report.runtimeContractMismatch.push({ id })
-    } else if (identitySet(productionEntries) !== identitySet(openSourceEntries)) {
-      report.sameDateDifferentContent.push({ id })
-    } else if (contentSet(productionEntries) !== contentSet(openSourceEntries)) {
-      report.sameDateDifferentContent.push({ id })
-    } else {
+    const hasLocaleCoverageMismatch = localeSet(productionEntries) !== localeSet(openSourceEntries)
+    const hasCalendarRuleMismatch = ruleSet(productionEntries) !== ruleSet(openSourceEntries)
+    const hasThemeReferenceMismatch = themeSet(productionEntries) !== themeSet(openSourceEntries)
+    const runtimeContractMismatchDetected = hasRuntimeMismatch || runtimeContractSet(productionEntries) !== runtimeContractSet(openSourceEntries)
+    const hasIdentityMismatch = identitySet(productionEntries) !== identitySet(openSourceEntries)
+    const hasContentMismatch = contentSet(productionEntries) !== contentSet(openSourceEntries)
+
+    if (hasLocaleCoverageMismatch) report.localeCoverageMismatch.push({ id })
+    if (hasCalendarRuleMismatch) report.calendarRuleMismatch.push({ id })
+    if (hasThemeReferenceMismatch) report.themeReferenceMismatch.push({ id })
+    if (runtimeContractMismatchDetected) report.runtimeContractMismatch.push({ id })
+    if (hasIdentityMismatch || hasContentMismatch) report.sameDateDifferentContent.push({ id })
+    if (!hasLocaleCoverageMismatch && !hasCalendarRuleMismatch && !hasThemeReferenceMismatch &&
+      !runtimeContractMismatchDetected && !hasIdentityMismatch && !hasContentMismatch) {
       report.shared.push({ id })
     }
   }

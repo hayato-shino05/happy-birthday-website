@@ -96,6 +96,30 @@ describe('collectSnapshot', () => {
     expect(snapshot.production.themes).toEqual(['spring'])
   })
 
+  it('rejects legacy-only event definitions instead of creating synthetic packs', async () => {
+    const productionRoot = createRepository()
+    mkdirSync(join(productionRoot, 'config'), { recursive: true })
+    mkdirSync(join(productionRoot, 'data', 'i18n'), { recursive: true })
+    writeFileSync(join(productionRoot, 'config', 'themes.ts'), 'export const FESTIVAL_DATES = { legacyEvent: { month: 1, day: 1 } }\n')
+    writeFileSync(join(productionRoot, 'data', 'i18n', 'ja.json'), JSON.stringify({ locale: 'ja' }))
+    execFileSync('git', ['-C', productionRoot, 'add', '.'])
+    execFileSync('git', ['-C', productionRoot, 'commit', '--quiet', '-m', 'legacy snapshot'])
+
+    const openSourceRoot = createRepository()
+    writeTrackedFixture(openSourceRoot)
+    execFileSync('git', ['-C', openSourceRoot, 'add', '.'])
+    execFileSync('git', ['-C', openSourceRoot, 'commit', '--quiet', '-m', 'snapshot'])
+
+    const moduleUrl = pathToFileURL(join(process.cwd(), 'scripts', 'collect-festival-snapshot.mjs')).href
+    const { collectSnapshot } = await import(moduleUrl)
+
+    expect(() => collectSnapshot({
+      productionRoot,
+      productionCommit: 'HEAD',
+      openSourceRoot,
+    })).toThrow(/legacy FESTIVAL_DATES.*validated festival packs/)
+  })
+
   it('records both paths for a dirty rename without truncating the old path', async () => {
     const productionRoot = createRepository()
     writeTrackedFixture(productionRoot)

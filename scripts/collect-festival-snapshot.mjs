@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import { validateFestivalPack } from './compare-festival-catalogs.mjs'
 
 const EXCLUDED_PATH_RULES = [
   { test: (path) => /^\.env(?:\.|$)/.test(path), reason: '環境変数と秘密情報' },
@@ -66,31 +67,18 @@ function readTrackedJson(root, commit, relativePath) {
   }
 }
 
-function isFestivalPack(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
-  const record = value
-  const dateRule = record.dateRule
-  return typeof record.id === 'string' &&
-    typeof record.country === 'string' &&
-    typeof record.locale === 'string' &&
-    typeof record.category === 'string' &&
-    typeof record.name === 'string' &&
-    typeof record.enabled === 'boolean' &&
-    typeof record.status === 'string' &&
-    typeof record.priority === 'number' &&
-    typeof dateRule === 'object' && dateRule !== null && !Array.isArray(dateRule) &&
-    typeof dateRule.calendar === 'string' &&
-    typeof dateRule.recurrence === 'string'
-}
-
 function readFestivalPacks(root, commit, trackedFiles) {
   const packs = []
   for (const relativePath of trackedFiles.filter((path) => path.startsWith('data/festivals/') && path.endsWith('.json'))) {
     const value = readTrackedJson(root, commit, relativePath)
     if (!Array.isArray(value)) throw new Error(`festival pack は配列である必要があります: ${relativePath}`)
     for (const [index, pack] of value.entries()) {
-      if (!isFestivalPack(pack)) throw new Error(`festival pack が不正です: ${relativePath}[${index}]`)
-      packs.push(pack)
+      try {
+        packs.push(validateFestivalPack(pack))
+      } catch (error) {
+        const reason = error instanceof Error ? `: ${error.message}` : ''
+        throw new Error(`festival pack が不正です: ${relativePath}[${index}]${reason}`, { cause: error })
+      }
     }
   }
   return packs
@@ -213,21 +201,12 @@ function collectSource({ source, root, commit }) {
   const themeSource = readTrackedFile(root, commit, 'config/themes.ts')
   const festivalPacks = readFestivalPacks(root, commit, trackedFiles)
   const legacyEventIds = extractObjectKeys(themeSource, 'FESTIVAL_DATES')
-  const events = festivalPacks.length > 0
-    ? festivalPacks
-    : legacyEventIds.map((id) => ({
-      id,
-      country: 'legacy',
-      locale: 'und',
-      category: 'festival',
-      name: id,
-      dateRule: { calendar: 'legacy', recurrence: 'legacy' },
-      enabled: true,
-      status: 'enabled',
-      priority: 0,
-    }))
+  if (festivalPacks.length === 0 && legacyEventIds.length > 0) {
+    throw new Error('legacy FESTIVAL_DATES requires validated festival packs in data/festivals/')
+  }
+  const events = festivalPacks
   const seasons = festivalPacks.length > 0
-    ? [...new Set(festivalPacks.filter((pack) => pack && pack.category === 'season').map((pack) => pack.id))].sort()
+    ? [...new Set(festivalPacks.filter((pack) => pack.category === 'season').map((pack) => pack.id))].sort()
     : extractObjectKeys(themeSource, 'SEASON_MONTHS')
   const themes = [...new Set([
     ...extractObjectKeys(themeSource, 'THEMES'),

@@ -111,4 +111,67 @@ describe('compare-festival-catalogs CLI', () => {
       rmSync(directory, { recursive: true, force: true })
     }
   })
+
+  it('reports independent mismatch categories for one id', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'festival-parity-'))
+    try {
+      const productionPath = join(directory, 'production.json')
+      const openSourcePath = join(directory, 'opensource.json')
+      const outputPath = join(directory, 'report.json')
+      writeFileSync(productionPath, JSON.stringify({
+        catalog: [pack('multi-diff', 'ja')],
+      }))
+      writeFileSync(openSourcePath, JSON.stringify({
+        catalog: [{
+          ...pack('multi-diff', 'ja'),
+          country: 'us',
+          name: 'Open source name',
+          themeKey: 'open-source-theme',
+          enabled: false,
+          dateRule: {
+            calendar: 'gregorian',
+            recurrence: 'year-specific',
+            dates: { '2026': [{ month: 1, day: 1 }] },
+            timeZone: 'Asia/Tokyo',
+          },
+        }],
+      }))
+
+      execFileSync(process.execPath, [
+        script,
+        '--production', productionPath,
+        '--opensource', openSourcePath,
+        '--output', outputPath,
+      ])
+
+      const report = JSON.parse(readFileSync(outputPath, 'utf8'))
+      expect(report.calendarRuleMismatch).toEqual([{ id: 'multi-diff' }])
+      expect(report.themeReferenceMismatch).toEqual([{ id: 'multi-diff' }])
+      expect(report.runtimeContractMismatch).toEqual([{ id: 'multi-diff' }])
+      expect(report.sameDateDifferentContent).toEqual([{ id: 'multi-diff' }])
+      expect(report.shared).toEqual([])
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects packs outside the strict FestivalPack contract', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'festival-parity-'))
+    try {
+      const productionPath = join(directory, 'production.json')
+      const openSourcePath = join(directory, 'opensource.json')
+      const outputPath = join(directory, 'report.json')
+      writeFileSync(productionPath, JSON.stringify({ catalog: [{ ...pack('broken'), locale: 'fr' }] }))
+      writeFileSync(openSourcePath, JSON.stringify({ catalog: [pack('broken')] }))
+
+      expect(() => execFileSync(process.execPath, [
+        script,
+        '--production', productionPath,
+        '--opensource', openSourcePath,
+        '--output', outputPath,
+      ])).toThrow(/malformed festival pack/)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
 })
