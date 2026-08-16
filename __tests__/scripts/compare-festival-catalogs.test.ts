@@ -174,4 +174,33 @@ describe('compare-festival-catalogs CLI', () => {
       rmSync(directory, { recursive: true, force: true })
     }
   })
+
+  it('rejects February 29 in recurring Gregorian ranges', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'festival-parity-'))
+    try {
+      const productionPath = join(directory, 'production.json')
+      const openSourcePath = join(directory, 'opensource.json')
+      const outputPath = join(directory, 'report.json')
+      const recurringLeapDayPack = {
+        ...pack('recurring-leap-day'),
+        dateRule: {
+          calendar: 'gregorian',
+          recurrence: 'yearly',
+          ranges: [{ month: 2, startDay: 29, endDay: 29 }],
+          timeZone: 'Asia/Tokyo',
+        },
+      }
+      writeFileSync(productionPath, JSON.stringify({ catalog: [recurringLeapDayPack] }))
+      writeFileSync(openSourcePath, JSON.stringify({ catalog: [recurringLeapDayPack] }))
+
+      expect(() => execFileSync(process.execPath, [
+        script,
+        '--production', productionPath,
+        '--opensource', openSourcePath,
+        '--output', outputPath,
+      ])).toThrow(/malformed festival pack/)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
 })

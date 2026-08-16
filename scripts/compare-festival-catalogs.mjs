@@ -51,7 +51,7 @@ function assertNonEmptyString(value) {
   return value
 }
 
-function assertMonthDay(month, day, year = 2024) {
+function assertMonthDay(month, day, year = 2023) {
   if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(day) || day < 1 || day > 31) {
     throw new TypeError('must contain a valid month and day')
   }
