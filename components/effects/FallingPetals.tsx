@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface FallingPetalsProps {
   count?: number
@@ -44,9 +45,10 @@ const PETAL_COLORS: PetalColor[] = [
 
 export function FallingPetals({ count = 30, active = true }: FallingPetalsProps) {
   const [petals, setPetals] = useState<Petal[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
-    if (!active) return
+    if (!active || prefersReducedMotion) return
 
     // Tạo petal mới liên tục thay vì tạo hàng loạt
     const createSinglePetal = (): Petal => ({
@@ -97,9 +99,9 @@ export function FallingPetals({ count = 30, active = true }: FallingPetalsProps)
       clearInterval(spawnInterval)
       clearInterval(cleanupInterval)
     }
-  }, [active, count])
+  }, [active, count, prefersReducedMotion])
 
-  if (!active) return null
+  if (!active || prefersReducedMotion) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
