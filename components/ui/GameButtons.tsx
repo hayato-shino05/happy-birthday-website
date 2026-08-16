@@ -1,7 +1,9 @@
 'use client'
 
+import { Brain, Puzzle, Calendar, HelpCircle } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
+import { MobileGameMenu } from './MobileGameMenu'
 
 const gameButtonStyle: React.CSSProperties = {
   padding: '10px 20px',
@@ -28,10 +30,10 @@ export function GameButtons() {
   const { openModal } = useUIStore()
 
   const games = [
-    { id: 'memoryGame' as const, icon: '🎮', label: t('memoryGame') || '記憶ゲーム' },
-    { id: 'puzzleGame' as const, icon: '🧩', label: t('puzzleGame') || 'パズルゲーム' },
-    { id: 'calendar' as const, icon: '📅', label: t('birthdayCalendar') || '誕生日カレンダー' },
-    { id: 'quiz' as const, icon: '❓', label: t('birthdayQuiz') || '誕生日クイズ' },
+    { id: 'memoryGame' as const, icon: Brain, label: t('memoryGame') },
+    { id: 'puzzleGame' as const, icon: Puzzle, label: t('puzzleGame') },
+    { id: 'calendar' as const, icon: Calendar, label: t('birthdayCalendar') },
+    { id: 'quiz' as const, icon: HelpCircle, label: t('birthdayQuiz') },
   ]
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -45,20 +47,29 @@ export function GameButtons() {
   }
 
   return (
-    <div className="games-container" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-      {games.map((game) => (
-        <button
-          key={game.id}
-          className="game-button"
-          onClick={() => openModal(game.id)}
-          style={gameButtonStyle}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          <span>{game.icon}</span>
-          <span>{game.label}</span>
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="games-mobile-only">
+        <MobileGameMenu />
+      </div>
+
+      <div className="games-container games-desktop-only" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        {games.map((game) => {
+          const IconComponent = game.icon
+          return (
+            <button
+              key={game.id}
+              className="game-button"
+              onClick={() => openModal(game.id)}
+              style={gameButtonStyle}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <IconComponent size={16} />
+              <span>{game.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </>
   )
 }
