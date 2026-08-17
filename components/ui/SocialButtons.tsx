@@ -127,7 +127,7 @@ export function SocialButtons() {
           </button>
           {/* リンクをコピーするボタン */}
           <button onClick={() => handleShare('copy')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: '1px solid #D4B08C', borderRadius: '4px', cursor: 'pointer', color: '#854D27', fontSize: '0.85rem', fontFamily: 'var(--font-body)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#854D27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <Icon name="Copy" size={18} />
             <span>リンクをコピー</span>
           </button>
         </div>

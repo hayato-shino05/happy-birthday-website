@@ -336,7 +336,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
                   justifyContent: 'center',
                 }}
               >
-                ✕
+                <Icon name="X" size={18} />
               </button>
             </div>
 

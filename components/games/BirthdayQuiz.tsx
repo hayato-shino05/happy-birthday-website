@@ -2,6 +2,7 @@
 
 import { useQuiz } from '@/lib/hooks/useQuiz'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Icon } from '@/components/ui/Icon'
 import { useBirthdays } from '@/lib/hooks/useBirthdays'
 
 interface BirthdayQuizProps {
@@ -51,7 +52,7 @@ export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
         <h3 style={{ color: '#854D27', fontSize: '1.5rem', marginBottom: '10px' }}>
-          🎉 完了！
+          <Icon name="Party" size={22} aria-hidden="true" /> 完了！
         </h3>
         <p style={{ color: '#854D27', fontSize: '2rem', fontWeight: 'bold', marginBottom: '20px' }}>
           スコア: {score}/100

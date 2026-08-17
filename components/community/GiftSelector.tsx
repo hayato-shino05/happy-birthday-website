@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGifts, GIFT_CATALOG } from '@/lib/hooks/useGifts'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Icon } from '@/components/ui/Icon'
 
 interface GiftSelectorProps {
   onClose: () => void
@@ -65,14 +66,16 @@ export function GiftSelector({ onClose, birthdayPerson }: GiftSelectorProps) {
       >
         {/* ヘッダー */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ color: '#854D27', fontFamily: 'var(--font-heading)', margin: 0, fontSize: '1.5rem' }}>
-            🎁 バーチャルギフトを送る
+          <h2 style={{ color: '#854D27', fontFamily: 'var(--font-heading)', margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="Gift" size={24} />
+            バーチャルギフトを送る
           </h2>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#854D27' }}
+            aria-label="閉じる"
+            style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#854D27', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            ✕
+            <Icon name="X" size={20} />
           </button>
         </div>
 

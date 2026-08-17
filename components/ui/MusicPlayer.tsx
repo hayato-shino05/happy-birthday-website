@@ -39,7 +39,7 @@ export function MusicPlayer() {
           fontSize: '1rem',
         }}
       >
-        ⏮️
+        <Icon name="SkipBack" size={16} />
       </button>
 
       {/* 再生/一時停止ボタン */}
@@ -69,7 +69,7 @@ export function MusicPlayer() {
           e.currentTarget.style.boxShadow = '2px 2px 0 #D4B08C'
         }}
       >
-        {isPlaying ? '⏸️' : '▶️'}
+        <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} />
       </button>
 
       {/* 次の曲ボタン */}
@@ -85,7 +85,7 @@ export function MusicPlayer() {
           fontSize: '1rem',
         }}
       >
-        ⏭️
+        <Icon name="SkipForward" size={16} />
       </button>
 
       <span
@@ -163,7 +163,7 @@ export function MusicPlayer() {
                 lineHeight: 1,
               }}
             >
-              ✕
+              <Icon name="X" size={14} />
             </button>
           </div>
           {tracks.length === 0 ? (

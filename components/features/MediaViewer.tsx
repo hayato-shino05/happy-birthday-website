@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MediaFile } from '@/types'
+import { Icon } from '@/components/ui/Icon'
 
 const SLIDESHOW_INTERVAL = 3000
 
@@ -163,17 +164,8 @@ export function MediaViewer({
               transition: 'all 0.2s',
             }}
           >
-            {isPlaying ? (
-              <>
-                <span>⏸</span>
-                <span>一時停止</span>
-              </>
-            ) : (
-              <>
-                <span>▶</span>
-                <span>スライドショー</span>
-              </>
-            )}
+            <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} />
+            <span>{isPlaying ? '一時停止' : 'スライドショー'}</span>
           </button>
         </div>
 
@@ -208,7 +200,7 @@ export function MediaViewer({
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
           }}
         >
-          ✕
+          <Icon name="X" size={28} />
         </button>
 
         {/* 前へボタン */}
@@ -244,7 +236,7 @@ export function MediaViewer({
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
           }}
         >
-          ‹
+          <Icon name="ArrowLeft" size={34} />
         </button>
 
         {/* 次へボタン */}
@@ -280,7 +272,7 @@ export function MediaViewer({
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
           }}
         >
-          ›
+          <Icon name="ArrowRight" size={34} />
         </button>
 
         {/* メディア表示エリア（フルスクリーン） */}

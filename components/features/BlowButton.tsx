@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Icon } from '@/components/ui/Icon'
 
 interface BlowButtonProps {
   onClick: () => void
@@ -41,10 +42,11 @@ export function BlowButton({ onClick, disabled, allCandlesBlown }: BlowButtonPro
         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
       />
 
-      <span 
-        className="relative z-10" 
+      <span
+        className="relative z-10 inline-flex items-center gap-2"
         style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
       >
+        <Icon name="Wind" size={20} />
         {t('blowCandles')}
       </span>
     </motion.button>

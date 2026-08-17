@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { CameraCapture } from './CameraCapture'
+import { Icon } from '@/components/ui/Icon'
 
 interface PostFormProps {
   onSubmit: (sender: string, message: string, giftId?: string, mediaUrl?: string) => Promise<boolean>
@@ -199,15 +200,15 @@ export default function PostForm({ onSubmit }: PostFormProps) {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button type="button" onClick={() => fileInputRef.current?.click()}
                 style={{ padding: '8px 12px', border: '1px dashed #D4B08C', background: 'transparent', color: '#854D27', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                📁 ライブラリ
+                <Icon name="Folder" size={18} style={{ color: '#7E57C2' }} /> ライブラリ
               </button>
               <button type="button" onClick={() => { setCameraMode('photo'); setShowCamera(true) }}
                 style={{ padding: '8px 12px', border: '1px solid #D4B08C', background: '#854D27', color: '#FFF9F3', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                📷 写真を撮る
+                <Icon name="Camera" size={18} style={{ color: '#FFB300' }} /> 写真を撮る
               </button>
               <button type="button" onClick={() => { setCameraMode('video'); setShowCamera(true) }}
                 style={{ padding: '8px 12px', border: '1px solid #D4B08C', background: '#854D27', color: '#FFF9F3', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                🎬 ビデオを撮る
+                <Icon name="Video" size={18} style={{ color: '#2D8CFF' }} /> ビデオを撮る
               </button>
             </div>
           ) : (
@@ -219,7 +220,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
               )}
               <button type="button" onClick={removeFile}
                 style={{ position: 'absolute', top: '4px', right: '4px', width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(220,53,69,0.9)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>
-                ✕
+                <Icon name="X" size={16} style={{ color: '#FFFFFF' }} />
               </button>
               <p style={{ fontSize: '0.75rem', color: '#854D27', marginTop: '4px' }}>{selectedFile.name} ({(selectedFile.size/1024/1024).toFixed(1)}MB)</p>
             </div>

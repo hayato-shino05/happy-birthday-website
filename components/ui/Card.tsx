@@ -1,6 +1,7 @@
 'use client'
 
 import { forwardRef, HTMLAttributes, useState } from 'react'
+import { Icon } from './Icon'
 
 type CardVariant = 'default' | 'glass' | 'solid' | 'gradient' | 'outline'
 type CardSize = 'sm' | 'md' | 'lg'
@@ -222,14 +223,10 @@ export function StatsCard({ title, value, change, icon, trend }: StatsCardProps)
           {change && (
             <p className={`text-sm mt-2 flex items-center gap-1 ${trendColors[trend || 'neutral']}`}>
               {trend === 'up' && (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
+                <Icon name="ArrowUp" size={16} className="text-emerald-300" aria-hidden="true" />
               )}
               {trend === 'down' && (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
+                <Icon name="ArrowDown" size={16} className="text-rose-300" aria-hidden="true" />
               )}
               {change.value > 0 ? '+' : ''}{change.value}%
               {change.label && <span className="text-white/40 ml-1">{change.label}</span>}

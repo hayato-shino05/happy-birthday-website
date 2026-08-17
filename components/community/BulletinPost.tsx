@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Icon } from '@/components/ui/Icon'
 import { Post } from '@/lib/hooks/usePosts'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -178,7 +179,7 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
             transition: 'all 0.2s',
           }}
         >
-          <span>{liked ? '❤️' : '🤍'}</span>
+          <Icon name="Heart" size={18} style={{ color: liked ? '#E91E63' : '#854D27' }} />
           <span>{localLikes}</span>
         </button>
 
@@ -201,7 +202,7 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
               fontSize: '0.85rem',
             }}
           >
-            <span>💬</span>
+            <Icon name="MessageCircle" size={18} style={{ color: '#2D8CFF' }} />
             <span>{post.replies_count || 0}</span>
           </button>
         )}

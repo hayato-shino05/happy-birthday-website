@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Post } from '@/lib/hooks/usePosts'
+import { Icon } from '@/components/ui/Icon'
 import { getSupabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -145,7 +146,7 @@ export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
           fontSize: '0.95rem',
         }}
       >
-        <span>←</span>
+        <Icon name="ArrowLeft" size={18} style={{ color: '#854D27' }} />
         <span>{t('back')}</span>
       </button>
 
@@ -220,11 +221,11 @@ export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
                   color: liked ? '#E91E63' : '#854D27',
                 }}
               >
-                <span>{liked ? '❤️' : '🤍'}</span>
+                <Icon name="Heart" size={18} style={{ color: liked ? '#E91E63' : '#854D27' }} />
                 <span>{localLikes} {t('liked')}</span>
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#854D27', opacity: 0.7 }}>
-                <span>💬</span>
+                <Icon name="MessageCircle" size={18} style={{ color: '#2D8CFF' }} />
                 <span>{replies.length} {t('replies')}</span>
               </div>
             </div>
@@ -233,8 +234,9 @@ export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
 
 
         <div style={{ width: '350px', display: 'flex', flexDirection: 'column', background: 'rgba(212,176,140,0.1)', borderRadius: '12px', padding: '16px' }}>
-          <h4 style={{ color: '#854D27', margin: '0 0 16px 0', fontSize: '1rem' }}>
-            💬 {t('replies')} ({replies.length})
+          <h4 style={{ color: '#854D27', margin: '0 0 16px 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="MessageCircle" size={18} style={{ color: '#2D8CFF' }} />
+            {t('replies')} ({replies.length})
           </h4>
 
 

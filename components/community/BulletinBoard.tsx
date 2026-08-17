@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { usePosts, Post } from '@/lib/hooks/usePosts'
+import { Icon } from '@/components/ui/Icon'
 import BulletinPost from './BulletinPost'
 import PostDetail from './PostDetail'
 
@@ -67,7 +68,7 @@ export default function BulletinBoard() {
       {/* ヘッダー */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '1.5rem' }}>📋</span>
+          <Icon name="ClipboardList" size={24} style={{ color: '#2D8CFF' }} />
           <h3 style={{ color: '#854D27', margin: 0, fontSize: '1.2rem' }}>
             メッセージ ({posts.length})
           </h3>
@@ -84,7 +85,7 @@ export default function BulletinBoard() {
             borderRadius: '8px',
           }}
         >
-          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>💌</span>
+          <Icon name="Mail" size={48} style={{ color: '#E91E63', display: 'block', margin: '0 auto 16px' }} />
           <p style={{ color: '#854D27', opacity: 0.7 }}>
             まだメッセージがありません。
           </p>

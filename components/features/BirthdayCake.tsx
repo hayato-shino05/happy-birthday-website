@@ -9,6 +9,7 @@ import { Balloons } from './Balloons'
 import { Fireworks } from './Fireworks'
 import { useMicrophone } from '@/lib/hooks/useMicrophone'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Icon } from '@/components/ui/Icon'
 
 interface BirthdayCakeProps {
   candleCount?: number
@@ -89,7 +90,11 @@ export function BirthdayCake({ candleCount = 5, onAllCandlesBlown }: BirthdayCak
             className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-full shadow-lg transition-colors cursor-pointer"
             style={{ color: '#ffffff' }}
           >
-            <span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
+            <span
+              style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+              className="inline-flex items-center gap-2"
+            >
+              <Icon name="Mic" size={18} />
               {t('useMicrophone')}
             </span>
           </motion.button>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MediaFile } from '@/types'
+import { Icon } from '@/components/ui/Icon'
 
 interface SlideshowProps {
   media: MediaFile[]
@@ -131,7 +132,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
             fontSize: '1.5rem',
           }}
         >
-          ‹
+          <Icon name="ArrowLeft" size={24} />
         </button>
         <button
           onClick={goToNext}
@@ -150,7 +151,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
             fontSize: '1.5rem',
           }}
         >
-          ›
+          <Icon name="ArrowRight" size={24} />
         </button>
       </div>
 
@@ -179,7 +180,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
             boxShadow: '2px 2px 0 #D4B08C',
           }}
         >
-          {isPlaying ? '⏸ 一時停止' : '▶ 再生'}
+          <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} /> {isPlaying ? '一時停止' : '再生'}
         </button>
 
         <span style={{ color: '#fff', fontSize: '0.9rem' }}>
@@ -199,7 +200,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
             fontSize: '0.9rem',
           }}
         >
-          ✕ 閉じる
+          <Icon name="X" size={18} /> 閉じる
         </button>
       </div>
 

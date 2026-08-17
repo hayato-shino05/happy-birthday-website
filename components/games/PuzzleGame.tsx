@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { usePuzzleGame } from '@/lib/hooks/usePuzzleGame'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Icon } from '@/components/ui/Icon'
 
 interface PuzzleGameProps {
   onClose: () => void
@@ -75,7 +76,7 @@ export function PuzzleGame({ onClose }: PuzzleGameProps) {
       ) : isComplete ? (
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
           <h3 style={{ color: '#854D27', fontSize: '1.5rem', marginBottom: '10px' }}>
-            🎉 {t('gameWin') || 'おめでとう！'}
+            <Icon name="Party" size={22} aria-hidden="true" /> {t('gameWin') || 'おめでとう！'}
           </h3>
           <p style={{ color: '#854D27', marginBottom: '20px' }}>
             移動: {moves} | 時間: {formatTime(timeElapsed)}
