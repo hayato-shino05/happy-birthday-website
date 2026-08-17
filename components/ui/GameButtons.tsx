@@ -1,6 +1,6 @@
 'use client'
 
-import { Brain, Puzzle, Calendar, HelpCircle } from 'lucide-react'
+import { Icon } from './Icon'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
 import { MobileGameMenu } from './MobileGameMenu'
@@ -30,10 +30,10 @@ export function GameButtons() {
   const { openModal } = useUIStore()
 
   const games = [
-    { id: 'memoryGame' as const, icon: Brain, label: t('memoryGame') },
-    { id: 'puzzleGame' as const, icon: Puzzle, label: t('puzzleGame') },
-    { id: 'calendar' as const, icon: Calendar, label: t('birthdayCalendar') },
-    { id: 'quiz' as const, icon: HelpCircle, label: t('birthdayQuiz') },
+    { id: 'memoryGame' as const, icon: 'Brain' as const, label: t('memoryGame') },
+    { id: 'puzzleGame' as const, icon: 'Puzzle' as const, label: t('puzzleGame') },
+    { id: 'calendar' as const, icon: 'Calendar' as const, label: t('birthdayCalendar') },
+    { id: 'quiz' as const, icon: 'HelpCircle' as const, label: t('birthdayQuiz') },
   ]
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -54,7 +54,6 @@ export function GameButtons() {
 
       <div className="games-container games-desktop-only" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         {games.map((game) => {
-          const IconComponent = game.icon
           return (
             <button
               key={game.id}
@@ -64,7 +63,7 @@ export function GameButtons() {
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
-              <IconComponent size={16} />
+              <Icon name={game.icon} size={16} />
               <span>{game.label}</span>
             </button>
           )

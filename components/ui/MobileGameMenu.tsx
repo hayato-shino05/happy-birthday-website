@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useId } from 'react'
-import { Gamepad2, X, Brain, Puzzle, Calendar, HelpCircle } from 'lucide-react'
+import { Icon } from './Icon'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
 
@@ -55,10 +55,10 @@ export function MobileGameMenu() {
   const { openModal } = useUIStore()
 
   const games = [
-    { id: 'memoryGame' as const, icon: Brain, label: t('memoryGame') },
-    { id: 'puzzleGame' as const, icon: Puzzle, label: t('puzzleGame') },
-    { id: 'calendar' as const, icon: Calendar, label: t('birthdayCalendar') },
-    { id: 'quiz' as const, icon: HelpCircle, label: t('birthdayQuiz') },
+    { id: 'memoryGame' as const, icon: 'Brain' as const, label: t('memoryGame') },
+    { id: 'puzzleGame' as const, icon: 'Puzzle' as const, label: t('puzzleGame') },
+    { id: 'calendar' as const, icon: 'Calendar' as const, label: t('birthdayCalendar') },
+    { id: 'quiz' as const, icon: 'HelpCircle' as const, label: t('birthdayQuiz') },
   ]
 
   useEffect(() => {
@@ -110,11 +110,7 @@ export function MobileGameMenu() {
         aria-expanded={isOpen}
         aria-controls={menuId}
       >
-        {isOpen ? (
-          <X size={16} />
-        ) : (
-          <Gamepad2 size={16} />
-        )}
+        <Icon name={isOpen ? 'X' : 'Gamepad'} size={16} />
         <span>{t('games')}</span>
       </button>
 
@@ -122,7 +118,6 @@ export function MobileGameMenu() {
       {isOpen && (
         <div id={menuId} className="mobile-game-dropdown">
           {games.map((game) => {
-            const IconComponent = game.icon
             return (
               <button
                 key={game.id}
@@ -130,7 +125,7 @@ export function MobileGameMenu() {
                 style={menuItemStyle}
                 className="mobile-game-item"
               >
-                <IconComponent size={18} />
+                <Icon name={game.icon} size={18} />
                 <span>{game.label}</span>
               </button>
             )
