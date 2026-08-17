@@ -15,7 +15,7 @@ const MONTHS = [
   '7月', '8月', '9月', '10月', '11月', '12月',
 ]
 
-export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
+export function BirthdayCalendar({}: BirthdayCalendarProps) {
   const { data: birthdays = [] } = useBirthdays()
   const { t } = useLanguage()
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
@@ -42,6 +42,7 @@ export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
       >
         <button
           onClick={prevMonth}
+          aria-label={t('previousMonth')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',
@@ -59,6 +60,7 @@ export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
         </h3>
         <button
           onClick={nextMonth}
+          aria-label={t('nextMonth')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',

@@ -54,6 +54,7 @@ export function MessageModal({ onClose, birthdayPerson }: MessageModalProps) {
           </h2>
           <button
             onClick={onClose}
+            aria-label={t('close')}
             style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#854D27' }}
           >
             <Icon name="X" size={22} />

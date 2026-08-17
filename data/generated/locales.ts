@@ -68,6 +68,7 @@ export const translationKeys = [
   "joinChat",
   "language",
   "library",
+  "like",
   "liked",
   "loading",
   "memoryGame",
@@ -81,6 +82,8 @@ export const translationKeys = [
   "music",
   "musicLibrary",
   "mute",
+  "nextMedia",
+  "nextMonth",
   "nextQuestion",
   "nextTrack",
   "noAudioWishes",
@@ -120,6 +123,8 @@ export const translationKeys = [
   "postWish",
   "posting",
   "preview",
+  "previousMedia",
+  "previousMonth",
   "previousTrack",
   "puzzleGame",
   "puzzleGameInstructions",
@@ -132,7 +137,9 @@ export const translationKeys = [
   "recordVideo",
   "recordingAudio",
   "recordingVideo",
+  "removeFile",
   "replies",
+  "reply",
   "rerecord",
   "reset",
   "retry",
@@ -147,6 +154,7 @@ export const translationKeys = [
   "sending",
   "share",
   "shareBirthday",
+  "slide",
   "slideshow",
   "startConversation",
   "startRecording",
@@ -363,7 +371,15 @@ export const localePacks = [
       "notifications": "Notifications",
       "mute": "Mute",
       "unmute": "Unmute",
-      "yourName": "Your name"
+      "yourName": "Your name",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "previousMedia": "Previous media",
+      "nextMedia": "Next media",
+      "slide": "Slide {index}",
+      "removeFile": "Remove file",
+      "like": "Like",
+      "reply": "Reply"
     }
   },
   {
@@ -543,7 +559,15 @@ export const localePacks = [
       "notifications": "通知",
       "mute": "ミュート",
       "unmute": "ミュート解除",
-      "yourName": "あなたの名前"
+      "yourName": "あなたの名前",
+      "previousMonth": "前の月",
+      "nextMonth": "次の月",
+      "previousMedia": "前のメディア",
+      "nextMedia": "次のメディア",
+      "slide": "スライド {index}",
+      "removeFile": "ファイルを削除",
+      "like": "いいね",
+      "reply": "返信"
     }
   }
 ] as const satisfies readonly GeneratedLocalePack[]

@@ -173,5 +173,13 @@
   "volume",
   "notifications",
   "mute",
-  "unmute"
+  "unmute",
+  "previousMonth",
+  "nextMonth",
+  "previousMedia",
+  "nextMedia",
+  "slide",
+  "removeFile",
+  "like",
+  "reply"
 ]

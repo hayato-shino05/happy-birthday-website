@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MediaFile } from '@/types'
 import { Icon } from '@/components/ui/Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 const SLIDESHOW_INTERVAL = 3000
 
@@ -25,6 +26,7 @@ export function MediaViewer({
   slideshowMode = false,
   onToggleSlideshow,
 }: MediaViewerProps) {
+  const { t } = useLanguage()
   const [isPlaying, setIsPlaying] = useState(slideshowMode)
   const [mounted, setMounted] = useState(false)
   const currentIndex = allMedia.findIndex((m) => m.id === media.id)
@@ -175,6 +177,7 @@ export function MediaViewer({
             e.stopPropagation()
             onClose()
           }}
+          aria-label={t('close')}
           style={{
             position: 'absolute',
             top: '20px',
@@ -210,6 +213,7 @@ export function MediaViewer({
             setIsPlaying(false)
             goToPrev()
           }}
+          aria-label={t('previousMedia')}
           style={{
             position: 'absolute',
             left: '30px',
@@ -246,6 +250,7 @@ export function MediaViewer({
             setIsPlaying(false)
             goToNext()
           }}
+          aria-label={t('nextMedia')}
           style={{
             position: 'absolute',
             right: '30px',

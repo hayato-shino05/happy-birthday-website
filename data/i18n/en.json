@@ -175,6 +175,14 @@
     "notifications": "Notifications",
     "mute": "Mute",
     "unmute": "Unmute",
-    "yourName": "Your name"
+    "yourName": "Your name",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "previousMedia": "Previous media",
+    "nextMedia": "Next media",
+    "slide": "Slide {index}",
+    "removeFile": "Remove file",
+    "like": "Like",
+    "reply": "Reply"
   }
 }

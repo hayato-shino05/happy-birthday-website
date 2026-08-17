@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MediaFile } from '@/types'
 import { Icon } from '@/components/ui/Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface SlideshowProps {
   media: MediaFile[]
@@ -13,6 +14,7 @@ interface SlideshowProps {
 }
 
 export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: SlideshowProps) {
+  const { t } = useLanguage()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(autoPlay)
 
@@ -117,6 +119,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
         {/* 矢印ナビゲーション */}
         <button
           onClick={goToPrev}
+          aria-label={t('previousMedia')}
           style={{
             position: 'absolute',
             left: '20px',
@@ -136,6 +139,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
         </button>
         <button
           onClick={goToNext}
+          aria-label={t('nextMedia')}
           style={{
             position: 'absolute',
             right: '20px',
@@ -219,6 +223,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
           <button
             key={i}
             onClick={() => setCurrentIndex(i)}
+            aria-label={t('slide', { index: i + 1 })}
             style={{
               width: '10px',
               height: '10px',

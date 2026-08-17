@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import { Icon } from '@/components/ui/Icon'
@@ -14,6 +15,7 @@ interface MessageFormProps {
 
 export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   const { sendMessage } = useMessages()
+  const { t } = useLanguage()
   const [sender, setSender] = useState('')
   
   // 共有ストレージから自動入力
@@ -319,6 +321,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
               <button
                 type="button"
                 onClick={removeFile}
+                aria-label={t('removeFile')}
                 style={{
                   position: 'absolute',
                   top: '5px',

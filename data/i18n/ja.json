@@ -175,6 +175,14 @@
     "notifications": "通知",
     "mute": "ミュート",
     "unmute": "ミュート解除",
-    "yourName": "あなたの名前"
+    "yourName": "あなたの名前",
+    "previousMonth": "前の月",
+    "nextMonth": "次の月",
+    "previousMedia": "前のメディア",
+    "nextMedia": "次のメディア",
+    "slide": "スライド {index}",
+    "removeFile": "ファイルを削除",
+    "like": "いいね",
+    "reply": "返信"
   }
 }

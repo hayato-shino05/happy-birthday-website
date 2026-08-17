@@ -164,6 +164,7 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
         <button
           onClick={handleLike}
           disabled={liked || liking}
+          aria-label={`${liked ? t('liked') : t('like')} (${localLikes})`}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -189,6 +190,7 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
               e.stopPropagation()
               onReply()
             }}
+            aria-label={`${t('reply')} (${post.replies_count || 0})`}
             style={{
               display: 'flex',
               alignItems: 'center',
