@@ -77,24 +77,14 @@ import brainIcon from '@/src/assets/icons/brain.png'
 import puzzleIcon from '@/src/assets/icons/puzzle.png'
 import searchIcon from '@/src/assets/icons/search.png'
 import menuIcon from '@/src/assets/icons/menu.png'
-import leftIcon from '@/src/assets/icons/left.png'
-import rightIcon from '@/src/assets/icons/right.png'
-import upIcon from '@/src/assets/icons/up.png'
-import downIcon from '@/src/assets/icons/down.png'
 import microphoneIcon from '@/src/assets/icons/microphone.png'
 import windIcon from '@/src/assets/icons/wind.png'
 import mailIcon from '@/src/assets/icons/mail.png'
 import speechBubbleIcon from '@/src/assets/icons/speech-bubble.png'
 import trophyIcon from '@/src/assets/icons/trophy.png'
-import errorIcon from '@/src/assets/icons/error.png'
-import infoIcon from '@/src/assets/icons/info.png'
-import checkmarkIcon from '@/src/assets/icons/checkmark.png'
-import loadingIcon from '@/src/assets/icons/loading.png'
 import downloadIcon from '@/src/assets/icons/download.png'
 import editIcon from '@/src/assets/icons/edit.png'
 import clipboardIcon from '@/src/assets/icons/clipboard.png'
-import muteIcon from '@/src/assets/icons/mute.png'
-import volumeIcon from '@/src/assets/icons/volume.png'
 import helpIcon from '@/src/assets/icons/help.png'
 import heartIcon from '@/src/assets/icons/heart.png'
 import sendIcon from '@/src/assets/icons/send.png'
@@ -108,11 +98,7 @@ import folderOpenIcon from '@/src/assets/icons/folder-open.png'
 import usersIcon from '@/src/assets/icons/users.png'
 import eyeIcon from '@/src/assets/icons/eye.png'
 import eyeOffIcon from '@/src/assets/icons/eye-off.png'
-import closeIcon from '@/src/assets/icons/close.png'
-import warningIcon from '@/src/assets/icons/warning.png'
 import gameControllerIcon from '@/src/assets/icons/game-controller.png'
-import maximizeIcon from '@/src/assets/icons/maximize.png'
-import minimizeIcon from '@/src/assets/icons/minimize.png'
 
 export const Icons = {
   AlertTriangle,
@@ -206,30 +192,15 @@ const assetIcons: Partial<Record<keyof typeof Icons, StaticImageData>> = {
   Puzzle: puzzleIcon,
   Search: searchIcon,
   Menu: menuIcon,
-  ArrowLeft: leftIcon,
-  ArrowRight: rightIcon,
-  ArrowUp: upIcon,
-  ArrowDown: downIcon,
   Mic: microphoneIcon,
   Wind: windIcon,
   Mail: mailIcon,
   Comment: speechBubbleIcon,
   MessageCircle: speechBubbleIcon,
   Trophy: trophyIcon,
-  CircleX: errorIcon,
-  X: errorIcon,
-  Info: infoIcon,
-  CheckCircle: checkmarkIcon,
-  CheckCircle2: checkmarkIcon,
-  CircleCheck: checkmarkIcon,
-  LoaderCircle: loadingIcon,
   Download: downloadIcon,
   PenLine: editIcon,
   ClipboardList: clipboardIcon,
-  Volume: volumeIcon,
-  Volume1: volumeIcon,
-  Volume2: volumeIcon,
-  VolumeX: muteIcon,
   HelpCircle: helpIcon,
   Heart: heartIcon,
   Send: sendIcon,
@@ -243,12 +214,7 @@ const assetIcons: Partial<Record<keyof typeof Icons, StaticImageData>> = {
   Users: usersIcon,
   Eye: eyeIcon,
   EyeOff: eyeOffIcon,
-  Close: closeIcon,
-  AlertTriangle: warningIcon,
-  CircleAlert: warningIcon,
   Gamepad: gameControllerIcon,
-  Maximize2: maximizeIcon,
-  Minimize2: minimizeIcon,
 }
 
 const iconToneClasses: Partial<Record<keyof typeof Icons, string>> = {
@@ -286,6 +252,7 @@ export function Icon({ name, size = 20, className, style, ...ariaProps }: IconPr
   const assetSrc = assetIcons[name]
   const toneClass = iconToneClasses[name as keyof typeof iconToneClasses]
   const classes = [toneClass, className].filter(Boolean).join(' ')
+  const hasAccessibleName = Boolean(ariaProps['aria-label'] || ariaProps['aria-labelledby'])
 
   if (assetSrc) {
     return (
@@ -298,7 +265,7 @@ export function Icon({ name, size = 20, className, style, ...ariaProps }: IconPr
         alt={ariaProps['aria-label'] ?? ''}
         role={ariaProps.role}
         tabIndex={ariaProps.tabIndex}
-        aria-hidden={ariaProps['aria-hidden'] ?? true}
+        aria-hidden={ariaProps['aria-hidden'] ?? !hasAccessibleName}
         aria-label={ariaProps['aria-label']}
         aria-labelledby={ariaProps['aria-labelledby']}
         aria-describedby={ariaProps['aria-describedby']}
@@ -312,7 +279,7 @@ export function Icon({ name, size = 20, className, style, ...ariaProps }: IconPr
       size={size}
       className={classes || undefined}
       style={style}
-      aria-hidden={ariaProps['aria-hidden'] ?? true}
+      aria-hidden={ariaProps['aria-hidden'] ?? !hasAccessibleName}
       {...ariaProps}
     />
   )
