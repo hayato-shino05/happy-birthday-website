@@ -150,10 +150,29 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
     
     if (!streamRef.current) return
 
+// 利用可能な動画 MIME タイプをブラウザごとに安全に取得（iOS Safari対応）
+function getSupportedVideoMimeType(): string | undefined {
+  if (typeof window === 'undefined' || typeof MediaRecorder === 'undefined') return undefined
+  const candidates = [
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+  ]
+  for (const type of candidates) {
+    if (MediaRecorder.isTypeSupported(type)) {
+      return type
+    }
+  }
+  return undefined
+}
+
     chunksRef.current = []
-    const mediaRecorder = new MediaRecorder(streamRef.current, {
-      mimeType: 'video/webm;codecs=vp9',
-    })
+    const supportedMimeType = getSupportedVideoMimeType()
+    const mediaRecorder = supportedMimeType
+      ? new MediaRecorder(streamRef.current, { mimeType: supportedMimeType })
+      : new MediaRecorder(streamRef.current)
 
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -162,8 +181,10 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
     }
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' })
-      const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' })
+      const mimeType = mediaRecorderRef.current?.mimeType || supportedMimeType || 'video/webm'
+      const isMp4 = mimeType.includes('mp4')
+      const blob = new Blob(chunksRef.current, { type: mimeType })
+      const file = new File([blob], `video_${Date.now()}.${isMp4 ? 'mp4' : 'webm'}`, { type: mimeType })
       // onCapture を呼び出す前にカメラを停止する
       stopCamera()
       // 状態更新が正しく反映されるように setTimeout を使用

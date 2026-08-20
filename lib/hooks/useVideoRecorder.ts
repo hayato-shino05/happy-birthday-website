@@ -77,11 +77,28 @@ export function useVideoRecorder() {
         videoPreviewRef.current.srcObject = stream
       }
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-          ? 'video/webm;codecs=vp9'
-          : 'video/webm',
-      })
+// 利用可能な動画 MIME タイプをブラウザごとに安全に取得（iOS Safari対応）
+function getSupportedVideoMimeType(): string | undefined {
+  if (typeof window === 'undefined' || typeof MediaRecorder === 'undefined') return undefined
+  const candidates = [
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+  ]
+  for (const type of candidates) {
+    if (MediaRecorder.isTypeSupported(type)) {
+      return type
+    }
+  }
+  return undefined
+}
+
+      const supportedMimeType = getSupportedVideoMimeType()
+      const mediaRecorder = supportedMimeType
+        ? new MediaRecorder(stream, { mimeType: supportedMimeType })
+        : new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
 
       mediaRecorder.ondataavailable = (e) => {
@@ -91,13 +108,21 @@ export function useVideoRecorder() {
       }
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+        const mimeType = mediaRecorderRef.current?.mimeType || supportedMimeType || 'video/webm'
+        const blob = new Blob(chunksRef.current, { type: mimeType })
         const url = URL.createObjectURL(blob)
-        setState(prev => ({
-          ...prev,
-          videoBlob: blob,
-          videoUrl: url,
-          isRecording: false,
+        setState(prev => {
+          // 古い ObjectURL を解放してメモリリークを防止
+          if (prev.videoUrl) {
+            URL.revokeObjectURL(prev.videoUrl)
+          }
+          return {
+            ...prev,
+            videoBlob: blob,
+            videoUrl: url,
+            isRecording: false,
+          }
+        })
           isPaused: false,
         }))
       }
