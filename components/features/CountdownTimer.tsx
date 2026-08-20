@@ -115,13 +115,13 @@ function TimeUnit({ value, label, delay }: { value: number; label: string; delay
       </div>
       <span
         style={{
-          fontSize: '0.75rem',
-          fontWeight: 600,
+          fontSize: '0.8rem',
+          fontWeight: 700,
           textTransform: 'uppercase',
           letterSpacing: '1px',
-          color: '#fff',
+          color: '#854D27',
           fontFamily: 'var(--font-body)',
-          textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+          textShadow: '0 1px 1px rgba(255,255,255,0.9)',
         }}
       >
         {label}
@@ -161,13 +161,13 @@ function TimeUnitPlaceholder({ label }: { label: string }) {
       </div>
       <span
         style={{
-          fontSize: '0.75rem',
-          fontWeight: 600,
+          fontSize: '0.8rem',
+          fontWeight: 700,
           textTransform: 'uppercase',
           letterSpacing: '1px',
-          color: '#fff',
+          color: '#854D27',
           fontFamily: 'var(--font-body)',
-          textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+          textShadow: '0 1px 1px rgba(255,255,255,0.9)',
         }}
       >
         {label}

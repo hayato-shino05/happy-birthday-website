@@ -61,12 +61,12 @@ export function CountdownDisplay() {
       transition={{ duration: 0.8, ease: 'easeOut' }}
       className={`countdown-card theme-${currentTheme}`}
       style={{
-        background: 'rgba(255, 255, 255, 0.25)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'rgba(255, 255, 255, 0.55)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
         borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.4)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        border: '2px solid rgba(212, 176, 140, 0.6)',
+        boxShadow: '0 12px 40px rgba(44, 24, 16, 0.2)',
         padding: '40px 50px',
         maxWidth: '600px',
         width: '90%',
@@ -76,7 +76,7 @@ export function CountdownDisplay() {
         marginTop: '-80px',
       }}
     >
-      {/* Decorative gradient overlay */}
+      {/* 装飾用グラデーションオーバーレイ */}
       <div
         style={{
           position: 'absolute',
@@ -96,11 +96,11 @@ export function CountdownDisplay() {
         style={{
           fontFamily: 'var(--font-display)',
           fontSize: '2rem',
-          color: '#fff',
+          color: '#2C1810',
           marginBottom: '30px',
-          fontWeight: 600,
+          fontWeight: 700,
           lineHeight: 1.4,
-          textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3)',
+          textShadow: '0 1px 1px rgba(255, 255, 255, 0.9), 0 2px 4px rgba(44, 24, 16, 0.15)',
         }}
       >
         {getTitle()}
@@ -120,11 +120,11 @@ export function CountdownDisplay() {
         transition={{ delay: 0.7, duration: 0.5 }}
         style={{
           marginTop: '25px',
-          fontSize: '1rem',
-          color: '#fff',
+          fontSize: '1.05rem',
+          color: '#854D27',
           fontFamily: 'var(--font-body)',
-          fontWeight: 500,
-          textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          fontWeight: 700,
+          textShadow: '0 1px 1px rgba(255, 255, 255, 0.8)',
         }}
       >
         {getDaysLeftText()}
