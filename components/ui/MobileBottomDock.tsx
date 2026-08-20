@@ -200,7 +200,7 @@ export function MobileBottomDock() {
                       {language === 'ja' ? '再生中の楽曲:' : 'Now Playing:'}
                     </span>
                     <span className="text-xs font-bold text-[#FFF9F3] truncate max-w-[200px]">
-                      {currentTrack?.title || 'Happy Birthday'}
+                      {currentTrack?.name || 'Happy Birthday'}
                     </span>
                   </div>
 
@@ -241,7 +241,7 @@ export function MobileBottomDock() {
                             : 'bg-black/20 border-[#D4B08C]/30 text-[#FFF9F3]/80 hover:bg-black/30'
                         }`}
                       >
-                        <span className="truncate">{track.title}</span>
+                        <span className="truncate">{track.name}</span>
                         {currentTrack?.id === track.id && isPlaying && (
                           <Volume2 className="w-4 h-4 text-[#E5A93C] animate-pulse flex-shrink-0 ml-2" />
                         )}

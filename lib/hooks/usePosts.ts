@@ -43,7 +43,7 @@ export function usePosts() {
     setError(null)
 
     try {
-      let queryResult = await getSupabase()
+      let queryResult: any = await getSupabase()
         .from('bulletin_posts')
         .select('id, sender, message, media_object_path, birthday_person, created_at, likes, post_replies(count)')
         .order('created_at', { ascending: false })
@@ -56,7 +56,7 @@ export function usePosts() {
       }
 
       if (queryResult.error) throw queryResult.error
-      setPosts((queryResult.data ?? []).map((post) => toPost(post as PostRecord)))
+      setPosts((queryResult.data ?? []).map((post: any) => toPost(post as PostRecord)))
     } catch (err) {
       console.error('投稿取得エラー:', err)
       setError('投稿を読み込めません')

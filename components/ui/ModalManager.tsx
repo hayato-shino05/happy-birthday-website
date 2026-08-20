@@ -16,7 +16,7 @@ import PhotoFrame from '@/components/features/PhotoFrame'
 
 export function ModalManager() {
   const { activeModal, closeModal } = useUIStore()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   if (!activeModal) return null
 
@@ -32,7 +32,7 @@ export function ModalManager() {
       size: 'widescreen' as const,
     },
     photoFrame: {
-      title: t('photoFrame') || '写真フレーム',
+      title: language === 'ja' ? '写真フレーム' : 'Photo Frame',
       content: <PhotoFrame />,
       size: 'widescreen' as const,
     },
