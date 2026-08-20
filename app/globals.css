@@ -700,16 +700,9 @@ body.theme-hanami {
     padding: 140px 10px 80px;
   }
   
-  /* カウントダウンカードをモバイル向けに小さく調整 */
-  .countdown-card {
-    padding: 20px 15px !important;
-    margin-top: -40px !important;
-    max-width: 95% !important;
-  }
-  
-  .countdown-card h1 {
-    font-size: 1.2rem !important;
-    margin-bottom: 15px !important;
+  /* カウントダウンカードのレスポンシブ余白調整 */
+  .countdown-card-wrapper {
+    margin-top: -20px !important;
   }
 }
 
@@ -828,27 +821,9 @@ body.theme-hanami {
     padding: 130px 8px 60px;
   }
   
-  /* カウントダウンカードをさらに小さく調整 */
-  .countdown-card {
-    padding: 15px 10px !important;
-    margin-top: -30px !important;
-    border-radius: 16px !important;
-  }
-  
-  .countdown-card h1 {
-    font-size: 1rem !important;
-    margin-bottom: 12px !important;
-  }
-  
-  /* カウントダウンタイマーの単位表示を小さく調整 */
-  .countdown-card > div > div > div:first-child {
-    padding: 8px 10px !important;
-    min-width: 45px !important;
-    font-size: 1.2rem !important;
-  }
-  
-  .countdown-card > div > div > span {
-    font-size: 0.6rem !important;
+  /* カウントダウンカードの極小画面用余白調整 */
+  .countdown-card-wrapper {
+    margin-top: -10px !important;
   }
 }
 

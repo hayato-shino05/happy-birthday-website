@@ -5,7 +5,9 @@ import { useNextBirthday } from '@/lib/hooks/useNextBirthday'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useThemeContext } from '@/lib/providers/ThemeProvider'
 import { CountdownTimer } from './CountdownTimer'
+import { Sparkles, Calendar } from 'lucide-react'
 
+// カウントダウンカードコンポーネント（洗練された日本の美意識と温かみのあるデザイン）
 export function CountdownDisplay() {
   const { nextBirthday, isLoading } = useNextBirthday()
   const { language, t } = useLanguage()
@@ -13,122 +15,130 @@ export function CountdownDisplay() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[50vh]">
         <div
-          className="animate-spin rounded-full h-12 w-12 border-b-2"
-          style={{ borderColor: 'var(--theme-primary)' }}
-        ></div>
+          className="animate-spin rounded-full h-10 w-10 border-2 border-t-transparent"
+          style={{ borderColor: 'var(--theme-primary)', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
 
   if (!nextBirthday) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-xl" style={{ color: 'var(--theme-text)' }}>
-          {t('noBirthdayData')}
-        </p>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="p-8 rounded-3xl bg-white/70 backdrop-blur-md border border-[#D4B08C]/30 text-center shadow-lg">
+          <p className="text-lg font-medium text-[#854D27]">
+            {t('noBirthdayData')}
+          </p>
+        </div>
       </div>
     )
   }
 
-  const getTitle = () => {
-    switch (language) {
-      case 'en':
-        return `${t('countdownTitle')} ${nextBirthday.person.name}`
-      case 'ja':
-        return `${nextBirthday.person.name}${t('countdownTitle')}`
-      default:
-        return `${t('countdownTitle')} ${nextBirthday.person.name}`
-    }
-  }
-
-  const getDaysLeftText = () => {
-    switch (language) {
-      case 'en':
-        return `${nextBirthday.daysUntil} ${t('daysLeft')}`
-      case 'ja':
-        return `あと ${nextBirthday.daysUntil} ${t('daysLeft')}`
-      default:
-        return `${nextBirthday.daysUntil} ${t('daysLeft')}`
-    }
-  }
+  const personName = nextBirthday.person.name
+  const targetDateStr = nextBirthday.date ? `${nextBirthday.date.getMonth() + 1}月${nextBirthday.date.getDate()}日` : ''
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.8, ease: 'easeOut' }}
-      className={`countdown-card theme-${currentTheme}`}
-      style={{
-        background: 'rgba(255, 255, 255, 0.55)',
-        backdropFilter: 'blur(18px)',
-        WebkitBackdropFilter: 'blur(18px)',
-        borderRadius: '24px',
-        border: '2px solid rgba(212, 176, 140, 0.6)',
-        boxShadow: '0 12px 40px rgba(44, 24, 16, 0.2)',
-        padding: '40px 50px',
-        maxWidth: '600px',
-        width: '90%',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        marginTop: '-80px',
-      }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className={`countdown-card-wrapper theme-${currentTheme} w-full flex justify-center px-4`}
     >
-      {/* 装飾用グラデーションオーバーレイ */}
       <div
+        className="relative w-full max-w-[620px] rounded-[28px] overflow-hidden transition-all duration-300"
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '4px',
-          background: 'linear-gradient(90deg, var(--theme-primary), var(--theme-secondary), var(--theme-primary))',
-          borderRadius: '24px 24px 0 0',
-        }}
-      />
-
-      <motion.h1
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '2rem',
-          color: '#2C1810',
-          marginBottom: '30px',
-          fontWeight: 700,
-          lineHeight: 1.4,
-          textShadow: '0 1px 1px rgba(255, 255, 255, 0.9), 0 2px 4px rgba(44, 24, 16, 0.15)',
+          background: 'rgba(255, 252, 248, 0.85)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(212, 176, 140, 0.45)',
+          boxShadow: '0 20px 50px -12px rgba(44, 24, 16, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.8) inset',
+          padding: '36px 32px 32px',
         }}
       >
-        {getTitle()}
-      </motion.h1>
+        {/* 上部バッジ：次の記念日 */}
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <span
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold tracking-wider uppercase"
+            style={{
+              background: 'rgba(133, 77, 39, 0.08)',
+              color: '#854D27',
+              border: '1px solid rgba(133, 77, 39, 0.15)',
+            }}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#D4B08C]" />
+            {language === 'ja' ? '次の記念日' : 'Next Celebration'}
+          </span>
+          {targetDateStr && (
+            <span
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-[#854D27]/80"
+              style={{
+                background: 'rgba(255, 255, 255, 0.6)',
+                border: '1px solid rgba(212, 176, 140, 0.25)',
+              }}
+            >
+              <Calendar className="w-3 h-3 text-[#854D27]/70" />
+              {targetDateStr}
+            </span>
+          )}
+        </div>
 
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-      >
-        <CountdownTimer targetDate={nextBirthday.date} />
-      </motion.div>
+        {/* メインタイトル */}
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-2xl sm:text-3xl md:text-4xl font-bold text-center tracking-tight leading-snug mb-7 text-[#2C1810]"
+          style={{
+            fontFamily: 'var(--font-heading)',
+          }}
+        >
+          {language === 'ja' ? (
+            <>
+              <span className="text-[#854D27]">{personName}</span>
+              <span className="font-normal text-xl sm:text-2xl text-[#5C3A21] ml-1">さんの誕生日まで</span>
+            </>
+          ) : (
+            <>
+              <span className="font-normal text-xl sm:text-2xl text-[#5C3A21]">Countdown to </span>
+              <span className="text-[#854D27]">{personName}&apos;s Birthday</span>
+            </>
+          )}
+        </motion.h1>
 
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.5 }}
-        style={{
-          marginTop: '25px',
-          fontSize: '1.05rem',
-          color: '#854D27',
-          fontFamily: 'var(--font-body)',
-          fontWeight: 700,
-          textShadow: '0 1px 1px rgba(255, 255, 255, 0.8)',
-        }}
-      >
-        {getDaysLeftText()}
-      </motion.p>
+        {/* カウントダウンタイマー本体 */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.35, duration: 0.5 }}
+          className="py-1"
+        >
+          <CountdownTimer targetDate={nextBirthday.date} />
+        </motion.div>
+
+        {/* 残り日数フッターピル */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="mt-6 flex justify-center"
+        >
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold shadow-xs"
+            style={{
+              background: 'rgba(255, 255, 255, 0.8)',
+              color: '#854D27',
+              border: '1px solid rgba(212, 176, 140, 0.35)',
+            }}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#3FCF8E] animate-pulse" />
+            {language === 'ja'
+              ? `あと ${nextBirthday.daysUntil} 日のお祝い`
+              : `${nextBirthday.daysUntil} days left`}
+          </div>
+        </motion.div>
+      </div>
     </motion.div>
   )
 }

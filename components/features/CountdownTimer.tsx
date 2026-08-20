@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { getTimeUntilBirthday } from '@/lib/utils/birthday'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -10,12 +10,13 @@ interface CountdownTimerProps {
   onComplete?: () => void
 }
 
+// カウントダウンタイマーコンポーネント（洗練された木目・和モダン調のタイルフリップデザイン）
 export function CountdownTimer({ targetDate, onComplete }: CountdownTimerProps) {
   const [mounted, setMounted] = useState(false)
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: false })
   const { t } = useLanguage()
 
-  // ハイドレーションの不整合を防ぐため、時間計算はクライアント側でのみ行う
+  // クライアント側でのみ時間計算を実行しハイドレーションの不整合を防止
   useEffect(() => {
     setMounted(true)
     setTimeLeft(getTimeUntilBirthday(targetDate))
@@ -38,12 +39,14 @@ export function CountdownTimer({ targetDate, onComplete }: CountdownTimerProps) 
   }, [targetDate, onComplete, mounted])
 
   if (!mounted) {
-    // SSR 中はプレースホルダーを返す
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+      <div className="flex justify-center items-center gap-2 sm:gap-4 flex-nowrap">
         <TimeUnitPlaceholder label={t('days')} />
+        <TimeSeparator />
         <TimeUnitPlaceholder label={t('hours')} />
+        <TimeSeparator />
         <TimeUnitPlaceholder label={t('minutes')} />
+        <TimeSeparator />
         <TimeUnitPlaceholder label={t('seconds')} />
       </div>
     )
@@ -54,122 +57,123 @@ export function CountdownTimer({ targetDate, onComplete }: CountdownTimerProps) 
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '12px',
-        flexWrap: 'wrap',
-      }}
-    >
-      <TimeUnit value={timeLeft.days} label={t('days')} delay={0} />
-      <TimeUnit value={timeLeft.hours} label={t('hours')} delay={0.1} />
-      <TimeUnit value={timeLeft.minutes} label={t('minutes')} delay={0.2} />
-      <TimeUnit value={timeLeft.seconds} label={t('seconds')} delay={0.3} />
+    <div className="flex justify-center items-center gap-1.5 sm:gap-3 md:gap-4 flex-nowrap">
+      <TimeUnit value={timeLeft.days} label={t('days')} />
+      <TimeSeparator />
+      <TimeUnit value={timeLeft.hours} label={t('hours')} />
+      <TimeSeparator />
+      <TimeUnit value={timeLeft.minutes} label={t('minutes')} />
+      <TimeSeparator />
+      <TimeUnit value={timeLeft.seconds} label={t('seconds')} isSeconds />
     </div>
   )
 }
 
-function TimeUnit({ value, label, delay }: { value: number; label: string; delay: number }) {
+function TimeSeparator() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '8px',
-      }}
-    >
+    <div className="flex flex-col gap-1.5 justify-center pb-6 opacity-40">
+      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#854D27]" />
+      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#854D27]" />
+    </div>
+  )
+}
+
+interface TimeUnitProps {
+  value: number
+  label: string
+  isSeconds?: boolean
+}
+
+function TimeUnit({ value, label, isSeconds = false }: TimeUnitProps) {
+  const formattedValue = String(value).padStart(2, '0')
+
+  return (
+    <div className="flex flex-col items-center gap-2">
       <div
+        className="relative group flex items-center justify-center rounded-2xl transition-transform duration-200"
         style={{
-          background: 'var(--theme-primary)',
-          color: '#fff',
-          padding: '14px 18px',
-          borderRadius: '12px',
-          minWidth: '60px',
-          textAlign: 'center',
-          fontFamily: 'var(--font-heading)',
-          fontSize: '1.8rem',
-          fontWeight: 700,
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
-          position: 'relative',
-          overflow: 'hidden',
+          background: 'linear-gradient(145deg, #9C5D33 0%, #76411E 100%)',
+          boxShadow: '0 8px 20px -4px rgba(44, 24, 16, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.15) inset',
+          minWidth: '58px',
+          width: 'clamp(58px, 14vw, 84px)',
+          height: 'clamp(62px, 15vw, 88px)',
+          padding: '0 4px',
         }}
       >
-        <span style={{ position: 'relative', zIndex: 1 }}>{value}</span>
-        {/* ハイライトエフェクト */}
+        {/* 上部微細ハイライト */}
         <div
+          className="absolute top-0 inset-x-0 h-1/2 rounded-t-2xl pointer-events-none"
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '50%',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%)',
-            borderRadius: '12px 12px 0 0',
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 100%)',
           }}
         />
+
+        {/* 中央フリップライン（精巧な木製時計のディテール） */}
+        <div
+          className="absolute inset-x-0 top-1/2 h-[1px] -translate-y-1/2 pointer-events-none opacity-40"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.6) 20%, rgba(0,0,0,0.6) 80%, transparent 100%)',
+          }}
+        />
+
+        {/* 数値アニメーション表示 */}
+        <AnimatePresence mode="popLayout">
+          <motion.span
+            key={formattedValue}
+            initial={{ opacity: 0, y: isSeconds ? -6 : 0, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: isSeconds ? 6 : 0, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="relative z-10 font-bold text-white tracking-wider"
+            style={{
+              fontFamily: 'var(--font-heading), ui-sans-serif, system-ui',
+              fontSize: 'clamp(1.4rem, 3.8vw, 2.3rem)',
+              fontVariantNumeric: 'tabular-nums',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.35)',
+            }}
+          >
+            {formattedValue}
+          </motion.span>
+        </AnimatePresence>
       </div>
+
+      {/* 単位ラベル */}
       <span
+        className="text-[0.7rem] sm:text-xs font-bold tracking-wider text-[#854D27] uppercase"
         style={{
-          fontSize: '0.8rem',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-          color: '#854D27',
           fontFamily: 'var(--font-body)',
-          textShadow: '0 1px 1px rgba(255,255,255,0.9)',
         }}
       >
         {label}
       </span>
-    </motion.div>
+    </div>
   )
 }
 
-
 function TimeUnitPlaceholder({ label }: { label: string }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '8px',
-      }}
-    >
+    <div className="flex flex-col items-center gap-2">
       <div
+        className="flex items-center justify-center rounded-2xl"
         style={{
-          background: 'var(--theme-primary)',
-          color: '#fff',
-          padding: '14px 18px',
-          borderRadius: '12px',
-          minWidth: '60px',
-          textAlign: 'center',
-          fontFamily: 'var(--font-heading)',
-          fontSize: '1.8rem',
-          fontWeight: 700,
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
-          position: 'relative',
-          overflow: 'hidden',
+          background: 'linear-gradient(145deg, #9C5D33 0%, #76411E 100%)',
+          boxShadow: '0 8px 20px -4px rgba(44, 24, 16, 0.3)',
+          minWidth: '58px',
+          width: 'clamp(58px, 14vw, 84px)',
+          height: 'clamp(62px, 15vw, 88px)',
         }}
       >
-        <span style={{ position: 'relative', zIndex: 1 }}>--</span>
+        <span
+          className="font-bold text-white/80"
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: 'clamp(1.4rem, 3.8vw, 2.3rem)',
+          }}
+        >
+          --
+        </span>
       </div>
-      <span
-        style={{
-          fontSize: '0.8rem',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-          color: '#854D27',
-          fontFamily: 'var(--font-body)',
-          textShadow: '0 1px 1px rgba(255,255,255,0.9)',
-        }}
-      >
+      <span className="text-[0.7rem] sm:text-xs font-bold tracking-wider text-[#854D27] uppercase">
         {label}
       </span>
     </div>
