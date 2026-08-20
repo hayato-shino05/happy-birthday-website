@@ -1,4 +1,7 @@
-# happy-birthday-website
+# Omoide
+
+> **Omoide Bako**  
+> An interactive celebration and keepsake space for birthdays, cherished memories, and friends.
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-%E6%97%A5%E6%9C%AC%E8%AA%9E-red" alt="Japanese"></a>
@@ -30,9 +33,9 @@
 
 ## ABOUT
 
-`happy-birthday-website` is an interactive Next.js application for remembering, celebrating, and sharing birthdays with people who matter.
+`Omoide` (Slogan: **Omoide Bako**) is an interactive Web application for remembering, celebrating, documenting, and sharing birthdays and anniversaries.
 
-It brings birthday countdowns, a 2D birthday cake, wish messages, photo and video albums, mini games, and seasonal themes into one web experience. The project is designed to work as a small celebration space for families, friends, teams, or communities.
+Beyond birthday countdowns and 2D cake candle-blowing, it brings together photo & video albums, real-time group chat, a message bulletin board, photo booth, mini-games, and 13 dynamic seasonal & festival themes into a single warm and inviting space. It is designed to serve as a shared celebration sanctuary for families, friends, teams, or communities.
 
 > [!NOTE]
 > This README avoids decorative emoji and represents feature groups with `lucide-react` icon names.
@@ -43,16 +46,17 @@ It brings birthday countdowns, a 2D birthday cake, wish messages, photo and vide
 
 | Icon | Feature | Description |
 |------|---------|-------------|
-| `Timer` | Real-time countdown | Shows the remaining time until the next birthday using Supabase birthday data. |
-| `Cake` | Interactive cake | Provides a 2D cake and candle experience for birthday celebrations. |
-| `Music` | Music player | Plays birthday songs and custom tracks with Howler.js. |
+| `Timer` | Real-time countdown | Shows the remaining time until the next birthday or milestone using Supabase data. |
+| `Cake` | Interactive cake | Provides a 2D cake and candle experience for celebrations. |
+| `Music` | Music player | Plays celebration songs and vintage tracks with Howler.js. |
 | `Sparkles` | Visual effects | Displays confetti, fireworks, balloons, and seasonal particles. |
 
-### MEDIA
+### MEDIA & KEEPSAKES
 
 | Icon | Feature | Description |
 |------|---------|-------------|
-| `Image` | Photo and video album | Organizes memories with Supabase Storage. |
+| `Image` | Photo & video album | Organizes memories with Supabase Storage. |
+| `Camera` | Photo booth / frame | Takes photos via WebRTC camera and frames them with custom seasonal borders. |
 | `Tags` | Tag management | Adds searchable tags to media files. |
 | `Upload` | Media upload | Supports image and video uploads through `react-dropzone`. |
 | `Search` | Search | Helps users find media by tags or text. |
@@ -61,48 +65,48 @@ It brings birthday countdowns, a 2D birthday cake, wish messages, photo and vide
 
 | Icon | Feature | Description |
 |------|---------|-------------|
-| `Trophy` | Memory game | Lets users flip cards and find matching pairs. |
-| `Puzzle` | Jigsaw puzzle | Generates a puzzle from an image with adjustable difficulty. |
-| `ClipboardList` | Birthday quiz | Displays customizable birthday-themed quiz content. |
-| `CalendarDays` | Birthday calendar | Shows birthdays grouped by month in a calendar UI. |
+| `Brain` | Memory game | Card matching mini-game for entertainment. |
+| `Puzzle` | Jigsaw puzzle | Creates customizable jigsaw puzzles from memory photos. |
+| `HelpCircle` | Birthday quiz | Interactive trivia quiz for the celebrant. |
+| `Calendar` | Birthday calendar | Monthly overview of birthdays and anniversaries. |
 
 ### COMMUNITY
 
 | Icon | Feature | Description |
 |------|---------|-------------|
-| `MessageCircle` | Real-time chat | Provides chat powered by Supabase Realtime. |
-| `PenLine` | Wish message board | Supports posts, likes, and replies for celebration messages. |
-| `Mic` | Voice messages | Records audio messages directly in the browser. |
-| `Video` | Video messages | Captures video messages through the webcam. |
-| `Gift` | Virtual gifts | Lets users send digital gifts. |
-| `Users` | Sharing flow | Makes invitation URLs easier to share through social buttons. |
+| `MessageCircle` | Real-time chat | Real-time group messaging powered by Supabase Realtime. |
+| `ClipboardList` | Message board (Yosegaki) | Digital guestbook for wishes, likes, and replies. |
+| `Mic` | Voice messages | Browser voice recording and audio message sharing. |
+| `Video` | Video messages | Record and save video greetings directly from the webcam. |
+| `Gift` | Virtual gifts | Select and send digital celebration gifts. |
+| `Share2` | Sharing links | Share invite links directly to social platforms. |
 
-### THEME
+### THEMES & CUSTOMIZATION
 
 | Icon | Feature | Description |
 |------|---------|-------------|
-| `Palette` | Seasonal themes | Switches visual themes for spring, summer, autumn, and winter. |
-| `PartyPopper` | Event themes | Supports Christmas, Halloween, Hanami, Tanabata, New Year, and more. |
-| `Video` | Video backgrounds | Uses theme-specific video backgrounds with fallback images. |
-| `Languages` | Internationalization | Supports Japanese and English UI switching. |
+| `Palette` | Four seasons | Dynamic visual themes for Spring, Summer, Autumn, and Winter. |
+| `Sparkles` | 13 Festival themes | Dynamic themes for Hanami, Tanabata, Obon, Tsukimi, Shogatsu, Halloween, Christmas, etc. |
+| `Video` | Video backgrounds | Theme-specific video backgrounds with smooth fallbacks. |
+| `Languages` | Multi-language (i18n) | Seamless switching between Japanese (JA) and English (EN). |
 
 ## VALUE
 
-1. **Make birthdays harder to forget**
-   - Check upcoming birthdays with a countdown.
-   - Keep family, friend, and team celebration dates in one place.
+1. **Never miss a milestone**
+   - Live countdowns to upcoming birthdays and special dates.
+   - Centralized anniversary registry for friends and family.
 
-2. **Preserve memories**
-   - Store photos, videos, audio, and text messages together.
-   - Build an album experience that is easy to revisit later.
+2. **A digital keepsake box (Omoide Bako)**
+   - Consolidate photos, videos, voice recordings, guestbook wishes, and photobooth strips in one place.
+   - Relive cherished moments anytime in a nostalgic, cozy atmosphere.
 
-3. **Make online celebrations more lively**
-   - Add motion and play through mini games and effects.
-   - Match the mood with seasonal and event themes.
+3. **Joyful online celebrations**
+   - Interactive mini-games and animated effects bring energy and delight.
+   - Dynamic 13-festival theme engine keeps the site fresh and lively all year round.
 
-4. **Work as a shared community space**
-   - Use it for classes, circles, teams, families, or friend groups.
-   - Customize it freely because it is open source.
+4. **Private community sanctuary**
+   - Ideal for friend circles, school clubs, teams, and families.
+   - Open source and highly extensible for your own events.
 
 ## TECH STACK
 
@@ -110,189 +114,50 @@ It brings birthday countdowns, a 2D birthday cake, wish messages, photo and vide
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Next.js | 16.0.7 | App Router and API Routes |
-| React | 19.2.1 | UI components |
-| TypeScript | 5.x | Type-safe implementation |
+| Next.js | 16.0.7 | App Router & API Routes |
+| React | 19.2.1 | UI Components |
+| TypeScript | 5.x | Type safety |
 | Tailwind CSS | 4.x | Styling |
 | Framer Motion | 12.23.25 | Animation |
-| lucide-react | 0.556.0 | UI icons |
-| Zustand | 5.0.9 | Global state management |
-| TanStack Query | 5.90.12 | Server state and caching |
+| lucide-react | 0.556.0 | UI Icons |
+| Zustand | 5.0.9 | Global state |
+| TanStack Query | 5.90.12 | Server state & caching |
 | Howler.js | 2.2.4 | Audio playback |
-| react-dropzone | 14.3.8 | File upload UI |
+| react-dropzone | 14.3.8 | Drag-and-drop file upload |
 | date-fns | 4.1.0 | Date utilities |
 
-### BACKEND AND SERVICES
+### BACKEND & SERVICES
 
 | Technology | Purpose |
 |------------|---------|
 | Supabase | PostgreSQL-based BaaS |
-| Supabase Storage | Media file storage |
-| Supabase Realtime | Real-time subscriptions |
-| Next.js API Routes | API boundaries |
+| Supabase Storage | Media asset storage |
+| Supabase Realtime | Real-time messaging subscription |
+| Next.js API Routes | Serverless backend endpoints |
 | Vercel Analytics | Web analytics |
-| Vercel | Hosting |
-
-### DEVELOPMENT
-
-| Tool | Purpose |
-|------|---------|
-| Vitest | Test runner |
-| Testing Library | React component testing |
-| ESLint | Static analysis |
-| Prettier | Formatting |
-
-## ENVIRONMENT
-
-### REQUIREMENTS
-
-| Item | Version or condition |
-|------|----------------------|
-| Node.js | 20.9.0 or higher |
-| npm | Version bundled with Node.js |
-| Supabase | Project URL and anonymous key are required |
-| Browser | Chrome 111+, Edge 111+, Firefox 111+, Safari 16.4+ |
-
-### ENV VARIABLES
-
-Copy `.env.example` to `.env.local`.
-
-```bash
-cp .env.example .env.local
-```
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Supabase anonymous key |
-| `NEXT_PUBLIC_BASE_URL` | no | Public base URL. The sitemap uses a default value when omitted. |
+| Vercel | Hosting platform |
 
 ## HOW TO USE
 
-### 1. Clone repository
-
 ```bash
+# 1. Clone repository
 git clone https://github.com/hayato-shino05/happy-birthday-website.git
 cd happy-birthday-website
-```
 
-### 2. Install dependencies
-
-```bash
+# 2. Install dependencies
 npm install
-```
 
-### 3. Configure environment variables
-
-```bash
+# 3. Configure environment
 cp .env.example .env.local
-```
 
-Edit `.env.local`.
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-```
-
-### 4. Prepare Supabase
-
-See [DATABASE.md](./DATABASE.md) for required tables, Storage setup, and RLS policies.
-
-### 5. Start development server
-
-```bash
+# 4. Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 6. Verify locally
-
-```bash
-npm run lint
-npm run test
-npm run build
-```
-
-## DEPLOY
-
-### Vercel
-
-<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fhayato-shino05%2Fhappy-birthday-website&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_BASE_URL&envDescription=Supabase%20configuration%20and%20public%20base%20URL&envLink=https%3A%2F%2Fsupabase.com%2Fdocs">
-  <img src="https://vercel.com/button" alt="Deploy with Vercel">
-</a>
-
-For manual deployment, import the repository into Vercel and configure the required Environment Variables.
-
-## SECURITY
-
-| Item | Handling |
-|------|----------|
-| Supabase anonymous key | Public frontend key. Use it with RLS. |
-| Supabase service role key | Never expose it in `.env.local`, README files, or the client bundle. |
-| RLS | Enable Row Level Security in Supabase. |
-| Uploads | Control file size, type, and visibility with both app validation and Supabase settings. |
-
-## PROJECT STRUCTURE
-
-See [STRUCTURE.md](./STRUCTURE.md) for details.
-
-```text
-happy-birthday-website/
-├── app/                      # Next.js App Router and API Routes
-├── components/               # UI, features, community, games, effects
-├── config/                   # Theme and music configuration
-├── lib/                      # hooks, stores, Supabase, i18n, providers
-├── public/                   # Static assets
-├── types/                    # TypeScript type definitions
-├── __tests__/                # Tests
-├── DATABASE.md               # Supabase schema
-├── STRUCTURE.md              # Architecture overview
-└── package.json              # scripts and dependencies
-```
-
-## NPM SCRIPTS
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start the development server. |
-| `npm run build` | Create a production build. |
-| `npm run start` | Start the production server. |
-| `npm run lint` | Run ESLint. |
-| `npm run test` | Run Vitest once. |
-| `npm run test:watch` | Run Vitest in watch mode. |
-| `npm run test:coverage` | Run tests with coverage. |
-
-## DOCUMENTS
-
-| Document | Content |
-|----------|---------|
-| [README.md](./README.md) | Japanese README |
-| [STRUCTURE.md](./STRUCTURE.md) | Directory structure and architecture |
-| [DATABASE.md](./DATABASE.md) | Supabase schema and policies |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guide |
-| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | Code of conduct |
-
-## CONTRIBUTING
-
-Contributions are welcome. For large feature or design changes, please open an Issue first to discuss the direction.
-
-Basic flow:
-
-1. Fork and clone the repository.
-2. Create a working branch.
-3. Implement code or documentation changes.
-4. Run `npm run lint`, `npm run test`, and `npm run build` when relevant.
-5. Open a Pull Request.
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
-
 ## LICENSE
 
-This project is released under the [MIT License](./LICENSE).
+This project is licensed under the [MIT License](./LICENSE).
 
 <p align="center">
-  <strong>For special birthdays and meaningful time with people who matter.</strong>
+  <strong>Crafted for cherishing memories and sharing joy with loved ones.</strong>
 </p>
