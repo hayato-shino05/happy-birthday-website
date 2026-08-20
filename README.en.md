@@ -4,6 +4,10 @@
 > An interactive celebration and keepsake space for birthdays, cherished memories, and friends.
 
 <p align="center">
+  <img src="./public/images/banners/banner_option_2_minimal.jpg" alt="Omoide Bako Banner" width="100%">
+</p>
+
+<p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-%E6%97%A5%E6%9C%AC%E8%AA%9E-red" alt="Japanese"></a>
   <img src="https://img.shields.io/badge/version-0.1.0-4f46e5" alt="Version 0.1.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow" alt="License MIT"></a>
@@ -34,6 +38,10 @@
 ## ABOUT
 
 `Omoide` (Slogan: **Omoide Bako**) is an interactive Web application for remembering, celebrating, documenting, and sharing birthdays and anniversaries.
+
+<p align="center">
+  <img src="./public/images/banners/banner_option_1_ghibli.jpg" alt="Omoide Bako Concept Illustration" width="100%">
+</p>
 
 Beyond birthday countdowns and 2D cake candle-blowing, it brings together photo & video albums, real-time group chat, a message bulletin board, photo booth, mini-games, and 13 dynamic seasonal & festival themes into a single warm and inviting space. It is designed to serve as a shared celebration sanctuary for families, friends, teams, or communities.
 

@@ -4,6 +4,10 @@
 > 大切な人の誕生日と、みんなの思い出をひとつの場所に。
 
 <p align="center">
+  <img src="./public/images/banners/banner_option_2_minimal.jpg" alt="Omoide Bako Banner" width="100%">
+</p>
+
+<p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/lang-English-blue" alt="英語版README"></a>
   <img src="https://img.shields.io/badge/%E3%83%90%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3-0.1.0-4f46e5" alt="バージョン 0.1.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9-MIT-yellow" alt="MIT ライセンス"></a>
@@ -34,6 +38,10 @@
 ## 概要
 
 `Omoide`（スローガン：**Omoide Bako / 想い出箱**）は、大切な人の誕生日や記念日を「覚える」「祝う」「記録する」「分かち合う」ためのインタラクティブな Web アプリケーションです。
+
+<p align="center">
+  <img src="./public/images/banners/banner_option_1_ghibli.jpg" alt="Omoide Bako Concept Illustration" width="100%">
+</p>
 
 誕生日カウントダウンや 2D ケーキのろうそく消しにとどまらず、写真・動画アルバム、リアルタイムチャット、メッセージボード（寄せ書き）、フォトブース、ミニゲーム、そして日本の 13 の季節・祝祭日に合わせたテーマ演出を 1 つの温かい空間にまとめています。家族・友人・チームのためのオンライン記念日共有スペースとして活用できます。
 
