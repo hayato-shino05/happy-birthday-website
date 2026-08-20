@@ -625,12 +625,12 @@ body.theme-bunka {
     display: none !important;
   }
 
-  /* 左上：言語＆テーマセレクター */
+  /* 左上：言語＆テーマセレクター（縦並び配置を維持しつつ、タッチしやすい適正サイズに拡大） */
   .fixed-top-left {
-    top: 12px;
-    left: 12px;
-    flex-direction: row !important;
-    align-items: center !important;
+    top: 14px;
+    left: 14px;
+    flex-direction: column !important;
+    align-items: flex-start !important;
     gap: 8px !important;
     z-index: 50;
   }
@@ -639,10 +639,12 @@ body.theme-bunka {
   .fixed-top-left .language-selector select,
   .fixed-top-left select,
   .fixed-top-left .theme-indicator {
-    padding: 4px 10px 4px 6px !important;
-    font-size: 0.75em !important;
-    height: 32px !important;
-    box-shadow: 0 2px 6px rgba(133, 77, 39, 0.3) !important;
+    padding: 6px 14px 6px 10px !important;
+    font-size: 0.88em !important;
+    height: 38px !important;
+    border-radius: 20px !important;
+    border: 2px solid #D4B08C !important;
+    box-shadow: 0 4px 12px rgba(133, 77, 39, 0.35) !important;
   }
 
   /* ミュージックプレイヤー（モバイルでは非表示にしてDockと重なりを防止） */
@@ -664,17 +666,20 @@ body.theme-bunka {
 /* ===== 小さなモバイル端末向け（最大480px）===== */
 @media screen and (max-width: 480px) {
   .fixed-top-left {
-    top: 6px;
-    left: 6px;
-    gap: 4px !important;
+    top: 12px;
+    left: 12px;
+    gap: 8px !important;
     flex-direction: column !important;
   }
   
   .fixed-top-left .language-selector select,
+  .fixed-top-left select,
   .fixed-top-left .theme-indicator {
-    padding: 2px 8px 2px 4px !important;
-    font-size: 0.68em !important;
-    height: 26px !important;
+    padding: 6px 14px 6px 10px !important;
+    font-size: 0.85em !important;
+    height: 36px !important;
+    border-radius: 20px !important;
+    border: 2px solid #D4B08C !important;
   }
   
   .fixed-top-right {
