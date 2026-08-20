@@ -79,7 +79,7 @@ export function useAudioRecorder() {
     } catch (err) {
       setState(prev => ({
         ...prev,
-        error: 'マイクにアクセスできません。権限を許可してください。',
+        error: 'Cannot access microphone. Please allow permission.',
       }))
     }
   }, [])

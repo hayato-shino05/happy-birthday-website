@@ -95,10 +95,10 @@ export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
               }}
             >
               {type === 'all'
-                ? language === 'ja' ? 'すべて' : 'All'
+                ? t('allMedia')
                 : type === 'image'
-                ? language === 'ja' ? '写真' : 'Photos'
-                : language === 'ja' ? '動画' : 'Videos'}
+                ? t('photos')
+                : t('videos')}
             </button>
           ))}
         </div>
@@ -153,7 +153,7 @@ export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
               }}
             >
               <Icon name="Play" size={16} />
-              <span>{language === 'ja' ? 'スライドショー' : 'Slideshow'}</span>
+              <span>{t('slideshow')}</span>
             </button>
           )}
         </div>

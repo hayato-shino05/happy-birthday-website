@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface ModalProps {
   isOpen: boolean
@@ -42,6 +43,7 @@ export default function Modal({
   centered = true,
   scrollBehavior = 'inside',
 }: ModalProps) {
+  const { t } = useLanguage()
   const [isAnimating, setIsAnimating] = useState(false)
   const [shouldRender, setShouldRender] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
@@ -216,7 +218,7 @@ export default function Modal({
                     padding: '5px',
                     lineHeight: 1,
                   }}
-                  aria-label="閉じる"
+                  aria-label={t('close')}
                 >
                   <Icon name="Close" size={24} className="text-rose-500" aria-hidden="true" />
                 </button>
@@ -283,11 +285,14 @@ export function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmText = '確認',
-  cancelText = 'キャンセル',
+  confirmText,
+  cancelText,
   variant = 'danger',
   isLoading = false,
 }: ConfirmModalProps) {
+  const { t } = useLanguage()
+  const resolvedConfirmText = confirmText ?? t('confirm')
+  const resolvedCancelText = cancelText ?? t('cancel')
   const variantStyles = {
     danger: {
       icon: <Icon name="AlertTriangle" size={24} className="text-rose-300" />,
@@ -322,7 +327,7 @@ export function ConfirmModal({
             disabled={isLoading}
             className="flex-1 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors cursor-pointer disabled:opacity-50"
           >
-            {cancelText}
+            {resolvedCancelText}
           </button>
           <button
             onClick={onConfirm}
@@ -332,7 +337,7 @@ export function ConfirmModal({
             {isLoading && (
               <Icon name="LoaderCircle" size={16} className="animate-spin" aria-hidden="true" />
             )}
-            {confirmText}
+            {resolvedConfirmText}
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import type { Birthday } from '@/types'
+import type { Language } from '@/lib/i18n/types'
 
 interface QuizQuestion {
   id: number
@@ -19,33 +20,47 @@ interface UseQuizReturn {
   selectedAnswer: number | null
   answerQuestion: (answerIndex: number) => void
   nextQuestion: () => void
-  startQuiz: (birthdays: Birthday[]) => void
+  startQuiz: (birthdays: Birthday[], language?: Language) => void
   resetQuiz: () => void
 }
 
-function generateQuestions(birthdays: Birthday[]): QuizQuestion[] {
+const MONTHS_JA = [
+  '1月', '2月', '3月', '4月', '5月', '6月',
+  '7月', '8月', '9月', '10月', '11月', '12月',
+]
+
+const MONTHS_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+function generateQuestions(birthdays: Birthday[], language: Language = 'ja'): QuizQuestion[] {
   if (birthdays.length < 4) return []
 
   const questions: QuizQuestion[] = []
   const shuffled = [...birthdays].sort(() => Math.random() - 0.5)
+  const isJa = language === 'ja'
+  const months = isJa ? MONTHS_JA : MONTHS_EN
 
   // 質問タイプ1: Xの誕生日はいつ？
   for (let i = 0; i < Math.min(3, shuffled.length); i++) {
     const person = shuffled[i]
-    const months = ['1月', '2月', '3月', '4月', '5月', '6月',
-                    '7月', '8月', '9月', '10月', '11月', '12月']
-    
     const correctMonth = months[person.month - 1]
-    const wrongMonths = months.filter((_, idx) => idx !== person.month - 1)
+    const wrongMonths = months
+      .filter((_, idx) => idx !== person.month - 1)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3)
 
     const options = [correctMonth, ...wrongMonths].sort(() => Math.random() - 0.5)
     const correctAnswer = options.indexOf(correctMonth)
 
+    const question = isJa
+      ? `${person.name}さんの誕生日は何月ですか？`
+      : `Which month is ${person.name}'s birthday?`
+
     questions.push({
       id: questions.length,
-      question: `${person.name}さんの誕生日は何月ですか？`,
+      question,
       options,
       correctAnswer,
     })
@@ -54,10 +69,8 @@ function generateQuestions(birthdays: Birthday[]): QuizQuestion[] {
   // 質問タイプ2: X月に誕生日があるのは誰？
   for (let i = 0; i < Math.min(2, shuffled.length); i++) {
     const person = shuffled[i]
-    const months = ['1月', '2月', '3月', '4月', '5月', '6月',
-                    '7月', '8月', '9月', '10月', '11月', '12月']
-    
-    const wrongPeople = shuffled.filter((p) => p.id !== person.id)
+    const wrongPeople = shuffled
+      .filter((p) => p.id !== person.id)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3)
       .map((p) => p.name)
@@ -65,9 +78,13 @@ function generateQuestions(birthdays: Birthday[]): QuizQuestion[] {
     const options = [person.name, ...wrongPeople].sort(() => Math.random() - 0.5)
     const correctAnswer = options.indexOf(person.name)
 
+    const question = isJa
+      ? `${months[person.month - 1]}に誕生日があるのは誰ですか？`
+      : `Who has a birthday in ${months[person.month - 1]}?`
+
     questions.push({
       id: questions.length,
-      question: `${months[person.month - 1]}に誕生日があるのは誰ですか？`,
+      question,
       options,
       correctAnswer,
     })
@@ -76,7 +93,7 @@ function generateQuestions(birthdays: Birthday[]): QuizQuestion[] {
   return questions.sort(() => Math.random() - 0.5).slice(0, 5)
 }
 
-export function useQuiz(): UseQuizReturn {
+export function useQuiz(initialLanguage: Language = 'ja'): UseQuizReturn {
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [score, setScore] = useState(0)
@@ -85,14 +102,17 @@ export function useQuiz(): UseQuizReturn {
 
   const isComplete = isPlaying && currentQuestion >= questions.length
 
-  const startQuiz = useCallback((birthdays: Birthday[]) => {
-    const generatedQuestions = generateQuestions(birthdays)
-    setQuestions(generatedQuestions)
-    setCurrentQuestion(0)
-    setScore(0)
-    setSelectedAnswer(null)
-    setIsPlaying(true)
-  }, [])
+  const startQuiz = useCallback(
+    (birthdays: Birthday[], language?: Language) => {
+      const generatedQuestions = generateQuestions(birthdays, language ?? initialLanguage)
+      setQuestions(generatedQuestions)
+      setCurrentQuestion(0)
+      setScore(0)
+      setSelectedAnswer(null)
+      setIsPlaying(true)
+    },
+    [initialLanguage]
+  )
 
   const resetQuiz = useCallback(() => {
     setQuestions([])

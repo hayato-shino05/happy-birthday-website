@@ -87,7 +87,7 @@ export function CountdownDisplay() {
               onClick={() => setIsHidden(true)}
               className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 hover:bg-white border border-white/80 flex items-center justify-center text-[#6E3902] hover:text-[#2C1400] shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
               title={language === 'ja' ? '背景を鑑賞するために隠す' : 'Hide to view background'}
-              aria-label="Hide Countdown"
+              aria-label={language === 'ja' ? 'カウントダウンを隠す' : 'Hide Countdown'}
             >
               <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>

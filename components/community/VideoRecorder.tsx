@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useVideoRecorder } from '@/lib/hooks/useVideoRecorder'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface VideoRecorderProps {
   birthdayPerson?: string
@@ -10,6 +11,7 @@ interface VideoRecorderProps {
 }
 
 export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecorderProps) {
+  const { t } = useLanguage()
   const {
     isRecording,
     isPaused,
@@ -62,7 +64,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
         setUploadSuccess(false)
       }, 2000)
     } catch {
-      setUploadError('アップロードできません。もう一度お試しください。')
+      setUploadError(t('videoUploadFailed'))
     } finally {
       setUploading(false)
     }
@@ -74,7 +76,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
-        ビデオメッセージを録画
+        {t('recordVideoMessage')}
       </h3>
 
       {error && (
@@ -85,7 +87,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
 
       {uploadSuccess && (
         <div className="bg-green-500/20 text-green-200 px-4 py-2 rounded-lg mb-4">
-          ビデオを送信しました！
+          {t('videoSent')}
         </div>
       )}
 
@@ -96,7 +98,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
             <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <p>下のボタンを押してカメラをオンにしてください</p>
+            <p>{t('cameraTurnOnPrompt')}</p>
           </div>
         )}
 
@@ -137,7 +139,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            カメラをオン
+            {t('turnOnCamera')}
           </button>
         )}
 
@@ -149,7 +151,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="6" />
             </svg>
-            録画開始
+            {t('startRecording')}
           </button>
         )}
 
@@ -190,7 +192,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
             onClick={resetRecording}
             className="px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-full font-medium transition-colors cursor-pointer"
           >
-            再録画
+            {t('rerecord')}
           </button>
         )}
       </div>
@@ -202,7 +204,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
             type="text"
             value={sender}
             onChange={(e) => setSender(e.target.value)}
-            placeholder="お名前"
+            placeholder={t('yourName')}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
           />
           {uploadError && (
@@ -213,7 +215,7 @@ export default function VideoRecorder({ birthdayPerson, onRecorded }: VideoRecor
             disabled={uploading || !sender.trim()}
             className="w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all cursor-pointer disabled:cursor-not-allowed"
           >
-            {uploading ? '送信中...' : 'ビデオを送る'}
+            {uploading ? t('sending') : t('sendVideo')}
           </button>
         </div>
       )}

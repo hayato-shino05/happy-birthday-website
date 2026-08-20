@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '@/components/ui/Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface CameraCaptureProps {
   mode: 'photo' | 'video'
@@ -11,6 +12,7 @@ interface CameraCaptureProps {
 }
 
 export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) {
+  const { t } = useLanguage()
   const [mounted, setMounted] = useState(false)
   
   useEffect(() => {
@@ -67,7 +69,7 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
                 })
                 .catch(err => {
                   console.error('Video play error:', err)
-                  if (mounted) setError('カメラからビデオを再生できません。')
+                  if (mounted) setError(t('cameraPlaybackError'))
                 })
             }
           }
@@ -77,11 +79,11 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
         const errorMessage = err instanceof Error ? err.message : 'Unknown error'
         if (mounted) {
           if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
-            setError('ブラウザの設定でカメラへのアクセスを許可してください。')
+            setError(t('cameraPermission'))
           } else if (errorMessage.includes('NotFoundError') || errorMessage.includes('DevicesNotFoundError')) {
-            setError('このデバイスにカメラが見つかりません。')
+            setError(t('cameraUnavailable'))
           } else {
-            setError(`カメラにアクセスできません: ${errorMessage}`)
+            setError(`${t('accessCameraError')}: ${errorMessage}`)
           }
         }
       }
@@ -248,11 +250,11 @@ function getSupportedVideoMimeType(): string | undefined {
       >
         <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 600 }}>
           <Icon name={mode === 'photo' ? 'Camera' : 'Video'} size={20} style={{ color: '#fff', verticalAlign: 'middle', marginRight: '8px' }} />
-          {mode === 'photo' ? '写真を撮る' : 'ビデオを撮る'}
+          {mode === 'photo' ? t('takePhoto') : t('takeVideo')}
         </span>
         <button
           onClick={handleClose}
-          aria-label="閉じる"
+          aria-label={t('close')}
           style={{
             background: 'rgba(255,255,255,0.2)',
             color: '#fff',
@@ -343,6 +345,7 @@ function getSupportedVideoMimeType(): string | undefined {
           <button
             onClick={capturePhoto}
             disabled={!cameraReady}
+            aria-label={t('capture')}
             style={{
               width: '70px',
               height: '70px',
@@ -357,6 +360,7 @@ function getSupportedVideoMimeType(): string | undefined {
           <button
             onClick={isRecording ? stopRecording : startRecording}
             disabled={!cameraReady}
+            aria-label={isRecording ? t('stopRecording') : t('startRecording')}
             style={{
               width: '70px',
               height: '70px',
@@ -391,3 +395,5 @@ function getSupportedVideoMimeType(): string | undefined {
   
   return createPortal(cameraContent, document.body)
 }
+
+export default CameraCapture

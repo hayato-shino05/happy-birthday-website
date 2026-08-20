@@ -3,6 +3,7 @@
 import { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
+import { useOptionalLanguage } from '@/lib/i18n/LanguageContext'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info' | 'loading'
 type ToastPosition = 'top-right' | 'top-left' | 'top-center' | 'bottom-right' | 'bottom-left' | 'bottom-center'
@@ -53,6 +54,8 @@ interface ToastProviderProps {
 }
 
 export function ToastProvider({ children, position = 'bottom-right', maxToasts = 5 }: ToastProviderProps) {
+  const lang = useOptionalLanguage()
+  const t = lang?.t ?? ((k: string) => k)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [mounted, setMounted] = useState(false)
 
@@ -146,7 +149,7 @@ export function ToastProvider({ children, position = 'bottom-right', maxToasts =
           <div
             className={`fixed z-[100] flex flex-col gap-3 pointer-events-none ${positionClasses[position]}`}
             aria-live="polite"
-            aria-label="Notifications"
+            aria-label={t('notifications')}
           >
             {toasts.map((toast, index) => (
               <ToastItem
@@ -203,6 +206,8 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast, onClose, index, position }: ToastItemProps) {
+  const lang = useOptionalLanguage()
+  const t = lang?.t ?? ((k: string) => k)
   const [isExiting, setIsExiting] = useState(false)
   const [progress, setProgress] = useState(100)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -286,7 +291,7 @@ function ToastItem({ toast, onClose, index, position }: ToastItemProps) {
           <button
             onClick={handleClose}
             className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer"
-            aria-label="通知を閉じる"
+            aria-label={t('closeNotification')}
           >
             <Icon name="Close" size={16} className="text-rose-200" aria-hidden="true" />
           </button>

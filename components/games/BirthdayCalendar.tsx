@@ -56,7 +56,7 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
       >
         <button
           onClick={prevMonth}
-          aria-label={t('previousMonth') || (isJa ? '前の月' : 'Previous Month')}
+          aria-label={t('previousMonth')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',
@@ -74,7 +74,7 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
         </h3>
         <button
           onClick={nextMonth}
-          aria-label={t('nextMonth') || (isJa ? '次の月' : 'Next Month')}
+          aria-label={t('nextMonth')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',
@@ -92,7 +92,7 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
       {/* 選択中の月の誕生日リスト */}
       {birthdaysInMonth.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 20px', color: '#854D27' }}>
-          <p>{isJa ? '今月は誕生日が登録されていません' : 'No birthdays registered this month'}</p>
+          <p>{t('noBirthdaysThisMonth')}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -146,7 +146,7 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
       {/* 全ての月の概要 */}
       <div style={{ marginTop: '30px' }}>
         <h4 style={{ color: '#854D27', marginBottom: '15px' }}>
-          {isJa ? '1年の誕生日一覧' : 'Yearly Birthday Overview'}
+          {t('yearOverview')}
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
           {(isJa ? MONTHS_JA : MONTHS_EN_SHORT).map((month, index) => {

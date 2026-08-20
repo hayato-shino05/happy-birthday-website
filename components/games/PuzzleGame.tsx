@@ -41,11 +41,11 @@ export function PuzzleGame({ onClose }: PuzzleGameProps) {
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#854D27' }}>{moves}</div>
-          <div style={{ fontSize: '0.8rem', color: '#854D27' }}>Moves</div>
+          <div style={{ fontSize: '0.8rem', color: '#854D27' }}>{t('moves')}</div>
         </div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#854D27' }}>{formatTime(timeElapsed)}</div>
-          <div style={{ fontSize: '0.8rem', color: '#854D27' }}>{t('gameTime') || '時間'}</div>
+          <div style={{ fontSize: '0.8rem', color: '#854D27' }}>{t('gameTime')}</div>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export function PuzzleGame({ onClose }: PuzzleGameProps) {
       {!isPlaying ? (
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
           <p style={{ color: '#854D27', marginBottom: '20px', fontSize: '1rem' }}>
-            {t('puzzleGameInstructions') || 'タイルを1-8の順に並べましょう！'}
+            {t('puzzleGameInstructions')}
           </p>
           <button
             onClick={() => startGame(3)}
@@ -70,16 +70,16 @@ export function PuzzleGame({ onClose }: PuzzleGameProps) {
               boxShadow: '4px 4px 0 #D4B08C',
             }}
           >
-            {t('gameStart') || 'スタート'}
+            {t('gameStart')}
           </button>
         </div>
       ) : isComplete ? (
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
           <h3 style={{ color: '#854D27', fontSize: '1.5rem', marginBottom: '10px' }}>
-            <Icon name="Party" size={22} aria-hidden="true" /> {t('gameWin') || 'おめでとう！'}
+            <Icon name="Party" size={22} aria-hidden="true" /> {t('gameWin')}
           </h3>
           <p style={{ color: '#854D27', marginBottom: '20px' }}>
-            移動: {moves} | 時間: {formatTime(timeElapsed)}
+            {t('moves')}: {moves} | {t('gameTime')}: {formatTime(timeElapsed)}
           </p>
           <button
             onClick={() => startGame(3)}
@@ -96,7 +96,7 @@ export function PuzzleGame({ onClose }: PuzzleGameProps) {
               boxShadow: '4px 4px 0 #D4B08C',
             }}
           >
-            {t('gameRestart') || 'もう一度プレイ'}
+            {t('gameRestart')}
           </button>
         </div>
       ) : (

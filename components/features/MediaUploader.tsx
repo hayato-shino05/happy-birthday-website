@@ -13,7 +13,7 @@ interface MediaUploaderProps {
 
 export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
   const { uploadFile } = useMediaFiles()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -33,7 +33,11 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
       for (const file of Array.from(files)) {
         const validation = validateFile(file)
         if (!validation.valid) {
-          setError(validation.error || 'Invalid file')
+          setError(
+            file.size > 50 * 1024 * 1024
+              ? t('fileTooLargeWithLimit', { size: 50 })
+              : t('fileTypeError')
+          )
           continue
         }
 
@@ -127,7 +131,7 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
                 }}
               />
               <p style={{ color: '#854D27', fontSize: '1.1rem', margin: 0 }}>
-                アップロード中... {uploadProgress}%
+                {t('uploadProgress', { progress: uploadProgress })}
               </p>
             </div>
           ) : (
@@ -143,10 +147,10 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
                   margin: '0 0 8px',
                 }}
               >
-                ここに画像・動画ファイルをドラッグ＆ドロップしてください
+                {t('dropMediaHere')}
               </p>
               <p style={{ color: '#854D27', opacity: 0.7, margin: 0 }}>
-                またはクリックしてファイルを選択
+                {t('orChooseFile')}
               </p>
               <p
                 style={{
@@ -156,7 +160,9 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
                   marginTop: '12px',
                 }}
               >
-                対応形式: JPG, PNG, GIF, MP4, WebM（最大50MB）
+                {language === 'ja'
+                  ? '対応形式: JPG, PNG, GIF, MP4, WebM（最大50MB）'
+                  : 'Supported formats: JPG, PNG, GIF, MP4, WebM (Max 50MB)'}
               </p>
             </div>
           )}

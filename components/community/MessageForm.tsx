@@ -46,14 +46,14 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     const isVideo = file.type.startsWith('video/')
     
     if (!isImage && !isVideo) {
-      setError('画像または動画ファイルのみ対応しています')
+      setError(t('fileTypeError'))
       return
     }
 
     // ファイルサイズを検証（画像は50MB、動画は100MBまで）
     const maxSize = isVideo ? 100 * 1024 * 1024 : 50 * 1024 * 1024
     if (file.size > maxSize) {
-      setError(`ファイルが大きすぎます！最大${isVideo ? '100MB' : '50MB'}`)
+      setError(t('fileTooLargeWithLimit', { size: isVideo ? 100 : 50 }))
       return
     }
 
@@ -95,7 +95,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!sender.trim() || !message.trim()) {
-      setError('すべての情報を入力してください')
+      setError(t('allFieldsRequired'))
       return
     }
 
@@ -110,7 +110,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       if (selectedFile) {
         mediaObjectPath = await uploadFile(selectedFile)
         if (!mediaObjectPath) {
-          setError('ファイルのアップロードに失敗しました。もう一度お試しください。')
+          setError(t('uploadFileFailed'))
           setIsSubmitting(false)
           return
         }
@@ -132,10 +132,10 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         removeFile()
         onSuccess?.()
       } else {
-        setError('メッセージの送信に失敗しました。もう一度お試しください。')
+        setError(t('sendMessageFailed'))
       }
     } catch {
-      setError('エラーが発生しました。もう一度お試しください。')
+      setError(t('genericError'))
     } finally {
       setIsSubmitting(false)
       setUploadProgress(0)
@@ -151,7 +151,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           type="text"
           value={sender}
           onChange={(e) => setSender(e.target.value)}
-          placeholder="お名前"
+          placeholder={t('yourName')}
           style={{
             width: '100%',
             padding: '12px 15px',
@@ -170,7 +170,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="メッセージを入力..."
+          placeholder={t('typeMessage')}
           rows={4}
           style={{
             width: '100%',
@@ -222,7 +222,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
               }}
             >
               <Icon name="Folder" size={18} />
-              <span>ライブラリから選択</span>
+              <span>{t('chooseFromLibrary')}</span>
             </button>
             
             {/* Camera buttons */}
@@ -251,7 +251,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
                 }}
               >
                 <Icon name="Camera" size={16} />
-                <span>写真を撮る</span>
+                <span>{t('takePhoto')}</span>
               </button>
               
               <button
@@ -278,7 +278,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
                 }}
               >
                 <Icon name="Video" size={16} />
-                <span>ビデオを撮る</span>
+                <span>{t('takeVideo')}</span>
               </button>
             </div>
           </div>
@@ -378,7 +378,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
             />
           </div>
           <p style={{ fontSize: '0.8rem', color: '#854D27', marginTop: '5px', textAlign: 'center' }}>
-            アップロード中... {uploadProgress}%
+            {t('uploadProgress', { progress: uploadProgress })}
           </p>
         </div>
       )}
@@ -408,7 +408,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           boxShadow: '4px 4px 0 #D4B08C',
         }}
       >
-        {isSubmitting ? '送信中...' : 'メッセージを送る'}
+        {isSubmitting ? t('sending') : t('sendWish')}
       </motion.button>
 
       {/* カメラキャプチャ用モーダル */}

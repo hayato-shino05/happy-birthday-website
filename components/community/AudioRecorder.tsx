@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAudioRecorder } from '@/lib/hooks/useAudioRecorder'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface AudioRecorderProps {
   birthdayPerson?: string
@@ -10,6 +11,7 @@ interface AudioRecorderProps {
 }
 
 export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecorderProps) {
+  const { t } = useLanguage()
   const {
     isRecording,
     isPaused,
@@ -52,7 +54,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
         setUploadSuccess(false)
       }, 2000)
     } catch (err) {
-      setUploadError('アップロードできません。もう一度お試しください。')
+      setUploadError(t('audioUploadFailed'))
     } finally {
       setUploading(false)
     }
@@ -64,7 +66,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
         </svg>
-        音声メッセージを録音
+        {t('recordAudioMessage')}
       </h3>
 
       {error && (
@@ -75,7 +77,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
 
       {uploadSuccess && (
         <div className="bg-green-500/20 text-green-200 px-4 py-2 rounded-lg mb-4">
-          メッセージを送信しました！
+          {t('messageSentSuccess')}
         </div>
       )}
 
@@ -126,7 +128,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="6" />
             </svg>
-            録音開始
+            {t('startRecording')}
           </button>
         )}
 
@@ -167,7 +169,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
             onClick={resetRecording}
             className="px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-full font-medium transition-colors cursor-pointer"
           >
-            再録音
+            {t('rerecord')}
           </button>
         )}
       </div>
@@ -179,7 +181,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
             type="text"
             value={sender}
             onChange={(e) => setSender(e.target.value)}
-            placeholder="お名前"
+            placeholder={t('yourName')}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
           />
           {uploadError && (
@@ -190,7 +192,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
             disabled={uploading || !sender.trim()}
             className="w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all cursor-pointer disabled:cursor-not-allowed"
           >
-            {uploading ? '送信中...' : 'メッセージを送る'}
+            {uploading ? t('sending') : t('sendWish')}
           </button>
         </div>
       )}

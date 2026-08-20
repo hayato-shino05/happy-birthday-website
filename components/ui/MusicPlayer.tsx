@@ -29,6 +29,7 @@ export function MusicPlayer() {
       {/* 前の曲ボタン */}
       <button
         onClick={prevTrack}
+        aria-label={t('previousTrack')}
         style={{
           width: '32px',
           height: '32px',
@@ -64,6 +65,7 @@ export function MusicPlayer() {
       {/* 再生/一時停止ボタン */}
       <button
         onClick={toggle}
+        aria-label={isPlaying ? t('pause') : t('play')}
         style={{
           width: '42px',
           height: '42px',
@@ -106,6 +108,7 @@ export function MusicPlayer() {
       {/* 次の曲ボタン */}
       <button
         onClick={nextTrack}
+        aria-label={t('nextTrack')}
         style={{
           width: '32px',
           height: '32px',
@@ -150,11 +153,12 @@ export function MusicPlayer() {
           whiteSpace: 'nowrap',
         }}
       >
-        {currentTrack?.name || t('birthdaySong') || '曲を選択'}
+        {currentTrack?.name || t('birthdaySong') || t('chooseSong')}
       </span>
 
       <button
         onClick={() => setShowSelector(!showSelector)}
+        aria-label={t('chooseSong')}
         style={{
           padding: '8px 15px',
           background: showSelector ? 'rgba(212, 176, 140, 0.3)' : 'transparent',
@@ -178,7 +182,7 @@ export function MusicPlayer() {
         }}
       >
         <Icon name="Music" size={20} />
-        <span>{t('selectMusic') || '音楽を選択'}</span>
+        <span>{t('selectMusic')}</span>
       </button>
 
       {/* トラック選択ドロップダウン（プレイヤーの上に絶対配置） */}
@@ -205,10 +209,11 @@ export function MusicPlayer() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #D4B08C' }}>
             <span style={{ color: '#854D27', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Icon name="Music" size={14} /> {t('selectMusic') || '曲を選択'}
+              <Icon name="Music" size={14} /> {t('selectMusic')}
             </span>
             <button
               onClick={() => setShowSelector(false)}
+              aria-label={t('close')}
               style={{
                 background: '#854D27',
                 border: 'none',
@@ -227,7 +232,7 @@ export function MusicPlayer() {
           </div>
           {tracks.length === 0 ? (
             <p style={{ color: '#854D27', opacity: 0.6, fontSize: '0.65rem', textAlign: 'center', margin: '6px 0' }}>
-              まだ曲がありません
+              {t('noTracks')}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>

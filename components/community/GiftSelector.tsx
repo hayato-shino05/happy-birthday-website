@@ -15,14 +15,14 @@ export function GiftSelector({ onClose, birthdayPerson }: GiftSelectorProps) {
   const { gifts, sendGift } = useGifts()
   const { t } = useLanguage()
   const [sender, setSender] = useState('')
-  const [selectedGift, setSelectedGift] = useState<{ emoji: string; name: string } | null>(null)
+  const [selectedGift, setSelectedGift] = useState<{ emoji: string; nameKey: string } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSendGift = async () => {
     if (!sender.trim() || !selectedGift) return
 
     setIsSubmitting(true)
-    const success = await sendGift(sender.trim(), selectedGift.emoji, selectedGift.name, birthdayPerson)
+    const success = await sendGift(sender.trim(), selectedGift.emoji, t(selectedGift.nameKey as Parameters<typeof t>[0]), birthdayPerson)
     setIsSubmitting(false)
 
     if (success) {
@@ -68,11 +68,11 @@ export function GiftSelector({ onClose, birthdayPerson }: GiftSelectorProps) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ color: '#854D27', fontFamily: 'var(--font-heading)', margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Icon name="Gift" size={24} />
-            バーチャルギフトを送る
+            {t('sendVirtualGift')}
           </h2>
           <button
             onClick={onClose}
-            aria-label="閉じる"
+            aria-label={t('close')}
             style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#854D27', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <Icon name="X" size={20} />
@@ -85,7 +85,7 @@ export function GiftSelector({ onClose, birthdayPerson }: GiftSelectorProps) {
             type="text"
             value={sender}
             onChange={(e) => setSender(e.target.value)}
-            placeholder="お名前"
+            placeholder={t('yourName')}
             style={{
               width: '100%',
               padding: '12px 15px',
@@ -127,7 +127,7 @@ export function GiftSelector({ onClose, birthdayPerson }: GiftSelectorProps) {
               }}
             >
               <span style={{ fontSize: '2rem' }}>{gift.emoji}</span>
-              <span style={{ fontSize: '0.7rem', color: '#854D27' }}>{gift.name}</span>
+              <span style={{ fontSize: '0.7rem', color: '#854D27' }}>{t(gift.nameKey)}</span>
             </motion.button>
           ))}
         </div>
@@ -150,13 +150,13 @@ export function GiftSelector({ onClose, birthdayPerson }: GiftSelectorProps) {
             boxShadow: '4px 4px 0 #D4B08C',
           }}
         >
-          {isSubmitting ? '送信中...' : 'ギフトを送る'}
+          {isSubmitting ? t('sending') : t('sendGift')}
         </button>
 
         {/* 最近受け取ったギフト */}
         {gifts.length > 0 && (
           <div style={{ marginTop: '30px' }}>
-            <h3 style={{ color: '#854D27', fontSize: '1rem', marginBottom: '15px' }}>受け取ったギフト</h3>
+            <h3 style={{ color: '#854D27', fontSize: '1rem', marginBottom: '15px' }}>{t('receivedGifts')}</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {gifts.slice(0, 10).map((gift) => (
                 <div
@@ -169,7 +169,7 @@ export function GiftSelector({ onClose, birthdayPerson }: GiftSelectorProps) {
                     color: '#854D27',
                   }}
                 >
-                  {gift.gift_emoji} {gift.sender}さんから
+                  {gift.gift_emoji} {gift.sender}{t('giftFrom')}
                 </div>
               ))}
             </div>

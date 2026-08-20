@@ -10,10 +10,19 @@ interface BirthdayQuizProps {
 }
 
 export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
-  const { questions, currentQuestion, score, isComplete, isPlaying, selectedAnswer, answerQuestion, nextQuestion, startQuiz } =
-    useQuiz()
+  const { language, t } = useLanguage()
+  const {
+    questions,
+    currentQuestion,
+    score,
+    isComplete,
+    isPlaying,
+    selectedAnswer,
+    answerQuestion,
+    nextQuestion,
+    startQuiz,
+  } = useQuiz(language)
   const { data: birthdays = [] } = useBirthdays()
-  const { t } = useLanguage()
 
   const question = questions[currentQuestion]
 
@@ -21,13 +30,13 @@ export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
         <p style={{ color: '#854D27', marginBottom: '20px', fontSize: '1rem' }}>
-          {t('quizInstructions') || '友達の誕生日に関する質問に答えましょう！'}
+          {t('quizInstructions')}
         </p>
         {birthdays.length < 4 ? (
-          <p style={{ color: '#dc3545' }}>クイズをプレイするには最低4人必要です！</p>
+          <p style={{ color: '#dc3545' }}>{t('quizMinimumPlayers')}</p>
         ) : (
           <button
-            onClick={() => startQuiz(birthdays)}
+            onClick={() => startQuiz(birthdays, language)}
             style={{
               padding: '12px 30px',
               background: '#854D27',
@@ -41,7 +50,7 @@ export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
               boxShadow: '4px 4px 0 #D4B08C',
             }}
           >
-            {t('gameStart') || 'スタート'}
+            {t('gameStart')}
           </button>
         )}
       </div>
@@ -52,13 +61,13 @@ export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
         <h3 style={{ color: '#854D27', fontSize: '1.5rem', marginBottom: '10px' }}>
-          <Icon name="Party" size={22} aria-hidden="true" /> 完了！
+          <Icon name="Party" size={22} aria-hidden="true" /> {t('quizComplete')}
         </h3>
         <p style={{ color: '#854D27', fontSize: '2rem', fontWeight: 'bold', marginBottom: '20px' }}>
-          スコア: {score}/100
+          {t('gameScore')}: {score}/100
         </p>
         <button
-          onClick={() => startQuiz(birthdays)}
+          onClick={() => startQuiz(birthdays, language)}
           style={{
             padding: '12px 30px',
             background: '#854D27',
@@ -72,7 +81,7 @@ export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
             boxShadow: '4px 4px 0 #D4B08C',
           }}
         >
-          {t('gameRestart') || 'もう一度プレイ'}
+          {t('gameRestart')}
         </button>
       </div>
     )
@@ -86,10 +95,10 @@ export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ color: '#854D27', fontSize: '0.9rem' }}>
-            問題 {currentQuestion + 1}/{questions.length}
+            {t('questionProgress', { current: currentQuestion + 1, total: questions.length })}
           </span>
           <span style={{ color: '#854D27', fontSize: '0.9rem' }}>
-            スコア: {score}
+            {t('gameScore')}: {score}
           </span>
         </div>
         <div style={{ background: '#D4B08C', height: '8px', borderRadius: '4px' }}>
@@ -166,7 +175,7 @@ export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
             width: '100%',
           }}
         >
-          {currentQuestion < questions.length - 1 ? '次の問題' : '結果を見る'}
+          {currentQuestion < questions.length - 1 ? t('nextQuestion') : t('viewResult')}
         </button>
       )}
     </div>

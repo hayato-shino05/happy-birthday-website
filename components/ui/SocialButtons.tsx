@@ -55,7 +55,7 @@ export function SocialButtons() {
   }
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
-  const shareText = 'お誕生日おめでとう！🎂🎉'
+  const shareText = t('allWishesComeTrue')
 
   const handleShare = async (platform: string) => {
     const urls: Record<string, string> = {
@@ -68,7 +68,7 @@ export function SocialButtons() {
 
     if (platform === 'copy') {
       await navigator.clipboard.writeText(shareUrl)
-      alert('リンクをコピーしました！')
+      alert(t('linkCopied'))
       setShowShareMenu(false)
       return
     }
@@ -98,7 +98,7 @@ export function SocialButtons() {
         onMouseUp={handleMouseUp}
       >
         <Icon name="Users" size={26} />
-        <span>{t('inviteFriends') || '友達を招待'}</span>
+        <span>{t('inviteFriends')}</span>
       </button>
 
       {/* シェアメニュー */}
@@ -144,7 +144,7 @@ export function SocialButtons() {
           {/* リンクをコピーするボタン */}
           <button onClick={() => handleShare('copy')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: '1px solid #D4B08C', borderRadius: '4px', cursor: 'pointer', color: '#854D27', fontSize: '0.85rem', fontFamily: 'var(--font-body)' }}>
             <Icon name="Copy" size={22} />
-            <span>リンクをコピー</span>
+            <span>{t('copyLink')}</span>
           </button>
         </div>
       )}
@@ -158,7 +158,7 @@ export function SocialButtons() {
         onMouseUp={handleMouseUp}
       >
         <Icon name="MessageCircle" size={26} />
-        <span>{t('groupChat') || 'グループチャット'}</span>
+        <span>{t('groupChat')}</span>
       </button>
     </div>
   )
