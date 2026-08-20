@@ -297,6 +297,10 @@ omoide/
 
 詳しくは [CONTRIBUTING.md](./CONTRIBUTING.md) を参照してください。
 
+## 作成者
+
+- GitHub: [@hayato-shino05](https://github.com/hayato-shino05)
+
 ## ライセンス
 
 このプロジェクトは [MIT License](./LICENSE) のもとで公開されています。

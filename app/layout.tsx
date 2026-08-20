@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   title: 'Omoide | 想い出箱 — 大切な記念日と思い出を分かち合う空間',
   description: '大切な人の誕生日とみんなの思い出をひとつの場所に。「想い出箱（Omoide Bako）」— カウントダウン、フォトブース、メッセージボード、ミニゲーム、13の四季・祝祭日テーマを搭載。',
   keywords: ['Omoide', '想い出箱', 'birthday', '誕生日', 'お祝い', '記念日', 'celebration', 'フォトブース'],
-  authors: [{ name: 'Omoide Team' }],
-  creator: 'Omoide Team',
-  publisher: 'Omoide Team',
+  authors: [{ name: 'hayato-shino05', url: 'https://github.com/hayato-shino05' }],
+  creator: 'hayato-shino05',
+  publisher: 'hayato-shino05',
   robots: 'index, follow',
   openGraph: {
     type: 'website',

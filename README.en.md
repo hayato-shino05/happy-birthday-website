@@ -162,6 +162,10 @@ cp .env.example .env.local
 npm run dev
 ```
 
+## AUTHOR
+
+- GitHub: [@hayato-shino05](https://github.com/hayato-shino05)
+
 ## LICENSE
 
 This project is licensed under the [MIT License](./LICENSE).
