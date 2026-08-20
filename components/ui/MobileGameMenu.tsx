@@ -58,7 +58,7 @@ export function MobileGameMenu() {
   const games = GAME_MENU_ITEMS.map((g) => ({
     id: g.id,
     icon: g.icon,
-    label: t(g.i18nKey) || g.defaultLabel,
+    label: t(g.i18nKey),
   }))
 
   useEffect(() => {

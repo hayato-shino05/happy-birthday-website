@@ -6,12 +6,11 @@ export interface GameMenuItem {
   id: 'memoryGame' | 'puzzleGame' | 'calendar' | 'quiz'
   icon: IconName
   i18nKey: TranslationKey
-  defaultLabel: string
 }
 
 export const GAME_MENU_ITEMS: GameMenuItem[] = [
-  { id: 'memoryGame', icon: 'Brain', i18nKey: 'memoryGame', defaultLabel: '神経衰弱' },
-  { id: 'puzzleGame', icon: 'Puzzle', i18nKey: 'puzzleGame', defaultLabel: 'パズル' },
-  { id: 'calendar', icon: 'Calendar', i18nKey: 'birthdayCalendar', defaultLabel: 'カレンダー' },
-  { id: 'quiz', icon: 'HelpCircle', i18nKey: 'birthdayQuiz', defaultLabel: 'クイズ' },
+  { id: 'memoryGame', icon: 'Brain', i18nKey: 'memoryGame' },
+  { id: 'puzzleGame', icon: 'Puzzle', i18nKey: 'puzzleGame' },
+  { id: 'calendar', icon: 'Calendar', i18nKey: 'birthdayCalendar' },
+  { id: 'quiz', icon: 'HelpCircle', i18nKey: 'birthdayQuiz' },
 ]

@@ -4,14 +4,16 @@ import { useState, useEffect, useRef, useId } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
+import { useMusicStore } from '@/lib/stores/musicStore'
 import { Icon } from './Icon'
 import { GAME_MENU_ITEMS } from './gameConfig'
-import { Camera, MessageSquare, Gamepad2, Share2, Sparkles, X } from 'lucide-react'
+import { Camera, MessageSquare, Gamepad2, Share2, Sparkles, X, Music, Volume2 } from 'lucide-react'
 
 // モバイル専用の日本風ボトムナビゲーションDockコンポーネント（Touch Target >= 44px 準拠 & 完全i18n対応）
 export function MobileBottomDock() {
   const { t, language } = useLanguage()
   const { openModal } = useUIStore()
+  const { isPlaying, toggle: toggleMusic } = useMusicStore()
   const [showGameDrawer, setShowGameDrawer] = useState(false)
   const drawerId = useId()
   const drawerRef = useRef<HTMLDivElement>(null)
@@ -76,7 +78,7 @@ export function MobileBottomDock() {
             id={drawerId}
             role="dialog"
             aria-modal="true"
-            aria-label={t('birthdayQuiz')}
+            aria-label={language === 'ja' ? 'お祝いミニゲーム' : 'Celebration Games'}
             className="fixed inset-0 z-50 md:hidden flex flex-col justify-end"
           >
             <motion.div
@@ -130,7 +132,7 @@ export function MobileBottomDock() {
                     <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0 text-[#E5A93C]">
                       <Icon name={game.icon} size={16} />
                     </div>
-                    <span className="truncate">{t(game.i18nKey as any)}</span>
+                    <span className="truncate">{t(game.i18nKey)}</span>
                   </button>
                 ))}
               </div>
@@ -145,7 +147,7 @@ export function MobileBottomDock() {
         aria-label="Mobile Navigation Dock"
       >
         <div
-          className="flex items-center justify-around px-1.5 py-1.5 rounded-2xl shadow-2xl"
+          className="flex items-center justify-between px-2 py-1.5 rounded-2xl shadow-2xl"
           style={{
             background: 'rgba(45, 27, 17, 0.94)',
             backdropFilter: 'blur(20px)',
@@ -205,7 +207,23 @@ export function MobileBottomDock() {
             </span>
           </button>
 
-          {/* 5. 共有 */}
+          {/* 5. 音楽再生 / 停止 */}
+          <button
+            onClick={() => toggleMusic()}
+            className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
+            aria-label={t('selectMusic')}
+          >
+            {isPlaying ? (
+              <Volume2 className="w-5 h-5 text-[#E5A93C] animate-pulse" />
+            ) : (
+              <Music className="w-5 h-5 text-[#E5A93C]" />
+            )}
+            <span className="text-[9px] font-bold tracking-tight mt-0.5 opacity-90">
+              {language === 'ja' ? '音楽' : 'Music'}
+            </span>
+          </button>
+
+          {/* 6. 共有 */}
           <button
             onClick={handleShare}
             className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
