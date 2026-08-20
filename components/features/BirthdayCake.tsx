@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Cake2D } from './Cake2D'
 import { BlowButton } from './BlowButton'
@@ -45,10 +45,18 @@ export function BirthdayCake({ candleCount = 5, onAllCandlesBlown }: BirthdayCak
   }, [onAllCandlesBlown])
 
   // マイク入力処理
-  const { isListening, audioLevel, requestPermission, startListening } = useMicrophone({
+  const { isListening, audioLevel, requestPermission, startListening, stopListening } = useMicrophone({
     onBlowDetected: blowCandle,
     threshold: 0.4,
+    debounceMs: 650,
   })
+
+  // すべてのろうそくが消灯したらマイクを自動停止
+  useEffect(() => {
+    if (allCandlesBlown && isListening) {
+      stopListening()
+    }
+  }, [allCandlesBlown, isListening, stopListening])
 
   // マイク有効化
   const handleEnableMic = async () => {
