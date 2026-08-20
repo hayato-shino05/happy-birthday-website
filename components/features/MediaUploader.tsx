@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useMediaFiles } from '@/lib/hooks/useMediaFiles'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { validateFile, formatFileSize } from '@/lib/utils/media'
+import { Icon } from '@/components/ui/Icon'
 
 interface MediaUploaderProps {
   onUploadComplete?: () => void
@@ -131,13 +132,8 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
             </div>
           ) : (
             <div>
-              <div
-                style={{
-                  fontSize: '3rem',
-                  marginBottom: '16px',
-                }}
-              >
-                📁
+              <div style={{ marginBottom: '16px' }}>
+                <Icon name="FolderOpen" size={48} />
               </div>
               <p
                 style={{

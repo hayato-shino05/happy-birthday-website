@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useBirthdays } from '@/lib/hooks/useBirthdays'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Icon } from '@/components/ui/Icon'
 
 interface BirthdayCalendarProps {
   onClose: () => void
@@ -14,7 +15,7 @@ const MONTHS = [
   '7月', '8月', '9月', '10月', '11月', '12月',
 ]
 
-export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
+export function BirthdayCalendar({}: BirthdayCalendarProps) {
   const { data: birthdays = [] } = useBirthdays()
   const { t } = useLanguage()
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
@@ -41,6 +42,7 @@ export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
       >
         <button
           onClick={prevMonth}
+          aria-label={t('previousMonth')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',
@@ -51,13 +53,14 @@ export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
             fontSize: '1rem',
           }}
         >
-          ‹
+          <Icon name="ArrowLeft" />
         </button>
         <h3 style={{ color: '#854D27', margin: 0, fontSize: '1.3rem' }}>
           {MONTHS[selectedMonth]}
         </h3>
         <button
           onClick={nextMonth}
+          aria-label={t('nextMonth')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',
@@ -68,7 +71,7 @@ export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
             fontSize: '1rem',
           }}
         >
-          ›
+          <Icon name="ArrowRight" />
         </button>
       </div>
 
@@ -113,7 +116,7 @@ export function BirthdayCalendar({ onClose }: BirthdayCalendarProps) {
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={{ color: '#854D27', margin: 0, fontSize: '1.1rem' }}>
-                  🎂 {birthday.name}
+                  <Icon name="Cake" size={20} aria-hidden="true" /> {birthday.name}
                 </h4>
                 {birthday.message && (
                   <p style={{ color: '#854D27', opacity: 0.7, margin: '4px 0 0', fontSize: '0.85rem' }}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Icon } from './Icon'
 
 type LoadingSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 type LoadingVariant = 'spinner' | 'dots' | 'pulse' | 'bars' | 'ring'
@@ -234,9 +235,7 @@ export function ImageSkeleton({ aspectRatio = 'video' }: ImageSkeletonProps) {
 
   return (
     <div className={`${aspectClasses[aspectRatio]} bg-white/10 rounded-xl animate-pulse flex items-center justify-center`}>
-      <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
+      <Icon name="Image" size={48} className="text-sky-300/70" aria-hidden="true" />
     </div>
   )
 }

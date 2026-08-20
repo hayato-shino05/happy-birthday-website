@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useVideoMessages, VideoMessage } from '@/lib/hooks/useVideoMessages'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface VideoMessageListProps {
   birthdayPerson?: string
 }
 
 function VideoCard({ message }: { message: VideoMessage }) {
+  const { locale } = useLanguage()
   const [isPlaying, setIsPlaying] = useState(false)
 
   const formatDuration = (seconds: number) => {
@@ -17,7 +19,7 @@ function VideoCard({ message }: { message: VideoMessage }) {
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('ja-JP', {
+    return new Date(dateStr).toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -65,6 +67,7 @@ function VideoCard({ message }: { message: VideoMessage }) {
 }
 
 export default function VideoMessageList({ birthdayPerson }: VideoMessageListProps) {
+  const { t } = useLanguage()
   const { messages, loading, error, refetch } = useVideoMessages(birthdayPerson)
 
   if (loading) {
@@ -85,7 +88,7 @@ export default function VideoMessageList({ birthdayPerson }: VideoMessageListPro
           onClick={refetch}
           className="mt-2 px-4 py-2 bg-white/20 rounded-lg text-white mx-auto block cursor-pointer"
         >
-          再試行
+          {t('retry')}
         </button>
       </div>
     )
@@ -97,12 +100,12 @@ export default function VideoMessageList({ birthdayPerson }: VideoMessageListPro
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
-        ビデオメッセージ ({messages.length})
+        {t('videoWishesCount', { count: messages.length })}
       </h3>
 
       {messages.length === 0 ? (
         <p className="text-white/60 text-center py-4">
-          まだビデオメッセージがありません。最初の人になりましょう！
+          {t('noVideoWishes')}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2">

@@ -11,10 +11,12 @@ export interface Post {
   media_url?: string
   birthday_person: string | null
   created_at: string
+  likes: number
   replies_count?: number
 }
 
-type PostRecord = Omit<Post, 'media_url' | 'replies_count'> & {
+type PostRecord = Omit<Post, 'media_url' | 'replies_count' | 'likes'> & {
+  likes?: number
   post_replies?: { count: number }[]
 }
 
@@ -26,6 +28,7 @@ function toPost(post: PostRecord): Post {
   return {
     ...post,
     media_url: data?.publicUrl,
+    likes: post.likes ?? 0,
     replies_count: post.post_replies?.[0]?.count ?? 0,
   }
 }
@@ -42,7 +45,7 @@ export function usePosts() {
     try {
       const { data, error: fetchError } = await getSupabase()
         .from('bulletin_posts')
-        .select('id, sender, message, media_object_path, birthday_person, created_at, post_replies(count)')
+        .select('id, sender, message, media_object_path, birthday_person, created_at, likes, post_replies(count)')
         .order('created_at', { ascending: false })
 
       if (fetchError) throw fetchError
@@ -83,6 +86,18 @@ export function usePosts() {
     }
   }, [])
 
+  const likePost = useCallback(async (postId: string) => {
+    const { data: likes, error: likeError } = await getSupabase()
+      .rpc('increment_bulletin_post_likes', { p_post_id: postId })
+
+    if (likeError || typeof likes !== 'number') return false
+
+    setPosts((prev) => prev.map((post) => (
+      post.id === postId ? { ...post, likes } : post
+    )))
+    return true
+  }, [])
+
   useEffect(() => {
     void fetchPosts()
   }, [fetchPosts])
@@ -93,5 +108,6 @@ export function usePosts() {
     error,
     refetch: fetchPosts,
     createPost,
+    likePost,
   }
 }

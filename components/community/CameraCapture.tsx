@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { Icon } from '@/components/ui/Icon'
 
 interface CameraCaptureProps {
   mode: 'photo' | 'video'
@@ -225,22 +226,27 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
         }}
       >
         <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 600 }}>
-          {mode === 'photo' ? '📷 写真を撮る' : '🎬 ビデオを撮る'}
+          <Icon name={mode === 'photo' ? 'Camera' : 'Video'} size={20} style={{ color: '#fff', verticalAlign: 'middle', marginRight: '8px' }} />
+          {mode === 'photo' ? '写真を撮る' : 'ビデオを撮る'}
         </span>
         <button
           onClick={handleClose}
+          aria-label="閉じる"
           style={{
             background: 'rgba(255,255,255,0.2)',
             color: '#fff',
             border: 'none',
             borderRadius: '50%',
-            width: '40px',
-            height: '40px',
+            width: '44px',
+            height: '44px',
             cursor: 'pointer',
             fontSize: '1.2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          ✕
+          <Icon name="X" size={20} style={{ color: '#fff' }} />
         </button>
       </div>
 

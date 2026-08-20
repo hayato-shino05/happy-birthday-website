@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Post } from '@/lib/hooks/usePosts'
+import { Icon } from '@/components/ui/Icon'
 import { getSupabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface Reply {
   id: string
@@ -15,16 +17,20 @@ interface Reply {
 interface PostDetailProps {
   post: Post
   onBack: () => void
+  onLike: (postId: string) => Promise<boolean>
 }
 
-export default function PostDetail({ post, onBack }: PostDetailProps) {
+export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
+  const { locale, t } = useLanguage()
   const [replies, setReplies] = useState<Reply[]>([])
   const [loading, setLoading] = useState(true)
   const [replyText, setReplyText] = useState('')
   const [replyName, setReplyName] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [liked, setLiked] = useState(false)
+  const [localLikes, setLocalLikes] = useState(post.likes)
 
-  // 共有ストレージから自動入力
+  // 共有ストレージから自動入力する
   useEffect(() => {
     const savedName = localStorage.getItem('birthday_user_name')
     if (savedName) {
@@ -73,13 +79,24 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
 
       if (error) throw error
       setReplies(prev => [...prev, data])
-      // 名前を共有ストレージに保存
+      // 名前を共有ストレージへ保存する
       localStorage.setItem('birthday_user_name', replyName.trim())
       setReplyText('')
     } catch (err) {
       console.error('Error submitting reply:', err)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleLike = async () => {
+    if (liked) return
+    setLiked(true)
+    setLocalLikes(prev => prev + 1)
+    const success = await onLike(post.id)
+    if (!success) {
+      setLiked(false)
+      setLocalLikes(prev => prev - 1)
     }
   }
 
@@ -91,7 +108,7 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    const fullDate = date.toLocaleString('ja-JP', {
+    const fullDate = date.toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -99,18 +116,22 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
       minute: '2-digit',
     })
 
-    let relative = ''
-    if (minutes < 1) relative = 'たった今'
-    else if (minutes < 60) relative = `${minutes}分前`
-    else if (hours < 24) relative = `${hours}時間前`
-    else if (days < 7) relative = `${days}日前`
+    const relative = minutes < 1
+      ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'minute')
+      : minutes < 60
+        ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-minutes, 'minute')
+        : hours < 24
+          ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-hours, 'hour')
+          : days < 7
+            ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-days, 'day')
+            : ''
 
     return relative ? `${relative} • ${fullDate}` : fullDate
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* 戻るボタン */}
+
       <button
         onClick={onBack}
         style={{
@@ -125,12 +146,12 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
           fontSize: '0.95rem',
         }}
       >
-        <span>←</span>
-        <span>戻る</span>
+        <Icon name="ArrowLeft" size={18} style={{ color: '#854D27' }} />
+        <span>{t('back')}</span>
       </button>
 
       <div style={{ display: 'flex', gap: '24px', flex: 1, overflow: 'hidden' }}>
-        {/* メイン投稿 */}
+
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <div
             style={{
@@ -140,7 +161,7 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
               padding: '20px',
             }}
           >
-            {/* 投稿者情報 */}
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <div
                 style={{
@@ -166,15 +187,15 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
               </div>
             </div>
 
-            {/* メッセージ本文 */}
+
             <p style={{ color: '#854D27', fontSize: '1.05rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
               {post.message}
             </p>
 
-            {/* メディア */}
+
             {post.media_url && (
               <div style={{ marginBottom: '16px', borderRadius: '8px', overflow: 'hidden' }}>
-                {post.media_url.includes('video') || post.media_url.endsWith('.webm') || post.media_url.endsWith('.mp4') ? (
+                {post.media_url.endsWith('.mp4') || post.media_url.endsWith('.webm') || post.media_url.endsWith('.ogg') ? (
                   <video src={post.media_url} controls style={{ width: '100%', maxHeight: '400px', background: '#000' }} />
                 ) : (
                   <img src={post.media_url} alt="Media" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
@@ -182,26 +203,49 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
               </div>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '16px', borderTop: '1px solid #D4B08C', color: '#854D27', opacity: 0.7 }}>
-              <span>💬</span>
-              <span>{replies.length} 返信</span>
+
+            <div style={{ display: 'flex', gap: '12px', paddingTop: '16px', borderTop: '1px solid #D4B08C' }}>
+              <button
+                onClick={handleLike}
+                disabled={liked}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: liked ? 'rgba(233, 30, 99, 0.1)' : 'transparent',
+                  border: '1px solid',
+                  borderColor: liked ? '#E91E63' : '#D4B08C',
+                  borderRadius: '20px',
+                  padding: '8px 16px',
+                  cursor: liked ? 'default' : 'pointer',
+                  color: liked ? '#E91E63' : '#854D27',
+                }}
+              >
+                <Icon name="Heart" size={18} style={{ color: liked ? '#E91E63' : '#854D27' }} />
+                <span>{localLikes} {t('liked')}</span>
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#854D27', opacity: 0.7 }}>
+                <Icon name="MessageCircle" size={18} style={{ color: '#2D8CFF' }} />
+                <span>{replies.length} {t('replies')}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 返信セクション */}
+
         <div style={{ width: '350px', display: 'flex', flexDirection: 'column', background: 'rgba(212,176,140,0.1)', borderRadius: '12px', padding: '16px' }}>
-          <h4 style={{ color: '#854D27', margin: '0 0 16px 0', fontSize: '1rem' }}>
-            💬 返信 ({replies.length})
+          <h4 style={{ color: '#854D27', margin: '0 0 16px 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="MessageCircle" size={18} style={{ color: '#2D8CFF' }} />
+            {t('replies')} ({replies.length})
           </h4>
 
-          {/* 返信リスト */}
+
           <div style={{ flex: 1, overflowY: 'auto', marginBottom: '16px' }}>
             {loading ? (
-              <p style={{ color: '#854D27', opacity: 0.6, textAlign: 'center' }}>読み込み中...</p>
+              <p style={{ color: '#854D27', opacity: 0.6, textAlign: 'center' }}>{t('loading')}</p>
             ) : replies.length === 0 ? (
               <p style={{ color: '#854D27', opacity: 0.6, textAlign: 'center', fontSize: '0.9rem' }}>
-                まだ返信がありません。最初の人になりましょう！
+                {t('noRepliesPrompt')}
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -246,13 +290,13 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
             )}
           </div>
 
-          {/* 返信フォーム */}
+
           <form onSubmit={handleSubmitReply} style={{ borderTop: '1px solid #D4B08C', paddingTop: '12px' }}>
             <input
               type="text"
               value={replyName}
               onChange={(e) => setReplyName(e.target.value)}
-              placeholder="お名前"
+              placeholder={t('yourName')}
               style={{
                 width: '100%',
                 padding: '8px 12px',
@@ -267,7 +311,7 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
             <textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              placeholder="返信を入力..."
+              placeholder={t('typeReply')}
               rows={2}
               style={{
                 width: '100%',
@@ -297,7 +341,7 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
                 opacity: (!replyText.trim() || !replyName.trim()) ? 0.5 : 1,
               }}
             >
-              {submitting ? '送信中...' : '返信を送る'}
+              {submitting ? t('sending') : t('sendMessage')}
             </button>
           </form>
         </div>

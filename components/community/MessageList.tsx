@@ -34,7 +34,7 @@ export function MessageList({ limit }: MessageListProps) {
   if (messages.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '20px' }}>
-        <p style={{ color: '#854D27' }}>まだメッセージがありません</p>
+        <p style={{ color: '#854D27' }}>{t('noWishes')}</p>
       </div>
     )
   }
@@ -49,9 +49,10 @@ export function MessageList({ limit }: MessageListProps) {
 }
 
 function MessageCard({ message, index }: { message: CustomMessage; index: number }) {
+  const { locale } = useLanguage()
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('ja-JP', {
+    return date.toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import type { MediaFile } from '@/types'
+import { Icon } from '@/components/ui/Icon'
 
 interface PhotoCardProps {
   media: MediaFile
@@ -77,7 +78,7 @@ export function PhotoCard({ media, onClick }: PhotoCardProps) {
             fontSize: '0.65rem',
           }}
         >
-          ▶
+          <Icon name="Play" size={14} />
         </div>
       )}
 

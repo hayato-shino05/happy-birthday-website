@@ -7,6 +7,7 @@ import { MediaViewer } from './MediaViewer'
 import { useMediaFiles } from '@/lib/hooks/useMediaFiles'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { MediaFile } from '@/types'
+import { Icon } from '@/components/ui/Icon'
 
 interface PhotoGalleryProps {
   filterTag?: string
@@ -121,7 +122,7 @@ export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
               gap: '6px',
             }}
           >
-            <span>▶</span>
+            <Icon name="Play" size={16} />
             <span>スライドショー</span>
           </button>
         )}

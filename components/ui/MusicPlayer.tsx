@@ -30,24 +30,43 @@ export function MusicPlayer() {
       <button
         onClick={prevTrack}
         style={{
-          width: '30px',
-          height: '30px',
+          width: '32px',
+          height: '32px',
           background: 'transparent',
           color: '#854D27',
           border: 'none',
           cursor: 'pointer',
-          fontSize: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 0.2s, opacity 0.2s, filter 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.15)'
+          e.currentTarget.style.filter = 'brightness(1.2)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+          e.currentTarget.style.filter = 'brightness(1)'
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'scale(0.95)'
+          e.currentTarget.style.filter = 'brightness(0.9)'
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'scale(1.15)'
+          e.currentTarget.style.filter = 'brightness(1.2)'
         }}
       >
-        ⏮️
+        <Icon name="SkipBack" size={22} />
       </button>
 
       {/* 再生/一時停止ボタン */}
       <button
         onClick={toggle}
         style={{
-          width: '40px',
-          height: '40px',
+          width: '42px',
+          height: '42px',
           background: '#854D27',
           color: '#FFF9F3',
           border: '2px solid #D4B08C',
@@ -58,34 +77,65 @@ export function MusicPlayer() {
           justifyContent: 'center',
           fontSize: '1.2em',
           boxShadow: '2px 2px 0 #D4B08C',
-          transition: 'transform 0.3s, box-shadow 0.3s',
+          transition: 'transform 0.2s, box-shadow 0.2s, filter 0.2s',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translate(-2px, -2px)'
           e.currentTarget.style.boxShadow = '4px 4px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translate(0, 0)'
           e.currentTarget.style.boxShadow = '2px 2px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1)'
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'translate(0, 0)'
+          e.currentTarget.style.boxShadow = '1px 1px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(0.95)'
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'translate(-2px, -2px)'
+          e.currentTarget.style.boxShadow = '4px 4px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
       >
-        {isPlaying ? '⏸️' : '▶️'}
+        <Icon name={isPlaying ? 'Pause' : 'Play'} size={24} />
       </button>
 
       {/* 次の曲ボタン */}
       <button
         onClick={nextTrack}
         style={{
-          width: '30px',
-          height: '30px',
+          width: '32px',
+          height: '32px',
           background: 'transparent',
           color: '#854D27',
           border: 'none',
           cursor: 'pointer',
-          fontSize: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 0.2s, opacity 0.2s, filter 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.15)'
+          e.currentTarget.style.filter = 'brightness(1.2)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+          e.currentTarget.style.filter = 'brightness(1)'
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'scale(0.95)'
+          e.currentTarget.style.filter = 'brightness(0.9)'
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'scale(1.15)'
+          e.currentTarget.style.filter = 'brightness(1.2)'
         }}
       >
-        ⏭️
+        <Icon name="SkipForward" size={22} />
       </button>
 
       <span
@@ -118,37 +168,44 @@ export function MusicPlayer() {
           display: 'flex',
           alignItems: 'center',
           gap: '5px',
-          transition: 'background 0.3s',
+          transition: 'background 0.3s, filter 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.filter = 'brightness(1.15)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.filter = 'brightness(1)'
         }}
       >
-        <Icon name="Music" size={16} />
+        <Icon name="Music" size={20} />
         <span>{t('selectMusic') || '音楽を選択'}</span>
       </button>
 
       {/* トラック選択ドロップダウン（プレイヤーの上に絶対配置） */}
       {showSelector && (
         <div
+          className="track-selector-dropdown"
           onClick={(e) => e.stopPropagation()}
           style={{
             position: 'absolute',
             bottom: '100%',
             left: 0,
-            right: 0,
-            marginBottom: '4px',
-            minWidth: '200px',
+            marginBottom: '6px',
+            minWidth: '260px',
+            maxWidth: '90vw',
             background: '#FFF9F3',
             border: '2px solid #D4B08C',
             borderRadius: '6px',
-            padding: '6px',
-            boxShadow: '0 -2px 8px rgba(0,0,0,0.15)',
-            maxHeight: '150px',
+            padding: '8px 10px',
+            boxShadow: '0 -4px 12px rgba(133, 77, 39, 0.25)',
+            maxHeight: '180px',
             overflowY: 'auto',
             zIndex: 10002,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ color: '#854D27', fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Icon name="Music" size={12} /> 音楽
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #D4B08C' }}>
+            <span style={{ color: '#854D27', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Icon name="Music" size={14} /> {t('selectMusic') || '曲を選択'}
             </span>
             <button
               onClick={() => setShowSelector(false)}
@@ -157,13 +214,15 @@ export function MusicPlayer() {
                 border: 'none',
                 color: '#FFF9F3',
                 cursor: 'pointer',
-                fontSize: '0.7rem',
-                padding: '2px 5px',
+                fontSize: '0.75rem',
+                padding: '3px 6px',
                 borderRadius: '3px',
-                lineHeight: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              ✕
+              <Icon name="X" size={14} />
             </button>
           </div>
           {tracks.length === 0 ? (

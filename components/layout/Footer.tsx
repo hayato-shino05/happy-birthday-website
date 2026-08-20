@@ -50,6 +50,9 @@ export default function Footer({ showSocial = true }: FooterProps) {
               </div>
             )}
           </div>
+          <p className="mt-4 text-center text-white/50 text-xs">
+            Icons by <a href="https://icons8.com/" target="_blank" rel="noreferrer" className="underline hover:text-white">Icons8</a>
+          </p>
         </div>
       </div>
     </footer>

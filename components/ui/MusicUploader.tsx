@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
+import { Icon } from './Icon'
 
 interface MusicUploaderProps {
   onUploaded?: (track: { name: string; url: string }) => void
@@ -103,9 +104,7 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="X" size={20} aria-hidden="true" />
           </button>
         )}
       </div>
@@ -125,9 +124,7 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
 
         {file ? (
           <div className="flex items-center justify-center gap-3">
-            <svg className="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-            </svg>
+            <Icon name="Music" size={40} className="text-green-400" aria-hidden="true" />
             <div className="text-left">
               <p className="text-white font-medium">{file.name}</p>
               <p className="text-white/50 text-sm">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
@@ -135,9 +132,7 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
           </div>
         ) : (
           <>
-            <svg className="w-12 h-12 text-white/40 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
+            <Icon name="Upload" size={48} className="text-white/40 mx-auto mb-3" aria-hidden="true" />
             <p className="text-white/70 mb-1">クリックして音楽ファイルを選択</p>
             <p className="text-white/40 text-sm">MP3, WAV, OGG (最大10MB)</p>
           </>

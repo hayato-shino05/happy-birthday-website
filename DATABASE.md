@@ -5,6 +5,7 @@
 データベーススキーマ、RLS、Storage、Realtime の正本は次のマイグレーションです。
 
 - [`supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql`](./supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql)
+- [`supabase/migrations/20260817000000_add_bulletin_post_likes.sql`](./supabase/migrations/20260817000000_add_bulletin_post_likes.sql)
 - 初期データ: [`supabase/seed.sql`](./supabase/seed.sql)
 
 [`database/database.sql`](./database/database.sql) は正本へのポインターです。DDL を追加しないでください。スキーマを変更するときは、新しい Supabase migration を追加します。
@@ -24,7 +25,7 @@ migration の適用後に `supabase/seed.sql` を実行すると、誕生日、�
 | `media_submissions` | Storage 上のメディア投稿のメタデータ | `object_path`, `media_kind`, `mime_type`, `size_bytes` |
 | `virtual_gifts` | バーチャルギフト | `sender`, `gift_emoji`, `gift_name`, `birthday_person` |
 | `chat_messages` | コミュニティチャット | `sender`, `message` |
-| `bulletin_posts` | 掲示板投稿 | `sender`, `message`, `media_object_path`, `birthday_person` |
+| `bulletin_posts` | 掲示板投稿 | `sender`, `message`, `media_object_path`, `birthday_person`, `likes` |
 | `post_replies` | 掲示板への返信 | `post_id`, `sender`, `message` |
 
 すべての ID は `bigint generated always as identity` です。日時は `timestamptz` で保存します。
@@ -42,7 +43,9 @@ migration の適用後に `supabase/seed.sql` を実行すると、誕生日、�
 - `bulletin_posts`
 - `post_replies`
 
-匿名の更新・削除ポリシーは定義していません。`birthdays` は匿名閲覧専用です。入力の文字数、メディア種別、サイズなどの制約は migration の `CHECK` 制約を正本として確認してください。
+匿名の更新・削除ポリシーは定義していません。`birthdays` は匿名閲覧専用です。`bulletin_posts.likes` は直接更新できず、`increment_bulletin_post_likes(bigint)` RPC だけが原子的に 1 件加算し、更新後の件数を返します。この RPC は `anon` にだけ実行権限を付与し、関数内の `search_path` は空に固定しています。入力の文字数、メディア種別、サイズなどの制約は migration の `CHECK` 制約を正本として確認してください。
+
+回帰確認は `__tests__/integration/production-snapshot-regression.test.ts` に固定しています。`birthdays`、`messages`、`media_submissions`、`virtual_gifts`、`chat_messages`、`bulletin_posts` の匿名 read/create-only 境界と `ThemeProvider` の render smoke を、Production の allowlist 統合とは独立に検証します。
 
 ## Storage
 

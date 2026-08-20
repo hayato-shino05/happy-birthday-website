@@ -1,13 +1,22 @@
 'use client'
 
+import { useState } from 'react'
+import { Icon } from '@/components/ui/Icon'
 import { Post } from '@/lib/hooks/usePosts'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface BulletinPostProps {
   post: Post
+  onLike: (postId: string) => Promise<boolean>
   onReply?: () => void
 }
 
-export default function BulletinPost({ post, onReply }: BulletinPostProps) {
+export default function BulletinPost({ post, onLike, onReply }: BulletinPostProps) {
+  const { locale, t } = useLanguage()
+  const [liked, setLiked] = useState(false)
+  const [liking, setLiking] = useState(false)
+  const [localLikes, setLocalLikes] = useState(post.likes)
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     const now = new Date()
@@ -16,7 +25,8 @@ export default function BulletinPost({ post, onReply }: BulletinPostProps) {
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    const fullDate = date.toLocaleString('ja-JP', {
+    // 完全な日時を表示用に整形
+    const fullDate = date.toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -24,13 +34,38 @@ export default function BulletinPost({ post, onReply }: BulletinPostProps) {
       minute: '2-digit',
     })
 
-    let relative = ''
-    if (minutes < 1) relative = 'たった今'
-    else if (minutes < 60) relative = `${minutes}分前`
-    else if (hours < 24) relative = `${hours}時間前`
-    else if (days < 7) relative = `${days}日前`
+    const relative = minutes < 1
+      ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'minute')
+      : minutes < 60
+        ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-minutes, 'minute')
+        : hours < 24
+          ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-hours, 'hour')
+          : days < 7
+            ? new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-days, 'day')
+            : ''
 
     return relative ? `${relative} • ${fullDate}` : fullDate
+  }
+
+  const handleLike = async () => {
+    if (liked || liking) return
+
+    setLiking(true)
+    setLiked(true)
+    setLocalLikes(prev => prev + 1)
+
+    try {
+      const success = await onLike(post.id)
+      if (!success) {
+        setLiked(false)
+        setLocalLikes(prev => prev - 1)
+      }
+    } catch {
+      setLiked(false)
+      setLocalLikes(prev => prev - 1)
+    } finally {
+      setLiking(false)
+    }
   }
 
   return (
@@ -56,6 +91,7 @@ export default function BulletinPost({ post, onReply }: BulletinPostProps) {
         e.currentTarget.style.boxShadow = '2px 2px 0 #D4B08C'
       }}
     >
+
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
         <div
           style={{
@@ -81,6 +117,7 @@ export default function BulletinPost({ post, onReply }: BulletinPostProps) {
         </div>
       </div>
 
+
       <p style={{
         color: '#854D27',
         marginBottom: '12px',
@@ -92,6 +129,7 @@ export default function BulletinPost({ post, onReply }: BulletinPostProps) {
       }}>
         {post.message}
       </p>
+
 
       {post.media_url && (
         <div style={{ marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', aspectRatio: '1', width: '100%' }}>
@@ -105,29 +143,72 @@ export default function BulletinPost({ post, onReply }: BulletinPostProps) {
           ) : (
             <img
               src={post.media_url}
-              alt="添付メディア"
+              alt={locale === 'ja' ? 'メディア' : 'Media'}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           )}
         </div>
       )}
 
-      {onReply && (
-        <div
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          paddingTop: '12px',
+          borderTop: '1px solid #D4B08C',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={handleLike}
+          disabled={liked || liking}
+          aria-label={`${liked ? t('liked') : t('like')} (${localLikes})`}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            paddingTop: '12px',
-            borderTop: '1px solid #D4B08C',
-            color: '#854D27',
+            background: liked ? 'rgba(233, 30, 99, 0.1)' : 'transparent',
+            border: '1px solid',
+            borderColor: liked ? '#E91E63' : '#D4B08C',
+            borderRadius: '20px',
+            padding: '6px 12px',
+            cursor: liked ? 'default' : 'pointer',
+            color: liked ? '#E91E63' : '#854D27',
             fontSize: '0.85rem',
+            transition: 'all 0.2s',
           }}
         >
-          <span>💬</span>
-          <span>{post.replies_count || 0}</span>
-        </div>
-      )}
+          <Icon name="Heart" size={18} style={{ color: liked ? '#E91E63' : '#854D27' }} />
+          <span>{localLikes}</span>
+        </button>
+
+        {onReply && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onReply()
+            }}
+            aria-label={`${t('reply')} (${post.replies_count || 0})`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'transparent',
+              border: '1px solid #D4B08C',
+              borderRadius: '20px',
+              padding: '6px 12px',
+              cursor: 'pointer',
+              color: '#854D27',
+              fontSize: '0.85rem',
+            }}
+          >
+            <Icon name="MessageCircle" size={18} style={{ color: '#2D8CFF' }} />
+            <span>{post.replies_count || 0}</span>
+          </button>
+        )}
+      </div>
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { useEffect, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MediaFile } from '@/types'
+import { Icon } from '@/components/ui/Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 const SLIDESHOW_INTERVAL = 3000
 
@@ -24,6 +26,7 @@ export function MediaViewer({
   slideshowMode = false,
   onToggleSlideshow,
 }: MediaViewerProps) {
+  const { t } = useLanguage()
   const [isPlaying, setIsPlaying] = useState(slideshowMode)
   const [mounted, setMounted] = useState(false)
   const currentIndex = allMedia.findIndex((m) => m.id === media.id)
@@ -163,17 +166,8 @@ export function MediaViewer({
               transition: 'all 0.2s',
             }}
           >
-            {isPlaying ? (
-              <>
-                <span>⏸</span>
-                <span>一時停止</span>
-              </>
-            ) : (
-              <>
-                <span>▶</span>
-                <span>スライドショー</span>
-              </>
-            )}
+            <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} />
+            <span>{isPlaying ? '一時停止' : 'スライドショー'}</span>
           </button>
         </div>
 
@@ -183,6 +177,7 @@ export function MediaViewer({
             e.stopPropagation()
             onClose()
           }}
+          aria-label={t('close')}
           style={{
             position: 'absolute',
             top: '20px',
@@ -208,7 +203,7 @@ export function MediaViewer({
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
           }}
         >
-          ✕
+          <Icon name="X" size={28} />
         </button>
 
         {/* 前へボタン */}
@@ -218,6 +213,7 @@ export function MediaViewer({
             setIsPlaying(false)
             goToPrev()
           }}
+          aria-label={t('previousMedia')}
           style={{
             position: 'absolute',
             left: '30px',
@@ -244,7 +240,7 @@ export function MediaViewer({
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
           }}
         >
-          ‹
+          <Icon name="ArrowLeft" size={34} />
         </button>
 
         {/* 次へボタン */}
@@ -254,6 +250,7 @@ export function MediaViewer({
             setIsPlaying(false)
             goToNext()
           }}
+          aria-label={t('nextMedia')}
           style={{
             position: 'absolute',
             right: '30px',
@@ -280,7 +277,7 @@ export function MediaViewer({
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
           }}
         >
-          ›
+          <Icon name="ArrowRight" size={34} />
         </button>
 
         {/* メディア表示エリア（フルスクリーン） */}

@@ -30,7 +30,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
           textTransform: 'uppercase',
           letterSpacing: '1px',
           boxShadow: '4px 4px 0 #D4B08C',
-          transition: 'transform 0.3s, box-shadow 0.3s',
+          transition: 'transform 0.3s, box-shadow 0.3s, filter 0.3s',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
@@ -38,13 +38,25 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translate(-2px, -2px)'
           e.currentTarget.style.boxShadow = '6px 6px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translate(0, 0)'
           e.currentTarget.style.boxShadow = '4px 4px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1)'
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'translate(0, 0)'
+          e.currentTarget.style.boxShadow = '1px 1px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(0.95)'
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'translate(-2px, -2px)'
+          e.currentTarget.style.boxShadow = '6px 6px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
       >
-        <Icon name="Camera" size={18} />
+        <Icon name="Camera" size={22} />
         <span>{t('viewAlbum') || 'アルバムを見る'}</span>
       </button>
     )
@@ -68,7 +80,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
           textTransform: 'uppercase',
           letterSpacing: '1px',
           boxShadow: '3px 3px 0 #D4B08C',
-          transition: 'transform 0.3s, box-shadow 0.3s',
+          transition: 'transform 0.3s, box-shadow 0.3s, filter 0.3s',
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
@@ -76,13 +88,25 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translate(-2px, -2px)'
           e.currentTarget.style.boxShadow = '5px 5px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translate(0, 0)'
           e.currentTarget.style.boxShadow = '3px 3px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1)'
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'translate(0, 0)'
+          e.currentTarget.style.boxShadow = '1px 1px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(0.95)'
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'translate(-2px, -2px)'
+          e.currentTarget.style.boxShadow = '5px 5px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
       >
-        <Icon name="PenLine" size={18} />
+        <Icon name="PenLine" size={22} />
         <span>{t('sendMessage') || 'メッセージを送る'}</span>
       </button>
 
@@ -102,7 +126,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
           textTransform: 'uppercase',
           letterSpacing: '1px',
           boxShadow: '3px 3px 0 #D4B08C',
-          transition: 'transform 0.3s, box-shadow 0.3s',
+          transition: 'transform 0.3s, box-shadow 0.3s, filter 0.3s',
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
@@ -110,13 +134,25 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translate(-2px, -2px)'
           e.currentTarget.style.boxShadow = '5px 5px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translate(0, 0)'
           e.currentTarget.style.boxShadow = '3px 3px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1)'
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'translate(0, 0)'
+          e.currentTarget.style.boxShadow = '1px 1px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(0.95)'
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'translate(-2px, -2px)'
+          e.currentTarget.style.boxShadow = '5px 5px 0 #D4B08C'
+          e.currentTarget.style.filter = 'brightness(1.15)'
         }}
       >
-        <Icon name="ClipboardList" size={18} />
+        <Icon name="ClipboardList" size={22} />
         <span>{t('bulletinBoard') || '掲示板'}</span>
       </button>
     </div>

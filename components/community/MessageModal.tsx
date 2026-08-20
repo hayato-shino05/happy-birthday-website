@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { MessageForm } from './MessageForm'
 import { MessageList } from './MessageList'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { Icon } from '@/components/ui/Icon'
 
 interface MessageModalProps {
   onClose: () => void
@@ -53,9 +54,10 @@ export function MessageModal({ onClose, birthdayPerson }: MessageModalProps) {
           </h2>
           <button
             onClick={onClose}
+            aria-label={t('close')}
             style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#854D27' }}
           >
-            ✕
+            <Icon name="X" size={22} />
           </button>
         </div>
 

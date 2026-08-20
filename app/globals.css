@@ -448,6 +448,53 @@ body.theme-hanami {
   max-width: calc(50% - 250px);
 }
 
+.games-mobile-only {
+  display: none;
+}
+
+.games-desktop-only {
+  display: flex;
+}
+
+.mobile-game-menu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 1001;
+}
+
+.mobile-game-toggle {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.mobile-game-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  min-width: min(220px, calc(100vw - 16px));
+  max-width: calc(100vw - 16px);
+  overflow: hidden;
+  background: #854D27;
+  border: 2px solid #D4B08C;
+  box-shadow: 3px 3px 0 #D4B08C;
+}
+
+.mobile-game-item {
+  min-height: 44px;
+  box-sizing: border-box;
+  justify-content: flex-start;
+}
+
+.mobile-game-item:hover,
+.mobile-game-item:focus-visible {
+  background: rgba(212, 176, 140, 0.25);
+}
+
 .fixed-bottom-center {
   position: fixed;
   bottom: 20px;
@@ -477,41 +524,53 @@ body.theme-hanami {
 
 /* ===== モバイルレイアウト調整（最大768px）===== */
 @media screen and (max-width: 768px) {
-  /* モバイルでアルバムボタンを表示（メッセージボタンの横に配置） */
+  .games-mobile-only {
+    display: block;
+  }
+
+  .games-desktop-only {
+    display: none !important;
+  }
+
+  /* モバイルでアルバムボタンを上部中央に配置（他のボタンと重ならない） */
   .fixed-top-center {
     display: block;
     position: fixed;
-    top: 55px;
-    right: 8px;
-    left: auto;
-    transform: none;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
   }
   
   .fixed-top-center button,
   .fixed-top-center .header-btn {
     padding: 4px 8px !important;
-    font-size: 0.55em !important;
-    box-shadow: 1px 1px 0 #D4B08C !important;
+    font-size: 0.6em !important;
+    box-shadow: 2px 2px 0 #D4B08C !important;
     gap: 3px !important;
+    white-space: nowrap !important;
   }
   
-  /* 左上：言語＆テーマ - かなりコンパクトに */
+  /* 左上：言語＆テーマ - 縦並び配置 */
   .fixed-top-left {
     top: 8px;
     left: 8px;
-    gap: 3px;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
   }
   
-  /* モバイル時の言語セレクターを小さくする */
+  /* モバイル時の言語セレクターとテーマインジケーター */
   .fixed-top-left .language-selector select,
-  .fixed-top-left select {
-    padding: 3px 6px !important;
-    font-size: 0.65em !important;
-    box-shadow: 1px 1px 0 #D4B08C !important;
+  .fixed-top-left select,
+  .fixed-top-left .theme-indicator {
+    padding: 3px 10px 3px 5px !important;
+    font-size: 0.72em !important;
+    height: 28px !important;
+    box-shadow: 0 2px 6px rgba(133, 77, 39, 0.3) !important;
   }
   
-  /* 右上：メッセージボタンを小さくする */
+  /* 右上：メッセージ＆掲示板ボタン */
   .fixed-top-right {
     top: 8px;
     right: 8px;
@@ -527,23 +586,24 @@ body.theme-hanami {
     font-size: 0.6em !important;
     box-shadow: 2px 2px 0 #D4B08C !important;
     gap: 3px !important;
+    white-space: nowrap !important;
   }
   
-  /* ゲームボタン - テーマ表示の下（Themeテキストを避けて約100px下） */
+  /* ゲームボタン - モバイルでは下部左に配置 */
   .fixed-bottom-left {
-    bottom: auto;
-    top: 100px;
+    bottom: 60px;
+    top: auto;
     left: 8px;
     right: auto;
-    max-width: calc(70%);
+    max-width: none;
   }
-  
+
   .fixed-bottom-left .games-container {
     flex-wrap: wrap;
     gap: 3px;
     justify-content: flex-start;
   }
-  
+
   .fixed-bottom-left .game-button {
     padding: 3px 5px !important;
     font-size: 0.5em !important;
@@ -566,7 +626,7 @@ body.theme-hanami {
     box-shadow: 2px 2px 0 #D4B08C !important;
   }
   
-  .fixed-bottom-center .music-player button {
+  .fixed-bottom-center .music-player > button:not(:last-of-type) {
     width: 32px !important;
     height: 32px !important;
     min-width: 32px !important;
@@ -589,6 +649,27 @@ body.theme-hanami {
   
   .fixed-bottom-center .music-player > button:last-of-type span:last-child {
     display: none !important;
+  }
+
+  /* トラック選択ポップアップ - モバイル画面内で綺麗に表示 */
+  .fixed-bottom-center .music-player .track-selector-dropdown {
+    position: fixed !important;
+    bottom: 50px !important;
+    left: 8px !important;
+    right: auto !important;
+    width: calc(100vw - 16px) !important;
+    max-width: 320px !important;
+    min-width: unset !important;
+    z-index: 10010 !important;
+  }
+
+  .fixed-bottom-center .music-player .track-selector-dropdown button {
+    width: 100% !important;
+    height: auto !important;
+    min-width: unset !important;
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+    box-shadow: none !important;
   }
   
   /* ソーシャルボタン - 右下配置 */
@@ -635,19 +716,17 @@ body.theme-hanami {
 /* ===== 小さなモバイル端末向け（最大480px）===== */
 @media screen and (max-width: 480px) {
   .fixed-top-left {
-    top: 5px;
-    left: 5px;
-    gap: 2px;
+    top: 6px;
+    left: 6px;
+    gap: 4px !important;
+    flex-direction: column !important;
   }
   
-  .fixed-top-left .language-selector select {
-    padding: 2px 4px;
-    font-size: 0.6em;
-  }
-  
+  .fixed-top-left .language-selector select,
   .fixed-top-left .theme-indicator {
-    font-size: 7px;
-    padding: 2px 4px;
+    padding: 2px 8px 2px 4px !important;
+    font-size: 0.68em !important;
+    height: 26px !important;
   }
   
   .fixed-top-right {
@@ -668,19 +747,19 @@ body.theme-hanami {
   
   /* ゲームボタン - テーマ表示の下（上から約90px） */
   .fixed-bottom-left {
-    bottom: auto;
-    top: 90px;
+    bottom: 60px;
+    top: auto;
     left: 5px;
     right: auto;
     max-width: 65%;
   }
-  
+
   .fixed-bottom-left .games-container {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 2px;
   }
-  
+
   .fixed-bottom-left .game-button {
     padding: 2px 4px !important;
     font-size: 0.45em !important;
@@ -1261,7 +1340,7 @@ body.theme-hanami {
   }
 }
 
-/* ===== Chat Responsive - Mobile (480px) ===== */
+/* ===== チャットのレスポンシブ対応 - モバイル（480px）===== */
 @media screen and (max-width: 480px) {
   .chat-modal {
     width: calc(100% - 16px);
@@ -1323,7 +1402,7 @@ body.theme-hanami {
   
   .chat-message-input {
     padding: 8px;
-    font-size: 16px; /* Prevent zoom on iOS */
+    font-size: 16px; /* iOSでのズーム防止 */
   }
   
   .chat-send-btn {
@@ -1336,7 +1415,7 @@ body.theme-hanami {
   }
 }
 
-/* ===== Chat Responsive - Very Small (320px) ===== */
+/* ===== チャットのレスポンシブ対応 - 極小画面（320px）===== */
 @media screen and (max-width: 320px) {
   .chat-modal {
     width: calc(100% - 10px);
@@ -1384,7 +1463,7 @@ body.theme-hanami {
   }
 }
 
-/* ===== Landscape Mode on Mobile ===== */
+/* ===== モバイル横向きモード ===== */
 @media screen and (max-height: 500px) and (orientation: landscape) {
   .chat-modal {
     height: 85vh;
