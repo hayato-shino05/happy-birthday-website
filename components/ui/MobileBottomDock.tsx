@@ -7,9 +7,9 @@ import { useUIStore } from '@/lib/stores/uiStore'
 import { useMusicStore } from '@/lib/stores/musicStore'
 import { Icon } from './Icon'
 import { GAME_MENU_ITEMS } from './gameConfig'
-import { Camera, MessageSquare, Gamepad2, Share2, Sparkles, X, Music, Volume2 } from 'lucide-react'
+import { X, Music, Volume2, Share2 } from 'lucide-react'
 
-// モバイル専用の日本風ボトムナビゲーションDockコンポーネント（Touch Target >= 44px 準拠 & 完全i18n対応）
+// 和風レトロ文具・漆器調モバイルボトムナビゲーションDock（Touch Target >= 48px & 伝統工芸スタイル）
 export function MobileBottomDock() {
   const { t, language } = useLanguage()
   const { openModal } = useUIStore()
@@ -19,7 +19,7 @@ export function MobileBottomDock() {
   const drawerRef = useRef<HTMLDivElement>(null)
   const gameToggleRef = useRef<HTMLButtonElement>(null)
 
-  // Escapeキーでドロワーを閉じるキーボード操作
+  // Escapeキーによるドロワー閉じる操作
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && showGameDrawer) {
@@ -35,7 +35,7 @@ export function MobileBottomDock() {
     }
   }, [showGameDrawer])
 
-  // Web Share API による共有処理（クリップボード非対応環境の安全なフォールバック付き）
+  // Web Share API による共有処理（安全なフォールバック付き）
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
     const defaultShareText = language === 'ja' ? '大切な記念日と思い出を分かち合う空間 🎂🎉' : 'A special place to share birthdays and memories 🎂🎉'
@@ -50,7 +50,6 @@ export function MobileBottomDock() {
         await navigator.share(shareData)
         return
       } catch {
-        // キャンセル時は何もしない
         return
       }
     }
@@ -61,7 +60,7 @@ export function MobileBottomDock() {
         alert(t('notificationCopied'))
         return
       } catch {
-        // クリップボード例外時はプロンプトへフォールバック
+        // クリップボード例外処理
       }
     }
 
@@ -71,7 +70,7 @@ export function MobileBottomDock() {
 
   return (
     <>
-      {/* ゲーム選択ドロワー（モバイルポップアップ） */}
+      {/* 桐箱・漆箱風 ゲーム選択ドロワー */}
       <AnimatePresence>
         {showGameDrawer && (
           <div
@@ -81,6 +80,7 @@ export function MobileBottomDock() {
             aria-label={language === 'ja' ? 'お祝いミニゲーム' : 'Celebration Games'}
             className="fixed inset-0 z-50 md:hidden flex flex-col justify-end"
           >
+            {/* 背景オーバーレイ */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -89,36 +89,42 @@ export function MobileBottomDock() {
                 setShowGameDrawer(false)
                 gameToggleRef.current?.focus()
               }}
-              className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
             />
+
+            {/* 桐箱ドロワー本体 */}
             <motion.div
               ref={drawerRef}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="relative z-10 mx-3 mb-20 p-4 rounded-3xl bg-[#2D1B11]/95 backdrop-blur-xl border border-[#D4B08C]/50 shadow-2xl text-[#FFF9F3]"
+              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+              className="relative z-10 mx-2 mb-20 p-4 bg-[#3E2314] border-2 border-[#D4B08C] shadow-2xl text-[#FFF9F3]"
+              style={{
+                boxShadow: '0 -8px 24px rgba(0,0,0,0.5), 4px 4px 0 #D4B08C',
+              }}
             >
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#D4B08C]/30">
+              {/* ドロワーヘッダー */}
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#D4B08C]/40">
                 <div className="flex items-center gap-2">
-                  <Gamepad2 className="w-5 h-5 text-[#E5A93C]" />
-                  <span className="font-bold text-sm tracking-wider">
-                    {language === 'ja' ? 'お祝いミニゲーム' : 'Celebration Games'}
+                  <Icon name="Gamepad" size={20} />
+                  <span className="font-bold text-sm tracking-wider font-body">
+                    {language === 'ja' ? 'お祝い遊技' : 'Celebration Games'}
                   </span>
                 </div>
-                {/* 閉じるボタン（Touch Target >= 44px） */}
                 <button
                   onClick={() => {
                     setShowGameDrawer(false)
                     gameToggleRef.current?.focus()
                   }}
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 active:scale-95 transition-colors cursor-pointer"
+                  className="min-w-[44px] min-h-[44px] px-2 py-1 bg-[#854D27] border border-[#D4B08C] text-[#FFF9F3] flex items-center justify-center cursor-pointer active:translate-x-0.5 active:translate-y-0.5"
                   aria-label={t('close')}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
+              {/* ゲーム一覧グリッド */}
               <div className="grid grid-cols-2 gap-2.5">
                 {GAME_MENU_ITEMS.map((game) => (
                   <button
@@ -127,12 +133,12 @@ export function MobileBottomDock() {
                       setShowGameDrawer(false)
                       openModal(game.id)
                     }}
-                    className="min-h-[48px] px-3 py-2.5 rounded-2xl bg-[#854D27]/80 hover:bg-[#854D27] border border-[#D4B08C]/40 flex items-center gap-2.5 text-xs font-bold text-[#FFF9F3] shadow-md active:scale-95 transition-transform text-left cursor-pointer"
+                    className="min-h-[50px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] border border-[#D4B08C] flex items-center gap-3 text-xs font-bold text-[#FFF9F3] shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                   >
-                    <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0 text-[#E5A93C]">
-                      <Icon name={game.icon} size={16} />
+                    <div className="w-8 h-8 rounded-none bg-black/20 border border-[#D4B08C]/50 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
+                      <Icon name={game.icon} size={18} />
                     </div>
-                    <span className="truncate">{t(game.i18nKey)}</span>
+                    <span className="truncate font-body">{t(game.i18nKey)}</span>
                   </button>
                 ))}
               </div>
@@ -141,84 +147,77 @@ export function MobileBottomDock() {
         )}
       </AnimatePresence>
 
-      {/* メインのモバイルボトムDockバー */}
+      {/* 伝統和風レトロ文具調 ボトムナビゲーションバー */}
       <nav
-        className="mobile-bottom-dock fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 md:hidden"
+        className="mobile-bottom-dock fixed bottom-2 inset-x-2 max-w-lg mx-auto z-40 md:hidden"
         aria-label="Mobile Navigation Dock"
       >
         <div
-          className="flex items-center justify-between px-2 py-1.5 rounded-2xl shadow-2xl"
-          style={{
-            background: 'rgba(45, 27, 17, 0.94)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1.5px solid rgba(212, 176, 140, 0.45)',
-            boxShadow: '0 12px 36px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-          }}
+          className="flex items-center justify-around px-1 py-1 bg-[#3E2314] border-2 border-[#D4B08C] shadow-[0_8px_20px_rgba(0,0,0,0.5),3px_3px_0_#D4B08C]"
         >
-          {/* 1. アルバム / 想い出 */}
+          {/* 1. 想い出アルバム */}
           <button
             onClick={() => openModal('album')}
-            className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('viewAlbum')}
           >
-            <Camera className="w-5 h-5 text-[#E5A93C]" />
-            <span className="text-[9px] font-bold tracking-tight mt-0.5 opacity-90">
-              {language === 'ja' ? '想い出' : 'Memories'}
+            <Icon name="Camera" size={20} />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
+              {language === 'ja' ? '想い出' : 'Album'}
             </span>
           </button>
 
-          {/* 2. 寄せ書き / 掲示板 */}
+          {/* 2. 寄せ書き掲示板 */}
           <button
             onClick={() => openModal('bulletin')}
-            className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('bulletinBoard')}
           >
-            <MessageSquare className="w-5 h-5 text-[#E5A93C]" />
-            <span className="text-[9px] font-bold tracking-tight mt-0.5 opacity-90">
+            <Icon name="ClipboardList" size={20} />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
               {language === 'ja' ? '寄せ書き' : 'Wishes'}
             </span>
           </button>
 
-          {/* 3. チャット / 祝言 */}
+          {/* 3. 祝言チャット */}
           <button
             onClick={() => openModal('chat')}
-            className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('groupChat')}
           >
-            <Sparkles className="w-5 h-5 text-[#E5A93C]" />
-            <span className="text-[9px] font-bold tracking-tight mt-0.5 opacity-90">
+            <Icon name="MessageCircle" size={20} />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
               {language === 'ja' ? '祝言' : 'Chat'}
             </span>
           </button>
 
-          {/* 4. ゲーム */}
+          {/* 4. お祝い遊技（ゲーム） */}
           <button
             ref={gameToggleRef}
             onClick={() => setShowGameDrawer(!showGameDrawer)}
             aria-expanded={showGameDrawer}
             aria-controls={drawerId}
-            className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
+            className={`flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 ${showGameDrawer ? 'bg-[#854D27] text-[#E5A93C]' : 'text-[#FFF9F3]'} hover:text-[#E5A93C] active:translate-y-0.5 transition-all cursor-pointer`}
             aria-label={language === 'ja' ? 'お祝いミニゲーム' : 'Celebration Games'}
           >
-            <Gamepad2 className="w-5 h-5 text-[#E5A93C]" />
-            <span className="text-[9px] font-bold tracking-tight mt-0.5 opacity-90">
-              {language === 'ja' ? '遊び' : 'Games'}
+            <Icon name="Gamepad" size={20} />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
+              {language === 'ja' ? '遊技' : 'Games'}
             </span>
           </button>
 
-          {/* 5. 音楽再生 / 停止 */}
+          {/* 5. 音楽（再生・停止切り替え） */}
           <button
             onClick={() => toggleMusic()}
-            className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
+            className={`flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 ${isPlaying ? 'text-[#E5A93C]' : 'text-[#FFF9F3]'} hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer`}
             aria-label={t('selectMusic')}
           >
             {isPlaying ? (
               <Volume2 className="w-5 h-5 text-[#E5A93C] animate-pulse" />
             ) : (
-              <Music className="w-5 h-5 text-[#E5A93C]" />
+              <Music className="w-5 h-5" />
             )}
-            <span className="text-[9px] font-bold tracking-tight mt-0.5 opacity-90">
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
               {language === 'ja' ? '音楽' : 'Music'}
             </span>
           </button>
@@ -226,11 +225,11 @@ export function MobileBottomDock() {
           {/* 6. 共有 */}
           <button
             onClick={handleShare}
-            className="flex flex-col items-center justify-center min-w-[44px] min-h-[46px] px-1 py-1 rounded-xl text-[#FFF9F3] hover:text-[#E5A93C] active:scale-90 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('inviteFriends')}
           >
-            <Share2 className="w-5 h-5 text-[#E5A93C]" />
-            <span className="text-[9px] font-bold tracking-tight mt-0.5 opacity-90">
+            <Share2 className="w-5 h-5" />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
               {language === 'ja' ? '共有' : 'Share'}
             </span>
           </button>
