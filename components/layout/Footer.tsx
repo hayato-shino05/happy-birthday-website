@@ -14,7 +14,7 @@ export default function Footer({ showSocial = true }: FooterProps) {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* 著作権表記 */}
             <p className="text-white/50 text-sm text-center md:text-left">
-              © {currentYear} Happy Birthday. All rights reserved.
+              © {currentYear} Omoide (想い出箱). All rights reserved.
             </p>
 
             {/* SNSリンク */}
