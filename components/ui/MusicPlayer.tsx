@@ -58,7 +58,7 @@ export function MusicPlayer() {
           e.currentTarget.style.filter = 'brightness(1.2)'
         }}
       >
-        <Icon name="SkipBack" size={22} />
+        <Icon name="SkipBack" size={22} useSvg={true} className="text-[#854D27]" />
       </button>
 
       {/* 再生/一時停止ボタン */}
@@ -100,7 +100,7 @@ export function MusicPlayer() {
           e.currentTarget.style.filter = 'brightness(1.15)'
         }}
       >
-        <Icon name={isPlaying ? 'Pause' : 'Play'} size={24} />
+        <Icon name={isPlaying ? 'Pause' : 'Play'} size={22} useSvg={true} className="text-[#FFF9F3]" />
       </button>
 
       {/* 次の曲ボタン */}
@@ -135,7 +135,7 @@ export function MusicPlayer() {
           e.currentTarget.style.filter = 'brightness(1.2)'
         }}
       >
-        <Icon name="SkipForward" size={22} />
+        <Icon name="SkipForward" size={22} useSvg={true} className="text-[#854D27]" />
       </button>
 
       <span

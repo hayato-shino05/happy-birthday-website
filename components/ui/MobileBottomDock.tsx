@@ -7,7 +7,7 @@ import { useUIStore } from '@/lib/stores/uiStore'
 import { useMusicPlayer } from '@/lib/hooks/useMusicPlayer'
 import { Icon } from './Icon'
 
-// PC（デスクトップ）と100%同一のアイコン、機能、配色を持つ完全同期型モバイルナビゲーション
+// デスクトップと100%同一の配色（#854D27, #D4B08C, #FFF9F3）とSVGアイコンを持つ統合型モバイルナビゲーション
 export function MobileBottomDock() {
   const { t, language } = useLanguage()
   const { openModal } = useUIStore()
@@ -71,14 +71,15 @@ export function MobileBottomDock() {
 
   return (
     <>
-      {/* 1. モバイル用ミュージックプレイヤー（PCのMusicPlayerと完全同一のアイコン＆操作性） */}
-      <div className="fixed bottom-[72px] inset-x-2 max-w-lg mx-auto z-30 md:hidden">
+      {/* 1. モバイル用ミュージックプレイヤー（デスクトップと完全同等の #854D27 & #D4B08C 配色） */}
+      <div className="fixed bottom-[68px] inset-x-3 max-w-md mx-auto z-30 md:hidden">
         <div
           style={{
-            background: 'rgba(255, 249, 243, 0.96)',
+            background: 'rgba(255, 249, 243, 0.98)',
             border: '2px solid #D4B08C',
-            boxShadow: '3px 3px 0 #D4B08C',
-            padding: '6px 12px',
+            borderBottom: 'none',
+            boxShadow: '0 -2px 10px rgba(133, 77, 39, 0.15)',
+            padding: '5px 12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -91,8 +92,8 @@ export function MobileBottomDock() {
             className="flex items-center gap-2 text-left cursor-pointer flex-1 min-w-0 mr-2"
             aria-label={t('selectMusic')}
           >
-            <div className={`w-7 h-7 bg-[#854D27] text-[#FFF9F3] flex items-center justify-center flex-shrink-0 ${isPlaying ? 'animate-pulse' : ''}`}>
-              <Icon name="Music" size={16} />
+            <div className={`w-6 h-6 bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] flex items-center justify-center flex-shrink-0 ${isPlaying ? 'animate-pulse' : ''}`}>
+              <Icon name="Music" size={13} useSvg={true} className="text-[#FFF9F3]" />
             </div>
             <div className="truncate">
               <span className="text-[11px] font-bold text-[#854D27] block truncate">
@@ -101,28 +102,33 @@ export function MobileBottomDock() {
             </div>
           </button>
 
-          {/* 前の曲・再生/停止・次の曲（PCと同一のIconコンポーネント使用） */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          {/* 前の曲・再生/停止・次の曲（デスクトップと完全に同一の #854D27 / #D4B08C 配色） */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* 前の曲 */}
             <button
               onClick={prevTrack}
-              className="w-8 h-8 bg-transparent text-[#854D27] hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
+              className="w-7 h-7 bg-transparent text-[#854D27] hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
               aria-label="Previous Track"
             >
-              <Icon name="SkipBack" size={18} />
+              <Icon name="SkipBack" size={16} useSvg={true} className="text-[#854D27]" />
             </button>
+
+            {/* 再生 / 一時停止 */}
             <button
               onClick={toggle}
-              className="w-9 h-9 bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] shadow-[1px_1px_0_#D4B08C] flex items-center justify-center active:translate-y-0.5 cursor-pointer"
+              className="w-7 h-7 bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] shadow-[1px_1px_0_#D4B08C] flex items-center justify-center active:translate-y-0.5 cursor-pointer"
               aria-label="Play/Pause"
             >
-              <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} />
+              <Icon name={isPlaying ? 'Pause' : 'Play'} size={14} useSvg={true} className="text-[#FFF9F3]" />
             </button>
+
+            {/* 次の曲 */}
             <button
               onClick={nextTrack}
-              className="w-8 h-8 bg-transparent text-[#854D27] hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
+              className="w-7 h-7 bg-transparent text-[#854D27] hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
               aria-label="Next Track"
             >
-              <Icon name="SkipForward" size={18} />
+              <Icon name="SkipForward" size={16} useSvg={true} className="text-[#854D27]" />
             </button>
           </div>
         </div>
@@ -131,10 +137,10 @@ export function MobileBottomDock() {
         <AnimatePresence>
           {showMusicList && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="mt-1 p-2 bg-[#FFF9F3] border-2 border-[#D4B08C] shadow-[3px_3px_0 #D4B08C] max-h-40 overflow-y-auto"
+              exit={{ opacity: 0, y: 8 }}
+              className="p-2 bg-[#FFF9F3] border-2 border-[#D4B08C] shadow-[3px_3px_0_#D4B08C] max-h-40 overflow-y-auto"
             >
               {tracks.map((track) => (
                 <button
@@ -190,14 +196,14 @@ export function MobileBottomDock() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="relative z-10 mx-2 mb-20 p-4 bg-[#FFF9F3] border-2 border-[#D4B08C] text-[#854D27]"
+              className="relative z-10 mx-3 mb-20 p-4 bg-[#FFF9F3] border-2 border-[#D4B08C] text-[#854D27]"
               style={{
                 boxShadow: '0 -8px 24px rgba(0,0,0,0.3), 4px 4px 0 #D4B08C',
               }}
             >
               <div className="flex items-center justify-between pb-3 mb-3 border-b-2 border-[#D4B08C]">
                 <div className="flex items-center gap-2">
-                  <Icon name="Gamepad" size={20} />
+                  <Icon name="Gamepad" size={20} useSvg={true} className="text-[#854D27]" />
                   <span className="font-bold text-sm font-body tracking-wider text-[#854D27]">
                     {language === 'ja' ? '遊技 ＆ 共有' : 'Games & Social'}
                   </span>
@@ -208,10 +214,10 @@ export function MobileBottomDock() {
                     setShowShareOptions(false)
                     menuBtnRef.current?.focus()
                   }}
-                  className="w-10 h-10 min-w-[40px] min-h-[40px] bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] flex items-center justify-center cursor-pointer active:translate-y-0.5"
+                  className="w-9 h-9 bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] flex items-center justify-center cursor-pointer active:translate-y-0.5"
                   aria-label={t('close')}
                 >
-                  <Icon name="X" size={18} />
+                  <Icon name="X" size={18} useSvg={true} className="text-[#FFF9F3]" />
                 </button>
               </div>
 
@@ -226,7 +232,7 @@ export function MobileBottomDock() {
                   className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                 >
                   <div className="w-7 h-7 bg-white/15 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
-                    <Icon name="Brain" size={18} />
+                    <Icon name="Brain" size={18} useSvg={true} className="text-[#FFF9F3]" />
                   </div>
                   <span className="truncate">{t('memoryGame')}</span>
                 </button>
@@ -240,7 +246,7 @@ export function MobileBottomDock() {
                   className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                 >
                   <div className="w-7 h-7 bg-white/15 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
-                    <Icon name="Puzzle" size={18} />
+                    <Icon name="Puzzle" size={18} useSvg={true} className="text-[#FFF9F3]" />
                   </div>
                   <span className="truncate">{t('puzzleGame')}</span>
                 </button>
@@ -254,7 +260,7 @@ export function MobileBottomDock() {
                   className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                 >
                   <div className="w-7 h-7 bg-white/15 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
-                    <Icon name="Calendar" size={18} />
+                    <Icon name="Calendar" size={18} useSvg={true} className="text-[#FFF9F3]" />
                   </div>
                   <span className="truncate">{t('birthdayCalendar')}</span>
                 </button>
@@ -268,7 +274,7 @@ export function MobileBottomDock() {
                   className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                 >
                   <div className="w-7 h-7 bg-white/15 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
-                    <Icon name="HelpCircle" size={18} />
+                    <Icon name="HelpCircle" size={18} useSvg={true} className="text-[#FFF9F3]" />
                   </div>
                   <span className="truncate">{t('birthdayQuiz')}</span>
                 </button>
@@ -280,7 +286,7 @@ export function MobileBottomDock() {
                   onClick={() => setShowShareOptions(!showShareOptions)}
                   className="w-full min-h-[46px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center justify-center gap-2 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-y-0.5 cursor-pointer"
                 >
-                  <Icon name="Users" size={20} />
+                  <Icon name="Users" size={18} useSvg={true} className="text-[#FFF9F3]" />
                   <span>{t('inviteFriends') || '友達を招待'}</span>
                 </button>
 
@@ -319,7 +325,7 @@ export function MobileBottomDock() {
                       onClick={() => handleShare('copy')}
                       className="col-span-2 flex items-center justify-center gap-2 p-2 bg-white border border-[#D4B08C] text-xs font-body text-[#854D27] cursor-pointer"
                     >
-                      <Icon name="Copy" size={16} />
+                      <Icon name="Copy" size={16} useSvg={true} className="text-[#854D27]" />
                       <span>{language === 'ja' ? 'リンクをコピー' : 'Copy Link'}</span>
                     </button>
                   </div>
@@ -330,81 +336,81 @@ export function MobileBottomDock() {
         )}
       </AnimatePresence>
 
-      {/* 3. メイン・モバイルボトムナビゲーションバー（PCと完全同一の5大機能＆Icon） */}
+      {/* 3. メイン・モバイルボトムナビゲーションバー（PCと100%同一の配色＆SVGアイコン） */}
       <nav
-        className="mobile-bottom-dock fixed bottom-2 inset-x-2 max-w-lg mx-auto z-40 md:hidden"
+        className="mobile-bottom-dock fixed bottom-2 inset-x-3 max-w-md mx-auto z-40 md:hidden"
         aria-label="Mobile Navigation Dock"
       >
         <div
           style={{
             background: '#854D27',
             border: '2px solid #D4B08C',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.3), 3px 3px 0 #D4B08C',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.35), 3px 3px 0 #D4B08C',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-around',
-            padding: '4px 2px',
+            padding: '5px 2px',
           }}
         >
-          {/* 1. アルバムを見る (PC HeaderButtons: Camera) */}
+          {/* 1. アルバムを見る (PC: Camera) */}
           <button
             onClick={() => openModal('album')}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[48px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('viewAlbum')}
           >
-            <Icon name="Camera" size={20} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
+            <Icon name="Camera" size={18} useSvg={true} className="text-[#FFF9F3]" />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
               {language === 'ja' ? 'アルバム' : 'Album'}
             </span>
           </button>
 
-          {/* 2. メッセージを送る (PC HeaderButtons: PenLine) */}
+          {/* 2. メッセージを送る (PC: PenLine) */}
           <button
             onClick={() => openModal('message')}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[48px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('sendMessage')}
           >
-            <Icon name="PenLine" size={20} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
+            <Icon name="PenLine" size={18} useSvg={true} className="text-[#FFF9F3]" />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
               {language === 'ja' ? 'メッセージ' : 'Wishes'}
             </span>
           </button>
 
-          {/* 3. 掲示板 (PC HeaderButtons: ClipboardList) */}
+          {/* 3. 掲示板 (PC: ClipboardList) */}
           <button
             onClick={() => openModal('bulletin')}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[48px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('bulletinBoard')}
           >
-            <Icon name="ClipboardList" size={20} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
+            <Icon name="ClipboardList" size={18} useSvg={true} className="text-[#FFF9F3]" />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
               {language === 'ja' ? '掲示板' : 'Board'}
             </span>
           </button>
 
-          {/* 4. グループチャット (PC SocialButtons: MessageCircle) */}
+          {/* 4. グループチャット (PC: MessageCircle) */}
           <button
             onClick={() => openModal('chat')}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[50px] min-h-[48px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('groupChat')}
           >
-            <Icon name="MessageCircle" size={20} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
+            <Icon name="MessageCircle" size={18} useSvg={true} className="text-[#FFF9F3]" />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
               {language === 'ja' ? 'チャット' : 'Chat'}
             </span>
           </button>
 
-          {/* 5. ゲーム ＆ 共有 (PC GameButtons & SocialButtons: Gamepad) */}
+          {/* 5. ゲーム ＆ 共有 (PC: Gamepad) */}
           <button
             ref={menuBtnRef}
             onClick={() => setShowMenuSheet(!showMenuSheet)}
             aria-expanded={showMenuSheet}
             aria-controls={menuId}
-            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 ${showMenuSheet ? 'bg-[#6D3D1E] text-[#E5A93C]' : 'text-[#FFF9F3]'} hover:text-[#E5A93C] active:translate-y-0.5 transition-all cursor-pointer`}
+            className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] px-1 py-1 ${showMenuSheet ? 'bg-[#6D3D1E] text-[#E5A93C]' : 'text-[#FFF9F3]'} hover:text-[#E5A93C] active:translate-y-0.5 transition-all cursor-pointer`}
             aria-label={language === 'ja' ? 'ゲーム＆共有' : 'Games & Social'}
           >
-            <Icon name="Gamepad" size={20} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
+            <Icon name="Gamepad" size={18} useSvg={true} className="text-[#FFF9F3]" />
+            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
               {language === 'ja' ? 'ゲーム' : 'Games'}
             </span>
           </button>
