@@ -249,7 +249,7 @@ npm run build
 詳細は [STRUCTURE.md](./STRUCTURE.md) を参照してください。
 
 ```text
-happy-birthday-website/
+omoide/
 ├── app/                      # Next.js App Router と API Routes
 ├── components/               # UI、機能、コミュニティ、ゲーム、エフェクト
 ├── config/                   # テーマと音楽の設定

@@ -1,5 +1,6 @@
 {
-  "name": "happy-birthday-website",
+  "name": "omoide",
+  "description": "想い出箱（Omoide Bako）— 大切な記念日と思い出を分かち合う空間",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",

@@ -1,6 +1,6 @@
-# 📁 プロジェクト構成
+# 📁 プロジェクト構成（Omoide）
 
-> 誕生日お祝いサイトのディレクトリ構成とアーキテクチャをまとめたドキュメントです。
+> 想い出箱（Omoide Bako）のディレクトリ構成とアーキテクチャをまとめたドキュメントです。
 >
 > Next.js 16 の App Router を前提に、UI コンポーネント / ビジネスロジック / 状態管理 / 設定ファイルを明確に分離しています。
 
@@ -20,9 +20,10 @@
 ## ディレクトリツリー（トップレベル）
 
 ```text
-happy-birthday-website/
+omoide/
 ├── app/                     # Next.js App Router エントリ & API ルート
 ├── components/              # 再利用可能な React コンポーネント
+├── data/                    # i18n および祭りデータパック
 ├── lib/                     # コアロジック（hooks, stores, i18n など）
 ├── config/                  # テーマ・音楽などの設定
 ├── types/                   # TypeScript 型定義
