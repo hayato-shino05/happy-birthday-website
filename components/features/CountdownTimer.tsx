@@ -10,7 +10,7 @@ interface CountdownTimerProps {
   onComplete?: () => void
 }
 
-// ポラロイド風ミニフォトカードによるカウントダウンタイマーコンポーネント
+// ポラロイド風ミニフォトカードによるカウントダウンタイマーコンポーネント（半透明背景上でも高視認性を維持）
 export function CountdownTimer({ targetDate, onComplete }: CountdownTimerProps) {
   const [mounted, setMounted] = useState(false)
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: false })
@@ -59,13 +59,13 @@ export function CountdownTimer({ targetDate, onComplete }: CountdownTimerProps) 
         value={timeLeft.days}
         label={t('days')}
         tapeStyle="tape-1"
-        hoverRotate={1}
+        hoverRotate={1.5}
       />
       <PolaroidUnit
         value={timeLeft.hours}
         label={t('hours')}
         tapeStyle="tape-2"
-        hoverRotate={-1}
+        hoverRotate={-1.5}
       />
       <PolaroidUnit
         value={timeLeft.minutes}
@@ -100,70 +100,69 @@ function PolaroidUnit({ value, label, tapeStyle, hoverRotate, isSeconds = false 
     switch (tapeStyle) {
       case 'tape-1':
         return {
-          background: 'rgba(215, 195, 181, 0.75)',
+          background: 'rgba(215, 195, 181, 0.9)',
           transform: 'rotate(-12deg)',
-          top: '-8px',
+          top: '-9px',
           left: '-6px',
-          width: '42px',
-          height: '14px',
+          width: '44px',
+          height: '15px',
         }
       case 'tape-2':
         return {
-          background: 'rgba(189, 171, 78, 0.55)',
+          background: 'rgba(202, 178, 86, 0.8)',
           transform: 'rotate(10deg)',
-          top: '-8px',
+          top: '-9px',
           right: '-6px',
-          width: '38px',
-          height: '14px',
+          width: '40px',
+          height: '15px',
         }
       case 'tape-3':
         return {
-          background: 'rgba(215, 195, 181, 0.75)',
+          background: 'rgba(215, 195, 181, 0.9)',
           transform: 'rotate(15deg)',
-          top: '-8px',
+          top: '-9px',
           left: '-4px',
-          width: '40px',
-          height: '14px',
+          width: '42px',
+          height: '15px',
         }
       case 'tape-4':
         return {
-          background: 'rgba(189, 171, 78, 0.55)',
+          background: 'rgba(202, 178, 86, 0.8)',
           transform: 'rotate(-10deg)',
-          top: '-8px',
+          top: '-9px',
           right: '-4px',
-          width: '38px',
-          height: '14px',
+          width: '40px',
+          height: '15px',
         }
     }
   }
 
   return (
     <motion.div
-      whileHover={{ y: -4, rotate: hoverRotate }}
+      whileHover={{ y: -5, rotate: hoverRotate }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className="relative group w-full max-w-[140px] flex flex-col items-center"
     >
       {/* 和紙テープ装飾 */}
       <div
-        className="absolute z-20 pointer-events-none rounded-2xs shadow-2xs"
+        className="absolute z-20 pointer-events-none rounded-2xs shadow-xs"
         style={getTapeStyle()}
       />
 
-      {/* ポラロイド写真風カード */}
+      {/* ポラロイド写真風カード（純白・高コントラストで背景が透けてもクッキリ） */}
       <div
-        className="w-full bg-[#FFFFFF] p-2.5 pb-3 sm:p-3 sm:pb-4 rounded-xs flex flex-col items-center transition-all duration-300"
+        className="w-full bg-white/95 backdrop-blur-md p-2.5 pb-3 sm:p-3 sm:pb-4 rounded-sm flex flex-col items-center transition-all duration-300"
         style={{
-          boxShadow: '0 8px 16px -4px rgba(137, 80, 51, 0.16), 0 2px 4px rgba(0, 0, 0, 0.04)',
-          border: '1px solid rgba(255, 255, 255, 0.8)',
+          boxShadow: '0 10px 25px -4px rgba(44, 24, 16, 0.25), 0 2px 6px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.9)',
         }}
       >
-        {/* 写真スロット（点線ボーダーとヴィンテージ背景） */}
+        {/* 写真スロット（クッキリとしたコントラスト） */}
         <div
           className="w-full aspect-square flex items-center justify-center rounded-2xs mb-2 sm:mb-2.5"
           style={{
-            background: '#FDF9E9',
-            border: '1.5px dashed rgba(109, 94, 0, 0.28)',
-            boxShadow: 'inset 0 1px 3px rgba(74, 36, 0, 0.06)',
+            background: 'linear-gradient(145deg, #FAF5E4 0%, #F5ECCB 100%)',
+            border: '1.5px dashed rgba(109, 94, 0, 0.38)',
+            boxShadow: 'inset 0 2px 4px rgba(74, 36, 0, 0.08)',
           }}
         >
           <AnimatePresence mode="popLayout">
@@ -173,12 +172,13 @@ function PolaroidUnit({ value, label, tapeStyle, hoverRotate, isSeconds = false 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: isSeconds ? 4 : 0, scale: 0.96 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="font-extrabold text-[#4A2400] tracking-tight select-none"
+              className="font-black text-[#2C1400] tracking-tight select-none"
               style={{
                 fontFamily: 'var(--font-heading), ui-sans-serif, system-ui',
-                fontSize: 'clamp(1.6rem, 5vw, 2.5rem)',
+                fontSize: 'clamp(1.7rem, 5.2vw, 2.6rem)',
                 fontVariantNumeric: 'tabular-nums',
                 lineHeight: 1,
+                textShadow: '0 1px 0 rgba(255, 255, 255, 0.6)',
               }}
             >
               {formattedValue}
@@ -188,7 +188,7 @@ function PolaroidUnit({ value, label, tapeStyle, hoverRotate, isSeconds = false 
 
         {/* ラベル（手書き風・日本語単位表記） */}
         <span
-          className="text-xs sm:text-sm font-bold tracking-widest text-[#895033]"
+          className="text-xs sm:text-sm font-black tracking-widest text-[#522500] uppercase"
           style={{
             fontFamily: 'var(--font-body), sans-serif',
           }}
@@ -204,29 +204,29 @@ function PolaroidPlaceholder({ label, tapeStyle }: { label: string; tapeStyle: '
   return (
     <div className="relative w-full max-w-[140px] flex flex-col items-center">
       <div
-        className="w-full bg-[#FFFFFF] p-2.5 pb-3 sm:p-3 sm:pb-4 rounded-xs flex flex-col items-center"
+        className="w-full bg-white p-2.5 pb-3 sm:p-3 sm:pb-4 rounded-sm flex flex-col items-center"
         style={{
-          boxShadow: '0 8px 16px -4px rgba(137, 80, 51, 0.16)',
+          boxShadow: '0 10px 25px -4px rgba(44, 24, 16, 0.2)',
         }}
       >
         <div
           className="w-full aspect-square flex items-center justify-center rounded-2xs mb-2"
           style={{
-            background: '#FDF9E9',
-            border: '1.5px dashed rgba(109, 94, 0, 0.28)',
+            background: '#FAF5E4',
+            border: '1.5px dashed rgba(109, 94, 0, 0.38)',
           }}
         >
           <span
-            className="font-bold text-[#4A2400]/40"
+            className="font-black text-[#2C1400]/30"
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 'clamp(1.6rem, 5vw, 2.5rem)',
+              fontSize: 'clamp(1.7rem, 5.2vw, 2.6rem)',
             }}
           >
             --
           </span>
         </div>
-        <span className="text-xs sm:text-sm font-bold text-[#895033]">
+        <span className="text-xs sm:text-sm font-black text-[#522500]">
           {label}
         </span>
       </div>
