@@ -39,7 +39,11 @@ export function CountdownDisplay() {
   }
 
   const personName = nextBirthday.person.name
-  const targetDateStr = nextBirthday.date ? `${nextBirthday.date.getMonth() + 1}月${nextBirthday.date.getDate()}日` : ''
+  const targetDateStr = nextBirthday.date
+    ? language === 'ja'
+      ? `${nextBirthday.date.getMonth() + 1}月${nextBirthday.date.getDate()}日`
+      : nextBirthday.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : ''
 
   return (
     <div className={`countdown-card-wrapper theme-${currentTheme} w-full flex justify-center items-center px-3 sm:px-4 min-h-[42vh]`}>

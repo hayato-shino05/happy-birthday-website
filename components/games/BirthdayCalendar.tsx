@@ -7,20 +7,34 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
 interface BirthdayCalendarProps {
-  onClose: () => void
+  onClose?: () => void
 }
 
-const MONTHS = [
+const MONTHS_JA = [
   '1月', '2月', '3月', '4月', '5月', '6月',
   '7月', '8月', '9月', '10月', '11月', '12月',
 ]
 
+const MONTHS_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+const MONTHS_EN_SHORT = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+]
+
 export function BirthdayCalendar({}: BirthdayCalendarProps) {
   const { data: birthdays = [] } = useBirthdays()
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
 
-  const birthdaysInMonth = birthdays.filter((b) => b.month === selectedMonth + 1)
+  const isJa = language === 'ja'
+  const currentMonthLabel = isJa ? MONTHS_JA[selectedMonth] : MONTHS_EN[selectedMonth]
+
+  const birthdaysInMonth = birthdays
+    .filter((b) => b.month === selectedMonth + 1)
     .sort((a, b) => a.day - b.day)
 
   const prevMonth = () => setSelectedMonth((prev) => (prev - 1 + 12) % 12)
@@ -42,7 +56,7 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
       >
         <button
           onClick={prevMonth}
-          aria-label={t('previousMonth')}
+          aria-label={t('previousMonth') || (isJa ? '前の月' : 'Previous Month')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',
@@ -56,11 +70,11 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
           <Icon name="ArrowLeft" />
         </button>
         <h3 style={{ color: '#854D27', margin: 0, fontSize: '1.3rem' }}>
-          {MONTHS[selectedMonth]}
+          {currentMonthLabel}
         </h3>
         <button
           onClick={nextMonth}
-          aria-label={t('nextMonth')}
+          aria-label={t('nextMonth') || (isJa ? '次の月' : 'Next Month')}
           style={{
             background: '#854D27',
             color: '#FFF9F3',
@@ -78,7 +92,7 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
       {/* 選択中の月の誕生日リスト */}
       {birthdaysInMonth.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 20px', color: '#854D27' }}>
-          <p>今月は誕生日が登録されていません</p>
+          <p>{isJa ? '今月は誕生日が登録されていません' : 'No birthdays registered this month'}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -131,9 +145,11 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
 
       {/* 全ての月の概要 */}
       <div style={{ marginTop: '30px' }}>
-        <h4 style={{ color: '#854D27', marginBottom: '15px' }}>1年の誕生日一覧</h4>
+        <h4 style={{ color: '#854D27', marginBottom: '15px' }}>
+          {isJa ? '1年の誕生日一覧' : 'Yearly Birthday Overview'}
+        </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-          {MONTHS.map((month, index) => {
+          {(isJa ? MONTHS_JA : MONTHS_EN_SHORT).map((month, index) => {
             const count = birthdays.filter((b) => b.month === index + 1).length
             const isCurrentMonth = index === selectedMonth
             return (
