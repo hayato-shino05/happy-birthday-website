@@ -7,6 +7,7 @@
 - [`supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql`](./supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql)
 - [`supabase/migrations/20260817000000_add_bulletin_post_likes.sql`](./supabase/migrations/20260817000000_add_bulletin_post_likes.sql)
 - [`supabase/migrations/20260820000000_add_full_storage_buckets.sql`](./supabase/migrations/20260820000000_add_full_storage_buckets.sql)
+- [`supabase/migrations/20260820000001_add_photo_album_storage.sql`](./supabase/migrations/20260820000001_add_photo_album_storage.sql)
 - 初期データ: [`supabase/seed.sql`](./supabase/seed.sql)
 
 [`database/database.sql`](./database/database.sql) は正本へのポインターです。DDL を追加しないでください。スキーマを変更するときは、新しい Supabase migration を追加します。
@@ -52,11 +53,12 @@ migration の適用後に `supabase/seed.sql` を実行すると、誕生日、�
 
 ## Storage
 
-次の 4 つの公開バケットを使用します。
+次の 5 つの公開バケットを使用します。
 
 | バケット名 | 用途 | 1 ファイル上限 | 許可する MIME type |
 |---|---|---|---|
-| `community-media` | 写真・動画・音声メッセージ | 50 MiB | 画像, MP4, WebM, 音声各種 |
+| `photo-album` | フォトアルバム・思い出ギャラリー写真/動画 | 50 MiB | 画像全般 (HEIC/HEIF含む), MP4, WebM, QuickTime |
+| `community-media` | 掲示板・チャットの写真・動画・音声メッセージ | 50 MiB | 画像, MP4, WebM, 音声各種 |
 | `music` | カスタム BGM 音楽トラック | 15 MiB | MP3, WAV, OGG, WebM, FLAC, AAC |
 | `avatars` | アバター・スタンプ画像 | 5 MiB | JPEG, PNG, WebP, GIF, SVG |
 | `time-capsules` | タイムカプセル添付メディア | 50 MiB | 画像, MP4, WebM, 音声各種 |
