@@ -5,43 +5,38 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
 import { useMusicPlayer } from '@/lib/hooks/useMusicPlayer'
-import { useThemeContext } from '@/lib/providers/ThemeProvider'
-import { getThemeDisplayName } from '@/lib/utils/theme'
-import { VISUAL_THEME_KEYS } from '@/config/visualThemes'
 import { Icon } from './Icon'
 import { GAME_MENU_ITEMS } from './gameConfig'
-import type { ThemeName } from '@/types'
-import { X, Play, Pause, SkipBack, SkipForward, Music, Volume2, Share2, Globe, Palette, Sparkles } from 'lucide-react'
+import { X, Play, Pause, SkipBack, SkipForward, Music, Share2, Camera } from 'lucide-react'
 
-// 和風レトロ文具・漆器調モバイル全機能ナビゲーションDock＆想い出の抽斗（All-in-One Master Mobile Navigation）
+// デスクトップと完全一致する色合いと機能性を持つ標準モバイルボトムナビゲーション
 export function MobileBottomDock() {
-  const { t, language, setLanguage } = useLanguage()
+  const { t, language } = useLanguage()
   const { openModal } = useUIStore()
-  const { currentTheme, setTheme } = useThemeContext()
   const { isPlaying, currentTrack, tracks, toggle, selectTrack, nextTrack, prevTrack } = useMusicPlayer()
-  const [showMasterDrawer, setShowMasterDrawer] = useState(false)
-  const [activeTab, setActiveTab] = useState<'games' | 'music' | 'themes'>('games')
-  const drawerId = useId()
-  const drawerRef = useRef<HTMLDivElement>(null)
-  const menuToggleRef = useRef<HTMLButtonElement>(null)
+  const [showMenuSheet, setShowMenuSheet] = useState(false)
+  const [showMusicList, setShowMusicList] = useState(false)
+  const menuId = useId()
+  const menuRef = useRef<HTMLDivElement>(null)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
 
-  // Escapeキーでドロワーを閉じるアクセシビリティ対応
+  // Escapeキーでメニューを閉じる
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showMasterDrawer) {
-        setShowMasterDrawer(false)
-        menuToggleRef.current?.focus()
+      if (e.key === 'Escape' && showMenuSheet) {
+        setShowMenuSheet(false)
+        menuBtnRef.current?.focus()
       }
     }
-    if (showMasterDrawer) {
+    if (showMenuSheet) {
       window.addEventListener('keydown', handleKeyDown)
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [showMasterDrawer])
+  }, [showMenuSheet])
 
-  // Web Share API による共有処理（安全なフォールバック付き）
+  // Web Share API 共有処理
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
     const defaultShareText = language === 'ja' ? '大切な記念日と思い出を分かち合う空間 🎂🎉' : 'A special place to share birthdays and memories 🎂🎉'
@@ -76,223 +71,192 @@ export function MobileBottomDock() {
 
   return (
     <>
-      {/* 漆器・和風文具調 全機能展開ドロワー（想い出の抽斗） */}
+      {/* 1. モバイル用コンパクト・ミュージックバー（デスクトップのMusicPlayerと完全同等デザイン） */}
+      <div className="fixed bottom-[70px] inset-x-2 max-w-lg mx-auto z-30 md:hidden">
+        <div
+          style={{
+            background: 'rgba(255, 249, 243, 0.96)',
+            border: '2px solid #D4B08C',
+            boxShadow: '3px 3px 0 #D4B08C',
+            padding: '6px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontFamily: 'var(--font-body)',
+          }}
+        >
+          {/* 曲名 ＆ 音楽リスト開閉 */}
+          <button
+            onClick={() => setShowMusicList(!showMusicList)}
+            className="flex items-center gap-2 text-left cursor-pointer flex-1 min-w-0 mr-2"
+            aria-label={t('selectMusic')}
+          >
+            <div className={`w-6 h-6 rounded-none bg-[#854D27] text-[#FFF9F3] flex items-center justify-center flex-shrink-0 ${isPlaying ? 'animate-pulse' : ''}`}>
+              <Music className="w-3.5 h-3.5" />
+            </div>
+            <div className="truncate">
+              <span className="text-[11px] font-bold text-[#854D27] block truncate">
+                {currentTrack?.name || 'Happy Birthday'}
+              </span>
+            </div>
+          </button>
+
+          {/* プレイヤー操作ボタン（前、再生/停止、次） */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={prevTrack}
+              className="w-7 h-7 bg-transparent text-[#854D27] hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
+              aria-label="Previous Track"
+            >
+              <SkipBack className="w-4 h-4" />
+            </button>
+            <button
+              onClick={toggle}
+              className="w-8 h-8 bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] shadow-[1px_1px_0_#D4B08C] flex items-center justify-center active:translate-y-0.5 cursor-pointer"
+              aria-label="Play/Pause"
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+            </button>
+            <button
+              onClick={nextTrack}
+              className="w-7 h-7 bg-transparent text-[#854D27] hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
+              aria-label="Next Track"
+            >
+              <SkipForward className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* 楽曲選択ドロップダウンポップアップ */}
+        <AnimatePresence>
+          {showMusicList && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="mt-1 p-2 bg-[#FFF9F3] border-2 border-[#D4B08C] shadow-[3px_3px_0_#D4B08C] max-h-40 overflow-y-auto"
+            >
+              {tracks.map((track) => (
+                <button
+                  key={track.id}
+                  onClick={() => {
+                    selectTrack(track.id)
+                    setShowMusicList(false)
+                  }}
+                  className={`w-full p-2 text-left text-xs font-body flex items-center justify-between border-b border-[#D4B08C]/30 last:border-none cursor-pointer ${
+                    currentTrack?.id === track.id
+                      ? 'bg-[#854D27] text-[#FFF9F3] font-bold'
+                      : 'text-[#854D27] hover:bg-[#854D27]/10'
+                  }`}
+                >
+                  <span className="truncate">{track.name}</span>
+                  {currentTrack?.id === track.id && (
+                    <span className="text-[10px] font-bold text-[#E5A93C] ml-1">●</span>
+                  )}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* 2. ミニゲーム＆その他メニューシート（標準的でクリーンなポップアップ） */}
       <AnimatePresence>
-        {showMasterDrawer && (
+        {showMenuSheet && (
           <div
-            id={drawerId}
+            id={menuId}
             role="dialog"
             aria-modal="true"
-            aria-label={language === 'ja' ? '想い出の全機能メニュー' : 'Master Feature Menu'}
+            aria-label={language === 'ja' ? 'ゲーム＆メニュー' : 'Games & Menu'}
             className="fixed inset-0 z-50 md:hidden flex flex-col justify-end"
           >
-            {/* 背景オーバーレイ */}
+            {/* オーバーレイ */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => {
-                setShowMasterDrawer(false)
-                menuToggleRef.current?.focus()
+                setShowMenuSheet(false)
+                menuBtnRef.current?.focus()
               }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+              className="absolute inset-0 bg-black/50 backdrop-blur-xs"
             />
 
-            {/* 漆箱ドロワー本体 */}
+            {/* メニューコンテンツ（デスクトップと完全に同等の配色・質感） */}
             <motion.div
-              ref={drawerRef}
+              ref={menuRef}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-              className="relative z-10 mx-2 mb-20 p-4 bg-[#3E2314] border-2 border-[#D4B08C] shadow-2xl text-[#FFF9F3] max-h-[80vh] overflow-y-auto"
+              transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+              className="relative z-10 mx-2 mb-20 p-4 bg-[#FFF9F3] border-2 border-[#D4B08C] text-[#854D27]"
               style={{
-                boxShadow: '0 -8px 28px rgba(0,0,0,0.6), 4px 4px 0 #D4B08C',
+                boxShadow: '0 -8px 24px rgba(0,0,0,0.3), 4px 4px 0 #D4B08C',
               }}
             >
-              {/* ドロワーヘッダー */}
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#D4B08C]/40">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b-2 border-[#D4B08C]">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#E5A93C]" />
-                  <span className="font-bold text-sm tracking-wider font-body">
-                    {language === 'ja' ? '想い出箱の全機能' : 'Omoide Features'}
+                  <Icon name="Gamepad" size={20} />
+                  <span className="font-bold text-sm font-body tracking-wider text-[#854D27]">
+                    {language === 'ja' ? 'ミニゲーム ＆ 特別機能' : 'Games & Features'}
                   </span>
                 </div>
                 <button
                   onClick={() => {
-                    setShowMasterDrawer(false)
-                    menuToggleRef.current?.focus()
+                    setShowMenuSheet(false)
+                    menuBtnRef.current?.focus()
                   }}
-                  className="min-w-[44px] min-h-[44px] px-2 py-1 bg-[#854D27] border border-[#D4B08C] text-[#FFF9F3] flex items-center justify-center cursor-pointer active:translate-x-0.5 active:translate-y-0.5"
+                  className="w-10 h-10 min-w-[40px] min-h-[40px] bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] flex items-center justify-center cursor-pointer active:translate-y-0.5"
                   aria-label={t('close')}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* サブナビゲーションタブ切替 */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <button
-                  onClick={() => setActiveTab('games')}
-                  className={`py-2 px-1 text-xs font-bold font-body border border-[#D4B08C] transition-all cursor-pointer ${
-                    activeTab === 'games' ? 'bg-[#854D27] text-[#FFF9F3] shadow-[2px_2px_0_#D4B08C]' : 'bg-[#2D1B11] text-[#D4B08C]/80'
-                  }`}
-                >
-                  {language === 'ja' ? '🎮 遊技' : '🎮 Games'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('music')}
-                  className={`py-2 px-1 text-xs font-bold font-body border border-[#D4B08C] transition-all cursor-pointer ${
-                    activeTab === 'music' ? 'bg-[#854D27] text-[#FFF9F3] shadow-[2px_2px_0_#D4B08C]' : 'bg-[#2D1B11] text-[#D4B08C]/80'
-                  }`}
-                >
-                  {language === 'ja' ? '🎵 音楽' : '🎵 Music'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('themes')}
-                  className={`py-2 px-1 text-xs font-bold font-body border border-[#D4B08C] transition-all cursor-pointer ${
-                    activeTab === 'themes' ? 'bg-[#854D27] text-[#FFF9F3] shadow-[2px_2px_0_#D4B08C]' : 'bg-[#2D1B11] text-[#D4B08C]/80'
-                  }`}
-                >
-                  {language === 'ja' ? '🎨 13テーマ' : '🎨 Themes'}
-                </button>
-              </div>
-
-              {/* タブ1: ミニゲーム ＆ 特別体験 */}
-              {activeTab === 'games' && (
-                <div className="grid grid-cols-2 gap-2.5 mb-4">
-                  {GAME_MENU_ITEMS.map((game) => (
-                    <button
-                      key={game.id}
-                      onClick={() => {
-                        setShowMasterDrawer(false)
-                        openModal(game.id)
-                      }}
-                      className="min-h-[50px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] border border-[#D4B08C] flex items-center gap-3 text-xs font-bold text-[#FFF9F3] shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
-                    >
-                      <div className="w-8 h-8 rounded-none bg-black/20 border border-[#D4B08C]/50 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
-                        <Icon name={game.icon} size={18} />
-                      </div>
-                      <span className="truncate font-body">{t(game.i18nKey)}</span>
-                    </button>
-                  ))}
-                  {/* 写真フレーム撮影 */}
+              {/* ゲームボタン 4種 ＋ 写真フレーム ＋ 共有 */}
+              <div className="grid grid-cols-2 gap-2.5">
+                {GAME_MENU_ITEMS.map((game) => (
                   <button
+                    key={game.id}
                     onClick={() => {
-                      setShowMasterDrawer(false)
-                      openModal('photoFrame')
+                      setShowMenuSheet(false)
+                      openModal(game.id)
                     }}
-                    className="min-h-[50px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] border border-[#D4B08C] flex items-center gap-3 text-xs font-bold text-[#FFF9F3] shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
+                    className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-none bg-black/20 border border-[#D4B08C]/50 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
-                      <Icon name="Camera" size={18} />
+                    <div className="w-7 h-7 bg-white/15 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
+                      <Icon name={game.icon} size={16} />
                     </div>
-                    <span className="truncate font-body">{language === 'ja' ? '写真フレーム撮影' : 'Photo Frame'}</span>
+                    <span className="truncate">{t(game.i18nKey)}</span>
                   </button>
-                </div>
-              )}
+                ))}
 
-              {/* タブ2: 音楽プレイヤー（完全版） */}
-              {activeTab === 'music' && (
-                <div className="p-3 bg-[#2D1B11] border border-[#D4B08C]/60 mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] text-[#D4B08C] font-bold">
-                      {language === 'ja' ? '再生中の楽曲:' : 'Now Playing:'}
-                    </span>
-                    <span className="text-xs font-bold text-[#FFF9F3] truncate max-w-[200px]">
-                      {currentTrack?.name || 'Happy Birthday'}
-                    </span>
-                  </div>
-
-                  {/* 音楽操作ボタン群 */}
-                  <div className="flex items-center justify-center gap-4 py-2">
-                    <button
-                      onClick={prevTrack}
-                      className="w-10 h-10 min-w-[40px] min-h-[40px] bg-[#854D27] border border-[#D4B08C] flex items-center justify-center text-[#FFF9F3] active:translate-y-0.5 cursor-pointer"
-                      aria-label="Previous Track"
-                    >
-                      <SkipBack className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={toggle}
-                      className="w-12 h-12 min-w-[48px] min-h-[48px] bg-[#854D27] border-2 border-[#D4B08C] shadow-[2px_2px_0_#D4B08C] flex items-center justify-center text-[#FFF9F3] active:translate-y-0.5 cursor-pointer"
-                      aria-label="Play/Pause Track"
-                    >
-                      {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
-                    </button>
-                    <button
-                      onClick={nextTrack}
-                      className="w-10 h-10 min-w-[40px] min-h-[40px] bg-[#854D27] border border-[#D4B08C] flex items-center justify-center text-[#FFF9F3] active:translate-y-0.5 cursor-pointer"
-                      aria-label="Next Track"
-                    >
-                      <SkipForward className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* 楽曲選択リスト */}
-                  <div className="mt-3 max-h-36 overflow-y-auto space-y-1">
-                    {tracks.map((track) => (
-                      <button
-                        key={track.id}
-                        onClick={() => selectTrack(track.id)}
-                        className={`w-full p-2 text-left text-xs font-body flex items-center justify-between border cursor-pointer ${
-                          currentTrack?.id === track.id
-                            ? 'bg-[#854D27] border-[#D4B08C] text-[#FFF9F3] font-bold'
-                            : 'bg-black/20 border-[#D4B08C]/30 text-[#FFF9F3]/80 hover:bg-black/30'
-                        }`}
-                      >
-                        <span className="truncate">{track.name}</span>
-                        {currentTrack?.id === track.id && isPlaying && (
-                          <Volume2 className="w-4 h-4 text-[#E5A93C] animate-pulse flex-shrink-0 ml-2" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* タブ3: 13テーマ切替 */}
-              {activeTab === 'themes' && (
-                <div className="grid grid-cols-2 gap-2 mb-4 max-h-48 overflow-y-auto p-1">
-                  {VISUAL_THEME_KEYS.map((themeKey) => {
-                    const isCurrent = currentTheme === themeKey
-                    const themeName = getThemeDisplayName(themeKey as ThemeName, language)
-                    return (
-                      <button
-                        key={themeKey}
-                        onClick={() => setTheme(themeKey as ThemeName)}
-                        className={`p-2 text-xs font-bold font-body flex items-center gap-2 border cursor-pointer transition-all ${
-                          isCurrent
-                            ? 'bg-[#854D27] border-[#D4B08C] text-[#FFF9F3] shadow-[2px_2px_0_#D4B08C]'
-                            : 'bg-[#2D1B11] border-[#D4B08C]/40 text-[#FFF9F3]/80 hover:bg-[#854D27]/50'
-                        }`}
-                      >
-                        <Palette className={`w-4 h-4 ${isCurrent ? 'text-[#E5A93C]' : 'text-[#D4B08C]/60'}`} />
-                        <span className="truncate">{themeName}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* ユーティリティ行（言語切替 ＋ 共有） */}
-              <div className="pt-3 border-t border-[#D4B08C]/30 flex items-center justify-between gap-3">
-                {/* 言語切替ボタン */}
+                {/* 写真フレーム撮影 */}
                 <button
-                  onClick={() => setLanguage(language === 'ja' ? 'en' : 'ja')}
-                  className="flex-1 py-2 px-3 bg-[#2D1B11] border border-[#D4B08C] text-[#FFF9F3] flex items-center justify-center gap-2 text-xs font-bold font-body cursor-pointer active:translate-y-0.5"
+                  onClick={() => {
+                    setShowMenuSheet(false)
+                    openModal('photoFrame')
+                  }}
+                  className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                 >
-                  <Globe className="w-4 h-4 text-[#E5A93C]" />
-                  <span>{language === 'ja' ? 'English に切替' : '日本語に切替'}</span>
+                  <div className="w-7 h-7 bg-white/15 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <span className="truncate">{language === 'ja' ? '写真フレーム' : 'Photo Frame'}</span>
                 </button>
 
-                {/* 共有ボタン */}
+                {/* 友達を招待・共有 */}
                 <button
-                  onClick={handleShare}
-                  className="flex-1 py-2 px-3 bg-[#854D27] border border-[#D4B08C] text-[#FFF9F3] flex items-center justify-center gap-2 text-xs font-bold font-body cursor-pointer active:translate-y-0.5 shadow-[2px_2px_0_#D4B08C]"
+                  onClick={() => {
+                    setShowMenuSheet(false)
+                    handleShare()
+                  }}
+                  className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[2px_2px_0_#D4B08C] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left cursor-pointer"
                 >
-                  <Share2 className="w-4 h-4" />
-                  <span>{language === 'ja' ? 'Webを共有' : 'Share Web'}</span>
+                  <div className="w-7 h-7 bg-white/15 flex items-center justify-center flex-shrink-0 text-[#FFF9F3]">
+                    <Share2 className="w-4 h-4" />
+                  </div>
+                  <span className="truncate">{t('inviteFriends')}</span>
                 </button>
               </div>
             </motion.div>
@@ -300,74 +264,82 @@ export function MobileBottomDock() {
         )}
       </AnimatePresence>
 
-      {/* 伝統和風レトロ文具調 メインボトムナビゲーションバー（5大主要アクション） */}
+      {/* 3. メイン・モバイルボトムナビゲーションバー（デスクトップと統一された和風ブラウン＆ゴールド配色） */}
       <nav
         className="mobile-bottom-dock fixed bottom-2 inset-x-2 max-w-lg mx-auto z-40 md:hidden"
         aria-label="Mobile Navigation Dock"
       >
         <div
-          className="flex items-center justify-around px-1 py-1 bg-[#3E2314] border-2 border-[#D4B08C] shadow-[0_8px_20px_rgba(0,0,0,0.5),3px_3px_0_#D4B08C]"
+          style={{
+            background: '#854D27',
+            border: '2px solid #D4B08C',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3), 3px 3px 0 #D4B08C',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            padding: '4px 2px',
+          }}
         >
-          {/* 1. 想い出アルバム */}
+          {/* 1. アルバムを見る */}
           <button
             onClick={() => openModal('album')}
-            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('viewAlbum')}
           >
             <Icon name="Camera" size={20} />
             <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
-              {language === 'ja' ? '想い出' : 'Album'}
+              {language === 'ja' ? 'アルバム' : 'Album'}
             </span>
           </button>
 
-          {/* 2. 祝言（お祝いメッセージ送信） */}
+          {/* 2. お祝いメッセージ送信 */}
           <button
             onClick={() => openModal('message')}
-            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('sendMessage')}
           >
             <Icon name="Gift" size={20} />
             <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
-              {language === 'ja' ? '祝言' : 'Wishes'}
+              {language === 'ja' ? 'メッセージ' : 'Wishes'}
             </span>
           </button>
 
-          {/* 3. 寄せ書き（掲示板） */}
+          {/* 3. 掲示板 */}
           <button
             onClick={() => openModal('bulletin')}
-            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('bulletinBoard')}
           >
             <Icon name="ClipboardList" size={20} />
             <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
-              {language === 'ja' ? '寄せ書き' : 'Board'}
+              {language === 'ja' ? '掲示板' : 'Board'}
             </span>
           </button>
 
           {/* 4. グループチャット */}
           <button
             onClick={() => openModal('chat')}
-            className="flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 text-[#FFF9F3] hover:text-[#E5A93C] active:translate-y-0.5 transition-transform cursor-pointer"
             aria-label={t('groupChat')}
           >
             <Icon name="MessageCircle" size={20} />
             <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
-              {language === 'ja' ? '談話' : 'Chat'}
+              {language === 'ja' ? 'チャット' : 'Chat'}
             </span>
           </button>
 
-          {/* 5. 全機能メニュー（想い出の抽斗） */}
+          {/* 5. ゲーム ＆ メニュー */}
           <button
-            ref={menuToggleRef}
-            onClick={() => setShowMasterDrawer(!showMasterDrawer)}
-            aria-expanded={showMasterDrawer}
-            aria-controls={drawerId}
-            className={`flex flex-col items-center justify-center min-w-[50px] min-h-[50px] px-1 py-1 ${showMasterDrawer ? 'bg-[#854D27] text-[#E5A93C]' : 'text-[#FFF9F3]'} hover:text-[#E5A93C] active:translate-y-0.5 transition-all cursor-pointer`}
-            aria-label={language === 'ja' ? '全機能メニュー' : 'All Features'}
+            ref={menuBtnRef}
+            onClick={() => setShowMenuSheet(!showMenuSheet)}
+            aria-expanded={showMenuSheet}
+            aria-controls={menuId}
+            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[50px] px-1 py-1 ${showMenuSheet ? 'bg-[#6D3D1E] text-[#E5A93C]' : 'text-[#FFF9F3]'} hover:text-[#E5A93C] active:translate-y-0.5 transition-all cursor-pointer`}
+            aria-label={language === 'ja' ? 'ゲーム＆メニュー' : 'Games & Menu'}
           >
             <Icon name="Gamepad" size={20} />
             <span className="text-[10px] font-bold tracking-tight mt-1 font-body">
-              {language === 'ja' ? '全機能' : 'Menu'}
+              {language === 'ja' ? 'ゲーム' : 'Games'}
             </span>
           </button>
         </div>

@@ -43,8 +43,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         <GameButtons />
       </div>
 
-      {/* 下中央 - ミュージックプレイヤー */}
-      <div className="fixed-bottom-center">
+      {/* 下中央 - ミュージックプレイヤー (デスクトップ専用) */}
+      <div className="fixed-bottom-center hidden md:block">
         <MusicPlayer />
       </div>
 
