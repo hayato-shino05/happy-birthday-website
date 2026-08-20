@@ -269,6 +269,7 @@ export function Icon({ name, size = 20, className, style, useSvg = false, ...ari
         src={assetSrc}
         width={size}
         height={size}
+        loading="eager"
         className={classes || undefined}
         style={{ objectFit: 'contain', filter: combinedFilter, ...style }}
         alt={ariaProps['aria-label'] ?? ''}
