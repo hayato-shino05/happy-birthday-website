@@ -289,10 +289,10 @@ body.theme-hanami {
 }
 
 body.theme-obon {
-  --theme-primary: #E64A19;
+  --theme-primary: #BF360C;
   --theme-secondary: #FFE0B2;
   --theme-background: #FFF3E0;
-  --theme-text: #E64A19;
+  --theme-text: #BF360C;
   background-color: #FFF3E0;
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FF5722' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
@@ -617,172 +617,42 @@ body.theme-bunka {
     display: none !important;
   }
 
-  /* モバイルでアルバムボタンを上部中央に配置（他のボタンと重ならない） */
-  .fixed-top-center {
-    display: block;
-    position: fixed;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
+  /* デスクトップ固定ボタン群はモバイルで非表示（MobileBottomDockに統合） */
+  .fixed-top-center,
+  .fixed-top-right,
+  .fixed-bottom-left,
+  .fixed-bottom-right {
+    display: none !important;
   }
-  
-  .fixed-top-center button,
-  .fixed-top-center .header-btn {
-    padding: 4px 8px !important;
-    font-size: 0.6em !important;
-    box-shadow: 2px 2px 0 #D4B08C !important;
-    gap: 3px !important;
-    white-space: nowrap !important;
-  }
-  
-  /* 左上：言語＆テーマ - 縦並び配置 */
+
+  /* 左上：言語＆テーマセレクター */
   .fixed-top-left {
-    top: 8px;
-    left: 8px;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 6px !important;
+    top: 12px;
+    left: 12px;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    z-index: 50;
   }
   
   /* モバイル時の言語セレクターとテーマインジケーター */
   .fixed-top-left .language-selector select,
   .fixed-top-left select,
   .fixed-top-left .theme-indicator {
-    padding: 3px 10px 3px 5px !important;
-    font-size: 0.72em !important;
-    height: 28px !important;
+    padding: 4px 10px 4px 6px !important;
+    font-size: 0.75em !important;
+    height: 32px !important;
     box-shadow: 0 2px 6px rgba(133, 77, 39, 0.3) !important;
   }
-  
-  /* 右上：メッセージ＆掲示板ボタン */
-  .fixed-top-right {
-    top: 8px;
-    right: 8px;
-  }
-  
-  .fixed-top-right > div {
-    gap: 4px !important;
-  }
-  
-  .fixed-top-right button,
-  .fixed-top-right .header-btn {
-    padding: 4px 8px !important;
-    font-size: 0.6em !important;
-    box-shadow: 2px 2px 0 #D4B08C !important;
-    gap: 3px !important;
-    white-space: nowrap !important;
-  }
-  
-  /* ゲームボタン - モバイルでは下部左に配置 */
-  .fixed-bottom-left {
-    bottom: 60px;
-    top: auto;
-    left: 8px;
-    right: auto;
-    max-width: none;
-  }
 
-  .fixed-bottom-left .games-container {
-    flex-wrap: wrap;
-    gap: 3px;
-    justify-content: flex-start;
-  }
-
-  .fixed-bottom-left .game-button {
-    padding: 3px 5px !important;
-    font-size: 0.5em !important;
-    box-shadow: 1px 1px 0 #D4B08C !important;
-    gap: 2px !important;
-  }
-  
-  /* ミュージックプレイヤー - 左下にコンパクト配置（操作しやすさは維持） */
+  /* ミュージックプレイヤー（モバイルでは非表示にしてDockと重なりを防止） */
   .fixed-bottom-center {
-    bottom: 8px;
-    left: 8px;
-    right: auto;
-    transform: none;
-    max-width: 60%;
-  }
-  
-  .fixed-bottom-center .music-player {
-    padding: 6px 10px !important;
-    gap: 6px !important;
-    box-shadow: 2px 2px 0 #D4B08C !important;
-  }
-  
-  .fixed-bottom-center .music-player > button:not(:last-of-type) {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    font-size: 0.9rem !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-  
-  .fixed-bottom-center .music-player .song-title {
-    display: none !important;
-  }
-  
-  /* 「曲を選ぶ」ボタンを小さめで表示 */
-  .fixed-bottom-center .music-player > button:last-of-type {
-    padding: 5px 10px !important;
-    font-size: 0.7em !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  
-  .fixed-bottom-center .music-player > button:last-of-type span:last-child {
     display: none !important;
   }
 
-  /* トラック選択ポップアップ - モバイル画面内で綺麗に表示 */
-  .fixed-bottom-center .music-player .track-selector-dropdown {
-    position: fixed !important;
-    bottom: 50px !important;
-    left: 8px !important;
-    right: auto !important;
-    width: calc(100vw - 16px) !important;
-    max-width: 320px !important;
-    min-width: unset !important;
-    z-index: 10010 !important;
-  }
-
-  .fixed-bottom-center .music-player .track-selector-dropdown button {
-    width: 100% !important;
-    height: auto !important;
-    min-width: unset !important;
-    padding: 6px 10px !important;
-    font-size: 0.8rem !important;
-    box-shadow: none !important;
-  }
-  
-  /* ソーシャルボタン - 右下配置 */
-  .fixed-bottom-right {
-    bottom: 8px;
-    right: 8px;
-  }
-  
-  .fixed-bottom-right > div {
-    gap: 3px !important;
-    flex-direction: column !important;
-  }
-  
-  .fixed-bottom-right button {
-    padding: 4px 8px !important;
-    font-size: 0.55em !important;
-    box-shadow: 1px 1px 0 #D4B08C !important;
-    gap: 3px !important;
-  }
-  
-  /* モバイル時はソーシャルボタン内の絵文字アイコンを非表示 */
-  .fixed-bottom-right button span:first-child {
-    display: none;
-  }
-  
   /* メインコンテンツ - カウントダウン用にスペースを広めに確保 */
   .main-content {
-    padding: 140px 10px 80px;
+    padding: 100px 10px 96px;
   }
   
   /* カウントダウンカードのレスポンシブ余白調整 */

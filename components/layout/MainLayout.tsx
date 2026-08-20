@@ -16,7 +16,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="main-layout pb-20 md:pb-0">
+    <div className="main-layout">
       {/* 左上 - 言語 & テーマ */}
       <div className="fixed-top-left">
         <LanguageSelector />
@@ -34,7 +34,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </div>
 
       {/* メインコンテンツ */}
-      <main className="main-content">
+      <main className="main-content pb-24 md:pb-0">
         {children}
       </main>
 

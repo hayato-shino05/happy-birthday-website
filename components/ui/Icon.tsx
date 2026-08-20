@@ -167,12 +167,14 @@ export const Icons = {
   X,
 } as const
 
-interface IconProps
+export type IconName = keyof typeof Icons
+
+export interface IconProps
   extends Pick<
     React.SVGProps<SVGSVGElement>,
     'aria-hidden' | 'aria-label' | 'aria-labelledby' | 'aria-describedby' | 'role' | 'tabIndex'
   > {
-  name: keyof typeof Icons
+  name: IconName
   size?: number
   className?: string
   style?: CSSProperties

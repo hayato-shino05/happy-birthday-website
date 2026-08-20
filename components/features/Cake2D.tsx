@@ -19,12 +19,22 @@ export function Cake2D({ candlesBlown, onCandleBlown }: Cake2DProps) {
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       className="relative w-full max-w-sm mx-auto flex flex-col items-center select-none"
     >
-      {/* ケーキ本体 */}
-      <div className="relative flex flex-col items-center">
+      {/* ふんわりとした浮遊微アニメーションでケーキ全体を包み込む */}
+      <motion.div
+        animate={{
+          y: [0, -6, 0],
+        }}
+        transition={{
+          duration: 3.5,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+        className="relative flex flex-col items-center w-full"
+      >
         {/* 最上段：ろうそく＆生クリーム苺デコレーション */}
         <div className="relative z-20 flex flex-col items-center">
-          {/* ろうそく配置 */}
-          <div className="absolute -top-7 left-0 right-0 flex justify-around px-3 z-30 pointer-events-auto">
+          {/* ろうそく配置（上段ケーキの上面に底面を自然に接地） */}
+          <div className="relative -mb-2 z-30 flex justify-around w-40 sm:w-44 px-2 pointer-events-auto">
             {Array.from({ length: candleCount }).map((_, index) => (
               <Candle
                 key={index}
@@ -59,7 +69,7 @@ export function Cake2D({ candlesBlown, onCandleBlown }: Cake2DProps) {
             initial={{ scaleY: 0, opacity: 0 }}
             animate={{ scaleY: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5, ease: 'easeOut' }}
-            className="w-44 sm:w-48 h-16 sm:h-18 rounded-2xl sm:rounded-3xl relative overflow-hidden shadow-lg border border-white/80"
+            className="w-40 sm:w-48 h-16 sm:h-18 rounded-2xl sm:rounded-3xl relative overflow-hidden shadow-lg border border-white/80"
             style={{
               background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF8F0 45%, #FBE8A6 50%, #F5D77F 80%, #FFFFFF 100%)',
               boxShadow: '0 8px 20px -4px rgba(68, 36, 17, 0.25), inset 0 2px 4px rgba(255, 255, 255, 0.9)',
@@ -79,7 +89,7 @@ export function Cake2D({ candlesBlown, onCandleBlown }: Cake2DProps) {
           initial={{ scaleY: 0, opacity: 0 }}
           animate={{ scaleY: 1, opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5, ease: 'easeOut' }}
-          className="relative z-10 w-64 sm:w-72 h-20 sm:h-24 rounded-2xl sm:rounded-3xl -mt-2 overflow-hidden shadow-xl border border-white/80"
+          className="relative z-10 w-60 sm:w-72 h-20 sm:h-24 rounded-2xl sm:rounded-3xl -mt-2 overflow-hidden shadow-xl border border-white/80"
           style={{
             background: 'linear-gradient(180deg, #FFFFFF 0%, #FFFDF9 35%, #FBE8A6 40%, #F5D77F 75%, #FFFFFF 100%)',
             boxShadow: '0 12px 30px -6px rgba(68, 36, 17, 0.35), inset 0 2px 6px rgba(255, 255, 255, 0.95)',
@@ -99,31 +109,18 @@ export function Cake2D({ candlesBlown, onCandleBlown }: Cake2DProps) {
           </div>
         </motion.div>
 
-        {/* ケーキプレート（陶器製のお皿） */}
+        {/* ケーキプレート（陶器製のお皿 - 小画面でもはみ出さないレスポンシブ幅） */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.6 }}
-          className="w-76 sm:w-84 h-5 sm:h-6 -mt-2 rounded-full border-2 border-[#D4B08C]/60 shadow-2xl"
+          className="w-full max-w-[270px] sm:max-w-[320px] h-5 sm:h-6 -mt-2 rounded-full border-2 border-[#D4B08C]/60 shadow-2xl"
           style={{
             background: 'linear-gradient(180deg, #FFFFFF 0%, #F5EBE1 100%)',
             boxShadow: '0 16px 36px -8px rgba(45, 27, 17, 0.45)',
           }}
         />
-      </div>
-
-      {/* ふんわりとした浮遊微アニメーション */}
-      <motion.div
-        animate={{
-          y: [0, -4, 0],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="absolute inset-0 pointer-events-none"
-      />
+      </motion.div>
     </motion.div>
   )
 }
