@@ -7,7 +7,7 @@ import { photoStrips, frameCategories, PhotoStripConfig } from '@/config/frames'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 export default function PhotoFrame() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [selectedStrip, setSelectedStrip] = useState<PhotoStripConfig>(photoStrips[0])
   const [selectedCategory, setSelectedCategory] = useState<string>('trending')
   const [userImages, setUserImages] = useState<(string | null)[]>([null, null, null, null])
@@ -293,7 +293,13 @@ export default function PhotoFrame() {
             }}
             className={`photoframe-cat-btn ${selectedCategory === cat.id ? 'active' : ''}`}
           >
-            {cat.name}
+            {cat.id === 'trending'
+              ? (language === 'ja' ? '🔥 トレンド' : '🔥 Trending')
+              : cat.id === 'classic'
+              ? (language === 'ja' ? '🎈 クラシック' : '🎈 Classic')
+              : cat.id === 'cute'
+              ? (language === 'ja' ? '💕 かわいい' : '💕 Cute')
+              : (language === 'ja' ? '✨ エレガント' : '✨ Elegant')}
           </button>
         ))}
       </div>
@@ -377,7 +383,7 @@ export default function PhotoFrame() {
 
 
           <div className="photoframe-note">
-            <label>✏️ {t('noteLabel')}</label>
+            <label>{t('noteLabel')}</label>
             <input
               type="text"
               value={noteText}

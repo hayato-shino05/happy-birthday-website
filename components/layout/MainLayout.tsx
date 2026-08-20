@@ -8,6 +8,7 @@ import { GameButtons } from '@/components/ui/GameButtons'
 import { MusicPlayer } from '@/components/ui/MusicPlayer'
 import { SocialButtons } from '@/components/ui/SocialButtons'
 import { ModalManager } from '@/components/ui/ModalManager'
+import { MobileBottomDock } from '@/components/ui/MobileBottomDock'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -22,35 +23,38 @@ export function MainLayout({ children }: MainLayoutProps) {
         <ThemeIndicator />
       </div>
 
-      {/* 上中央 - アルバムボタン */}
-      <div className="fixed-top-center">
+      {/* 上中央 - アルバムボタン (デスクトップ専用) */}
+      <div className="fixed-top-center hidden md:block">
         <HeaderButtons position="center" />
       </div>
 
-      {/* 右上 - メッセージボタン */}
-      <div className="fixed-top-right">
+      {/* 右上 - メッセージボタン (デスクトップ専用) */}
+      <div className="fixed-top-right hidden md:block">
         <HeaderButtons position="right" />
       </div>
 
       {/* メインコンテンツ */}
-      <main className="main-content">
+      <main className="main-content pb-24 md:pb-0">
         {children}
       </main>
 
-      {/* 左下 - ゲームボタン */}
-      <div className="fixed-bottom-left">
+      {/* 左下 - ゲームボタン (デスクトップ専用) */}
+      <div className="fixed-bottom-left hidden md:block">
         <GameButtons />
       </div>
 
-      {/* 下中央 - ミュージックプレイヤー */}
-      <div className="fixed-bottom-center">
+      {/* 下中央 - ミュージックプレイヤー (デスクトップ専用) */}
+      <div className="fixed-bottom-center hidden md:block">
         <MusicPlayer />
       </div>
 
-      {/* 右下 - ソーシャルボタン */}
-      <div className="fixed-bottom-right">
+      {/* 右下 - ソーシャルボタン (デスクトップ専用) */}
+      <div className="fixed-bottom-right hidden md:block">
         <SocialButtons />
       </div>
+
+      {/* モバイル用ボトムナビゲーションDock (スマホ専用) */}
+      <MobileBottomDock />
 
       {/* モーダル管理コンポーネント */}
       <ModalManager />

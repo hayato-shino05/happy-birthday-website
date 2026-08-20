@@ -1,5 +1,7 @@
 'use client'
 
+import { useLanguage } from '@/lib/i18n/LanguageContext'
+
 interface Track {
   id: string
   name: string
@@ -20,6 +22,7 @@ export default function TrackSelector({
   onSelect,
   isPlaying = false,
 }: TrackSelectorProps) {
+  const { t } = useLanguage()
   const formatDuration = (seconds?: number) => {
     if (!seconds) return '--:--'
     const mins = Math.floor(seconds / 60)
@@ -29,7 +32,7 @@ export default function TrackSelector({
 
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-      <h4 className="text-sm font-medium text-white/70 mb-3">曲を選択</h4>
+      <h4 className="text-sm font-medium text-white/70 mb-3">{t('chooseSong')}</h4>
 
       <div className="space-y-1 max-h-60 overflow-y-auto">
         {tracks.map((track) => {
@@ -87,7 +90,7 @@ export default function TrackSelector({
 
       {tracks.length === 0 && (
         <p className="text-white/50 text-sm text-center py-4">
-          まだ曲がありません
+          {t('noTracks')}
         </p>
       )}
     </div>

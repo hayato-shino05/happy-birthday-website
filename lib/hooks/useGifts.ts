@@ -5,18 +5,18 @@ import { supabase } from '@/lib/supabase/client'
 import type { VirtualGift } from '@/types'
 
 export const GIFT_CATALOG = [
-  { emoji: '🎂', name: 'バースデーケーキ' },
-  { emoji: '🎁', name: 'ギフトボックス' },
-  { emoji: '💐', name: '花束' },
-  { emoji: '🌹', name: 'バラの花' },
-  { emoji: '🧸', name: 'テディベア' },
-  { emoji: '💝', name: 'ハート' },
-  { emoji: '🎈', name: '風船' },
-  { emoji: '🍫', name: 'チョコレート' },
-  { emoji: '🎀', name: 'リボン' },
-  { emoji: '⭐', name: '星' },
-  { emoji: '🌸', name: '桜' },
-  { emoji: '🎵', name: '音楽' },
+  { emoji: '🎂', nameKey: 'giftBirthdayCake' as const },
+  { emoji: '🎁', nameKey: 'giftGiftBox' as const },
+  { emoji: '💐', nameKey: 'giftBouquet' as const },
+  { emoji: '🌹', nameKey: 'giftRose' as const },
+  { emoji: '🧸', nameKey: 'giftTeddyBear' as const },
+  { emoji: '💝', nameKey: 'giftHeart' as const },
+  { emoji: '🎈', nameKey: 'giftBalloon' as const },
+  { emoji: '🍫', nameKey: 'giftChocolate' as const },
+  { emoji: '🎀', nameKey: 'giftRibbon' as const },
+  { emoji: '⭐', nameKey: 'giftStar' as const },
+  { emoji: '🌸', nameKey: 'giftSakura' as const },
+  { emoji: '🎵', nameKey: 'giftMusic' as const },
 ]
 
 interface UseGiftsReturn {
@@ -45,7 +45,7 @@ export function useGifts(): UseGiftsReturn {
       if (fetchError) throw fetchError
       setGifts((data || []) as VirtualGift[])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ギフト一覧を読み込めませんでした')
+      setError(err instanceof Error ? err.message : 'Failed to load gifts')
     } finally {
       setIsLoading(false)
     }
@@ -69,7 +69,7 @@ export function useGifts(): UseGiftsReturn {
         await fetchGifts()
         return true
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'ギフトを送信できませんでした')
+        setError(err instanceof Error ? err.message : 'Failed to send gift')
         return false
       }
     },

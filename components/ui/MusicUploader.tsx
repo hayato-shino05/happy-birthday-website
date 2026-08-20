@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { Icon } from './Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface MusicUploaderProps {
   onUploaded?: (track: { name: string; url: string }) => void
@@ -10,6 +11,7 @@ interface MusicUploaderProps {
 }
 
 export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProps) {
+  const { t } = useLanguage()
   const [file, setFile] = useState<File | null>(null)
   const [trackName, setTrackName] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -24,13 +26,12 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
     // ファイル形式のチェック
     const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm']
     if (!validTypes.includes(selectedFile.type)) {
-      setError('MP3・WAV・OGG・WebM 形式のファイルのみ対応しています')
+      setError(t('audioSupportedFormats'))
       return
     }
 
-    // ファイルサイズのチェック (最大 10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('ファイルサイズは 10MB 以下にしてください')
+      setError(t('fileSizeLimitError'))
       return
     }
 
@@ -89,7 +90,7 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
         onClose?.()
       }, 1000)
     } catch {
-      setError('アップロードできません。もう一度お試しください。')
+      setError(t('audioUploadFailed'))
     } finally {
       setUploading(false)
     }
@@ -98,7 +99,7 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-white">音楽をアップロード</h3>
+        <h3 className="text-lg font-bold text-white">{t('uploadMusic')}</h3>
         {onClose && (
           <button
             onClick={onClose}
@@ -109,7 +110,6 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
         )}
       </div>
 
-      {/* アップロード用ドロップゾーン */}
       <div
         onClick={() => inputRef.current?.click()}
         className="border-2 border-dashed border-white/30 rounded-xl p-8 text-center hover:border-white/50 transition-colors cursor-pointer mb-4"
@@ -133,24 +133,22 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
         ) : (
           <>
             <Icon name="Upload" size={48} className="text-white/40 mx-auto mb-3" aria-hidden="true" />
-            <p className="text-white/70 mb-1">クリックして音楽ファイルを選択</p>
-            <p className="text-white/40 text-sm">MP3, WAV, OGG (最大10MB)</p>
+            <p className="text-white/70 mb-1">{t('audioFileSelect')}</p>
+            <p className="text-white/40 text-sm">{t('audioFileLimit')}</p>
           </>
         )}
       </div>
 
-      {/* 曲名入力フィールド */}
       {file && (
         <input
           type="text"
           value={trackName}
           onChange={(e) => setTrackName(e.target.value)}
-          placeholder="曲名"
+          placeholder={t('trackName')}
           className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 mb-4"
         />
       )}
 
-      {/* 進捗バー */}
       {uploading && (
         <div className="mb-4">
           <div className="h-2 bg-white/20 rounded-full overflow-hidden">
@@ -163,18 +161,16 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
         </div>
       )}
 
-      {/* エラーメッセージ */}
       {error && (
         <p className="text-red-300 text-sm mb-4">{error}</p>
       )}
 
-      {/* アップロードボタン */}
       <button
         onClick={handleUpload}
         disabled={!file || !trackName.trim() || uploading}
         className="w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all cursor-pointer disabled:cursor-not-allowed"
       >
-        {uploading ? 'アップロード中...' : 'アップロード'}
+        {uploading ? t('uploading') : t('uploadMusic')}
       </button>
     </div>
   )

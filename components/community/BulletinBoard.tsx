@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { usePosts, Post } from '@/lib/hooks/usePosts'
 import { Icon } from '@/components/ui/Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import BulletinPost from './BulletinPost'
 import PostDetail from './PostDetail'
 
 export default function BulletinBoard() {
+  const { t } = useLanguage()
   const { posts, loading, error, refetch, likePost } = usePosts()
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
@@ -24,7 +26,7 @@ export default function BulletinBoard() {
             margin: '0 auto',
           }}
         />
-        <p style={{ marginTop: '16px', color: '#854D27' }}>読み込み中...</p>
+        <p style={{ marginTop: '16px', color: '#854D27' }}>{t('loading')}</p>
       </div>
     )
   }
@@ -46,7 +48,7 @@ export default function BulletinBoard() {
             boxShadow: '3px 3px 0 #D4B08C',
           }}
         >
-          再試行
+          {t('retry')}
         </button>
       </div>
     )
@@ -70,7 +72,7 @@ export default function BulletinBoard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Icon name="ClipboardList" size={24} style={{ color: '#2D8CFF' }} />
           <h3 style={{ color: '#854D27', margin: 0, fontSize: '1.2rem' }}>
-            メッセージ ({posts.length})
+            {t('bulletinMessagesCount', { count: posts.length })}
           </h3>
         </div>
       </div>
@@ -87,7 +89,7 @@ export default function BulletinBoard() {
         >
           <Icon name="Mail" size={48} style={{ color: '#E91E63', display: 'block', margin: '0 auto 16px' }} />
           <p style={{ color: '#854D27', opacity: 0.7 }}>
-            まだメッセージがありません。
+            {t('noBulletinMessages')}
           </p>
         </div>
       ) : (

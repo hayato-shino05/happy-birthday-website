@@ -38,7 +38,7 @@ export function useMessages(): UseMessagesReturn {
       if (fetchError) throw fetchError
       setMessages((data || []) as Message[])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'メッセージ一覧を読み込めませんでした')
+      setError(err instanceof Error ? err.message : 'Failed to load messages')
     } finally {
       setIsLoading(false)
     }
@@ -62,7 +62,7 @@ export function useMessages(): UseMessagesReturn {
         await fetchMessages()
         return true
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'メッセージを送信できませんでした')
+        setError(err instanceof Error ? err.message : 'Failed to send message')
         return false
       }
     },

@@ -17,6 +17,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
       <button
         className="header-btn"
         onClick={() => openModal('album')}
+        aria-label={t('viewAlbum')}
         style={{
           padding: '12px 25px',
           background: '#854D27',
@@ -57,7 +58,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
         }}
       >
         <Icon name="Camera" size={22} />
-        <span>{t('viewAlbum') || 'アルバムを見る'}</span>
+        <span>{t('viewAlbum')}</span>
       </button>
     )
   }
@@ -67,6 +68,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
       <button
         className="header-btn"
         onClick={() => openModal('message')}
+        aria-label={t('sendMessage')}
         style={{
           padding: '10px 20px',
           background: '#854D27',
@@ -107,12 +109,13 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
         }}
       >
         <Icon name="PenLine" size={22} />
-        <span>{t('sendMessage') || 'メッセージを送る'}</span>
+        <span>{t('sendMessage')}</span>
       </button>
 
       <button
         className="header-btn"
         onClick={() => openModal('bulletin')}
+        aria-label={t('bulletinBoard')}
         style={{
           padding: '10px 20px',
           background: '#854D27',
@@ -153,7 +156,7 @@ export function HeaderButtons({ position }: HeaderButtonsProps) {
         }}
       >
         <Icon name="ClipboardList" size={22} />
-        <span>{t('bulletinBoard') || '掲示板'}</span>
+        <span>{t('bulletinBoard')}</span>
       </button>
     </div>
   )

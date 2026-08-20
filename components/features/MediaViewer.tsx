@@ -167,7 +167,7 @@ export function MediaViewer({
             }}
           >
             <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} />
-            <span>{isPlaying ? '一時停止' : 'スライドショー'}</span>
+            <span>{isPlaying ? t('pause') : t('slideshow')}</span>
           </button>
         </div>
 

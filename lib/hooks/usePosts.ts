@@ -43,16 +43,23 @@ export function usePosts() {
     setError(null)
 
     try {
-      const { data, error: fetchError } = await getSupabase()
+      let queryResult: any = await getSupabase()
         .from('bulletin_posts')
         .select('id, sender, message, media_object_path, birthday_person, created_at, likes, post_replies(count)')
         .order('created_at', { ascending: false })
 
-      if (fetchError) throw fetchError
-      setPosts((data ?? []).map((post) => toPost(post as PostRecord)))
+      if (queryResult.error && (queryResult.error.message?.includes('likes') || queryResult.error.code === '42703')) {
+        queryResult = await getSupabase()
+          .from('bulletin_posts')
+          .select('id, sender, message, media_object_path, birthday_person, created_at, post_replies(count)')
+          .order('created_at', { ascending: false })
+      }
+
+      if (queryResult.error) throw queryResult.error
+      setPosts((queryResult.data ?? []).map((post: any) => toPost(post as PostRecord)))
     } catch (err) {
-      console.error('投稿取得エラー:', err)
-      setError('投稿を読み込めません')
+      console.error('Failed to fetch posts:', err)
+      setError('Failed to load posts')
       setPosts([])
     } finally {
       setLoading(false)
@@ -81,7 +88,7 @@ export function usePosts() {
       setPosts((prev) => [{ ...toPost(data as PostRecord), replies_count: 0 }, ...prev])
       return true
     } catch (err) {
-      console.error('投稿作成中のエラー:', err)
+      console.error('Failed to create post:', err)
       return false
     }
   }, [])

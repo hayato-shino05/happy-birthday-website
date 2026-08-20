@@ -59,7 +59,7 @@ export function useVideoRecorder() {
     } catch {
       setState(prev => ({
         ...prev,
-        error: 'カメラ/マイクにアクセスできません。権限を許可してください。',
+        error: 'Cannot access camera/microphone. Please allow permission.',
         hasPermission: false,
       }))
       return null
@@ -136,7 +136,7 @@ export function useVideoRecorder() {
     } catch {
       setState(prev => ({
         ...prev,
-        error: '録画を開始できません。',
+        error: 'Failed to start recording.',
       }))
     }
   }, [requestPermission])

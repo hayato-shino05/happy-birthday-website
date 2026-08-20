@@ -4,12 +4,14 @@ import { useState, useRef, useEffect } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { CameraCapture } from './CameraCapture'
 import { Icon } from '@/components/ui/Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface PostFormProps {
   onSubmit: (sender: string, message: string, giftId?: string, mediaUrl?: string) => Promise<boolean>
 }
 
 export default function PostForm({ onSubmit }: PostFormProps) {
+  const { t } = useLanguage()
   const [author, setAuthor] = useState('')
   
   // 共有ストレージから自動入力
@@ -39,13 +41,13 @@ export default function PostForm({ onSubmit }: PostFormProps) {
     const isVideo = file.type.startsWith('video/')
     
     if (!isImage && !isVideo) {
-      setError('画像または動画ファイルのみ対応しています')
+      setError(t('fileTypeError'))
       return
     }
 
     const maxSize = isVideo ? 100 * 1024 * 1024 : 50 * 1024 * 1024
     if (file.size > maxSize) {
-      setError(`ファイルが大きすぎます！最大${isVideo ? '100MB' : '50MB'}`)
+      setError(t('fileTooLargeWithLimit', { size: isVideo ? 100 : 50 }))
       return
     }
 
@@ -99,7 +101,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
       if (selectedFile) {
         const url = await uploadFile(selectedFile)
         if (!url) {
-          setError('ファイルのアップロードに失敗しました。もう一度お試しください。')
+          setError(t('uploadFileFailed'))
           setSubmitting(false)
           return
         }
@@ -115,10 +117,10 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         setContent('')
         removeFile()
       } else {
-        setError('投稿できませんでした。もう一度お試しください。')
+        setError(t('postFailed'))
       }
     } catch {
-      setError('エラーが発生しました。もう一度お試しください。')
+      setError(t('genericError'))
     } finally {
       setSubmitting(false)
       setUploadProgress(0)
@@ -160,7 +162,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
             type="text"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            placeholder="お名前"
+            placeholder={t('yourName')}
             required
             style={{
               width: '100%',
@@ -177,7 +179,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="メッセージを入力..."
+            placeholder={t('typeMessage')}
             rows={3}
             required
             style={{
@@ -200,15 +202,15 @@ export default function PostForm({ onSubmit }: PostFormProps) {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button type="button" onClick={() => fileInputRef.current?.click()}
                 style={{ padding: '8px 12px', border: '1px dashed #D4B08C', background: 'transparent', color: '#854D27', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Icon name="Folder" size={18} style={{ color: '#7E57C2' }} /> ライブラリ
+                <Icon name="Folder" size={18} style={{ color: '#7E57C2' }} /> {t('library')}
               </button>
               <button type="button" onClick={() => { setCameraMode('photo'); setShowCamera(true) }}
                 style={{ padding: '8px 12px', border: '1px solid #D4B08C', background: '#854D27', color: '#FFF9F3', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Icon name="Camera" size={18} style={{ color: '#FFB300' }} /> 写真を撮る
+                <Icon name="Camera" size={18} style={{ color: '#FFB300' }} /> {t('takePhoto')}
               </button>
               <button type="button" onClick={() => { setCameraMode('video'); setShowCamera(true) }}
                 style={{ padding: '8px 12px', border: '1px solid #D4B08C', background: '#854D27', color: '#FFF9F3', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Icon name="Video" size={18} style={{ color: '#2D8CFF' }} /> ビデオを撮る
+                <Icon name="Video" size={18} style={{ color: '#2D8CFF' }} /> {t('takeVideo')}
               </button>
             </div>
           ) : (
@@ -219,6 +221,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
                 <img src={previewUrl || ''} alt="Preview" style={{ width: '100%', maxHeight: '150px', objectFit: 'contain' }} />
               )}
               <button type="button" onClick={removeFile}
+                aria-label={t('removeFile')}
                 style={{ position: 'absolute', top: '4px', right: '4px', width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(220,53,69,0.9)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>
                 <Icon name="X" size={16} style={{ color: '#FFFFFF' }} />
               </button>
@@ -252,7 +255,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
                 opacity: (!author.trim() || !content.trim()) ? 0.5 : 1,
               }}
             >
-              {submitting ? '投稿中...' : '投稿する'}
+              {submitting ? t('posting') : t('postMessage')}
             </button>
           </div>
         </div>

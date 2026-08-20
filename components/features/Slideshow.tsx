@@ -184,7 +184,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
             boxShadow: '2px 2px 0 #D4B08C',
           }}
         >
-          <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} /> {isPlaying ? '一時停止' : '再生'}
+          <Icon name={isPlaying ? 'Pause' : 'Play'} size={18} /> {isPlaying ? t('pause') : t('play')}
         </button>
 
         <span style={{ color: '#fff', fontSize: '0.9rem' }}>
@@ -204,7 +204,7 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
             fontSize: '0.9rem',
           }}
         >
-          <Icon name="X" size={18} /> 閉じる
+          <Icon name="X" size={18} /> {t('close')}
         </button>
       </div>
 

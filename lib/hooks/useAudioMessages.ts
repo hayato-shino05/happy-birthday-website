@@ -52,7 +52,7 @@ export function useAudioMessages(birthdayPerson?: string) {
         created_at: message.created_at,
       })))
     } catch {
-      setError('音声メッセージを読み込めません')
+      setError('Failed to load audio messages')
     } finally {
       setLoading(false)
     }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Icon } from './Icon'
 import TrackSelector from './TrackSelector'
 import MusicControls from './MusicControls'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface Track {
   id: string
@@ -34,6 +35,7 @@ export default function MusicLibrary({
   onVolumeChange,
   onUpload,
 }: MusicLibraryProps) {
+  const { t } = useLanguage()
   const [activeCategory, setActiveCategory] = useState<string>('all')
 
   // トラックからカテゴリ一覧を抽出
@@ -51,7 +53,7 @@ export default function MusicLibrary({
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-white flex items-center gap-2">
           <Icon name="Music" size={24} />
-          音楽ライブラリ
+          {t('musicLibrary')}
         </h3>
 
         {onUpload && (
@@ -60,7 +62,7 @@ export default function MusicLibrary({
             className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Icon name="Upload" size={16} />
-            アップロード
+            {t('upload')}
           </button>
         )}
       </div>
@@ -68,7 +70,7 @@ export default function MusicLibrary({
       {/* 再生中のトラック表示 */}
       {currentTrack && (
         <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-xl p-4 mb-4 border border-white/10">
-          <p className="text-xs text-white/50 mb-1">再生中</p>
+          <p className="text-xs text-white/50 mb-1">{t('nowPlaying')}</p>
           <p className="text-white font-medium mb-3">{currentTrack.name}</p>
           <MusicControls
             isPlaying={isPlaying}
@@ -92,7 +94,7 @@ export default function MusicLibrary({
                   : 'bg-white/5 text-white/60 hover:bg-white/10'
               }`}
             >
-              {cat === 'all' ? 'すべて' : cat}
+              {cat === 'all' ? t('allMedia') : cat}
             </button>
           ))}
         </div>

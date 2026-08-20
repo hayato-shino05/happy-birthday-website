@@ -79,7 +79,7 @@ export function useMediaFiles(): UseMediaFilesReturn {
       })
       setCacheTime(now)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'メディアを読み込めませんでした')
+      setError(err instanceof Error ? err.message : 'Failed to load media')
       setFiles([])
       setStats({ totalFiles: 0, totalImages: 0, totalVideos: 0, totalSize: 0, recentUploads: [] })
     } finally {
@@ -93,13 +93,13 @@ export function useMediaFiles(): UseMediaFilesReturn {
 
   const uploadFile = useCallback(async (file: File): Promise<MediaFile | null> => {
     try {
-      const data = await uploadCommunityMedia({ file, sender: 'ゲスト' })
+      const data = await uploadCommunityMedia({ file, sender: 'Guest' })
 
       setCacheTime(0)
       await fetchFiles(true)
       return toMediaFile(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ファイルをアップロードできませんでした')
+      setError(err instanceof Error ? err.message : 'Failed to upload file')
       return null
     }
   }, [fetchFiles])

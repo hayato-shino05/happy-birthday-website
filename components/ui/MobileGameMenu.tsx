@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useId } from 'react'
 import { Icon } from './Icon'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useUIStore } from '@/lib/stores/uiStore'
+import { GAME_MENU_ITEMS } from './gameConfig'
 
 const menuButtonStyle: React.CSSProperties = {
   minWidth: '44px',
@@ -54,12 +55,11 @@ export function MobileGameMenu() {
   const { t } = useLanguage()
   const { openModal } = useUIStore()
 
-  const games = [
-    { id: 'memoryGame' as const, icon: 'Brain' as const, label: t('memoryGame') },
-    { id: 'puzzleGame' as const, icon: 'Puzzle' as const, label: t('puzzleGame') },
-    { id: 'calendar' as const, icon: 'Calendar' as const, label: t('birthdayCalendar') },
-    { id: 'quiz' as const, icon: 'HelpCircle' as const, label: t('birthdayQuiz') },
-  ]
+  const games = GAME_MENU_ITEMS.map((g) => ({
+    id: g.id,
+    icon: g.icon,
+    label: t(g.i18nKey),
+  }))
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {

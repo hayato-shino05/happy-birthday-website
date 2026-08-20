@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface GiftAnimationProps {
   emoji: string
@@ -10,6 +11,7 @@ interface GiftAnimationProps {
 }
 
 export default function GiftAnimation({ emoji, giftName, sender, onComplete }: GiftAnimationProps) {
+  const { t } = useLanguage()
   const [isVisible, setIsVisible] = useState(true)
   const [particles, setParticles] = useState<Array<{ id: number; x: number; delay: number }>>([])
 
@@ -64,7 +66,7 @@ export default function GiftAnimation({ emoji, giftName, sender, onComplete }: G
         <div className="bg-white/20 backdrop-blur-md rounded-2xl px-8 py-4 text-center">
           <p className="text-2xl font-bold text-white mb-1">{giftName}</p>
           <p className="text-white/80">
-            <span className="font-semibold">{sender}</span> さんから
+            <span className="font-semibold">{sender}</span> {t('giftFrom')}
           </p>
         </div>
 

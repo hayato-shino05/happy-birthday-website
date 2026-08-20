@@ -12,6 +12,8 @@ import BulletinBoard from '@/components/community/BulletinBoard'
 import { ChatRoom } from '@/components/community/ChatRoom'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
+import PhotoFrame from '@/components/features/PhotoFrame'
+
 export function ModalManager() {
   const { activeModal, closeModal } = useUIStore()
   const { t } = useLanguage()
@@ -25,33 +27,38 @@ export function ModalManager() {
 
   const modalConfig: Record<string, { title: string; content: React.ReactNode; size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'widescreen' }> = {
     album: {
-      title: t('viewAlbum') || 'アルバム',
+      title: t('viewAlbum'),
       content: <PhotoGallery />,
       size: 'widescreen' as const,
     },
+    photoFrame: {
+      title: t('photoFrame'),
+      content: <PhotoFrame />,
+      size: 'widescreen' as const,
+    },
     message: {
-      title: t('sendMessage') || 'メッセージを送る',
+      title: t('sendMessage'),
       content: <MessageForm onSuccess={closeModal} />,
     },
     bulletin: {
-      title: t('bulletinBoard') || '掲示板',
+      title: t('bulletinBoard'),
       content: <BulletinBoard />,
       size: 'full' as const,
     },
     memoryGame: {
-      title: t('memoryGame') || '記憶ゲーム',
+      title: t('memoryGame'),
       content: <MemoryGame onClose={closeModal} />,
     },
     puzzleGame: {
-      title: t('puzzleGame') || 'パズルゲーム',
+      title: t('puzzleGame'),
       content: <PuzzleGame onClose={closeModal} />,
     },
     calendar: {
-      title: t('birthdayCalendar') || '誕生日カレンダー',
+      title: t('birthdayCalendar'),
       content: <BirthdayCalendar onClose={closeModal} />,
     },
     quiz: {
-      title: t('birthdayQuiz') || '誕生日クイズ',
+      title: t('birthdayQuiz'),
       content: <BirthdayQuiz onClose={closeModal} />,
     },
   }

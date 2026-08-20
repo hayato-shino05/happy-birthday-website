@@ -311,7 +311,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
         <div className="chat-header">
           <h3 className="chat-title">{t('groupChat')}</h3>
           <div className="chat-controls">
-            <button type="button" className="chat-btn" onClick={onClose} aria-label="Close chat">
+            <button type="button" className="chat-btn" onClick={onClose} aria-label={t('close')}>
               <Icon name="X" size={18} />
             </button>
           </div>
@@ -354,12 +354,12 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
             type="button"
             className="chat-btn chat-minimize"
             onClick={() => setIsMinimized(!isMinimized)}
-            aria-label={isMinimized ? 'チャットを展開' : 'チャットを最小化'}
+            aria-label={isMinimized ? t('expandChat') : t('minimizeChat')}
             aria-expanded={!isMinimized}
           >
             <Icon name="Minus" size={18} />
           </button>
-          <button type="button" className="chat-btn" onClick={onClose} aria-label="Close chat">
+          <button type="button" className="chat-btn" onClick={onClose} aria-label={t('close')}>
             <Icon name="X" size={18} />
           </button>
         </div>
@@ -406,7 +406,7 @@ export function ChatRoom({ onClose }: ChatRoomProps) {
               onClick={handleSend}
               disabled={!newMessage.trim() || loading}
               className="chat-send-btn"
-              aria-label="メッセージを送信"
+              aria-label={t('sendMessage')}
             >
               <Icon name="Send" size={16} />
             </button>
