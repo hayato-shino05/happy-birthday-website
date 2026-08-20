@@ -288,6 +288,60 @@ body.theme-hanami {
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E91E63' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
+body.theme-obon {
+  --theme-primary: #E64A19;
+  --theme-secondary: #FFE0B2;
+  --theme-background: #FFF3E0;
+  --theme-text: #E64A19;
+  background-color: #FFF3E0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FF5722' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-tsukimi {
+  --theme-primary: #64B5F6;
+  --theme-secondary: #1A237E;
+  --theme-background: #0D1B2A;
+  --theme-text: #E3F2FD;
+  background-color: #0D1B2A;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2364B5F6' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-tanabata {
+  --theme-primary: #7B1FA2;
+  --theme-secondary: #E1BEE7;
+  --theme-background: #F3E5F5;
+  --theme-text: #4A148C;
+  background-color: #F3E5F5;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237B1FA2' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-shogatsu {
+  --theme-primary: #D32F2F;
+  --theme-secondary: #FFCDD2;
+  --theme-background: #FFEBEE;
+  --theme-text: #B71C1C;
+  background-color: #FFEBEE;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D32F2F' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-kodomo {
+  --theme-primary: #1976D2;
+  --theme-secondary: #BBDEFB;
+  --theme-background: #E3F2FD;
+  --theme-text: #0D47A1;
+  background-color: #E3F2FD;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231976D2' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+body.theme-bunka {
+  --theme-primary: #E65100;
+  --theme-secondary: #FFE0B2;
+  --theme-background: #FFF3E0;
+  --theme-text: #BF360C;
+  background-color: #FFF3E0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E65100' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
 /* ===== カウントダウン用テーマバリエーション ===== */
 .countdown-box.theme-spring {
   background: linear-gradient(135deg, #FCE4EC 0%, #F8DDE4 100%);
@@ -323,6 +377,37 @@ body.theme-hanami {
 .countdown-box.theme-hanami {
   background: linear-gradient(135deg, #FFE6F2 0%, #F8DDE4 100%);
   border-color: #C2185B;
+}
+
+.countdown-box.theme-obon {
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  border-color: #E64A19;
+}
+
+.countdown-box.theme-tsukimi {
+  background: linear-gradient(135deg, #1A237E 0%, #0D47A1 100%);
+  border-color: #64B5F6;
+  color: #E3F2FD;
+}
+
+.countdown-box.theme-tanabata {
+  background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+  border-color: #7B1FA2;
+}
+
+.countdown-box.theme-shogatsu {
+  background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+  border-color: #D32F2F;
+}
+
+.countdown-box.theme-kodomo {
+  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+  border-color: #1976D2;
+}
+
+.countdown-box.theme-bunka {
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  border-color: #E65100;
 }
 
 /* ===== フォトギャラリーのグリッド ===== */
