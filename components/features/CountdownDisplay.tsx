@@ -5,9 +5,9 @@ import { useNextBirthday } from '@/lib/hooks/useNextBirthday'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useThemeContext } from '@/lib/providers/ThemeProvider'
 import { CountdownTimer } from './CountdownTimer'
-import { Sparkles, Calendar } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 
-// カウントダウンカードコンポーネント（洗練された日本の美意識と温かみのあるデザイン）
+// ヴィンテージ・スクラップブック風のカウントダウンカードコンポーネント（想い出箱デザイン）
 export function CountdownDisplay() {
   const { nextBirthday, isLoading } = useNextBirthday()
   const { language, t } = useLanguage()
@@ -27,7 +27,7 @@ export function CountdownDisplay() {
   if (!nextBirthday) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="p-8 rounded-3xl bg-white/70 backdrop-blur-md border border-[#D4B08C]/30 text-center shadow-lg">
+        <div className="p-8 rounded-2xl bg-[#FDF9E9]/90 backdrop-blur-md border border-[#D7C3B5] text-center shadow-lg">
           <p className="text-lg font-medium text-[#854D27]">
             {t('noBirthdayData')}
           </p>
@@ -46,98 +46,103 @@ export function CountdownDisplay() {
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className={`countdown-card-wrapper theme-${currentTheme} w-full flex justify-center px-4`}
     >
+      {/* スクラップブック・台紙カード */}
       <div
-        className="relative w-full max-w-[620px] rounded-[28px] overflow-hidden transition-all duration-300"
+        className="relative w-full max-w-[760px] rounded-2xl transition-all duration-300 flex flex-col items-center select-none"
         style={{
-          background: 'rgba(255, 252, 248, 0.85)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(212, 176, 140, 0.45)',
-          boxShadow: '0 20px 50px -12px rgba(44, 24, 16, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.8) inset',
-          padding: '36px 32px 32px',
+          background: 'linear-gradient(135deg, rgba(253, 249, 233, 0.92) 0%, rgba(242, 238, 222, 0.95) 100%)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(215, 195, 181, 0.7)',
+          boxShadow: '0 20px 50px -15px rgba(74, 36, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04)',
+          padding: '40px 24px 36px',
         }}
       >
-        {/* 上部バッジ：次の記念日 */}
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <span
-            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold tracking-wider uppercase"
+        {/* 右上のクリップとヴィンテージチケット装飾 */}
+        <div className="absolute -top-3.5 right-6 sm:right-10 transform rotate-6 z-20 pointer-events-none">
+          {/* クリップ */}
+          <div
+            className="w-4 h-10 border-2 rounded-full absolute -top-2 left-3 opacity-75"
+            style={{ borderColor: '#867466' }}
+          />
+          {/* チケットバッジ */}
+          <div
+            className="px-3 py-1 rounded-xs text-[#895033] text-[11px] font-bold tracking-widest shadow-xs transform -rotate-3 uppercase"
             style={{
-              background: 'rgba(133, 77, 39, 0.08)',
-              color: '#854D27',
-              border: '1px solid rgba(133, 77, 39, 0.15)',
+              background: '#FFFFFF',
+              border: '1px solid rgba(215, 195, 181, 0.8)',
+              fontFamily: 'var(--font-heading), monospace',
             }}
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#D4B08C]" />
-            {language === 'ja' ? '次の記念日' : 'Next Celebration'}
-          </span>
-          {targetDateStr && (
-            <span
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-[#854D27]/80"
-              style={{
-                background: 'rgba(255, 255, 255, 0.6)',
-                border: '1px solid rgba(212, 176, 140, 0.25)',
-              }}
-            >
-              <Calendar className="w-3 h-3 text-[#854D27]/70" />
-              {targetDateStr}
-            </span>
-          )}
+            HAPPY CELEBRATION
+          </div>
         </div>
 
-        {/* メインタイトル */}
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-2xl sm:text-3xl md:text-4xl font-bold text-center tracking-tight leading-snug mb-7 text-[#2C1810]"
-          style={{
-            fontFamily: 'var(--font-heading)',
-          }}
-        >
-          {language === 'ja' ? (
-            <>
-              <span className="text-[#854D27]">{personName}</span>
-              <span className="font-normal text-xl sm:text-2xl text-[#5C3A21] ml-1">さんの誕生日まで</span>
-            </>
-          ) : (
-            <>
-              <span className="font-normal text-xl sm:text-2xl text-[#5C3A21]">Countdown to </span>
-              <span className="text-[#854D27]">{personName}&apos;s Birthday</span>
-            </>
-          )}
-        </motion.h1>
+        {/* 上部ヘッダー：想い出箱タイトル & 日付 */}
+        <div className="flex flex-col items-center gap-1.5 mb-6 text-center">
+          <div className="flex items-center gap-2">
+            <span
+              className="text-xs font-bold tracking-widest text-[#895033] uppercase"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              OMOIDE BAKO
+            </span>
+            {targetDateStr && (
+              <span
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-[#784327]"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  border: '1px solid rgba(215, 195, 181, 0.5)',
+                }}
+              >
+                <Calendar className="w-3 h-3 text-[#895033]" />
+                {targetDateStr}
+              </span>
+            )}
+          </div>
 
-        {/* カウントダウンタイマー本体 */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
-          className="py-1"
-        >
+          {/* メインお祝いタイトル */}
+          <h1
+            className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#4A2400] tracking-tight relative mt-1"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
+            {language === 'ja' ? (
+              <>
+                <span className="text-[#895033]">{personName}</span>
+                <span className="font-normal text-xl sm:text-2xl text-[#52443A] ml-1">さんの誕生日まで</span>
+              </>
+            ) : (
+              <>
+                <span className="font-normal text-xl sm:text-2xl text-[#52443A]">Countdown to </span>
+                <span className="text-[#895033]">{personName}&apos;s Birthday</span>
+              </>
+            )}
+            {/* タイトル下部の装飾アクセントライン */}
+            <div className="w-20 h-0.5 mx-auto mt-2 rounded-full bg-[#BEAB4E]/60" />
+          </h1>
+        </div>
+
+        {/* ポラロイド風カウントダウンタイマー */}
+        <div className="w-full my-2">
           <CountdownTimer targetDate={nextBirthday.date} />
-        </motion.div>
+        </div>
 
-        {/* 残り日数フッターピル */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="mt-6 flex justify-center"
-        >
+        {/* 下部：残り日数ステータス */}
+        <div className="mt-7 flex justify-center">
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-xs"
             style={{
-              background: 'rgba(255, 255, 255, 0.8)',
-              color: '#854D27',
-              border: '1px solid rgba(212, 176, 140, 0.35)',
+              background: 'rgba(255, 255, 255, 0.85)',
+              color: '#895033',
+              border: '1px solid rgba(215, 195, 181, 0.6)',
             }}
           >
             <span className="w-2 h-2 rounded-full bg-[#3FCF8E] animate-pulse" />
             {language === 'ja'
-              ? `あと ${nextBirthday.daysUntil} 日のお祝い`
-              : `${nextBirthday.daysUntil} days left`}
+              ? `あと ${nextBirthday.daysUntil} 日の特別な瞬間`
+              : `${nextBirthday.daysUntil} days until celebration`}
           </div>
-        </motion.div>
+        </div>
       </div>
     </motion.div>
   )
