@@ -12,6 +12,24 @@ interface VideoRecorderState {
   hasPermission: boolean
 }
 
+// 利用可能な動画 MIME タイプをブラウザごとに安全に取得（iOS Safari対応）
+function getSupportedVideoMimeType(): string | undefined {
+  if (typeof window === 'undefined' || typeof MediaRecorder === 'undefined') return undefined
+  const candidates = [
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+  ]
+  for (const type of candidates) {
+    if (MediaRecorder.isTypeSupported(type)) {
+      return type
+    }
+  }
+  return undefined
+}
+
 export function useVideoRecorder() {
   const [state, setState] = useState<VideoRecorderState>({
     isRecording: false,
@@ -77,24 +95,6 @@ export function useVideoRecorder() {
         videoPreviewRef.current.srcObject = stream
       }
 
-// 利用可能な動画 MIME タイプをブラウザごとに安全に取得（iOS Safari対応）
-function getSupportedVideoMimeType(): string | undefined {
-  if (typeof window === 'undefined' || typeof MediaRecorder === 'undefined') return undefined
-  const candidates = [
-    'video/webm;codecs=vp9',
-    'video/webm;codecs=vp8',
-    'video/webm',
-    'video/mp4;codecs=avc1',
-    'video/mp4',
-  ]
-  for (const type of candidates) {
-    if (MediaRecorder.isTypeSupported(type)) {
-      return type
-    }
-  }
-  return undefined
-}
-
       const supportedMimeType = getSupportedVideoMimeType()
       const mediaRecorder = supportedMimeType
         ? new MediaRecorder(stream, { mimeType: supportedMimeType })
@@ -121,10 +121,9 @@ function getSupportedVideoMimeType(): string | undefined {
             videoBlob: blob,
             videoUrl: url,
             isRecording: false,
+            isPaused: false,
           }
         })
-          isPaused: false,
-        }))
       }
 
       mediaRecorder.start(100)
