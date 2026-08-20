@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-type ModalType = 
+export type ModalType = 
   | 'album'
   | 'message'
   | 'bulletin'
@@ -9,6 +9,7 @@ type ModalType =
   | 'calendar'
   | 'quiz'
   | 'chat'
+  | 'photoFrame'
   | null
 
 interface UIState {

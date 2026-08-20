@@ -1276,11 +1276,12 @@ body.theme-bunka {
     width: calc(100% - 16px);
     right: 8px;
     left: 8px;
-    bottom: 8px;
+    bottom: 72px;
     height: 55vh;
     min-height: 300px;
     max-height: 400px;
     box-shadow: 3px 3px 0 var(--community-secondary);
+    z-index: 45;
   }
   
   .chat-modal-expanded {
