@@ -30,7 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# 環境変数ファイル（必要であればコミット対象に含めてもよい）
+# 環境変数ファイル
 .env
 
 # Vercel 関連
@@ -40,6 +40,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-happy-birthday-production/
-.serena/
+# エージェント・開発補助ツール関連
+.agents/
+.claude/
+.codegraph/
+.harness-core/
 .gitnexus/
+.serena/
+docs/
+happy-birthday-production/
+tmp-*.png
+smoke-snapshot.txt
+canonical-home.network-response
