@@ -46,6 +46,7 @@ import {
   Share2,
   SkipBack,
   SkipForward,
+  Sparkles,
   StopCircle,
   Trophy,
   Upload,
@@ -99,6 +100,7 @@ import usersIcon from '@/src/assets/icons/users.png'
 import eyeIcon from '@/src/assets/icons/eye.png'
 import eyeOffIcon from '@/src/assets/icons/eye-off.png'
 import gameControllerIcon from '@/src/assets/icons/game-controller.png'
+import groupChatIcon from '@/src/assets/icons/group-chat.png'
 
 export const Icons = {
   AlertTriangle,
@@ -151,6 +153,7 @@ export const Icons = {
   Share2,
   SkipBack,
   SkipForward,
+  Sparkles,
   StopCircle,
   Trophy,
   Upload,
@@ -173,6 +176,7 @@ interface IconProps
   size?: number
   className?: string
   style?: CSSProperties
+  useSvg?: boolean
 }
 
 const assetIcons: Partial<Record<keyof typeof Icons, StaticImageData>> = {
@@ -195,8 +199,8 @@ const assetIcons: Partial<Record<keyof typeof Icons, StaticImageData>> = {
   Mic: microphoneIcon,
   Wind: windIcon,
   Mail: mailIcon,
-  Comment: speechBubbleIcon,
-  MessageCircle: speechBubbleIcon,
+  Comment: groupChatIcon,
+  MessageCircle: groupChatIcon,
   Trophy: trophyIcon,
   Download: downloadIcon,
   PenLine: editIcon,
@@ -248,20 +252,23 @@ const iconToneClasses: Partial<Record<keyof typeof Icons, string>> = {
   X: 'text-rose-500',
 }
 
-export function Icon({ name, size = 20, className, style, ...ariaProps }: IconProps) {
+export function Icon({ name, size = 20, className, style, useSvg = false, ...ariaProps }: IconProps) {
   const assetSrc = assetIcons[name]
   const toneClass = iconToneClasses[name as keyof typeof iconToneClasses]
   const classes = [toneClass, className].filter(Boolean).join(' ')
   const hasAccessibleName = Boolean(ariaProps['aria-label'] || ariaProps['aria-labelledby'])
 
-  if (assetSrc) {
+  if (assetSrc && !useSvg) {
+    const defaultPngFilter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.5)) brightness(1.2)'
+    const combinedFilter = style?.filter ? `${defaultPngFilter} ${style.filter}` : defaultPngFilter
+
     return (
       <Image
         src={assetSrc}
         width={size}
         height={size}
         className={classes || undefined}
-        style={{ objectFit: 'contain', ...style }}
+        style={{ objectFit: 'contain', filter: combinedFilter, ...style }}
         alt={ariaProps['aria-label'] ?? ''}
         role={ariaProps.role}
         tabIndex={ariaProps.tabIndex}

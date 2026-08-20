@@ -18,7 +18,7 @@ const gameButtonStyle: React.CSSProperties = {
   textTransform: 'uppercase',
   letterSpacing: '1px',
   boxShadow: '4px 4px 0 #D4B08C',
-  transition: 'transform 0.3s, box-shadow 0.3s',
+  transition: 'transform 0.3s, box-shadow 0.3s, filter 0.3s',
   display: 'flex',
   alignItems: 'center',
   gap: '6px',
@@ -39,11 +39,25 @@ export function GameButtons() {
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.transform = 'translate(-2px, -2px)'
     e.currentTarget.style.boxShadow = '6px 6px 0 #D4B08C'
+    e.currentTarget.style.filter = 'brightness(1.15)'
   }
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.transform = 'translate(0, 0)'
     e.currentTarget.style.boxShadow = '4px 4px 0 #D4B08C'
+    e.currentTarget.style.filter = 'brightness(1)'
+  }
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.transform = 'translate(0, 0)'
+    e.currentTarget.style.boxShadow = '1px 1px 0 #D4B08C'
+    e.currentTarget.style.filter = 'brightness(0.95)'
+  }
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.transform = 'translate(-2px, -2px)'
+    e.currentTarget.style.boxShadow = '6px 6px 0 #D4B08C'
+    e.currentTarget.style.filter = 'brightness(1.15)'
   }
 
   return (
@@ -62,8 +76,10 @@ export function GameButtons() {
               style={gameButtonStyle}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
             >
-              <Icon name={game.icon} size={16} />
+              <Icon name={game.icon} size={22} />
               <span>{game.label}</span>
             </button>
           )
