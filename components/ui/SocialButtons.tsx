@@ -160,6 +160,18 @@ export function SocialButtons() {
         <Icon name="MessageCircle" size={26} />
         <span>{t('groupChat')}</span>
       </button>
+
+      <button
+        onClick={() => openModal('timeCapsule')}
+        style={socialButtonStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+      >
+        <Icon name="Archive" size={26} />
+        <span>{t('timeCapsuleTitle')}</span>
+      </button>
     </div>
   )
 }

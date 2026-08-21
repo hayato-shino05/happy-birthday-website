@@ -202,7 +202,7 @@ export function MobileBottomDock() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="relative z-10 mx-3 mb-20 p-4 bg-[#FFF9F3] border-2 border-[#D4B08C] text-[#854D27]"
+              className="relative z-10 mx-3 mb-20 p-4 bg-[#FFF9F3] border-2 border-[#D4B08C] text-[#854D27] max-h-[80vh] overflow-y-auto"
               style={{
                 borderRadius: '24px 24px 16px 16px',
                 boxShadow: '0 -8px 28px rgba(133, 77, 39, 0.35), 0 4px 12px rgba(0,0,0,0.15)',
@@ -229,8 +229,53 @@ export function MobileBottomDock() {
                 </button>
               </div>
 
-              {/* PC GameButtons と 100% 同一の4大ゲーム */}
+              {/* PC GameButtons / 記念機能 と 100% 同一の機能グリッド */}
               <div className="grid grid-cols-2 gap-2.5 mb-3">
+                {/* おみくじ */}
+                <button
+                  onClick={() => {
+                    setShowMenuSheet(false)
+                    openModal('omikuji')
+                  }}
+                  style={{ borderRadius: '14px' }}
+                  className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[0_2px_8px_rgba(133,77,39,0.3)] active:translate-y-0.5 transition-all text-left cursor-pointer"
+                >
+                  <div style={{ borderRadius: '8px' }} className="w-7 h-7 bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <Icon name="Sparkles" size={20} />
+                  </div>
+                  <span className="truncate">{t('omikujiTitle')}</span>
+                </button>
+
+                {/* あの日の思い出 */}
+                <button
+                  onClick={() => {
+                    setShowMenuSheet(false)
+                    openModal('flashback')
+                  }}
+                  style={{ borderRadius: '14px' }}
+                  className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[0_2px_8px_rgba(133,77,39,0.3)] active:translate-y-0.5 transition-all text-left cursor-pointer"
+                >
+                  <div style={{ borderRadius: '8px' }} className="w-7 h-7 bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <Icon name="Calendar" size={20} />
+                  </div>
+                  <span className="truncate">{t('flashbackTitle')}</span>
+                </button>
+
+                {/* タイムカプセル */}
+                <button
+                  onClick={() => {
+                    setShowMenuSheet(false)
+                    openModal('timeCapsule')
+                  }}
+                  style={{ borderRadius: '14px' }}
+                  className="min-h-[48px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center gap-2.5 text-xs font-bold font-body shadow-[0_2px_8px_rgba(133,77,39,0.3)] active:translate-y-0.5 transition-all text-left cursor-pointer col-span-2"
+                >
+                  <div style={{ borderRadius: '8px' }} className="w-7 h-7 bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <Icon name="Archive" size={20} />
+                  </div>
+                  <span className="truncate">{t('timeCapsuleTitle')}</span>
+                </button>
+
                 {/* 1. 記憶ゲーム (Brain) */}
                 <button
                   onClick={() => {

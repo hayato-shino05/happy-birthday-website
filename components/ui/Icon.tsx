@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  Archive,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
@@ -15,6 +16,7 @@ import {
   CircleCheck,
   CircleX,
   ClipboardList,
+  Clock,
   Copy,
   Download,
   Eye,
@@ -36,6 +38,7 @@ import {
   Minimize2,
   Minus,
   Music,
+  Palette,
   Pause,
   PartyPopper,
   PenLine,
@@ -47,6 +50,7 @@ import {
   SkipBack,
   SkipForward,
   Sparkles,
+  Star,
   StopCircle,
   Trophy,
   Upload,
@@ -101,9 +105,14 @@ import eyeIcon from '@/src/assets/icons/eye.png'
 import eyeOffIcon from '@/src/assets/icons/eye-off.png'
 import gameControllerIcon from '@/src/assets/icons/game-controller.png'
 import groupChatIcon from '@/src/assets/icons/group-chat.png'
+import sparklesIcon from '@/src/assets/icons/sparkles.png'
+import toriiIcon from '@/src/assets/icons/torii.png'
+import archiveIcon from '@/src/assets/icons/archive.png'
+import scrollIcon from '@/src/assets/icons/scroll.png'
 
 export const Icons = {
   AlertTriangle,
+  Archive,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
@@ -120,6 +129,7 @@ export const Icons = {
   ChevronDown,
   ChevronRight,
   ClipboardList,
+  Clock,
   Close: X,
   Comment: MessageCircle,
   Copy,
@@ -143,6 +153,7 @@ export const Icons = {
   Minimize2,
   Minus,
   Music,
+  Palette,
   Pause,
   Party: PartyPopper,
   PenLine,
@@ -154,6 +165,7 @@ export const Icons = {
   SkipBack,
   SkipForward,
   Sparkles,
+  Star,
   StopCircle,
   Trophy,
   Upload,
@@ -221,6 +233,8 @@ const assetIcons: Partial<Record<keyof typeof Icons, StaticImageData>> = {
   Eye: eyeIcon,
   EyeOff: eyeOffIcon,
   Gamepad: gameControllerIcon,
+  Sparkles: toriiIcon,
+  Archive: archiveIcon,
 }
 
 const iconToneClasses: Partial<Record<keyof typeof Icons, string>> = {

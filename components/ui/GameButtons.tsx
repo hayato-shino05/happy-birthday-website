@@ -30,6 +30,8 @@ export function GameButtons() {
   const { openModal } = useUIStore()
 
   const games = [
+    { id: 'omikuji' as const, icon: 'Sparkles' as const, label: t('omikujiTitle') },
+    { id: 'flashback' as const, icon: 'Calendar' as const, label: t('flashbackTitle') },
     { id: 'memoryGame' as const, icon: 'Brain' as const, label: t('memoryGame') },
     { id: 'puzzleGame' as const, icon: 'Puzzle' as const, label: t('puzzleGame') },
     { id: 'calendar' as const, icon: 'Calendar' as const, label: t('birthdayCalendar') },

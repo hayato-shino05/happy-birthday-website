@@ -93,7 +93,7 @@ export function MobileGameMenu() {
   }
 
 
-  const handleGameClick = (gameId: 'memoryGame' | 'puzzleGame' | 'calendar' | 'quiz') => {
+  const handleGameClick = (gameId: (typeof GAME_MENU_ITEMS)[number]['id']) => {
     openModal(gameId)
     setIsOpen(false)
   }

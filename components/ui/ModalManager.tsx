@@ -66,6 +66,21 @@ const ChatRoom = dynamic(
   { ssr: false, loading: () => <ModalLoadingSpinner /> }
 )
 
+const OnThisDayFlashback = dynamic(
+  () => import('@/components/features/OnThisDayFlashback').then((mod) => mod.OnThisDayFlashback),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const DailyOmikuji = dynamic(
+  () => import('@/components/features/DailyOmikuji').then((mod) => mod.DailyOmikuji),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const TimeCapsule = dynamic(
+  () => import('@/components/community/TimeCapsule').then((mod) => mod.TimeCapsule),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
 export function ModalManager() {
   const { activeModal, closeModal } = useUIStore()
   const { t } = useLanguage()
@@ -112,6 +127,21 @@ export function ModalManager() {
     quiz: {
       title: t('birthdayQuiz'),
       content: <BirthdayQuiz onClose={closeModal} />,
+    },
+    flashback: {
+      title: t('flashbackTitle'),
+      content: <OnThisDayFlashback onClose={closeModal} />,
+      size: 'md' as const,
+    },
+    omikuji: {
+      title: t('omikujiTitle'),
+      content: <DailyOmikuji onClose={closeModal} />,
+      size: 'sm' as const,
+    },
+    timeCapsule: {
+      title: t('timeCapsuleTitle'),
+      content: <TimeCapsule onClose={closeModal} />,
+      size: 'md' as const,
     },
   }
 

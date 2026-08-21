@@ -13,11 +13,8 @@ interface UseThemeReturn {
   setAutoDetect: (auto: boolean) => void
 }
 
-// クライアント側でテーマを検出
+// サーバー（SSR）およびクライアント（CSR）の双方で現在日付に基づく初期テーマを検出
 function getInitialTheme(): ThemeName {
-  if (typeof window === 'undefined') {
-    return 'winter' // SSRのデフォルト（12月）
-  }
   return detectSeasonAndFestival()
 }
 
