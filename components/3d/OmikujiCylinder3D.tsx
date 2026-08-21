@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
@@ -287,22 +287,23 @@ export function OmikujiCylinder3D({
       sctx.arc(894, 1918, 32, 0, Math.PI * 2)
       sctx.fill()
 
-      // 金箔の極太毛筆文字（重厚な輪郭ストローク＋白金充填）
-      sctx.font = '900 300px "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif'
+      // 純白（#FFFFFF）＋極太漆黒輪郭（#000000）の超高コントラスト文字描画
+      sctx.font = '900 340px "Yu Gothic", "Meiryo", "Hiragino Sans", "Segoe UI", sans-serif'
       sctx.textAlign = 'center'
       sctx.textBaseline = 'middle'
 
       const signChars = ['想', 'い', '出', '籤']
-      const charY = [450, 810, 1170, 1530]
+      const charY = [440, 800, 1160, 1520]
 
       signChars.forEach((c, i) => {
-        sctx.shadowColor = 'rgba(245, 184, 66, 1.0)'
-        sctx.shadowBlur = 36
-        sctx.lineWidth = 28
-        sctx.strokeStyle = '#D4AF37'
+        // 1. 極太の漆黒輪郭線（境界をくっきり際立たせる）
+        sctx.lineWidth = 40
+        sctx.strokeStyle = '#000000'
+        sctx.lineJoin = 'round'
+        sctx.miterLimit = 2
         sctx.strokeText(c, 512, charY[i])
 
-        sctx.shadowBlur = 0
+        // 2. 純白の充填（文字を鮮明に発光・浮き立たせる）
         sctx.fillStyle = '#FFFFFF'
         sctx.fillText(c, 512, charY[i])
       })
@@ -314,11 +315,11 @@ export function OmikujiCylinder3D({
     signTexture.magFilter = THREE.LinearFilter
     signTexture.anisotropy = renderer.capabilities.getMaxAnisotropy()
 
-    const plaqueGeo = new THREE.BoxGeometry(0.66, 1.40, 0.03)
+    const plaqueGeo = new THREE.BoxGeometry(0.68, 1.44, 0.03)
     const plaqueMat = new THREE.MeshStandardMaterial({
       map: signTexture,
-      roughness: 0.14,
-      metalness: 0.35,
+      roughness: 0.2,
+      metalness: 0.1,
     })
     const plaqueMesh = new THREE.Mesh(plaqueGeo, plaqueMat)
     plaqueMesh.position.set(0, 0, 0.81)
