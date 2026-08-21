@@ -70,7 +70,8 @@ export function OmikujiCylinder3D({
     // リアルな環境マップ（RoomEnvironment による鏡面反射）
     const pmremGenerator = new THREE.PMREMGenerator(renderer)
     pmremGenerator.compileEquirectangularShader()
-    const envTexture = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture
+    const roomScene = new RoomEnvironment()
+    const envTexture = pmremGenerator.fromScene(roomScene, 0.04).texture
     scene.environment = envTexture
 
     // 2. OrbitControls の設定（スムーズなダンピングと直感的な操作）
@@ -443,11 +444,16 @@ export function OmikujiCylinder3D({
       })
     }
 
-    // (7) Raycaster によるホバー＆クリック判定
+    // (7) Raycaster によるホバー＆ドラッグ判別クリック判定
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
     const clickableMeshes = [cylinderMesh, plaqueMesh, topRing, bottomRing, capMesh]
     let isHovered = false
+    let pointerDownPos = { x: 0, y: 0 }
+
+    const handlePointerDown = (e: PointerEvent) => {
+      pointerDownPos = { x: e.clientX, y: e.clientY }
+    }
 
     const handlePointerMove = (e: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect()
@@ -472,12 +478,26 @@ export function OmikujiCylinder3D({
       }
     }
 
-    const handleClick = () => {
-      onDrawRef.current?.()
+    const handlePointerUp = (e: PointerEvent) => {
+      // 6px以上の移動がある場合はドラッグ回転と判定し、クリック抽選を抑制
+      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y)
+      if (moveDist > 6) return
+
+      const rect = renderer.domElement.getBoundingClientRect()
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+
+      raycaster.setFromCamera(mouse, camera)
+      const intersects = raycaster.intersectObjects(clickableMeshes)
+
+      if (intersects.length > 0) {
+        onDrawRef.current?.()
+      }
     }
 
+    renderer.domElement.addEventListener('pointerdown', handlePointerDown)
     renderer.domElement.addEventListener('pointermove', handlePointerMove)
-    renderer.domElement.addEventListener('click', handleClick)
+    renderer.domElement.addEventListener('pointerup', handlePointerUp)
 
     // (8) アニメーションループ（高精度タイムステップ）
     let animationFrameId: number
@@ -568,9 +588,24 @@ export function OmikujiCylinder3D({
     return () => {
       cancelAnimationFrame(animationFrameId)
       window.removeEventListener('resize', handleResize)
+      renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
       renderer.domElement.removeEventListener('pointermove', handlePointerMove)
-      renderer.domElement.removeEventListener('click', handleClick)
+      renderer.domElement.removeEventListener('pointerup', handlePointerUp)
       controls.dispose()
+
+      roomScene.traverse((obj) => {
+        if ((obj as THREE.Mesh).geometry) {
+          (obj as THREE.Mesh).geometry.dispose()
+        }
+        if ((obj as THREE.Mesh).material) {
+          const mat = (obj as THREE.Mesh).material
+          if (Array.isArray(mat)) {
+            mat.forEach((m) => m.dispose())
+          } else {
+            mat.dispose()
+          }
+        }
+      })
       pmremGenerator.dispose()
       envTexture.dispose()
 
