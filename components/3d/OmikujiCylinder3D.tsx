@@ -212,17 +212,27 @@ export function OmikujiCylinder3D({
       sctx.arc(904, 1928, 28, 0, Math.PI * 2)
       sctx.fill()
 
-      // 金箔の毛筆文字（超高精細）
-      sctx.fillStyle = '#FFFDF5'
-      sctx.shadowColor = 'rgba(212, 175, 55, 0.9)'
-      sctx.shadowBlur = 24
-      sctx.font = '900 230px "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif'
+      // 金箔の極太毛筆文字（重厚な輪郭ストローク＋白金充填）
+      sctx.font = '900 280px "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif'
       sctx.textAlign = 'center'
       sctx.textBaseline = 'middle'
-      sctx.fillText('想', 512, 460)
-      sctx.fillText('い', 512, 820)
-      sctx.fillText('出', 512, 1180)
-      sctx.fillText('籤', 512, 1540)
+
+      const signChars = ['想', 'い', '出', '籤']
+      const charY = [450, 810, 1170, 1530]
+
+      signChars.forEach((c, i) => {
+        // 金色の太い輪郭縁取り
+        sctx.shadowColor = 'rgba(229, 169, 60, 1.0)'
+        sctx.shadowBlur = 32
+        sctx.lineWidth = 24
+        sctx.strokeStyle = '#D4AF37'
+        sctx.strokeText(c, 512, charY[i])
+
+        // 白金の極太塗りつぶし
+        sctx.shadowBlur = 0
+        sctx.fillStyle = '#FFFFFF'
+        sctx.fillText(c, 512, charY[i])
+      })
     }
 
     const signTexture = new THREE.CanvasTexture(signCanvas)
@@ -267,7 +277,7 @@ export function OmikujiCylinder3D({
     tipMesh.position.y = 1.14
     mainStickGroup.add(tipMesh)
 
-    // 棒上の番号テキスト（512x2048 高解像度）
+    // 棒上の番号テキスト（512x2048 極太高解像度）
     const stickCanvas = document.createElement('canvas')
     stickCanvas.width = 512
     stickCanvas.height = 2048
@@ -275,14 +285,17 @@ export function OmikujiCylinder3D({
     if (stickCtx) {
       stickCtx.fillStyle = '#F5E6CC'
       stickCtx.fillRect(0, 0, 512, 2048)
-      stickCtx.fillStyle = '#1E0C06'
-      stickCtx.font = '900 240px "Yu Mincho", "Hiragino Mincho ProN", serif'
+      stickCtx.fillStyle = '#100502'
+      stickCtx.strokeStyle = '#100502'
+      stickCtx.lineWidth = 18
+      stickCtx.font = '900 280px "Yu Mincho", "Hiragino Mincho ProN", serif'
       stickCtx.textAlign = 'center'
       stickCtx.textBaseline = 'middle'
       const label = KANJI_NUMBERS[(fortuneNumber - 1) % KANJI_NUMBERS.length] || '第一番'
       const chars = label.split('')
       chars.forEach((c, idx) => {
-        stickCtx.fillText(c, 256, 420 + idx * 340)
+        stickCtx.strokeText(c, 256, 420 + idx * 360)
+        stickCtx.fillText(c, 256, 420 + idx * 360)
       })
     }
     const stickTexture = new THREE.CanvasTexture(stickCanvas)

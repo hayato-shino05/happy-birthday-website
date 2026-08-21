@@ -149,16 +149,16 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
 
             {/* 祝詠・和歌 / 俳句 */}
             <div className="bg-[#854D27]/5 border-l-4 border-[#854D27] rounded-r-xl p-3.5 mb-4">
-              <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-1">
+              <span className="text-[10px] font-bold text-[#854D27]/80 uppercase block mb-1">
                 📜 {language === 'ja' ? '祝詠（しゅくえい）' : 'Celebration Poem'}
               </span>
-              <p className="text-sm font-serif text-[#854D27] italic leading-relaxed">
+              <p className="text-sm font-serif text-[#854D27] italic font-semibold leading-relaxed">
                 &ldquo;{language === 'ja' ? result.poemJa : result.poemEn}&rdquo;
               </p>
             </div>
 
             {/* 総合運勢 */}
-            <p className="text-xs font-serif text-[#854D27] leading-relaxed mb-5 px-1 font-medium">
+            <p className="text-xs font-serif text-[#854D27] leading-relaxed mb-5 px-1 font-bold">
               {language === 'ja' ? result.generalJa : result.generalEn}
             </p>
 
@@ -170,7 +170,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
                   <Icon name="Heart" size={14} />
                   <span>{language === 'ja' ? '【縁】絆・出会い' : '【Bond】Connection'}</span>
                 </div>
-                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.bondJa : result.bondEn}
                 </p>
               </div>
@@ -181,7 +181,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
                   <Icon name="Sparkles" size={14} />
                   <span>{language === 'ja' ? '【健】心身・健康' : '【Health】Well-being'}</span>
                 </div>
-                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.healthJa : result.healthEn}
                 </p>
               </div>
@@ -192,7 +192,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
                   <Icon name="Star" size={14} />
                   <span>{language === 'ja' ? '【志】願い事・学業' : '【Wish】Aspirations'}</span>
                 </div>
-                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.wishJa : result.wishEn}
                 </p>
               </div>
@@ -203,7 +203,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
                   <Icon name="Cake" size={14} />
                   <span>{language === 'ja' ? '【祝】誕生日の言霊' : '【Blessing】Birthday Wish'}</span>
                 </div>
-                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.blessingJa : result.blessingEn}
                 </p>
               </div>
