@@ -216,12 +216,12 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
             </div>
 
             {/* ラッキー情報バー（色・品・数字） */}
-            <div className="grid grid-cols-3 gap-2 p-3 bg-[#854D27]/10 border border-[#D4B08C] rounded-xl text-center">
+            <div className="grid grid-cols-3 gap-2 p-3 bg-[#854D27]/10 border border-[#D4B08C] rounded-xl text-center items-start">
               <div>
                 <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-0.5">
                   {t('omikujiLuckyColor')}
                 </span>
-                <span className="text-xs font-bold text-[#854D27] truncate block">
+                <span className="text-xs font-bold text-[#854D27] leading-snug break-words block">
                   {language === 'ja' ? result.luckyColorJa : result.luckyColorEn}
                 </span>
               </div>
@@ -229,7 +229,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
                 <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-0.5">
                   {t('omikujiLuckyItem')}
                 </span>
-                <span className="text-xs font-bold text-[#854D27] truncate block">
+                <span className="text-xs font-bold text-[#854D27] leading-snug break-words block">
                   {language === 'ja' ? result.luckyItemJa : result.luckyItemEn}
                 </span>
               </div>
@@ -237,7 +237,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
                 <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-0.5">
                   {language === 'ja' ? '幸運数' : 'Lucky No.'}
                 </span>
-                <span className="text-xs font-black text-[#854D27]">
+                <span className="text-xs font-black text-[#854D27] leading-snug block">
                   {result.luckyNumber}
                 </span>
               </div>
