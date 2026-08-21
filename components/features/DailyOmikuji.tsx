@@ -1,101 +1,38 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
+import { OMIKUJI_DATA, type OmikujiFortune } from '@/data/omikujiData'
 
-interface FortuneResult {
-  rank: 'daikichi' | 'chukichi' | 'shokichi' | 'kichi' | 'suekichi'
-  rankNameJa: string
-  rankNameEn: string
-  messageJa: string
-  messageEn: string
-  luckyColorJa: string
-  luckyColorEn: string
-  luckyItemJa: string
-  luckyItemEn: string
-  actionJa: string
-  actionEn: string
-}
+// 3D おみくじ筒を SSR 回避でダイナミックインポート
+const OmikujiCylinder3D = dynamic(
+  () => import('@/components/3d/OmikujiCylinder3D').then((mod) => mod.OmikujiCylinder3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-64 flex flex-col items-center justify-center gap-2">
+        <div className="w-8 h-8 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin" />
+        <span className="text-xs text-[#854D27]/70">3D Loading...</span>
+      </div>
+    ),
+  }
+)
 
-const FORTUNES: FortuneResult[] = [
-  {
-    rank: 'daikichi',
-    rankNameJa: '大吉',
-    rankNameEn: 'Great Blessing',
-    messageJa: '最高の一日！すべての願いが実を結び、笑顔あふれる温かい祝福に包まれます。',
-    messageEn: 'A magnificent day! All your wishes will bear fruit surrounded by joyful celebrations.',
-    luckyColorJa: '桜色（さくらいろ）',
-    luckyColorEn: 'Cherry Blossom Pink',
-    luckyItemJa: 'バースデーケーキ',
-    luckyItemEn: 'Birthday Cake',
-    actionJa: '大切な人に笑顔で「ありがとう」を伝えましょう。',
-    actionEn: 'Share a heartfelt thank-you with someone you cherish.',
-  },
-  {
-    rank: 'chukichi',
-    rankNameJa: '中吉',
-    rankNameEn: 'Middle Blessing',
-    messageJa: 'あたたかいご縁が深まる日。心を通わせる会話から素敵なひらめきが生まれます。',
-    messageEn: 'A day of deepening bonds. Warm conversations will spark wonderful moments.',
-    luckyColorJa: '山吹色（やまぶきいろ）',
-    luckyColorEn: 'Golden Yellow',
-    luckyItemJa: 'フォトアルバム',
-    luckyItemEn: 'Photo Album',
-    actionJa: '昔の写真を見返して、懐かしい思い出を語り合ってみましょう。',
-    actionEn: 'Look back at past photos and share fond memories together.',
-  },
-  {
-    rank: 'shokichi',
-    rankNameJa: '小吉',
-    rankNameEn: 'Small Blessing',
-    messageJa: 'ささやかな幸せがそっと寄り添う日。温かいお茶とお菓子で心満たされる時間を。',
-    messageEn: 'Gentle joy will grace your day. Take a peaceful break with tea and sweets.',
-    luckyColorJa: '抹茶色（まっちゃいろ）',
-    luckyColorEn: 'Matcha Green',
-    luckyItemJa: 'お気に入りの音楽',
-    luckyItemEn: 'Favorite Music',
-    actionJa: '好きな音楽を聴きながら、穏やかなティータイムを楽しみましょう。',
-    actionEn: 'Enjoy a cozy tea break while listening to your favorite tunes.',
-  },
-  {
-    rank: 'kichi',
-    rankNameJa: '吉',
-    rankNameEn: 'Blessing',
-    messageJa: '平穏で実り豊かな一日。普段通りの日常の中に特別な輝きを見つけられます。',
-    messageEn: 'A peaceful and fruitful day. You will discover special beauty in everyday moments.',
-    luckyColorJa: '浅葱色（あさぎいろ）',
-    luckyColorEn: 'Light Azure Blue',
-    luckyItemJa: '手書きのメッセージカード',
-    luckyItemEn: 'Handwritten Message Card',
-    actionJa: '心に浮かんだ素直な言葉をメッセージボードに残してみましょう。',
-    actionEn: 'Write down your heartfelt thoughts on the wish board.',
-  },
-  {
-    rank: 'suekichi',
-    rankNameJa: '末吉',
-    rankNameEn: 'Future Blessing',
-    messageJa: 'これからゆっくり運気が開けていく兆し。焦らず一歩ずつ進むことで道が拓けます。',
-    messageEn: 'Good fortune is gently unfolding. Taking steady steps will open new paths.',
-    luckyColorJa: '藤色（ふじいろ）',
-    luckyColorEn: 'Wisteria Purple',
-    luckyItemJa: '折り紙の花',
-    luckyItemEn: 'Origami Flower',
-    actionJa: '新しいミニゲームに挑戦して気分をリフレッシュしましょう。',
-    actionEn: 'Try out a fun mini game to refresh your spirit.',
-  },
-]
-
-// 神社風の日替わりおみくじコンポーネント
+// 和風 3D 想い出みくじコンポーネント
 export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
   const { t, language } = useLanguage()
   const [isShaking, setIsShaking] = useState(false)
-  const [result, setResult] = useState<FortuneResult | null>(null)
+  const [result, setResult] = useState<OmikujiFortune | null>(null)
+  const [activeCategory, setActiveCategory] = useState<'all' | 'bond' | 'health' | 'wish' | 'blessing'>('all')
 
-  // ユーザーのローカル深夜0時に切り替わるキーを生成
-  const now = new Date()
-  const todayKey = `omikuji_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}_${String(now.getDate()).padStart(2, '0')}`
+  // ユーザーのローカル深夜0時に切り替わるキー
+  const todayKey = useMemo(() => {
+    const now = new Date()
+    return `omikuji_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}_${String(now.getDate()).padStart(2, '0')}`
+  }, [])
 
   // 本日すでに引いた結果があればロード
   useEffect(() => {
@@ -115,7 +52,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
     setIsShaking(true)
 
     setTimeout(() => {
-      const picked = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
+      const picked = OMIKUJI_DATA[Math.floor(Math.random() * OMIKUJI_DATA.length)]
       setResult(picked)
       setIsShaking(false)
       try {
@@ -123,98 +60,180 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
       } catch {
         // localStorage 保存エラー時は無視
       }
-    }, 1400)
+    }, 2200)
+  }
+
+  // 運勢に応じたグラデーション・スタイル
+  const getRankBadgeStyle = (rank: string) => {
+    switch (rank) {
+      case 'daikichi':
+        return 'from-[#B8860B] via-[#E5A93C] to-[#D4AF37] text-[#2A1208] border-[#FFF8E7]'
+      case 'chukichi':
+        return 'from-[#854D27] via-[#A05D30] to-[#854D27] text-[#FFF9F3] border-[#D4B08C]'
+      case 'shokichi':
+        return 'from-[#3E6B48] via-[#4E825A] to-[#3E6B48] text-[#FFF9F3] border-[#A8D5BA]'
+      default:
+        return 'from-[#854D27] to-[#6D3D1E] text-[#FFF9F3] border-[#D4B08C]'
+    }
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 max-w-md mx-auto text-center">
-      {!result ? (
-        /* おみくじ筒・抽選エリア */
-        <div className="w-full bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-6 shadow-md flex flex-col items-center">
-          {/* おみくじ筒アニメーション */}
-          <motion.div
-            animate={
-              isShaking
-                ? {
-                    rotate: [-15, 15, -15, 15, -10, 10, 0],
-                    y: [-10, 5, -10, 5, 0],
-                  }
-                : {}
-            }
-            transition={{ duration: 1.2, repeat: isShaking ? Infinity : 0 }}
-            className="w-24 h-40 bg-gradient-to-b from-[#854D27] via-[#9C5D33] to-[#6E3F20] rounded-2xl border-4 border-[#D4B08C] shadow-xl flex flex-col items-center justify-between p-3 relative overflow-hidden mb-6"
-          >
-            <div className="w-12 h-3 bg-[#D4B08C] rounded-full" />
-            <div className="text-xs font-bold text-[#FFF9F3] tracking-widest border border-[#D4B08C]/50 px-2 py-1.5 rounded text-center leading-tight">
-              {language === 'ja' ? '想い出みくじ' : 'Fortune'}
-            </div>
-            <div className="w-16 h-2 bg-[#D4B08C]/60 rounded-full" />
-          </motion.div>
-
-          <p className="text-xs text-[#854D27]/80 mb-4">{t('omikujiSubtitle')}</p>
-
-          <button
-            onClick={handleDraw}
-            disabled={isShaking}
-            className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#854D27] to-[#A05D30] hover:brightness-110 disabled:opacity-50 text-[#FFF9F3] font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-          >
-            <Icon name="Sparkles" size={18} />
-            <span>{isShaking ? t('omikujiDrawing') : t('omikujiDraw')}</span>
-          </button>
+    <div className="flex flex-col items-center justify-center p-2 max-w-lg mx-auto text-center">
+      {/* 3D おみくじ筒エリア */}
+      <div className="w-full bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-4 shadow-md mb-4 relative overflow-hidden">
+        <div className="text-[11px] font-bold text-[#854D27]/80 flex items-center justify-center gap-1.5 mb-1">
+          <Icon name="Sparkles" size={16} />
+          <span>{language === 'ja' ? 'ドラッグして3D筒を回転・観察できます' : 'Drag to rotate the 3D cylinder'}</span>
         </div>
-      ) : (
-        /* 結果発表カード */
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="w-full bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-5 shadow-xl relative"
-        >
-          {/* 本日の運勢バッジ */}
-          <div className="text-[10px] font-bold text-[#854D27]/70 uppercase tracking-wider mb-2">
-            {language === 'ja' ? '本日の運勢' : "Today's Fortune"}
+
+        <OmikujiCylinder3D
+          isShaking={isShaking}
+          isRevealed={Boolean(result)}
+          fortuneNumber={result?.id || 1}
+        />
+
+        {!result && (
+          <div className="mt-3">
+            <p className="text-xs text-[#854D27]/80 mb-3">{t('omikujiSubtitle')}</p>
+            <button
+              onClick={handleDraw}
+              disabled={isShaking}
+              className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#854D27] via-[#A05D30] to-[#854D27] hover:brightness-110 disabled:opacity-50 text-[#FFF9F3] font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Icon name="Sparkles" size={20} />
+              <span>{isShaking ? (language === 'ja' ? 'みくじ筒を振っています...' : 'Shaking cylinder...') : t('omikujiDraw')}</span>
+            </button>
           </div>
+        )}
+      </div>
 
-          {/* 運勢大見出し */}
-          <div className="inline-block bg-[#854D27] text-[#FFF9F3] text-2xl font-black px-6 py-2 rounded-xl border-2 border-[#D4B08C] shadow-md mb-4">
-            {language === 'ja' ? result.rankNameJa : result.rankNameEn}
-          </div>
-
-          {/* 運勢メッセージ */}
-          <p className="text-sm font-serif text-[#854D27] leading-relaxed mb-5 px-1">
-            {language === 'ja' ? result.messageJa : result.messageEn}
-          </p>
-
-          {/* 吉事・ラッキーアイテム詳細グリッド */}
-          <div className="grid grid-cols-2 gap-2.5 mb-4 text-left">
-            <div className="bg-[#854D27]/5 border border-[#D4B08C]/60 rounded-xl p-2.5">
-              <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-1 flex items-center gap-1">
-                <Icon name="Palette" size={12} /> {t('omikujiLuckyColor')}
+      {/* 結果発表：和紙巻物風デザイン */}
+      <AnimatePresence>
+        {result && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="w-full bg-[#FFFDF9] border-2 border-[#D4B08C] rounded-2xl p-5 shadow-xl relative text-left"
+            style={{
+              backgroundImage: 'radial-gradient(#D4B08C 0.6px, transparent 0.6px)',
+              backgroundSize: '16px 16px',
+            }}
+          >
+            {/* 本日の運勢・ヘッダーバッジ */}
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#D4B08C]/50">
+              <span className="text-xs font-bold text-[#854D27]/80 uppercase tracking-widest flex items-center gap-1.5">
+                <Icon name="Calendar" size={14} />
+                {language === 'ja' ? '本日の想い出運勢' : "Today's Omoide Fortune"}
               </span>
               <span className="text-xs font-bold text-[#854D27]">
-                {language === 'ja' ? result.luckyColorJa : result.luckyColorEn}
+                {language === 'ja' ? `第${result.id}番` : `No. ${result.id}`}
               </span>
             </div>
-            <div className="bg-[#854D27]/5 border border-[#D4B08C]/60 rounded-xl p-2.5">
-              <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-1 flex items-center gap-1">
-                <Icon name="Gift" size={12} /> {t('omikujiLuckyItem')}
-              </span>
-              <span className="text-xs font-bold text-[#854D27]">
-                {language === 'ja' ? result.luckyItemJa : result.luckyItemEn}
-              </span>
-            </div>
-          </div>
 
-          {/* 今日のアクション提案 */}
-          <div className="bg-[#854D27]/10 border border-[#D4B08C] rounded-xl p-2.5 text-left mb-2">
-            <span className="text-[10px] font-bold text-[#854D27] uppercase block mb-1 flex items-center gap-1">
-              <Icon name="Sparkles" size={12} /> {t('omikujiActionAdvice')}
-            </span>
-            <span className="text-xs text-[#854D27]/90 leading-normal">
-              {language === 'ja' ? result.actionJa : result.actionEn}
-            </span>
-          </div>
-        </motion.div>
-      )}
+            {/* 運勢大見出し */}
+            <div className="text-center mb-5">
+              <div
+                className={`inline-block px-8 py-2.5 rounded-2xl bg-gradient-to-r ${getRankBadgeStyle(
+                  result.rank
+                )} font-black text-2xl tracking-widest border-2 shadow-lg`}
+              >
+                {language === 'ja' ? result.rankNameJa : result.rankNameEn}
+              </div>
+            </div>
+
+            {/* 祝詠・和歌 / 俳句 */}
+            <div className="bg-[#854D27]/5 border-l-4 border-[#854D27] rounded-r-xl p-3.5 mb-4">
+              <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-1">
+                📜 {language === 'ja' ? '祝詠（しゅくえい）' : 'Celebration Poem'}
+              </span>
+              <p className="text-sm font-serif text-[#854D27] italic leading-relaxed">
+                &ldquo;{language === 'ja' ? result.poemJa : result.poemEn}&rdquo;
+              </p>
+            </div>
+
+            {/* 総合運勢 */}
+            <p className="text-xs font-serif text-[#854D27] leading-relaxed mb-5 px-1 font-medium">
+              {language === 'ja' ? result.generalJa : result.generalEn}
+            </p>
+
+            {/* 4大運勢カテゴリ（縁・健・志・祝） */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-5">
+              {/* 1. 縁（絆・人間関係） */}
+              <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
+                  <Icon name="Heart" size={14} />
+                  <span>{language === 'ja' ? '【縁】絆・出会い' : '【Bond】Connection'}</span>
+                </div>
+                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                  {language === 'ja' ? result.bondJa : result.bondEn}
+                </p>
+              </div>
+
+              {/* 2. 健（健康・心身） */}
+              <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
+                  <Icon name="Sparkles" size={14} />
+                  <span>{language === 'ja' ? '【健】心身・健康' : '【Health】Well-being'}</span>
+                </div>
+                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                  {language === 'ja' ? result.healthJa : result.healthEn}
+                </p>
+              </div>
+
+              {/* 3. 志（願い事・目標） */}
+              <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
+                  <Icon name="Star" size={14} />
+                  <span>{language === 'ja' ? '【志】願い事・学業' : '【Wish】Aspirations'}</span>
+                </div>
+                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                  {language === 'ja' ? result.wishJa : result.wishEn}
+                </p>
+              </div>
+
+              {/* 4. 祝（誕生日の祝福） */}
+              <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
+                  <Icon name="Cake" size={14} />
+                  <span>{language === 'ja' ? '【祝】誕生日の言霊' : '【Blessing】Birthday Wish'}</span>
+                </div>
+                <p className="text-[11px] text-[#854D27]/90 leading-snug">
+                  {language === 'ja' ? result.blessingJa : result.blessingEn}
+                </p>
+              </div>
+            </div>
+
+            {/* ラッキー情報バー（色・品・数字） */}
+            <div className="grid grid-cols-3 gap-2 p-3 bg-[#854D27]/10 border border-[#D4B08C] rounded-xl text-center">
+              <div>
+                <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-0.5">
+                  {t('omikujiLuckyColor')}
+                </span>
+                <span className="text-xs font-bold text-[#854D27] truncate block">
+                  {language === 'ja' ? result.luckyColorJa : result.luckyColorEn}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-0.5">
+                  {t('omikujiLuckyItem')}
+                </span>
+                <span className="text-xs font-bold text-[#854D27] truncate block">
+                  {language === 'ja' ? result.luckyItemJa : result.luckyItemEn}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-0.5">
+                  {language === 'ja' ? '幸運数' : 'Lucky No.'}
+                </span>
+                <span className="text-xs font-black text-[#854D27]">
+                  {result.luckyNumber}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
