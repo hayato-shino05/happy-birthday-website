@@ -287,8 +287,8 @@ export function OmikujiCylinder3D({
       sctx.arc(894, 1918, 32, 0, Math.PI * 2)
       sctx.fill()
 
-      // 純白（#FFFFFF）＋極太漆黒輪郭（#000000）の超高コントラスト文字描画
-      sctx.font = '900 340px "Yu Gothic", "Meiryo", "Hiragino Sans", "Segoe UI", sans-serif'
+      // 純白（#FFFFFF）＋超極太漆黒輪郭（#000000, lineWidth 64）の超高コントラスト文字描画
+      sctx.font = '900 350px "Yu Gothic", "Meiryo", "Hiragino Sans", "Segoe UI", sans-serif'
       sctx.textAlign = 'center'
       sctx.textBaseline = 'middle'
 
@@ -296,14 +296,17 @@ export function OmikujiCylinder3D({
       const charY = [440, 800, 1160, 1520]
 
       signChars.forEach((c, i) => {
-        // 1. 極太の漆黒輪郭線（境界をくっきり際立たせる）
-        sctx.lineWidth = 40
+        // 1. 超極太の漆黒輪郭線（lineWidth 64 による圧倒的エッジ強調）
+        sctx.shadowColor = '#000000'
+        sctx.shadowBlur = 18
+        sctx.lineWidth = 64
         sctx.strokeStyle = '#000000'
         sctx.lineJoin = 'round'
         sctx.miterLimit = 2
         sctx.strokeText(c, 512, charY[i])
 
-        // 2. 純白の充填（文字を鮮明に発光・浮き立たせる）
+        // 2. 純白の充填（文字をくっきり浮き立たせる）
+        sctx.shadowBlur = 0
         sctx.fillStyle = '#FFFFFF'
         sctx.fillText(c, 512, charY[i])
       })
