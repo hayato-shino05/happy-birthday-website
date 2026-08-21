@@ -57,9 +57,9 @@ Beyond birthday countdowns and 2D/3D cake candle-blowing, it brings together a T
 |------|---------|-------------|
 | `Timer` | Real-time countdown | Shows the remaining time until the next birthday or milestone using Supabase data. |
 | `Cake` | Interactive cake | 2D/3D cake with microphone-enabled candle blowing interaction. |
-| `Sparkles` | 3D Omikuji Fortune (Three.js) | Interactive 3D Japanese Omikuji cylinder with 360-degree orbit, haptic shake physics, bamboo stick reveal, Waka/Haiku poems, 4 life categories (Bond, Health, Wish, Blessing), and lucky items. |
+| `Scroll` | 3D Omikuji Fortune (Three.js) | Interactive 3D Japanese Omikuji cylinder with 360-degree orbit, haptic shake physics, bamboo stick reveal, Waka/Haiku poems, 4 life categories (Bond, Health, Wish, Blessing), and lucky items. |
 | `Music` | Music player | Plays celebration songs and nostalgic/vintage tracks with Howler.js. |
-| `Sparkles` | Visual effects | Displays confetti, fireworks, balloons, and seasonal particle effects. |
+| `PartyPopper` | Visual effects | Displays confetti, fireworks, balloons, and seasonal particle effects. |
 
 ### MEDIA & KEEPSAKES
 
@@ -98,7 +98,7 @@ Beyond birthday countdowns and 2D/3D cake candle-blowing, it brings together a T
 | Icon | Feature | Description |
 |------|---------|-------------|
 | `Palette` | Four seasons | Dynamic visual themes for Spring, Summer, Autumn, and Winter. |
-| `Sparkles` | 13 Festival themes | Dynamic themes for Hanami, Tanabata, Obon, Tsukimi, Shogatsu, Halloween, Christmas, etc. |
+| `CalendarDays` | 13 Festival themes | Dynamic themes for Hanami, Tanabata, Obon, Tsukimi, Shogatsu, Halloween, Christmas, etc. |
 | `Compass` | Mobile Bottom Dock & Drawer | Mobile-first bottom dock and expandable Japanese memory drawer. |
 | `Type` | Japanese Typography System | High-contrast font stack: Windows (Yu Gothic / Meiryo), macOS / iOS (Hiragino Sans), and Mincho Serif (Yu Mincho / Noto Serif JP). |
 | `Languages` | Multi-language (i18n) | Seamless switching between Japanese (JA) and English (EN). |

@@ -449,13 +449,26 @@ export function OmikujiCylinder3D({
     const mouse = new THREE.Vector2()
     const clickableMeshes = [cylinderMesh, plaqueMesh, topRing, bottomRing, capMesh]
     let isHovered = false
+    let isPointerDown = false
+    let hasMovedBeyondThreshold = false
     let pointerDownPos = { x: 0, y: 0 }
 
     const handlePointerDown = (e: PointerEvent) => {
+      // 主ポインターの左クリック・第1タッチ以外は無視
+      if (e.button !== 0 || !e.isPrimary) return
+      isPointerDown = true
+      hasMovedBeyondThreshold = false
       pointerDownPos = { x: e.clientX, y: e.clientY }
     }
 
     const handlePointerMove = (e: PointerEvent) => {
+      if (isPointerDown) {
+        const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y)
+        if (dist > 6) {
+          hasMovedBeyondThreshold = true
+        }
+      }
+
       const rect = renderer.domElement.getBoundingClientRect()
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
@@ -479,9 +492,14 @@ export function OmikujiCylinder3D({
     }
 
     const handlePointerUp = (e: PointerEvent) => {
-      // 6px以上の移動がある場合はドラッグ回転と判定し、クリック抽選を抑制
-      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y)
-      if (moveDist > 6) return
+      // 主ポインターの左クリック・第1タッチ以外は無視
+      if (e.button !== 0 || !e.isPrimary) return
+      const wasDragging = hasMovedBeyondThreshold
+      isPointerDown = false
+      hasMovedBeyondThreshold = false
+
+      // ドラッグ操作中（累積移動距離が閾値6pxを超えた場合）はクリック抽選を抑制
+      if (wasDragging) return
 
       const rect = renderer.domElement.getBoundingClientRect()
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1

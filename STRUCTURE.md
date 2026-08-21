@@ -109,6 +109,7 @@ app/
 | `LanguageSelector.tsx` | UI 言語の切り替え（英語 / 日本語） |
 | `ThemeIndicator.tsx` | 現在のテーマ表示 |
 | `HeaderButtons.tsx` | ヘッダーアクションボタン群 |
+| `GameButtons.tsx` | デスクトップ向けミニゲームナビゲーションボタン群 |
 | `MobileBottomDock.tsx` | モバイル向けボトムナビゲーション & 和風の抽斗（Drawer）メニュー |
 | `MobileGameMenu.tsx` | モバイル専用ミニゲームセレクター |
 | `SocialButtons.tsx` | SNS 共有ボタン |
@@ -218,11 +219,6 @@ Three.js WebGL を活用したリッチな 3D インタラクティブ体験を�
 
 ### エフェクトコンポーネント（`/components/effects/`）
 
-装飾用のビジュアルエフェクトをまとめたレイヤーです。
-
-| Component | 説明 |
-|-----------|------|
-| `ParticleSystem.tsx` | 汎用パーティクルシステム |
 | `Confetti.tsx` | 紙吹雪エフェクト |
 | `FallingPetals.tsx` | 桜の花びらが舞うエフェクト |
 | `FallingLeaves.tsx` | 紅葉が舞うエフェクト |
@@ -343,8 +339,8 @@ React コンテキストや外部ライブラリのプロバイダをまとめ�
 | `omikujiData.ts` | 12 種類の本格和風おみくじデータ（大吉〜半吉、和歌・俳句、4大運勢、ラッキー色・品・数） |
 | `i18n/en.json` | 英語 UI 辞書データ |
 | `i18n/ja.json` | 日本語 UI 辞書データ |
-| `festivals/` | 13 の季節・祝祭日データパック |
-| `generated/` | 自動生成されたデータマニフェスト（`locales.ts`, `festivals.ts`） |
+| `festivals/` | 9 の祝祭日データパック（`jp/` 配下に `en.json` / `ja.json` を配置） |
+| `generated/` | 自動生成されたデータマニフェスト（`festival-packs.ts`, `locales.ts`, `themes.ts`） |
 
 ---
 
