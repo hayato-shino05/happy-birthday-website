@@ -23,6 +23,7 @@ export default function Home() {
 
   return (
     <div
+      suppressHydrationWarning
       className={`min-h-screen bg-gradient-to-br ${themeConfig.gradient}`}
       style={{ backgroundColor: themeConfig.colors.background }}
     >

@@ -66,6 +66,7 @@ export function ThemeIndicator() {
   return (
     <div
       className="theme-indicator"
+      suppressHydrationWarning
       style={{
         padding: '6px 14px 6px 8px',
         border: '2px solid #D4B08C',
