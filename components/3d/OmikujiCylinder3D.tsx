@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 
 interface OmikujiCylinder3DProps {
   isShaking: boolean
@@ -47,11 +48,11 @@ export function OmikujiCylinder3D({
 
     // 1. シーン、カメラ、レンダラーの初期化
     const width = container.clientWidth || 360
-    const height = container.clientHeight || 300
+    const height = container.clientHeight || 280
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100)
-    camera.position.set(0, 0.65, 8.8)
+    const camera = new THREE.PerspectiveCamera(34, width / height, 0.1, 100)
+    camera.position.set(0, 0.5, 8.2)
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -61,10 +62,16 @@ export function OmikujiCylinder3D({
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.35
+    renderer.toneMappingExposure = 1.25
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFShadowMap
     container.appendChild(renderer.domElement)
+
+    // リアルな環境マップ（RoomEnvironment による漆と金箔の鏡面反射）
+    const pmremGenerator = new THREE.PMREMGenerator(renderer)
+    pmremGenerator.compileEquirectangularShader()
+    const envTexture = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture
+    scene.environment = envTexture
 
     // 2. OrbitControls の設定（スムーズなダンピングと直感的な操作）
     const controls = new OrbitControls(camera, renderer.domElement)
@@ -72,76 +79,77 @@ export function OmikujiCylinder3D({
     controls.dampingFactor = 0.06
     controls.enablePan = false
     controls.minDistance = 5.0
-    controls.maxDistance = 14.0
+    controls.maxDistance = 12.0
     controls.minPolarAngle = Math.PI / 6
     controls.maxPolarAngle = (Math.PI * 5) / 8
     controls.target.set(0, -0.05, 0)
 
-    // 3. 照明システム（金箔の輝きと漆の艶を引き出す多灯ライティング）
-    const ambientLight = new THREE.AmbientLight(0xfff8ee, 1.4)
+    // 3. 照明システム（和風の温かな光彩と金箔ハイライト）
+    const ambientLight = new THREE.AmbientLight(0xfff8ee, 0.9)
     scene.add(ambientLight)
 
-    const mainSun = new THREE.DirectionalLight(0xffffff, 2.2)
+    const mainSun = new THREE.DirectionalLight(0xfffaed, 2.4)
     mainSun.position.set(4, 7, 5)
     mainSun.castShadow = true
-    mainSun.shadow.mapSize.width = 1024
-    mainSun.shadow.mapSize.height = 1024
     scene.add(mainSun)
 
-    const warmPointLight = new THREE.PointLight(0xffb84d, 3.0, 12)
-    warmPointLight.position.set(-3, 3, 2.5)
+    const warmPointLight = new THREE.PointLight(0xffa726, 2.5, 10)
+    warmPointLight.position.set(-3, 2.5, 3)
     scene.add(warmPointLight)
 
-    const goldenRim = new THREE.DirectionalLight(0xd4af37, 2.0)
-    goldenRim.position.set(0, -3, -4)
+    const goldenRim = new THREE.DirectionalLight(0xd4af37, 2.2)
+    goldenRim.position.set(0, -2, -4)
     scene.add(goldenRim)
 
-    const topGlowLight = new THREE.PointLight(0xfff0b3, 1.5, 6)
-    topGlowLight.position.set(0, 2.8, 0)
+    const topGlowLight = new THREE.PointLight(0xffe082, 1.8, 6)
+    topGlowLight.position.set(0, 2.6, 0)
     scene.add(topGlowLight)
 
     // 4. メインオブジェクトグループ
     const mainRoot = new THREE.Group()
     scene.add(mainRoot)
 
-    // 台座グループ（神社の飾り台座）
+    // 神社の飾り台座グループ
     const pedestalGroup = new THREE.Group()
-    pedestalGroup.position.y = -1.75
+    pedestalGroup.position.y = -1.68
     mainRoot.add(pedestalGroup)
 
-    const baseGeo = new THREE.CylinderGeometry(1.6, 1.75, 0.22, 8)
+    const baseGeo = new THREE.CylinderGeometry(1.5, 1.65, 0.2, 8)
+    baseGeo.rotateY(Math.PI / 8)
     const baseMat = new THREE.MeshStandardMaterial({
       color: 0x1f0e07,
       roughness: 0.35,
-      metalness: 0.2,
+      metalness: 0.15,
     })
     const baseMesh = new THREE.Mesh(baseGeo, baseMat)
     baseMesh.receiveShadow = true
     pedestalGroup.add(baseMesh)
 
-    const baseGoldRingGeo = new THREE.CylinderGeometry(1.62, 1.62, 0.04, 8)
+    const baseGoldRingGeo = new THREE.CylinderGeometry(1.52, 1.52, 0.04, 8)
+    baseGoldRingGeo.rotateY(Math.PI / 8)
     const goldOrnamentMat = new THREE.MeshStandardMaterial({
-      color: 0xe5a93c,
-      roughness: 0.15,
-      metalness: 0.9,
+      color: 0xf5b041,
+      roughness: 0.18,
+      metalness: 0.88,
     })
     const baseGoldRing = new THREE.Mesh(baseGoldRingGeo, goldOrnamentMat)
-    baseGoldRing.position.y = 0.12
+    baseGoldRing.position.y = 0.11
     pedestalGroup.add(baseGoldRing)
 
     // おみくじ筒グループ
     const cylinderGroup = new THREE.Group()
     mainRoot.add(cylinderGroup)
 
-    // 漆塗り（Urushi）の鏡面八角柱本体
-    const cylinderGeo = new THREE.CylinderGeometry(0.95, 1.0, 2.9, 8)
+    // 漆塗り（Urushi）の鏡面八角柱本体（正面をフラットに合わせるため rotateY）
+    const cylinderGeo = new THREE.CylinderGeometry(0.85, 0.88, 3.0, 8)
+    cylinderGeo.rotateY(Math.PI / 8)
     const lacquerMat = new THREE.MeshPhysicalMaterial({
-      color: 0x3d170b,
-      roughness: 0.18,
-      metalness: 0.12,
+      color: 0x381308,
+      roughness: 0.15,
+      metalness: 0.1,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.06,
-      reflectivity: 0.8,
+      clearcoatRoughness: 0.04,
+      reflectivity: 0.85,
     })
     const cylinderMesh = new THREE.Mesh(cylinderGeo, lacquerMat)
     cylinderMesh.castShadow = true
@@ -149,71 +157,73 @@ export function OmikujiCylinder3D({
     cylinderGroup.add(cylinderMesh)
 
     // 上下の装飾金帯（彫刻風リング）
-    const ringGeo = new THREE.CylinderGeometry(0.98, 0.98, 0.16, 8)
+    const ringGeo = new THREE.CylinderGeometry(0.875, 0.875, 0.14, 8)
+    ringGeo.rotateY(Math.PI / 8)
     const topRing = new THREE.Mesh(ringGeo, goldOrnamentMat)
-    topRing.position.y = 1.38
+    topRing.position.y = 1.43
     cylinderGroup.add(topRing)
 
     const bottomRing = new THREE.Mesh(ringGeo, goldOrnamentMat)
-    bottomRing.position.y = -1.38
+    bottomRing.position.y = -1.43
     cylinderGroup.add(bottomRing)
 
     // 上蓋とみくじ棒出口
-    const capGeo = new THREE.CylinderGeometry(0.92, 0.92, 0.09, 8)
+    const capGeo = new THREE.CylinderGeometry(0.82, 0.82, 0.08, 8)
+    capGeo.rotateY(Math.PI / 8)
     const capMesh = new THREE.Mesh(capGeo, lacquerMat)
-    capMesh.position.y = 1.48
+    capMesh.position.y = 1.52
     cylinderGroup.add(capMesh)
 
-    const holeRimGeo = new THREE.TorusGeometry(0.2, 0.035, 12, 24)
+    const holeRimGeo = new THREE.TorusGeometry(0.18, 0.03, 12, 24)
     const holeRim = new THREE.Mesh(holeRimGeo, goldOrnamentMat)
     holeRim.rotation.x = Math.PI / 2
-    holeRim.position.y = 1.53
+    holeRim.position.y = 1.56
     cylinderGroup.add(holeRim)
 
-    const holeInnerGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.12, 16)
+    const holeInnerGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.1, 16)
     const holeInnerMat = new THREE.MeshBasicMaterial({ color: 0x050201 })
     const holeInner = new THREE.Mesh(holeInnerGeo, holeInnerMat)
-    holeInner.position.y = 1.48
+    holeInner.position.y = 1.52
     cylinderGroup.add(holeInner)
 
-    // 蒔絵風の「想い出籤」看板プレート（1024x2048 超高解像度レンダリング）
+    // 正面フラット面にぴったり配置する 3D 看板銘板
     const signCanvas = document.createElement('canvas')
     signCanvas.width = 1024
     signCanvas.height = 2048
     const sctx = signCanvas.getContext('2d')
     if (sctx) {
-      // 漆黒グラデーション背景
+      // 漆黒のグラデーション
       const grad = sctx.createLinearGradient(0, 0, 1024, 2048)
-      grad.addColorStop(0, '#190A05')
-      grad.addColorStop(0.5, '#2B1207')
-      grad.addColorStop(1, '#150602')
+      grad.addColorStop(0, '#150602')
+      grad.addColorStop(0.5, '#2A1005')
+      grad.addColorStop(1, '#120401')
       sctx.fillStyle = grad
       sctx.fillRect(0, 0, 1024, 2048)
 
       // 三重の精緻な金枠装飾
-      sctx.strokeStyle = '#E5A93C'
-      sctx.lineWidth = 32
+      sctx.strokeStyle = '#F5B041'
+      sctx.lineWidth = 36
       sctx.strokeRect(48, 48, 928, 1952)
 
       sctx.strokeStyle = '#D4AF37'
-      sctx.lineWidth = 12
-      sctx.strokeRect(84, 84, 856, 1880)
+      sctx.lineWidth = 14
+      sctx.strokeRect(90, 90, 844, 1868)
 
-      sctx.strokeStyle = '#F3D27E'
-      sctx.lineWidth = 4
-      sctx.strokeRect(102, 102, 820, 1844)
+      sctx.strokeStyle = '#FFE082'
+      sctx.lineWidth = 6
+      sctx.strokeRect(112, 112, 800, 1824)
 
       // 四隅の金花文様
-      sctx.fillStyle = '#E5A93C'
+      sctx.fillStyle = '#F5B041'
       sctx.beginPath()
-      sctx.arc(120, 120, 28, 0, Math.PI * 2)
-      sctx.arc(904, 120, 28, 0, Math.PI * 2)
-      sctx.arc(120, 1928, 28, 0, Math.PI * 2)
-      sctx.arc(904, 1928, 28, 0, Math.PI * 2)
+      sctx.arc(130, 130, 32, 0, Math.PI * 2)
+      sctx.arc(894, 130, 32, 0, Math.PI * 2)
+      sctx.arc(130, 1918, 32, 0, Math.PI * 2)
+      sctx.arc(894, 1918, 32, 0, Math.PI * 2)
       sctx.fill()
 
       // 金箔の極太毛筆文字（重厚な輪郭ストローク＋白金充填）
-      sctx.font = '900 280px "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif'
+      sctx.font = '900 300px "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif'
       sctx.textAlign = 'center'
       sctx.textBaseline = 'middle'
 
@@ -222,13 +232,13 @@ export function OmikujiCylinder3D({
 
       signChars.forEach((c, i) => {
         // 金色の太い輪郭縁取り
-        sctx.shadowColor = 'rgba(229, 169, 60, 1.0)'
-        sctx.shadowBlur = 32
-        sctx.lineWidth = 24
+        sctx.shadowColor = 'rgba(245, 176, 65, 1.0)'
+        sctx.shadowBlur = 36
+        sctx.lineWidth = 28
         sctx.strokeStyle = '#D4AF37'
         sctx.strokeText(c, 512, charY[i])
 
-        // 白金の極太塗りつぶし
+        // 純白の極太塗りつぶし
         sctx.shadowBlur = 0
         sctx.fillStyle = '#FFFFFF'
         sctx.fillText(c, 512, charY[i])
@@ -241,20 +251,22 @@ export function OmikujiCylinder3D({
     signTexture.magFilter = THREE.LinearFilter
     signTexture.anisotropy = renderer.capabilities.getMaxAnisotropy()
 
-    const signGeo = new THREE.PlaneGeometry(0.78, 1.56)
-    const signMat = new THREE.MeshStandardMaterial({
+    // 8角形フラット面上の厚みを持った 3D 看板プレート
+    const plaqueGeo = new THREE.BoxGeometry(0.68, 1.46, 0.03)
+    const plaqueMat = new THREE.MeshStandardMaterial({
       map: signTexture,
       roughness: 0.15,
-      metalness: 0.35,
+      metalness: 0.3,
     })
-    const signMesh = new THREE.Mesh(signGeo, signMat)
-    signMesh.position.set(0, 0, 0.98)
-    cylinderGroup.add(signMesh)
+    const plaqueMesh = new THREE.Mesh(plaqueGeo, plaqueMat)
+    // 8角柱の正面フラット面の距離: 0.85 * cos(pi/8) ~= 0.785
+    plaqueMesh.position.set(0, 0, 0.805)
+    cylinderGroup.add(plaqueMesh)
 
     // 5. 内部の竹製みくじ棒束
     const stickMat = new THREE.MeshStandardMaterial({
       color: 0xf1dfc3,
-      roughness: 0.5,
+      roughness: 0.45,
       metalness: 0.05,
     })
 
@@ -264,14 +276,14 @@ export function OmikujiCylinder3D({
     mainStickGroup.position.set(0, 0.2, 0)
     mainStickGroup.visible = false
 
-    const mainStickGeo = new THREE.BoxGeometry(0.14, 2.6, 0.04)
+    const mainStickGeo = new THREE.BoxGeometry(0.13, 2.6, 0.035)
     const mainStickMesh = new THREE.Mesh(mainStickGeo, stickMat)
     mainStickGroup.add(mainStickMesh)
 
-    const tipGeo = new THREE.BoxGeometry(0.142, 0.35, 0.042)
+    const tipGeo = new THREE.BoxGeometry(0.132, 0.35, 0.037)
     const tipMat = new THREE.MeshStandardMaterial({
       color: 0xc62828,
-      roughness: 0.3,
+      roughness: 0.25,
     })
     const tipMesh = new THREE.Mesh(tipGeo, tipMat)
     tipMesh.position.y = 1.14
@@ -287,8 +299,8 @@ export function OmikujiCylinder3D({
       stickCtx.fillRect(0, 0, 512, 2048)
       stickCtx.fillStyle = '#100502'
       stickCtx.strokeStyle = '#100502'
-      stickCtx.lineWidth = 18
-      stickCtx.font = '900 280px "Yu Mincho", "Hiragino Mincho ProN", serif'
+      stickCtx.lineWidth = 20
+      stickCtx.font = '900 290px "Yu Mincho", "Hiragino Mincho ProN", serif'
       stickCtx.textAlign = 'center'
       stickCtx.textBaseline = 'middle'
       const label = KANJI_NUMBERS[(fortuneNumber - 1) % KANJI_NUMBERS.length] || '第一番'
@@ -304,14 +316,13 @@ export function OmikujiCylinder3D({
     stickTexture.magFilter = THREE.LinearFilter
     stickTexture.anisotropy = renderer.capabilities.getMaxAnisotropy()
 
-    const stickLabelGeo = new THREE.PlaneGeometry(0.12, 0.9)
+    const stickLabelGeo = new THREE.PlaneGeometry(0.11, 0.9)
     const stickLabelMat = new THREE.MeshBasicMaterial({ map: stickTexture, transparent: true })
     const stickLabelMesh = new THREE.Mesh(stickLabelGeo, stickLabelMat)
-    stickLabelMesh.position.set(0, 0.45, 0.022)
+    stickLabelMesh.position.set(0, 0.45, 0.019)
     mainStickGroup.add(stickLabelMesh)
 
     // 6. パーティクルシステム（金粉＆桜の花びら）
-    // 金粉パーティクル
     const goldCount = 60
     const goldGeo = new THREE.BufferGeometry()
     const goldPositions = new Float32Array(goldCount * 3)
@@ -325,7 +336,7 @@ export function OmikujiCylinder3D({
     goldGeo.setAttribute('position', new THREE.BufferAttribute(goldPositions, 3))
     const goldParticleMat = new THREE.PointsMaterial({
       color: 0xffd700,
-      size: 0.09,
+      size: 0.08,
       transparent: true,
       opacity: 0.85,
       blending: THREE.AdditiveBlending,
@@ -371,7 +382,7 @@ export function OmikujiCylinder3D({
     // 7. Raycaster によるホバー＆クリック判定（直感操作）
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
-    const clickableMeshes = [cylinderMesh, signMesh, topRing, bottomRing, capMesh]
+    const clickableMeshes = [cylinderMesh, plaqueMesh, topRing, bottomRing, capMesh]
     let isHovered = false
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -397,10 +408,10 @@ export function OmikujiCylinder3D({
       }
     }
 
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = () => {
       const rect = renderer.domElement.getBoundingClientRect()
-      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
-      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+      mouse.x = ((event as MouseEvent).clientX - rect.left) / rect.width * 2 - 1
+      mouse.y = -(((event as MouseEvent).clientY - rect.top) / rect.height) * 2 + 1
 
       raycaster.setFromCamera(mouse, camera)
       const intersects = raycaster.intersectObjects(clickableMeshes)
@@ -461,7 +472,7 @@ export function OmikujiCylinder3D({
 
         mainStickGroup.visible = true
         mainStickGroup.position.y = 0.4 + Math.sin(shakePhase * 2.2) * 0.15
-        warmPointLight.intensity = 4.5 + Math.sin(shakePhase * 3) * 1.5
+        warmPointLight.intensity = 4.0 + Math.sin(shakePhase * 3) * 1.5
       } else if (isRevealedRef.current) {
         // 結果開示：主役のみくじ棒が黄金光と共にせり出し、静かに回転
         cylinderGroup.position.y = THREE.MathUtils.lerp(cylinderGroup.position.y, 0, delta * 4)
@@ -471,7 +482,7 @@ export function OmikujiCylinder3D({
 
         mainStickGroup.visible = true
         mainStickGroup.position.y = THREE.MathUtils.lerp(mainStickGroup.position.y, 1.95, delta * 3.5)
-        topGlowLight.intensity = THREE.MathUtils.lerp(topGlowLight.intensity, 3.5, delta * 2)
+        topGlowLight.intensity = THREE.MathUtils.lerp(topGlowLight.intensity, 3.2, delta * 2)
       } else {
         // 待機時：自然な呼吸の浮遊感
         cylinderGroup.position.y = Math.sin(time * 1.8) * 0.05
@@ -491,7 +502,7 @@ export function OmikujiCylinder3D({
     const handleResize = () => {
       if (!container) return
       const newWidth = container.clientWidth || 360
-      const newHeight = container.clientHeight || 300
+      const newHeight = container.clientHeight || 280
       camera.aspect = newWidth / newHeight
       camera.updateProjectionMatrix()
       renderer.setSize(newWidth, newHeight)
@@ -505,6 +516,8 @@ export function OmikujiCylinder3D({
       renderer.domElement.removeEventListener('pointermove', handlePointerMove)
       renderer.domElement.removeEventListener('click', handleClick)
       controls.dispose()
+      pmremGenerator.dispose()
+      envTexture.dispose()
 
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement)
@@ -517,7 +530,7 @@ export function OmikujiCylinder3D({
       baseGoldRingGeo.dispose()
       holeRimGeo.dispose()
       holeInnerGeo.dispose()
-      signGeo.dispose()
+      plaqueGeo.dispose()
       mainStickGeo.dispose()
       tipGeo.dispose()
       stickLabelGeo.dispose()
@@ -528,7 +541,7 @@ export function OmikujiCylinder3D({
       goldOrnamentMat.dispose()
       baseMat.dispose()
       holeInnerMat.dispose()
-      signMat.dispose()
+      plaqueMat.dispose()
       stickMat.dispose()
       tipMat.dispose()
       stickLabelMat.dispose()
@@ -545,7 +558,7 @@ export function OmikujiCylinder3D({
   return (
     <div
       ref={containerRef}
-      className="w-full h-72 relative flex items-center justify-center select-none"
+      className="w-full h-64 relative flex items-center justify-center select-none"
       style={{ touchAction: 'none' }}
     />
   )

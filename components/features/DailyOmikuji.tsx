@@ -34,12 +34,18 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
     return `omikuji_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}_${String(now.getDate()).padStart(2, '0')}`
   }, [])
 
-  // 本日すでに引いた結果があればロード
+  // 本日すでに引いた結果があればロード（旧スキーマのキャッシュを自動補正・完全復元）
   useEffect(() => {
     try {
       const saved = localStorage.getItem(todayKey)
       if (saved) {
-        setResult(JSON.parse(saved))
+        const parsed = JSON.parse(saved)
+        const matched =
+          OMIKUJI_DATA.find((f) => f.id === parsed?.id) ||
+          OMIKUJI_DATA.find((f) => f.rank === parsed?.rank) ||
+          OMIKUJI_DATA[0]
+        setResult(matched)
+        localStorage.setItem(todayKey, JSON.stringify(matched))
       }
     } catch {
       // localStorage 利用不可時は無視
