@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
@@ -109,6 +109,33 @@ export function OmikujiCylinder3D({
     const mainRoot = new THREE.Group()
     scene.add(mainRoot)
 
+    // 接地面のコンタクトシャドウ（Contact Shadow）によるリアルな接地感
+    const shadowCanvas = document.createElement('canvas')
+    shadowCanvas.width = 256
+    shadowCanvas.height = 256
+    const shadowCtx = shadowCanvas.getContext('2d')
+    if (shadowCtx) {
+      const grad = shadowCtx.createRadialGradient(128, 128, 20, 128, 128, 120)
+      grad.addColorStop(0, 'rgba(25, 10, 4, 0.85)')
+      grad.addColorStop(0.4, 'rgba(25, 10, 4, 0.45)')
+      grad.addColorStop(0.8, 'rgba(25, 10, 4, 0.12)')
+      grad.addColorStop(1, 'rgba(25, 10, 4, 0)')
+      shadowCtx.fillStyle = grad
+      shadowCtx.fillRect(0, 0, 256, 256)
+    }
+    const shadowTexture = new THREE.CanvasTexture(shadowCanvas)
+    const shadowGeo = new THREE.PlaneGeometry(3.6, 3.6)
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTexture,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    })
+    const contactShadow = new THREE.Mesh(shadowGeo, shadowMat)
+    contactShadow.rotation.x = -Math.PI / 2
+    contactShadow.position.y = -1.77
+    mainRoot.add(contactShadow)
+
     // 神社の飾り台座グループ
     const pedestalGroup = new THREE.Group()
     pedestalGroup.position.y = -1.68
@@ -136,20 +163,56 @@ export function OmikujiCylinder3D({
     baseGoldRing.position.y = 0.11
     pedestalGroup.add(baseGoldRing)
 
+    // 伝統工芸の手彫り木目テクスチャ（Wood Grain Texture）のプロシージャル生成
+    const woodCanvas = document.createElement('canvas')
+    woodCanvas.width = 512
+    woodCanvas.height = 1024
+    const wctx = woodCanvas.getContext('2d')
+    if (wctx) {
+      // 欅（けやき）・檜の深い漆茶褐色ベース
+      wctx.fillStyle = '#3E180A'
+      wctx.fillRect(0, 0, 512, 1024)
+
+      // 有機的な年輪・木目ラインの重なり
+      for (let y = 0; y < 1024; y += 3) {
+        const wave = Math.sin(y * 0.018) * 16 + Math.cos(y * 0.045) * 8
+        const alpha = 0.09 + Math.sin(y * 0.07 + wave * 0.1) * 0.06
+        wctx.strokeStyle = `rgba(18, 5, 2, ${Math.max(0.03, alpha)})`
+        wctx.lineWidth = 1.8
+        wctx.beginPath()
+        wctx.moveTo(0, y + wave)
+        wctx.bezierCurveTo(170, y - wave * 0.5, 340, y + wave * 0.7, 512, y + wave * 0.3)
+        wctx.stroke()
+      }
+
+      // 金粉が微かに滲む導管・木肌テクスチャ
+      for (let i = 0; i < 350; i++) {
+        const rx = Math.random() * 512
+        const ry = Math.random() * 1024
+        wctx.fillStyle = 'rgba(212, 175, 55, 0.04)'
+        wctx.fillRect(rx, ry, 1, 5 + Math.random() * 8)
+      }
+    }
+    const woodTexture = new THREE.CanvasTexture(woodCanvas)
+    woodTexture.wrapS = THREE.RepeatWrapping
+    woodTexture.wrapT = THREE.RepeatWrapping
+    woodTexture.repeat.set(2, 1)
+
     // おみくじ筒グループ
     const cylinderGroup = new THREE.Group()
     mainRoot.add(cylinderGroup)
 
-    // 漆塗り（Urushi）の鏡面八角柱本体（正面をフラットに合わせるため rotateY）
+    // 手彫り木肌と伝統漆塗り（Urushi）の鏡面八角柱本体
     const cylinderGeo = new THREE.CylinderGeometry(0.85, 0.88, 3.0, 8)
     cylinderGeo.rotateY(Math.PI / 8)
     const lacquerMat = new THREE.MeshPhysicalMaterial({
-      color: 0x381308,
-      roughness: 0.15,
-      metalness: 0.1,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.04,
-      reflectivity: 0.85,
+      color: 0x421A0C,
+      map: woodTexture,
+      roughness: 0.28, // プラスチック感を排除し、手触りのある高級漆器の質感へ
+      metalness: 0.08,
+      clearcoat: 0.85,
+      clearcoatRoughness: 0.1,
+      reflectivity: 0.75,
     })
     const cylinderMesh = new THREE.Mesh(cylinderGeo, lacquerMat)
     cylinderMesh.castShadow = true
@@ -536,6 +599,7 @@ export function OmikujiCylinder3D({
       stickLabelGeo.dispose()
       goldGeo.dispose()
       petalGeo.dispose()
+      shadowGeo.dispose()
 
       lacquerMat.dispose()
       goldOrnamentMat.dispose()
@@ -547,9 +611,12 @@ export function OmikujiCylinder3D({
       stickLabelMat.dispose()
       goldParticleMat.dispose()
       petalMat.dispose()
+      shadowMat.dispose()
 
       signTexture.dispose()
       stickTexture.dispose()
+      shadowTexture.dispose()
+      woodTexture.dispose()
 
       renderer.dispose()
     }
