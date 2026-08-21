@@ -42,7 +42,14 @@ export function FallingSnow({ count = 50, active = true }: FallingSnowProps) {
     }))
     const initializationTimeout = setTimeout(() => setSnowflakes(initialSnow), 0)
 
+    let isVisible = typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+    const handleVisibilityChange = () => {
+      isVisible = document.visibilityState === 'visible'
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     const spawnInterval = setInterval(() => {
+      if (!isVisible) return
       setSnowflakes((previous) => {
         if (previous.length >= count * 1.8) return previous
         const newCount = 2 + Math.floor(Math.random() * 3)
@@ -51,6 +58,7 @@ export function FallingSnow({ count = 50, active = true }: FallingSnowProps) {
     }, 500)
 
     const cleanupInterval = setInterval(() => {
+      if (!isVisible) return
       setSnowflakes((previous) => {
         const now = Date.now()
         return previous.filter((snowflake) => (
@@ -63,6 +71,7 @@ export function FallingSnow({ count = 50, active = true }: FallingSnowProps) {
       clearTimeout(initializationTimeout)
       clearInterval(spawnInterval)
       clearInterval(cleanupInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [active, count, prefersReducedMotion])
 
