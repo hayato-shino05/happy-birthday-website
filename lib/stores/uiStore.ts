@@ -10,6 +10,9 @@ export type ModalType =
   | 'quiz'
   | 'chat'
   | 'photoFrame'
+  | 'flashback'
+  | 'omikuji'
+  | 'timeCapsule'
   | null
 
 interface UIState {
