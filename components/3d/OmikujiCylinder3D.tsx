@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
@@ -50,8 +50,8 @@ export function OmikujiCylinder3D({
     const height = container.clientHeight || 300
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100)
-    camera.position.set(0, 1.2, 6.8)
+    const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100)
+    camera.position.set(0, 0.65, 8.8)
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -63,7 +63,7 @@ export function OmikujiCylinder3D({
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.35
     renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.shadowMap.type = THREE.PCFShadowMap
     container.appendChild(renderer.domElement)
 
     // 2. OrbitControls の設定（スムーズなダンピングと直感的な操作）
@@ -71,11 +71,11 @@ export function OmikujiCylinder3D({
     controls.enableDamping = true
     controls.dampingFactor = 0.06
     controls.enablePan = false
-    controls.minDistance = 3.5
-    controls.maxDistance = 9.0
+    controls.minDistance = 5.0
+    controls.maxDistance = 14.0
     controls.minPolarAngle = Math.PI / 6
     controls.maxPolarAngle = (Math.PI * 5) / 8
-    controls.target.set(0, 0.2, 0)
+    controls.target.set(0, -0.05, 0)
 
     // 3. 照明システム（金箔の輝きと漆の艶を引き出す多灯ライティング）
     const ambientLight = new THREE.AmbientLight(0xfff8ee, 1.4)
@@ -176,56 +176,66 @@ export function OmikujiCylinder3D({
     holeInner.position.y = 1.48
     cylinderGroup.add(holeInner)
 
-    // 蒔絵風の「想い出籤」看板プレート
+    // 蒔絵風の「想い出籤」看板プレート（1024x2048 超高解像度レンダリング）
     const signCanvas = document.createElement('canvas')
-    signCanvas.width = 512
-    signCanvas.height = 1024
+    signCanvas.width = 1024
+    signCanvas.height = 2048
     const sctx = signCanvas.getContext('2d')
     if (sctx) {
       // 漆黒グラデーション背景
-      const grad = sctx.createLinearGradient(0, 0, 512, 1024)
-      grad.addColorStop(0, '#1E0C06')
-      grad.addColorStop(0.5, '#2D1409')
-      grad.addColorStop(1, '#1A0904')
+      const grad = sctx.createLinearGradient(0, 0, 1024, 2048)
+      grad.addColorStop(0, '#190A05')
+      grad.addColorStop(0.5, '#2B1207')
+      grad.addColorStop(1, '#150602')
       sctx.fillStyle = grad
-      sctx.fillRect(0, 0, 512, 1024)
+      sctx.fillRect(0, 0, 1024, 2048)
 
-      // 二重金枠
+      // 三重の精緻な金枠装飾
       sctx.strokeStyle = '#E5A93C'
-      sctx.lineWidth = 16
-      sctx.strokeRect(24, 24, 464, 976)
+      sctx.lineWidth = 32
+      sctx.strokeRect(48, 48, 928, 1952)
+
       sctx.strokeStyle = '#D4AF37'
-      sctx.lineWidth = 6
-      sctx.strokeRect(42, 42, 428, 940)
+      sctx.lineWidth = 12
+      sctx.strokeRect(84, 84, 856, 1880)
+
+      sctx.strokeStyle = '#F3D27E'
+      sctx.lineWidth = 4
+      sctx.strokeRect(102, 102, 820, 1844)
 
       // 四隅の金花文様
       sctx.fillStyle = '#E5A93C'
       sctx.beginPath()
-      sctx.arc(60, 60, 14, 0, Math.PI * 2)
-      sctx.arc(452, 60, 14, 0, Math.PI * 2)
-      sctx.arc(60, 964, 14, 0, Math.PI * 2)
-      sctx.arc(452, 964, 14, 0, Math.PI * 2)
+      sctx.arc(120, 120, 28, 0, Math.PI * 2)
+      sctx.arc(904, 120, 28, 0, Math.PI * 2)
+      sctx.arc(120, 1928, 28, 0, Math.PI * 2)
+      sctx.arc(904, 1928, 28, 0, Math.PI * 2)
       sctx.fill()
 
-      // 金箔の毛筆文字
-      sctx.fillStyle = '#FFF5DE'
-      sctx.shadowColor = '#D4AF37'
-      sctx.shadowBlur = 12
-      sctx.font = 'bold 110px "Yu Mincho", "Hiragino Mincho ProN", serif'
+      // 金箔の毛筆文字（超高精細）
+      sctx.fillStyle = '#FFFDF5'
+      sctx.shadowColor = 'rgba(212, 175, 55, 0.9)'
+      sctx.shadowBlur = 24
+      sctx.font = '900 230px "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif'
       sctx.textAlign = 'center'
       sctx.textBaseline = 'middle'
-      sctx.fillText('想', 256, 230)
-      sctx.fillText('い', 256, 410)
-      sctx.fillText('出', 256, 590)
-      sctx.fillText('籤', 256, 770)
+      sctx.fillText('想', 512, 460)
+      sctx.fillText('い', 512, 820)
+      sctx.fillText('出', 512, 1180)
+      sctx.fillText('籤', 512, 1540)
     }
 
     const signTexture = new THREE.CanvasTexture(signCanvas)
+    signTexture.generateMipmaps = true
+    signTexture.minFilter = THREE.LinearMipmapLinearFilter
+    signTexture.magFilter = THREE.LinearFilter
+    signTexture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+
     const signGeo = new THREE.PlaneGeometry(0.78, 1.56)
     const signMat = new THREE.MeshStandardMaterial({
       map: signTexture,
-      roughness: 0.2,
-      metalness: 0.25,
+      roughness: 0.15,
+      metalness: 0.35,
     })
     const signMesh = new THREE.Mesh(signGeo, signMat)
     signMesh.position.set(0, 0, 0.98)
@@ -257,25 +267,30 @@ export function OmikujiCylinder3D({
     tipMesh.position.y = 1.14
     mainStickGroup.add(tipMesh)
 
-    // 棒上の番号テキスト
+    // 棒上の番号テキスト（512x2048 高解像度）
     const stickCanvas = document.createElement('canvas')
-    stickCanvas.width = 128
-    stickCanvas.height = 512
+    stickCanvas.width = 512
+    stickCanvas.height = 2048
     const stickCtx = stickCanvas.getContext('2d')
     if (stickCtx) {
       stickCtx.fillStyle = '#F5E6CC'
-      stickCtx.fillRect(0, 0, 128, 512)
-      stickCtx.fillStyle = '#2A1208'
-      stickCtx.font = 'bold 64px serif'
+      stickCtx.fillRect(0, 0, 512, 2048)
+      stickCtx.fillStyle = '#1E0C06'
+      stickCtx.font = '900 240px "Yu Mincho", "Hiragino Mincho ProN", serif'
       stickCtx.textAlign = 'center'
       stickCtx.textBaseline = 'middle'
       const label = KANJI_NUMBERS[(fortuneNumber - 1) % KANJI_NUMBERS.length] || '第一番'
       const chars = label.split('')
       chars.forEach((c, idx) => {
-        stickCtx.fillText(c, 64, 100 + idx * 80)
+        stickCtx.fillText(c, 256, 420 + idx * 340)
       })
     }
     const stickTexture = new THREE.CanvasTexture(stickCanvas)
+    stickTexture.generateMipmaps = true
+    stickTexture.minFilter = THREE.LinearMipmapLinearFilter
+    stickTexture.magFilter = THREE.LinearFilter
+    stickTexture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+
     const stickLabelGeo = new THREE.PlaneGeometry(0.12, 0.9)
     const stickLabelMat = new THREE.MeshBasicMaterial({ map: stickTexture, transparent: true })
     const stickLabelMesh = new THREE.Mesh(stickLabelGeo, stickLabelMat)
