@@ -21,13 +21,6 @@ export default function Home() {
     }
   }, [currentTheme, isMounted])
 
-  // Hydration mismatch防止のためのプレースホルダー
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: '#F3E5D8' }} />
-    )
-  }
-
   return (
     <div
       className={`min-h-screen bg-gradient-to-br ${themeConfig.gradient}`}

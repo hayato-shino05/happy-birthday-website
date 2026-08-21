@@ -1,18 +1,70 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useUIStore } from '@/lib/stores/uiStore'
 import Modal from './Modal'
-import { MemoryGame } from '@/components/games/MemoryGame'
-import { PuzzleGame } from '@/components/games/PuzzleGame'
-import { BirthdayCalendar } from '@/components/games/BirthdayCalendar'
-import { BirthdayQuiz } from '@/components/games/BirthdayQuiz'
-import { PhotoGallery } from '@/components/features/PhotoGallery'
-import { MessageForm } from '@/components/community/MessageForm'
-import BulletinBoard from '@/components/community/BulletinBoard'
-import { ChatRoom } from '@/components/community/ChatRoom'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
-import PhotoFrame from '@/components/features/PhotoFrame'
+// モーダル読み込み中のローディングスピナー
+function ModalLoadingSpinner() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
+      <div
+        className="w-10 h-10 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin"
+        style={{ animationDuration: '0.8s' }}
+      />
+      <span className="text-sm font-medium text-[#854D27]/80 tracking-wider">
+        Loading...
+      </span>
+    </div>
+  )
+}
+
+// 各モーダルコンポーネントを next/dynamic でコード分割し、初期バンドルサイズを大幅に削減
+const PhotoGallery = dynamic(
+  () => import('@/components/features/PhotoGallery').then((mod) => mod.PhotoGallery),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const PhotoFrame = dynamic(
+  () => import('@/components/features/PhotoFrame'),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const MessageForm = dynamic(
+  () => import('@/components/community/MessageForm').then((mod) => mod.MessageForm),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const BulletinBoard = dynamic(
+  () => import('@/components/community/BulletinBoard'),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const MemoryGame = dynamic(
+  () => import('@/components/games/MemoryGame').then((mod) => mod.MemoryGame),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const PuzzleGame = dynamic(
+  () => import('@/components/games/PuzzleGame').then((mod) => mod.PuzzleGame),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const BirthdayCalendar = dynamic(
+  () => import('@/components/games/BirthdayCalendar').then((mod) => mod.BirthdayCalendar),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const BirthdayQuiz = dynamic(
+  () => import('@/components/games/BirthdayQuiz').then((mod) => mod.BirthdayQuiz),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
+
+const ChatRoom = dynamic(
+  () => import('@/components/community/ChatRoom').then((mod) => mod.ChatRoom),
+  { ssr: false, loading: () => <ModalLoadingSpinner /> }
+)
 
 export function ModalManager() {
   const { activeModal, closeModal } = useUIStore()

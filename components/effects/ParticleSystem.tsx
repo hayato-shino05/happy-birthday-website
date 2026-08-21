@@ -127,7 +127,9 @@ export default function ParticleSystem({
       window.addEventListener('mousemove', handleMouseMove)
     }
 
+    let isRunning = true
     const animate = () => {
+      if (!isRunning) return
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       if (isActive) {
@@ -167,10 +169,29 @@ export default function ParticleSystem({
       animationRef.current = requestAnimationFrame(animate)
     }
 
+    // バックグラウンドタブ時にアニメーションループを一時停止
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        isRunning = false
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current)
+          animationRef.current = null
+        }
+      } else {
+        if (!isRunning) {
+          isRunning = true
+          animationRef.current = requestAnimationFrame(animate)
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     animate()
 
     return () => {
+      isRunning = false
       window.removeEventListener('resize', resizeCanvas)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       if (followMouse) {
         window.removeEventListener('mousemove', handleMouseMove)
       }

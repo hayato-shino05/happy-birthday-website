@@ -72,8 +72,16 @@ export function FallingPetals({ count = 30, active = true }: FallingPetalsProps)
     }))
     const initialTimeout = setTimeout(() => setPetals(initialPetals), 0)
 
+    // バックグラウンドタブ時に生成を一時停止してCPU負荷を軽減
+    let isVisible = typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+    const handleVisibilityChange = () => {
+      isVisible = document.visibilityState === 'visible'
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     // Spawn petals mới liên tục
     const spawnInterval = setInterval(() => {
+      if (!isVisible) return
       setPetals(prev => {
         // Giới hạn số lượng tối đa
         if (prev.length >= count * 1.5) {
@@ -88,6 +96,7 @@ export function FallingPetals({ count = 30, active = true }: FallingPetalsProps)
 
     // Cleanup petals đã rơi xong
     const cleanupInterval = setInterval(() => {
+      if (!isVisible) return
       setPetals(prev => {
         const now = Date.now()
         return prev.filter(p => now - p.id < (p.duration + p.delay) * 1000 + 2000)
@@ -98,6 +107,7 @@ export function FallingPetals({ count = 30, active = true }: FallingPetalsProps)
       clearTimeout(initialTimeout)
       clearInterval(spawnInterval)
       clearInterval(cleanupInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [active, count, prefersReducedMotion])
 
