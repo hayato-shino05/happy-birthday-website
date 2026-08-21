@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -83,13 +83,18 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
       <div className="w-full bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-4 shadow-md mb-4 relative overflow-hidden">
         <div className="text-[11px] font-bold text-[#854D27]/80 flex items-center justify-center gap-1.5 mb-1">
           <Icon name="Sparkles" size={16} />
-          <span>{language === 'ja' ? 'ドラッグして3D筒を回転・観察できます' : 'Drag to rotate the 3D cylinder'}</span>
+          <span>
+            {language === 'ja'
+              ? '3D筒をドラッグして360°回転 / クリックして籤引きできます'
+              : 'Drag to rotate 360° / Click cylinder to draw fortune'}
+          </span>
         </div>
 
         <OmikujiCylinder3D
           isShaking={isShaking}
           isRevealed={Boolean(result)}
           fortuneNumber={result?.id || 1}
+          onDraw={handleDraw}
         />
 
         {!result && (
