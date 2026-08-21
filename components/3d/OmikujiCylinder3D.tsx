@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
@@ -212,15 +212,18 @@ export function OmikujiCylinder3D({
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
 
-    // 7. アニメーションループ
+    // 7. アニメーションループ（THREE.Clock の非推奨警告を解消し performance.now() で高精度計算）
     let animationFrameId: number
-    let clock = new THREE.Clock()
+    let lastTime = performance.now()
+    const startTime = performance.now()
     let shakeTimer = 0
 
-    const animate = () => {
+    const animate = (currentTime: number) => {
       animationFrameId = requestAnimationFrame(animate)
-      const delta = clock.getDelta()
-      const time = clock.getElapsedTime()
+      const nowTime = currentTime || performance.now()
+      const delta = Math.min((nowTime - lastTime) / 1000, 0.1)
+      lastTime = nowTime
+      const time = (nowTime - startTime) / 1000
 
       // パーティクルの浮遊運動
       const positions = particleGeo.attributes.position.array as Float32Array
@@ -266,7 +269,7 @@ export function OmikujiCylinder3D({
       renderer.render(scene, camera)
     }
 
-    animate()
+    animate(performance.now())
 
     // 8. リサイズ処理
     const handleResize = () => {
