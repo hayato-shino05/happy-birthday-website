@@ -169,7 +169,7 @@ export function SocialButtons() {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
       >
-        <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>🏺</span>
+        <Icon name="Archive" size={26} />
         <span>{t('timeCapsuleTitle')}</span>
       </button>
     </div>

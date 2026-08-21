@@ -12,7 +12,7 @@ interface FlashbackMemory {
   sender: string
   content?: string
   mediaUrl?: string
-  mediaKind?: 'image' | 'video'
+  mediaKind?: 'image' | 'video' | 'audio'
   createdAt: string
   yearsAgo: number
 }
@@ -37,8 +37,8 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
 
         // メディアと掲示板投稿を取得
         const [mediaRes, postsRes] = await Promise.all([
-          supabase.from('media_submissions').select('*').order('created_at', { ascending: false }),
-          supabase.from('bulletin_posts').select('*').order('created_at', { ascending: false }),
+          supabase.from('media_submissions').select('*').order('created_at', { ascending: false }).limit(100),
+          supabase.from('bulletin_posts').select('*').order('created_at', { ascending: false }).limit(100),
         ])
 
         const matchedMemories: FlashbackMemory[] = []
@@ -62,7 +62,7 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
                 sender: item.sender,
                 content: item.description || undefined,
                 mediaUrl: data?.publicUrl,
-                mediaKind: item.media_kind as 'image' | 'video',
+                mediaKind: item.media_kind as 'image' | 'video' | 'audio',
                 createdAt: item.created_at,
                 yearsAgo: currentYear - date.getFullYear(),
               })
@@ -105,17 +105,7 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
   const currentMemory = memories[currentIndex]
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 max-w-lg mx-auto">
-      {/* ヘッダー装飾 */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs font-bold tracking-widest uppercase mb-2">
-          <Icon name="Calendar" size={14} />
-          {t('flashbackTitle')}
-        </div>
-        <h2 className="text-xl font-bold text-[#854D27]">{t('flashbackTitle')}</h2>
-        <p className="text-xs text-[#854D27]/70 mt-1">{t('flashbackSubtitle')}</p>
-      </div>
-
+    <div className="flex flex-col items-center justify-center p-2 max-w-lg mx-auto">
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <div className="w-10 h-10 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin" />
@@ -132,7 +122,7 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
                 : `${currentMemory.yearsAgo} year${currentMemory.yearsAgo > 1 ? 's' : ''} ago today`}
             </div>
 
-            {/* メディア表示 */}
+            {/* メディア表示（画像・動画・音声） */}
             {currentMemory.mediaUrl && (
               <div className="w-full h-64 rounded-xl overflow-hidden mb-4 bg-black/5 flex items-center justify-center border border-[#D4B08C]/40">
                 {currentMemory.mediaKind === 'video' ? (
@@ -141,6 +131,11 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
                     controls
                     className="w-full h-full object-contain"
                   />
+                ) : currentMemory.mediaKind === 'audio' ? (
+                  <div className="flex flex-col items-center justify-center p-6 gap-3 w-full">
+                    <Icon name="Music" size={36} />
+                    <audio src={currentMemory.mediaUrl} controls className="w-full" />
+                  </div>
                 ) : (
                   <img
                     src={currentMemory.mediaUrl}

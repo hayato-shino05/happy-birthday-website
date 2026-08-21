@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
@@ -15,6 +14,15 @@ interface CapsuleItem {
   unlockDate: string
   createdAt: string
   isUnlocked: boolean
+}
+
+// ローカル日付文字列（YYYY-MM-DD）をローカル時間 00:00:00 の Date オブジェクトに変換
+function parseLocalDate(dateStr: string): Date {
+  const parts = dateStr.split('-').map(Number)
+  if (parts.length === 3) {
+    return new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0)
+  }
+  return new Date(dateStr)
 }
 
 // 未来の記念日に届くタイムカプセルコンポーネント
@@ -31,53 +39,80 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
   const [unlockDate, setUnlockDate] = useState(() => {
     const nextYear = new Date()
     nextYear.setFullYear(nextYear.getFullYear() + 1)
-    return nextYear.toISOString().slice(0, 10)
+    const y = nextYear.getFullYear()
+    const m = String(nextYear.getMonth() + 1).padStart(2, '0')
+    const d = String(nextYear.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
   })
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // タイムカプセル一覧の取得
+  // タイムカプセル一覧の取得およびローカル保存データの統合
   const fetchCapsules = async () => {
     setLoading(true)
     try {
       const supabase = getSupabase()
+      const now = new Date()
+
+      // リモートデータの取得
       const { data, error } = await supabase
         .from('time_capsules')
         .select('*')
         .order('unlock_date', { ascending: true })
 
-      if (error || !data) {
-        // ローカルストレージからのフォールバック取得
+      // ローカルストレージフォールバックデータの取得
+      let localCapsules: CapsuleItem[] = []
+      try {
         const localSaved = localStorage.getItem('local_time_capsules')
         if (localSaved) {
-          const parsed = JSON.parse(localSaved) as CapsuleItem[]
-          const now = new Date()
-          setCapsules(
-            parsed.map(c => ({
-              ...c,
-              isUnlocked: new Date(c.unlockDate) <= now,
-            }))
-          )
-        } else {
-          setCapsules([])
+          localCapsules = JSON.parse(localSaved) as CapsuleItem[]
         }
-      } else {
-        const now = new Date()
-        setCapsules(
-          data.map((c: any) => ({
+      } catch {
+        localCapsules = []
+      }
+
+      let remoteCapsules: CapsuleItem[] = []
+      if (!error && data) {
+        remoteCapsules = data.map((c: any) => {
+          const unlockTime = parseLocalDate(c.unlock_date)
+          const isUnlocked = unlockTime <= now
+          return {
             id: c.id,
             sender: c.sender,
             recipient: c.recipient,
-            message: c.message,
-            photoUrl: c.photo_url,
+            // 未開封時は内容を秘匿化
+            message: isUnlocked ? c.message : '',
+            photoUrl: isUnlocked ? c.photo_url : undefined,
             unlockDate: c.unlock_date,
             createdAt: c.created_at,
-            isUnlocked: new Date(c.unlock_date) <= now,
-          }))
-        )
+            isUnlocked,
+          }
+        })
       }
+
+      // リモートとローカルの統合（ID重複を排除）
+      const remoteIds = new Set(remoteCapsules.map((c) => String(c.id)))
+      const unmergedLocal = localCapsules
+        .filter((c) => !remoteIds.has(String(c.id)))
+        .map((c) => {
+          const unlockTime = parseLocalDate(c.unlockDate)
+          const isUnlocked = unlockTime <= now
+          return {
+            ...c,
+            isUnlocked,
+            message: isUnlocked ? c.message : '',
+            photoUrl: isUnlocked ? c.photoUrl : undefined,
+          }
+        })
+
+      const combined = [...remoteCapsules, ...unmergedLocal].sort(
+        (a, b) => parseLocalDate(a.unlockDate).getTime() - parseLocalDate(b.unlockDate).getTime()
+      )
+
+      setCapsules(combined)
     } catch {
       setCapsules([])
     } finally {
@@ -87,6 +122,17 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
 
   useEffect(() => {
     fetchCapsules()
+    // 定期的に開封状態を再計算
+    const interval = setInterval(() => {
+      setCapsules((prev) =>
+        prev.map((c) => ({
+          ...c,
+          isUnlocked: parseLocalDate(c.unlockDate) <= new Date(),
+        }))
+      )
+    }, 30000)
+
+    return () => clearInterval(interval)
   }, [])
 
   // タイムカプセルの封印処理
@@ -95,19 +141,26 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
     if (!sender.trim() || !message.trim() || !unlockDate) return
 
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
       const supabase = getSupabase()
       let photoUrl: string | undefined = undefined
 
       if (photoFile) {
-        const fileName = `capsule_${Date.now()}_${photoFile.name}`
+        const fileExt = photoFile.name.split('.').pop() || 'jpg'
+        const fileName = `capsule_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`
         const { data: uploadData, error: uploadErr } = await supabase.storage
           .from('time-capsules')
           .upload(fileName, photoFile)
 
-        if (!uploadErr && uploadData) {
-          photoUrl = supabase.storage.from('time-capsules').getPublicUrl(fileName).data.publicUrl
+        if (uploadErr || !uploadData) {
+          // 写真アップロード失敗時は封印を中断してエラーを表示
+          setSubmitError(t('uploadFileFailed'))
+          setIsSubmitting(false)
+          return
         }
+
+        photoUrl = supabase.storage.from('time-capsules').getPublicUrl(fileName).data.publicUrl
       }
 
       const newCapsule: CapsuleItem = {
@@ -118,10 +171,10 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
         photoUrl,
         unlockDate,
         createdAt: new Date().toISOString(),
-        isUnlocked: new Date(unlockDate) <= new Date(),
+        isUnlocked: parseLocalDate(unlockDate) <= new Date(),
       }
 
-      // Supabase へ保存、失敗時はローカルストレージへ保存
+      // Supabase へ保存、失敗時はローカルストレージへフォールバック保存
       const { error: insertErr } = await supabase.from('time_capsules').insert({
         sender: newCapsule.sender,
         recipient: newCapsule.recipient,
@@ -131,9 +184,13 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
       })
 
       if (insertErr) {
-        const localSaved = localStorage.getItem('local_time_capsules')
-        const currentList = localSaved ? JSON.parse(localSaved) : []
-        localStorage.setItem('local_time_capsules', JSON.stringify([newCapsule, ...currentList]))
+        try {
+          const localSaved = localStorage.getItem('local_time_capsules')
+          const currentList = localSaved ? JSON.parse(localSaved) : []
+          localStorage.setItem('local_time_capsules', JSON.stringify([newCapsule, ...currentList]))
+        } catch {
+          // ストレージエラーは無視
+        }
       }
 
       setSubmitSuccess(true)
@@ -148,24 +205,16 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
       }, 1200)
     } catch (err) {
       console.error('Failed to seal time capsule:', err)
+      setSubmitError(t('genericError'))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="flex flex-col p-4 max-w-lg mx-auto">
-      {/* ヘッダー */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs font-bold tracking-widest uppercase mb-2">
-          🏺 {t('timeCapsuleTitle')}
-        </div>
-        <h2 className="text-xl font-bold text-[#854D27]">{t('timeCapsuleTitle')}</h2>
-        <p className="text-xs text-[#854D27]/70 mt-1">{t('timeCapsuleSubtitle')}</p>
-      </div>
-
+    <div className="flex flex-col p-2 max-w-lg mx-auto">
       {/* タブ切り替え */}
-      <div className="flex rounded-xl bg-[#854D27]/10 p-1 mb-6 border border-[#D4B08C]">
+      <div className="flex rounded-xl bg-[#854D27]/10 p-1 mb-5 border border-[#D4B08C]">
         <button
           onClick={() => setActiveTab('view')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
@@ -197,7 +246,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
               <span className="text-xs text-[#854D27]/80">{t('loading')}</span>
             </div>
           ) : capsules.length > 0 ? (
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
               {capsules.map((capsule) => (
                 <div
                   key={capsule.id}
@@ -209,13 +258,13 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-[#854D27] flex items-center gap-1.5">
-                      {capsule.isUnlocked ? '🔓' : '🔒'} {capsule.sender}
+                      <Icon name={capsule.isUnlocked ? 'Folder' : 'Clock'} size={15} /> {capsule.sender}
                       {capsule.recipient ? ` ➔ ${capsule.recipient}` : ''}
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#854D27] text-[#FFF9F3]">
                       {capsule.isUnlocked
                         ? language === 'ja' ? '開封済み' : 'Unlocked'
-                        : `${new Date(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')} まで封印`}
+                        : `${parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')} まで封印`}
                     </span>
                   </div>
 
@@ -237,7 +286,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                   ) : (
                     <p className="text-xs text-[#854D27]/70 italic mt-2">
                       {t('timeCapsuleLockedNotice', {
-                        date: new Date(capsule.unlockDate).toLocaleDateString(
+                        date: parseLocalDate(capsule.unlockDate).toLocaleDateString(
                           language === 'ja' ? 'ja-JP' : 'en-US',
                           { year: 'numeric', month: 'short', day: 'numeric' }
                         ),
@@ -249,7 +298,9 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
             </div>
           ) : (
             <div className="text-center py-12 bg-[#FFF9F3] border-2 border-dashed border-[#D4B08C] rounded-2xl p-6">
-              <span className="text-3xl block mb-2">🏺</span>
+              <div className="w-12 h-12 rounded-full bg-[#854D27]/10 flex items-center justify-center mx-auto mb-3 text-[#854D27]">
+                <Icon name="Archive" size={24} />
+              </div>
               <p className="text-xs text-[#854D27]/80 mb-4">
                 {language === 'ja'
                   ? 'まだ封印されたタイムカプセルはありません。未来の記念日に届くメッセージを残してみましょう！'
@@ -267,6 +318,12 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
       ) : (
         /* 新規封印フォーム */
         <form onSubmit={handleSeal} className="bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-5 shadow-lg space-y-4">
+          {submitError && (
+            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
+              {submitError}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold text-[#854D27] mb-1">
               {t('yourName')} <span className="text-red-500">*</span>
