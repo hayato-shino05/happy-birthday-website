@@ -109,10 +109,21 @@ app/
 | `LanguageSelector.tsx` | UI 言語の切り替え（英語 / 日本語） |
 | `ThemeIndicator.tsx` | 現在のテーマ表示 |
 | `HeaderButtons.tsx` | ヘッダーアクションボタン群 |
-| `GameButtons.tsx` | ゲーム画面へのナビゲーション |
+| `MobileBottomDock.tsx` | モバイル向けボトムナビゲーション & 和風の抽斗（Drawer）メニュー |
+| `MobileGameMenu.tsx` | モバイル専用ミニゲームセレクター |
 | `SocialButtons.tsx` | SNS 共有ボタン |
 | `ShareButton.tsx` | 単体の共有ボタン |
 | `FeatureButton.tsx` | 特定機能の ON/OFF トグル |
+
+---
+
+### 3D コンポーネント（`/components/3d/`）
+
+Three.js WebGL を活用したリッチな 3D インタラクティブ体験を提供するコンポーネントです。
+
+| Component | 説明 |
+|-----------|------|
+| `OmikujiCylinder3D.tsx` | 360 度回転・ドラッグ＆クリック物理シェイク対応の 3D おみくじ筒。RoomEnvironment 反射、PBR 真鍮金箔、手彫り木目テクスチャ、接地シャドウ、竹製みくじ棒のせり出し演出を実装 |
 
 ---
 
@@ -131,6 +142,9 @@ app/
 | `BirthdayChecker.tsx` | 今日が誕生日かどうかのチェック |
 | `BirthdayHero.tsx` | ヒーローセクション |
 | `BirthdayMessage.tsx` | お祝いメッセージ表示 |
+| `DailyOmikuji.tsx` | 3D おみくじと連動した運勢表示（和歌・4大運勢・ラッキーアイテム・localStorage 永続化） |
+| `OnThisDayFlashback.tsx` | 過去の同じ月日の思い出を振り返るフラッシュバック機能 |
+| `PhotoFrame.tsx` | 和風・季節フレーム付きフォト撮影機能 |
 
 **メディア関連コンポーネント**
 
@@ -167,6 +181,7 @@ app/
 | `BulletinPost.tsx` | 単一投稿表示 |
 | `PostForm.tsx` | 投稿作成フォーム |
 | `PostDetail.tsx` | 返信を含む投稿詳細 |
+| `TimeCapsule.tsx` | 未来の指定日に届くタイムカプセル（手紙・写真・音声封入） |
 
 **メディアメッセージ**
 
@@ -320,6 +335,16 @@ React コンテキストや外部ライブラリのプロバイダをまとめ�
 | `/lib/animations/` | Framer Motion 用アニメーション定義 |
 | `/lib/utils/` | 汎用ユーティリティ関数 |
 | `/lib/validations/` | Zod を使ったバリデーションスキーマ |
+
+## `/data` – 静的データとマニフェスト
+
+| ディレクトリ / ファイル | 説明 |
+|-----------------------|------|
+| `omikujiData.ts` | 12 種類の本格和風おみくじデータ（大吉〜半吉、和歌・俳句、4大運勢、ラッキー色・品・数） |
+| `i18n/en.json` | 英語 UI 辞書データ |
+| `i18n/ja.json` | 日本語 UI 辞書データ |
+| `festivals/` | 13 の季節・祝祭日データパック |
+| `generated/` | 自動生成されたデータマニフェスト（`locales.ts`, `festivals.ts`） |
 
 ---
 
