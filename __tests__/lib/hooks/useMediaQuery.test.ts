@@ -73,4 +73,22 @@ describe('usePrefersReducedMotion', () => {
     const { result } = renderHook(() => usePrefersReducedMotion())
     expect(typeof result.current).toBe('boolean')
   })
+
+  it('should reflect prefers-reduced-motion from matchMedia', () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation((query: string) =>
+      ({
+        matches: query.includes('prefers-reduced-motion'),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }) as unknown as MediaQueryList,
+    )
+
+    const { result } = renderHook(() => usePrefersReducedMotion())
+    expect(result.current).toBe(true)
+  })
 })
