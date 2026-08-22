@@ -57,7 +57,7 @@ const themeIconColors: Record<ThemeName, string> = {
 
 export function ThemeIndicator() {
   const { currentTheme } = useThemeContext()
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
 
   const displayName = getThemeDisplayName(currentTheme, language)
   const IconComponent = themeIcons[currentTheme] || Palette
@@ -101,7 +101,7 @@ export function ThemeIndicator() {
       >
         <IconComponent size={15} strokeWidth={2.8} />
       </span>
-      <span style={{ color: '#FBE8D3', fontSize: '0.9em', opacity: 0.95 }}>Theme:</span>
+      <span style={{ color: '#FBE8D3', fontSize: '0.9em', opacity: 0.95 }}>{t('themeLabel')}</span>
       <span style={{ color: '#FFF9F3', fontWeight: 700 }}>{displayName}</span>
     </div>
   )

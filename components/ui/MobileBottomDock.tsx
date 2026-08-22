@@ -9,7 +9,7 @@ import { Icon } from './Icon'
 
 // テーマインジケーターと同等の優美な角丸（カプセル・ピル形状）を持つモバイルナビゲーション
 export function MobileBottomDock() {
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const { openModal } = useUIStore()
   const { isPlaying, currentTrack, tracks, toggle, selectTrack, nextTrack, prevTrack } = useMusicPlayer()
   const [showMenuSheet, setShowMenuSheet] = useState(false)
@@ -39,7 +39,7 @@ export function MobileBottomDock() {
   // PC（SocialButtons.tsx）と完全同一のSNSシェア処理
   const handleShare = async (platform: string) => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
-    const shareText = language === 'ja' ? 'お誕生日おめでとう！🎂🎉' : 'Happy Birthday! 🎂🎉'
+    const shareText = `${t('happyBirthday')} 🎂🎉`
 
     switch (platform) {
       case 'facebook':
@@ -61,7 +61,6 @@ export function MobileBottomDock() {
             alert(t('linkCopied'))
             return
           } catch {
-            // クリップボード例外処理
           }
         }
         window.prompt(t('copyLinkPrompt'), shareUrl)
@@ -111,7 +110,7 @@ export function MobileBottomDock() {
             <button
               onClick={prevTrack}
               className="min-w-[44px] min-h-[44px] bg-transparent hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
-              aria-label="Previous Track"
+              aria-label={t('previousTrack')}
             >
               <Icon name="SkipBack" size={20} />
             </button>
@@ -121,7 +120,7 @@ export function MobileBottomDock() {
               onClick={toggle}
               style={{ borderRadius: '12px' }}
               className="min-w-[44px] min-h-[44px] bg-[#854D27] text-[#FFF9F3] border border-[#D4B08C] shadow-[1px_1px_0_#D4B08C] flex items-center justify-center active:translate-y-0.5 cursor-pointer"
-              aria-label="Play/Pause"
+              aria-label={isPlaying ? t('pause') : t('play')}
             >
               <Icon name={isPlaying ? 'Pause' : 'Play'} size={20} />
             </button>
@@ -130,7 +129,7 @@ export function MobileBottomDock() {
             <button
               onClick={nextTrack}
               className="min-w-[44px] min-h-[44px] bg-transparent hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-transform"
-              aria-label="Next Track"
+              aria-label={t('nextTrack')}
             >
               <Icon name="SkipForward" size={20} />
             </button>
@@ -179,7 +178,7 @@ export function MobileBottomDock() {
             id={menuId}
             role="dialog"
             aria-modal="true"
-            aria-label={language === 'ja' ? 'ゲーム＆ソーシャル' : 'Games & Social'}
+            aria-label={t('gamesAndSocial')}
             className="fixed inset-0 z-50 md:hidden flex flex-col justify-end"
           >
             {/* 背景オーバーレイ */}
@@ -212,7 +211,7 @@ export function MobileBottomDock() {
                 <div className="flex items-center gap-2">
                   <Icon name="Gamepad" size={22} />
                   <span className="font-bold text-sm font-body tracking-wider text-[#854D27]">
-                    {language === 'ja' ? '遊技 ＆ 共有' : 'Games & Social'}
+                    {t('gamesAndSocial')}
                   </span>
                 </div>
                 <button
@@ -345,7 +344,7 @@ export function MobileBottomDock() {
                   className="w-full min-h-[46px] p-2.5 bg-[#854D27] hover:bg-[#6D3D1E] text-[#FFF9F3] border-2 border-[#D4B08C] flex items-center justify-center gap-2 text-xs font-bold font-body shadow-[0_2px_8px_rgba(133,77,39,0.3)] active:translate-y-0.5 cursor-pointer"
                 >
                   <Icon name="Users" size={22} />
-                  <span>{t('inviteFriends') || '友達を招待'}</span>
+                  <span>{t('inviteFriends')}</span>
                 </button>
 
                 {/* PCと全く同一の5大SNSシェアメニュー（Facebook, Twitter, WhatsApp, Telegram, コピー） */}
@@ -389,7 +388,7 @@ export function MobileBottomDock() {
                       className="col-span-2 flex items-center justify-center gap-2 min-h-[44px] p-2 bg-white border border-[#D4B08C] text-xs font-body text-[#854D27] cursor-pointer"
                     >
                       <Icon name="Copy" size={18} />
-                      <span>{language === 'ja' ? 'リンクをコピー' : 'Copy Link'}</span>
+                      <span>{t('copyLink')}</span>
                     </button>
                   </div>
                 )}
@@ -402,7 +401,7 @@ export function MobileBottomDock() {
       {/* 3. メイン・モバイルボトムナビゲーションバー（テーマインジケーターと同等の優美な角丸カプセル設計） */}
       <nav
         className="mobile-bottom-dock fixed bottom-2 inset-x-3 max-w-md mx-auto z-40 md:hidden"
-        aria-label="Mobile Navigation Dock"
+        aria-label={t('mobileNavDock')}
       >
         <div
           style={{
@@ -424,9 +423,9 @@ export function MobileBottomDock() {
             aria-label={t('viewAlbum')}
           >
             <Icon name="Camera" size={22} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
-              {language === 'ja' ? 'アルバム' : 'Album'}
-            </span>
+              <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
+                {t('dockAlbum')}
+              </span>
           </button>
 
           {/* 2. メッセージを送る (PC: PenLine) */}
@@ -437,9 +436,9 @@ export function MobileBottomDock() {
             aria-label={t('sendMessage')}
           >
             <Icon name="PenLine" size={22} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
-              {language === 'ja' ? 'メッセージ' : 'Wishes'}
-            </span>
+              <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
+                {t('dockWishes')}
+              </span>
           </button>
 
           {/* 3. 掲示板 (PC: ClipboardList) */}
@@ -450,9 +449,9 @@ export function MobileBottomDock() {
             aria-label={t('bulletinBoard')}
           >
             <Icon name="ClipboardList" size={22} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
-              {language === 'ja' ? '掲示板' : 'Board'}
-            </span>
+              <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
+                {t('dockBoard')}
+              </span>
           </button>
 
           {/* 4. グループチャット (PC: MessageCircle) */}
@@ -463,9 +462,9 @@ export function MobileBottomDock() {
             aria-label={t('groupChat')}
           >
             <Icon name="MessageCircle" size={22} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
-              {language === 'ja' ? 'チャット' : 'Chat'}
-            </span>
+              <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
+                {t('dockChat')}
+              </span>
           </button>
 
           {/* 5. ゲーム ＆ 共有 (PC: Gamepad) */}
@@ -476,12 +475,12 @@ export function MobileBottomDock() {
             aria-controls={menuId}
             style={{ borderRadius: '16px' }}
             className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] px-1 py-1 ${showMenuSheet ? 'bg-[#6D3D1E] text-[#E5A93C]' : 'text-[#FFF9F3]'} hover:text-[#E5A93C] active:scale-95 transition-all cursor-pointer`}
-            aria-label={language === 'ja' ? 'ゲーム＆共有' : 'Games & Social'}
+            aria-label={t('gamesAndSocial')}
           >
             <Icon name="Gamepad" size={22} />
-            <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
-              {language === 'ja' ? 'ゲーム' : 'Games'}
-            </span>
+              <span className="text-[10px] font-bold tracking-tight mt-1 font-body text-[#FFF9F3]">
+                {t('dockGames')}
+              </span>
           </button>
         </div>
       </nav>

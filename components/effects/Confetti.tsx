@@ -69,7 +69,7 @@ export default function Confetti({
     let lastTime = performance.now()
 
     const animate = (currentTime: number) => {
-      const deltaTime = (currentTime - lastTime) / 16.67 // Normalize to ~60fps
+      const deltaTime = (currentTime - lastTime) / 16.67 // 約60fps基準に正規化
       lastTime = currentTime
 
       setPieces((prev) =>
@@ -79,9 +79,9 @@ export default function Confetti({
             x: piece.x + piece.velocityX * deltaTime * 0.5,
             y: piece.y + piece.velocityY * deltaTime * 0.5,
             rotation: piece.rotation + piece.rotationSpeed * deltaTime,
-            velocityY: piece.velocityY + 0.1 * deltaTime, // Gravity
+            velocityY: piece.velocityY + 0.1 * deltaTime, // 重力
           }))
-          .filter((piece) => piece.y < 120) // Remove pieces that fall off screen
+          .filter((piece) => piece.y < 120) // 画面外に落ちたピースを除去
       )
 
       animationId = requestAnimationFrame(animate)

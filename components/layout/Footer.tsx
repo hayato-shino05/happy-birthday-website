@@ -1,11 +1,14 @@
 'use client'
 
+import { useLanguage } from '@/lib/i18n/LanguageContext'
+
 interface FooterProps {
   showSocial?: boolean
 }
 
 export default function Footer({ showSocial = true }: FooterProps) {
   const currentYear = new Date().getFullYear()
+  const { t } = useLanguage()
 
   return (
     <footer className="relative z-10 mt-auto">
@@ -14,7 +17,7 @@ export default function Footer({ showSocial = true }: FooterProps) {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* 著作権表記 & オーナーリンク */}
             <p className="text-white/70 text-sm text-center md:text-left flex items-center justify-center md:justify-start gap-1.5 flex-wrap">
-              <span>© {currentYear} Omoide (想い出箱). Created by</span>
+              <span>© {currentYear} Omoide (想い出箱). {t('createdBy')}</span>
               <a
                 href="https://github.com/hayato-shino05"
                 target="_blank"
@@ -73,7 +76,7 @@ export default function Footer({ showSocial = true }: FooterProps) {
             )}
           </div>
           <p className="mt-4 text-center text-white/50 text-xs">
-            Icons by <a href="https://icons8.com/" target="_blank" rel="noreferrer" className="underline hover:text-white">Icons8</a>
+            {t('iconsBy')} <a href="https://icons8.com/" target="_blank" rel="noreferrer" className="underline hover:text-white">Icons8</a>
           </p>
         </div>
       </div>

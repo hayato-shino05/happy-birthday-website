@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase/client'
 
-// GET /api/gifts - ギフト一覧を取得
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabase()
@@ -33,7 +32,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // ギフト種別ごとに集計
     const giftStats = data?.reduce((acc, gift) => {
       const key = gift.gift_name
       acc[key] = (acc[key] || 0) + 1
@@ -49,7 +47,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/gifts - ギフトを送信
 export async function POST(request: NextRequest) {
   try {
     const supabase = getSupabase()

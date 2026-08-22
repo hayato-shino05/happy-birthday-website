@@ -137,7 +137,7 @@ describe('File Upload Validation', () => {
 
   it('should reject file exceeding max size', () => {
     const file = new File([''], 'test.jpg', { type: 'image/jpeg' })
-    Object.defineProperty(file, 'size', { value: 20 * 1024 * 1024 }) // 20MB
+    Object.defineProperty(file, 'size', { value: 20 * 1024 * 1024 })
 
     const result = validateFileUpload(file, {
       maxSize: 10 * 1024 * 1024,

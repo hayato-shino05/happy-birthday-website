@@ -40,7 +40,7 @@ export default function Header({ title, showLanguageSelector = true, onMenuClick
               onMenuClick?.()
             }}
             className="md:hidden w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
-            aria-label="Menu"
+            aria-label={t('menu')}
           >
             <span aria-hidden="true">
               <Icon name={isMobileMenuOpen ? 'X' : 'Menu'} size={20} />

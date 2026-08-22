@@ -160,9 +160,7 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
                   marginTop: '12px',
                 }}
               >
-                {language === 'ja'
-                  ? '対応形式: JPG, PNG, GIF, MP4, WebM（最大50MB）'
-                  : 'Supported formats: JPG, PNG, GIF, MP4, WebM (Max 50MB)'}
+                {t('supportedMediaFormats')}
               </p>
             </div>
           )}

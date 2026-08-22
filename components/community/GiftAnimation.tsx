@@ -16,7 +16,6 @@ export default function GiftAnimation({ emoji, giftName, sender, onComplete }: G
   const [particles, setParticles] = useState<Array<{ id: number; x: number; delay: number }>>([])
 
   useEffect(() => {
-    // パーティクルを生成
     const newParticles = Array.from({ length: 20 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -57,7 +56,6 @@ export default function GiftAnimation({ emoji, giftName, sender, onComplete }: G
 
       {/* メインのギフト表示 */}
       <div className="relative z-10 flex flex-col items-center animate-bounce-in">
-        {/* ギフトの絵文字 */}
         <div className="text-8xl mb-4 animate-pulse-scale">
           {emoji}
         </div>

@@ -198,7 +198,7 @@ export default function PostDetail({ post, onBack, onLike }: PostDetailProps) {
                 {post.media_url.endsWith('.mp4') || post.media_url.endsWith('.webm') || post.media_url.endsWith('.ogg') ? (
                   <video src={post.media_url} controls style={{ width: '100%', maxHeight: '400px', background: '#000' }} />
                 ) : (
-                  <img src={post.media_url} alt="Media" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+                  <img src={post.media_url} alt={t('mediaAlt')} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
                 )}
               </div>
             )}

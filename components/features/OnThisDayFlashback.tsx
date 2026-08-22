@@ -117,9 +117,7 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
           <div className="bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-4 shadow-lg relative overflow-hidden">
             {/* 年数バッジ */}
             <div className="absolute top-3 right-3 bg-[#854D27] text-[#FFF9F3] text-xs font-bold px-3 py-1 rounded-full border border-[#D4B08C] shadow-sm">
-              {language === 'ja'
-                ? `${currentMemory.yearsAgo}年前の今日`
-                : `${currentMemory.yearsAgo} year${currentMemory.yearsAgo > 1 ? 's' : ''} ago today`}
+              {t('yearsAgoToday', { count: currentMemory.yearsAgo })}
             </div>
 
             {/* メディア表示（画像・動画・音声） */}
@@ -156,7 +154,7 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
             {/* 投稿者情報 */}
             <div className="flex items-center justify-between pt-3 border-t border-[#D4B08C]/30 text-xs text-[#854D27]/80">
               <span className="font-semibold">
-                {language === 'ja' ? `${currentMemory.sender} より` : `From ${currentMemory.sender}`}
+                {t('fromSender', { name: currentMemory.sender })}
               </span>
               <span>
                 {new Date(currentMemory.createdAt).toLocaleDateString(

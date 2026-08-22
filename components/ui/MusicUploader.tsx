@@ -82,7 +82,6 @@ export default function MusicUploader({ onUploaded, onClose }: MusicUploaderProp
 
       onUploaded?.({ name: trackName.trim(), url: urlData.publicUrl })
 
-      // フォームをリセット
       setTimeout(() => {
         setFile(null)
         setTrackName('')

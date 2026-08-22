@@ -1,6 +1,5 @@
 import type { ThemeName } from '@/types'
 
-// テーマエフェクトタイプ
 export interface ThemeEffect {
   type:
     | 'fallingPetals'

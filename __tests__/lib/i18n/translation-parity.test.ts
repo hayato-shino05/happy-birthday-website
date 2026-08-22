@@ -43,27 +43,107 @@ describe('translation parity', () => {
     ])).toThrow('translation keys')
   })
 
-  it('covers localized error keys in both locales with ja fallback', () => {
-    const errorKeys = [
+  it('covers recently converted keys in both locales with ja fallback', () => {
+    const convertedKeys = [
+      'attachPhotoOptional',
       'audioMessagesLoadError',
       'cameraMicPermissionError',
+      'capsuleMessagePlaceholder',
+      'capsuleUnlocked',
+      'countdownHeading',
+      'countdownHide',
+      'countdownHideTitle',
+      'countdownShow',
+      'createdBy',
+      'daysUntilCelebration',
       'flashbackPhotoAlt',
+      'frameCategoryClassic',
+      'frameCategoryCute',
+      'frameCategoryElegant',
+      'frameCategoryTrending',
+      'fromSender',
       'giftSendError',
       'giftsLoadError',
+      'iconsBy',
+      'mediaAlt',
       'mediaLoadError',
       'messagesLoadError',
       'microphonePermissionError',
+      'mobileNavDock',
+      'monthsShort',
+      'omikuji3dLoading',
+      'omikujiBlessingLabel',
+      'omikujiBondLabel',
+      'omikujiCylinderHint',
+      'omikujiHealthLabel',
+      'omikujiLuckyNumber',
+      'omikujiNumber',
+      'omikujiPoemLabel',
+      'omikujiTodayFortune',
+      'omikujiWishLabel',
+      'passwordHide',
+      'passwordShow',
       'postsLoadError',
+      'quizBirthdayMonthQuestion',
+      'quizWhoHasBirthday',
+      'recentMessages',
+      'recipientExamplePlaceholder',
+      'recipientOptional',
       'recordingStartError',
+      'sealedSuccess',
+      'selectPhoto',
+      'sealNewCapsule',
       'timeCapsuleEmptyDesc',
       'timeCapsulePhotoAlt',
+      'videoMessagesLoadError',
+      'viewCapsules',
     ] as const
-    for (const key of errorKeys) {
+    for (const key of convertedKeys) {
       for (const pack of localePacks) {
         expect(pack.translations[key], `${pack.locale}:${key}`).toBeTruthy()
         expect(pack.translations[key]).not.toBe(key)
       }
       expect(translate('fr-FR', key, 'ja')).toBe(localePacks.find((p) => p.locale === 'ja')?.translations[key])
     }
+  })
+
+  it('keeps placeholder sets consistent between locales for every key', () => {
+    const extract = (value: string): string[] =>
+      [...value.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort()
+    const [enPack, jaPack] = localePacks
+    for (const key of translationKeys) {
+      expect(extract(enPack.translations[key]), `${key} (en)`).toEqual(
+        extract(jaPack.translations[key]),
+        `${key} (ja)`,
+      )
+    }
+  })
+})
+
+describe('timeCapsuleSealed locale regression', () => {
+  const params = { date: '8/21/2027' }
+  const jpPattern = /[\u3040-\u30ff\u4e00-\u9faf]/
+
+  it('keeps the {date} placeholder in both locales', () => {
+    expect(translate('ja', 'timeCapsuleSealed', 'ja')).toContain('{date}')
+    expect(translate('en', 'timeCapsuleSealed', 'en')).toContain('{date}')
+  })
+
+  it('renders the Japanese suffix for ja with the date preserved', () => {
+    const out = translate('ja', 'timeCapsuleSealed', 'ja', params)
+    expect(out).toContain(params.date)
+    expect(out).toMatch(jpPattern)
+  })
+
+  it('renders natural English without any Japanese suffix leak', () => {
+    const out = translate('en', 'timeCapsuleSealed', 'en', params)
+    expect(out).toBe('Sealed until 8/21/2027')
+    expect(out).not.toMatch(jpPattern)
+  })
+
+  it('falls back to the ja rendering for unsupported locales', () => {
+    const out = translate('fr-FR', 'timeCapsuleSealed', 'ja', params)
+    expect(out).toContain(params.date)
+    expect(out).toMatch(jpPattern)
   })
 })

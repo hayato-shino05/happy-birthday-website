@@ -112,9 +112,9 @@ export default function PostForm({ onSubmit }: PostFormProps) {
       const success = await onSubmit(author.trim(), content.trim(), undefined, mediaUrl)
 
       if (success) {
-        // Save name to shared storage for other forms
+        // 名前を共有ストレージに保存する（他のフォームと共用）
         localStorage.setItem('birthday_user_name', author.trim())
-        // Keep author name, only clear content
+        // 投稿者名は保持し、本文のみクリアする
         setContent('')
         removeFile()
       } else {
@@ -219,7 +219,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
               {isVideo ? (
                 <video src={previewUrl || ''} style={{ width: '100%', maxHeight: '150px', objectFit: 'contain' }} controls />
               ) : (
-                <img src={previewUrl || ''} alt="Preview" style={{ width: '100%', maxHeight: '150px', objectFit: 'contain' }} />
+                <img src={previewUrl || ''} alt={t('preview')} style={{ width: '100%', maxHeight: '150px', objectFit: 'contain' }} />
               )}
               <button type="button" onClick={removeFile}
                 aria-label={t('removeFile')}

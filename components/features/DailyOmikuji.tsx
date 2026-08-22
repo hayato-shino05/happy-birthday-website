@@ -6,18 +6,32 @@ import dynamic from 'next/dynamic'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 import { OMIKUJI_DATA, type OmikujiFortune } from '@/data/omikujiData'
+import { LANGUAGE_COOKIE_NAME } from '@/lib/i18n/cookie'
+import { DEFAULT_LOCALE, translate } from '@/lib/i18n/resolveLocale'
+import type { Locale } from '@/lib/i18n/types'
+
+function readCookieLocale(): Locale {
+  if (typeof document === 'undefined') return DEFAULT_LOCALE
+  const match = document.cookie.match(new RegExp(`${LANGUAGE_COOKIE_NAME}=([^;]+)`))
+  return match?.[1] === 'en' ? 'en' : DEFAULT_LOCALE
+}
+
+function Omikuji3dLoading() {
+  const locale = readCookieLocale()
+  return (
+    <div className="w-full h-64 flex flex-col items-center justify-center gap-2">
+      <div className="w-8 h-8 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin" />
+      <span className="text-xs text-[#854D27]/70">{translate(locale, 'omikuji3dLoading', DEFAULT_LOCALE)}</span>
+    </div>
+  )
+}
 
 // 3D おみくじ筒を SSR 回避でダイナミックインポート
 const OmikujiCylinder3D = dynamic(
   () => import('@/components/3d/OmikujiCylinder3D').then((mod) => mod.OmikujiCylinder3D),
   {
     ssr: false,
-    loading: () => (
-      <div className="w-full h-64 flex flex-col items-center justify-center gap-2">
-        <div className="w-8 h-8 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin" />
-        <span className="text-xs text-[#854D27]/70">3D Loading...</span>
-      </div>
-    ),
+    loading: () => <Omikuji3dLoading />,
   }
 )
 
@@ -90,9 +104,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
         <div className="text-[11px] font-bold text-[#854D27]/80 flex items-center justify-center gap-1.5 mb-1">
           <Icon name="Sparkles" size={16} />
           <span>
-            {language === 'ja'
-              ? '3D筒をドラッグして360°回転 / クリックして籤引きできます'
-              : 'Drag to rotate 360° / Click cylinder to draw fortune'}
+            {t('omikujiCylinderHint')}
           </span>
         </div>
 
@@ -112,7 +124,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
               className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#854D27] via-[#A05D30] to-[#854D27] hover:brightness-110 disabled:opacity-50 text-[#FFF9F3] font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <Icon name="Sparkles" size={20} />
-              <span>{isShaking ? (language === 'ja' ? 'みくじ筒を振っています...' : 'Shaking cylinder...') : t('omikujiDraw')}</span>
+              <span>{isShaking ? t('omikujiDrawing') : t('omikujiDraw')}</span>
             </button>
           </div>
         )}
@@ -135,10 +147,10 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#D4B08C]/50">
               <span className="text-xs font-bold text-[#854D27]/80 uppercase tracking-widest flex items-center gap-1.5">
                 <Icon name="Calendar" size={14} />
-                {language === 'ja' ? '本日の想い出運勢' : "Today's Omoide Fortune"}
+                {t('omikujiTodayFortune')}
               </span>
               <span className="text-xs font-bold text-[#854D27]">
-                {language === 'ja' ? `第${result.id}番` : `No. ${result.id}`}
+                {t('omikujiNumber', { id: result.id })}
               </span>
             </div>
 
@@ -156,7 +168,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
             {/* 祝詠・和歌 / 俳句 */}
             <div className="bg-[#854D27]/5 border-l-4 border-[#854D27] rounded-r-xl p-3.5 mb-4">
               <span className="text-[10px] font-bold text-[#854D27]/80 uppercase block mb-1">
-                📜 {language === 'ja' ? '祝詠（しゅくえい）' : 'Celebration Poem'}
+                📜 {t('omikujiPoemLabel')}
               </span>
               <p className="text-sm font-serif text-[#854D27] italic font-semibold leading-relaxed">
                 &ldquo;{language === 'ja' ? result.poemJa : result.poemEn}&rdquo;
@@ -174,7 +186,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
               <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
                   <Icon name="Heart" size={14} />
-                  <span>{language === 'ja' ? '【縁】絆・出会い' : '【Bond】Connection'}</span>
+                  <span>{t('omikujiBondLabel')}</span>
                 </div>
                 <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.bondJa : result.bondEn}
@@ -185,7 +197,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
               <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
                   <Icon name="Sparkles" size={14} />
-                  <span>{language === 'ja' ? '【健】心身・健康' : '【Health】Well-being'}</span>
+                  <span>{t('omikujiHealthLabel')}</span>
                 </div>
                 <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.healthJa : result.healthEn}
@@ -196,7 +208,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
               <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
                   <Icon name="Star" size={14} />
-                  <span>{language === 'ja' ? '【志】願い事・学業' : '【Wish】Aspirations'}</span>
+                  <span>{t('omikujiWishLabel')}</span>
                 </div>
                 <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.wishJa : result.wishEn}
@@ -207,7 +219,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
               <div className="bg-white/80 border border-[#D4B08C]/60 rounded-xl p-3 shadow-xs">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#854D27] mb-1">
                   <Icon name="Cake" size={14} />
-                  <span>{language === 'ja' ? '【祝】誕生日の言霊' : '【Blessing】Birthday Wish'}</span>
+                  <span>{t('omikujiBlessingLabel')}</span>
                 </div>
                 <p className="text-[11px] text-[#854D27] font-semibold leading-snug">
                   {language === 'ja' ? result.blessingJa : result.blessingEn}
@@ -235,7 +247,7 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-[#854D27]/70 uppercase block mb-0.5">
-                  {language === 'ja' ? '幸運数' : 'Lucky No.'}
+                  {t('omikujiLuckyNumber')}
                 </span>
                 <span className="text-xs font-black text-[#854D27] leading-snug block">
                   {result.luckyNumber}

@@ -29,7 +29,6 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
   const [error, setError] = useState<string | null>(null)
   const [cameraReady, setCameraReady] = useState(false)
 
-  // カメラを起動する
   useEffect(() => {
     let mounted = true
 
@@ -237,7 +236,6 @@ function getSupportedVideoMimeType(): string | undefined {
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
-      {/* Header */}
       {/* ヘッダー */}
       <div
         style={{

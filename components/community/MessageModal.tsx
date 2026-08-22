@@ -68,7 +68,7 @@ export function MessageModal({ onClose, birthdayPerson }: MessageModalProps) {
 
         {/* 最近のメッセージ一覧 */}
         <div>
-          <h3 style={{ color: '#854D27', fontSize: '1.1rem', marginBottom: '15px' }}>最近のメッセージ</h3>
+          <h3 style={{ color: '#854D27', fontSize: '1.1rem', marginBottom: '15px' }}>{t('recentMessages')}</h3>
           <MessageList limit={5} />
         </div>
       </motion.div>

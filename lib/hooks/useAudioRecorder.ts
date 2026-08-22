@@ -100,12 +100,12 @@ export function useAudioRecorder() {
     if (mediaRecorderRef.current && state.isRecording) {
       mediaRecorderRef.current.stop()
       
-      // Stop all tracks
+      // すべてのトラックを停止する
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop())
       }
 
-      // Clear timer
+      // タイマーを解除する
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null

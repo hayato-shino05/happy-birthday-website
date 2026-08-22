@@ -242,7 +242,7 @@ export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
                 boxShadow: '3px 3px 0 #D4B08C',
               }}
             >
-              {language === 'ja' ? '今すぐ写真をアップロード' : 'Upload Photos Now'}
+              {t('uploadPhotosNow')}
             </button>
           )}
         </div>
