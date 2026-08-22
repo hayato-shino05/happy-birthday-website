@@ -64,3 +64,14 @@ describe('GET /api/birthdays query handling', () => {
     expect(typeof body.error).toBe('string')
   })
 })
+
+describe('birthday management boundary', () => {
+  it('exposes no anonymous mutating handlers', async () => {
+    const mod = await import('@/app/api/birthdays/route')
+    // anon は読み取り専用。作成・更新・削除の API 経路を設けない
+    expect(mod.GET).toBeTypeOf('function')
+    expect((mod as Record<string, unknown>).POST).toBeUndefined()
+    expect((mod as Record<string, unknown>).PUT).toBeUndefined()
+    expect((mod as Record<string, unknown>).DELETE).toBeUndefined()
+  })
+})
