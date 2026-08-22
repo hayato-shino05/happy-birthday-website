@@ -136,7 +136,7 @@ export function ModalManager() {
     omikuji: {
       title: t('omikujiTitle'),
       content: <DailyOmikuji onClose={closeModal} />,
-      size: 'sm' as const,
+      size: 'md' as const,
     },
     timeCapsule: {
       title: t('timeCapsuleTitle'),

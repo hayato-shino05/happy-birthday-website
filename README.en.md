@@ -13,6 +13,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow" alt="License MIT"></a>
   <img src="https://img.shields.io/badge/Next.js-16.0.7-black?logo=nextdotjs" alt="Next.js 16.0.7">
   <img src="https://img.shields.io/badge/React-19.2.1-61DAFB?logo=react&logoColor=111111" alt="React 19.2.1">
+  <img src="https://img.shields.io/badge/Three.js-0.185.1-black?logo=threedotjs" alt="Three.js 0.185.1">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=ffffff" alt="TypeScript 5">
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=ffffff" alt="Tailwind CSS 4">
   <img src="https://img.shields.io/badge/Supabase-2.86.2-3FCF8E?logo=supabase&logoColor=ffffff" alt="Supabase 2.86.2">
@@ -43,21 +44,22 @@
   <img src="./public/images/banners/banner_option_1_ghibli.jpg" alt="Omoide Bako Concept Illustration" width="100%">
 </p>
 
-Beyond birthday countdowns and 2D cake candle-blowing, it brings together photo & video albums, real-time group chat, a message bulletin board, photo booth, mini-games, and 13 dynamic seasonal & festival themes into a single warm and inviting space. It is designed to serve as a shared celebration sanctuary for families, friends, teams, or communities.
+Beyond birthday countdowns and 2D/3D cake candle-blowing, it brings together a Three.js interactive 3D Omikuji fortune cylinder, photo & video albums, real-time group chat, a message bulletin board, photo booth, digital time capsule, mini-games, and 13 dynamic seasonal & festival themes into a single warm and inviting space. It is designed to serve as a shared celebration sanctuary for families, friends, teams, or communities.
 
 > [!NOTE]
 > This README avoids decorative emoji and represents feature groups with `lucide-react` icon names.
 
 ## FEATURES
 
-### CORE
+### CELEBRATION & CORE
 
 | Icon | Feature | Description |
 |------|---------|-------------|
 | `Timer` | Real-time countdown | Shows the remaining time until the next birthday or milestone using Supabase data. |
-| `Cake` | Interactive cake | Provides a 2D cake and candle experience for celebrations. |
-| `Music` | Music player | Plays celebration songs and vintage tracks with Howler.js. |
-| `Sparkles` | Visual effects | Displays confetti, fireworks, balloons, and seasonal particles. |
+| `Cake` | Interactive cake | 2D/3D cake with microphone-enabled candle blowing interaction. |
+| `Scroll` | 3D Omikuji Fortune (Three.js) | Interactive 3D Japanese Omikuji cylinder with 360-degree orbit, haptic shake physics, bamboo stick reveal, Waka/Haiku poems, 4 life categories (Bond, Health, Wish, Blessing), and lucky items. |
+| `Music` | Music player | Plays celebration songs and nostalgic/vintage tracks with Howler.js. |
+| `PartyPopper` | Visual effects | Displays confetti, fireworks, balloons, and seasonal particle effects. |
 
 ### MEDIA & KEEPSAKES
 
@@ -65,6 +67,8 @@ Beyond birthday countdowns and 2D cake candle-blowing, it brings together photo 
 |------|---------|-------------|
 | `Image` | Photo & video album | Organizes memories with Supabase Storage. |
 | `Camera` | Photo booth / frame | Takes photos via WebRTC camera and frames them with custom seasonal borders. |
+| `Clock` | On This Day Flashback | Revisit memories and photos from past milestones on the same calendar day. |
+| `Mail` | Time Capsule | Seal letters, photos, and audio recordings to be unlocked on future milestone dates. |
 | `Tags` | Tag management | Adds searchable tags to media files. |
 | `Upload` | Media upload | Supports image and video uploads through `react-dropzone`. |
 | `Search` | Search | Helps users find media by tags or text. |
@@ -89,13 +93,14 @@ Beyond birthday countdowns and 2D cake candle-blowing, it brings together photo 
 | `Gift` | Virtual gifts | Select and send digital celebration gifts. |
 | `Share2` | Sharing links | Share invite links directly to social platforms. |
 
-### THEMES & CUSTOMIZATION
+### THEMES & MOBILE OPTIMIZATION
 
 | Icon | Feature | Description |
 |------|---------|-------------|
 | `Palette` | Four seasons | Dynamic visual themes for Spring, Summer, Autumn, and Winter. |
-| `Sparkles` | 13 Festival themes | Dynamic themes for Hanami, Tanabata, Obon, Tsukimi, Shogatsu, Halloween, Christmas, etc. |
-| `Video` | Video backgrounds | Theme-specific video backgrounds with smooth fallbacks. |
+| `CalendarDays` | 13 Festival themes | Dynamic themes for Hanami, Tanabata, Obon, Tsukimi, Shogatsu, Halloween, Christmas, etc. |
+| `Compass` | Mobile Bottom Dock & Drawer | Mobile-first bottom dock and expandable Japanese memory drawer. |
+| `Type` | Japanese Typography System | High-contrast font stack: Windows (Yu Gothic / Meiryo), macOS / iOS (Hiragino Sans), and Mincho Serif (Yu Mincho / Noto Serif JP). |
 | `Languages` | Multi-language (i18n) | Seamless switching between Japanese (JA) and English (EN). |
 
 ## VALUE
@@ -105,11 +110,11 @@ Beyond birthday countdowns and 2D cake candle-blowing, it brings together photo 
    - Centralized anniversary registry for friends and family.
 
 2. **A digital keepsake box (Omoide Bako)**
-   - Consolidate photos, videos, voice recordings, guestbook wishes, and photobooth strips in one place.
+   - Consolidate photos, videos, voice recordings, guestbook wishes, photobooth strips, and time capsules in one place.
    - Relive cherished moments anytime in a nostalgic, cozy atmosphere.
 
 3. **Joyful online celebrations**
-   - Interactive mini-games and animated effects bring energy and delight.
+   - Interactive 3D Omikuji, mini-games, and animated effects bring energy and delight.
    - Dynamic 13-festival theme engine keeps the site fresh and lively all year round.
 
 4. **Private community sanctuary**
@@ -122,8 +127,9 @@ Beyond birthday countdowns and 2D cake candle-blowing, it brings together photo 
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Next.js | 16.0.7 | App Router & API Routes |
+| Next.js | 16.0.7 | App Router & API Routes (Turbopack) |
 | React | 19.2.1 | UI Components |
+| Three.js | 0.185.1 | 3D Omikuji cylinder & WebGL rendering |
 | TypeScript | 5.x | Type safety |
 | Tailwind CSS | 4.x | Styling |
 | Framer Motion | 12.23.25 | Animation |

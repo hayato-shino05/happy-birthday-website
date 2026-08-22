@@ -20,6 +20,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.86.2",
     "@tanstack/react-query": "^5.90.12",
+    "@types/three": "^0.185.4",
     "@vercel/analytics": "^1.6.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.25",
@@ -29,6 +30,7 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-dropzone": "^14.3.8",
+    "three": "^0.185.1",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
