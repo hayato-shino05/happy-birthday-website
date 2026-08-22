@@ -31,7 +31,8 @@ afterEach(() => {
 })
 
 describe('production allowlist integration', () => {
-  it('applies only clean-commit integrationPaths and ignores dirty production files', async () => {
+  // Windows では git サブプロセスが既定 5 秒を超えることがあるため、テスト単位で余裕を持たせる
+  it('applies only clean-commit integrationPaths and ignores dirty production files', { timeout: 30_000 }, async () => {
     const { applyProductionAllowlist } = await loadAllowlistScript()
     const productionRoot = createRepository()
     mkdirSync(join(productionRoot, 'data', 'festivals', 'jp'), { recursive: true })
@@ -66,7 +67,7 @@ describe('production allowlist integration', () => {
     expect(existsSync(join(destination, 'supabase', 'config.toml'))).toBe(false)
   })
 
-  it('rejects excluded paths and forbidden staged files', async () => {
+  it('rejects excluded paths and forbidden staged files', { timeout: 30_000 }, async () => {
     const { checkStagedFiles, readIntegrationPaths } = await loadAllowlistScript()
     expect(() => readIntegrationPaths({
       allowedPathScopes: ['data/'],
