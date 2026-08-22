@@ -236,6 +236,15 @@ function getSupportedVideoMimeType(): string | undefined {
     }
   }, [])
 
+  // フォーカス位置に依存しないよう、document レベルでも Escape を処理する
+  useEffect(() => {
+    const handleDocumentEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose()
+    }
+    document.addEventListener('keydown', handleDocumentEscape)
+    return () => document.removeEventListener('keydown', handleDocumentEscape)
+  }, [handleClose])
+
   const cameraContent = (
     <div
       ref={containerRef}
