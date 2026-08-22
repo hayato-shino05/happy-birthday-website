@@ -90,7 +90,7 @@ export default function Modal({
       document.addEventListener('keydown', handleEscape)
       document.addEventListener('keydown', handleTab)
 
-      // Focus first focusable element
+      // 最初のフォーカス可能要素へフォーカス
       setTimeout(() => {
         const firstFocusable = modalRef.current?.querySelector(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'

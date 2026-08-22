@@ -63,7 +63,7 @@ export function CountdownDisplay() {
             }}
           >
             <Eye className="w-4 h-4 text-[#895033] group-hover:scale-110 transition-transform" />
-            <span>{language === 'ja' ? '想い出箱・カウントダウンを表示' : 'Show Countdown'}</span>
+            <span>{t('countdownShow')}</span>
           </motion.button>
         ) : (
           /* メインのスクラップブック風カウントダウンカード */
@@ -86,8 +86,8 @@ export function CountdownDisplay() {
             <button
               onClick={() => setIsHidden(true)}
               className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80 hover:bg-white border border-white/80 flex items-center justify-center text-[#6E3902] hover:text-[#2C1400] shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              title={language === 'ja' ? '背景を鑑賞するために隠す' : 'Hide to view background'}
-              aria-label={language === 'ja' ? 'カウントダウンを隠す' : 'Hide Countdown'}
+              title={t('countdownHideTitle')}
+              aria-label={t('countdownHide')}
             >
               <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
@@ -147,12 +147,12 @@ export function CountdownDisplay() {
                 {language === 'ja' ? (
                   <>
                     <span className="text-[#6E3902]">{personName}</span>
-                    <span className="font-extrabold text-base sm:text-xl md:text-2xl text-[#381A00] ml-1">さんの誕生日まで</span>
+                    <span className="font-extrabold text-base sm:text-xl md:text-2xl text-[#381A00] ml-1">{t('countdownTitle')}</span>
                   </>
                 ) : (
                   <>
-                    <span className="font-extrabold text-base sm:text-xl md:text-2xl text-[#381A00]">Countdown to </span>
-                    <span className="text-[#6E3902]">{personName}&apos;s Birthday</span>
+                    <span className="font-extrabold text-base sm:text-xl md:text-2xl text-[#381A00]">{t('countdownTitle')} </span>
+                    <span className="text-[#6E3902]">{personName}</span>
                   </>
                 )}
                 <div className="w-14 sm:w-18 h-0.5 mx-auto mt-1.5 rounded-full bg-[#BEAB4E]/80 shadow-xs" />
@@ -176,9 +176,7 @@ export function CountdownDisplay() {
                 }}
               >
                 <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#10B981] animate-pulse" />
-                {language === 'ja'
-                  ? `あと ${nextBirthday.daysUntil} 日の特別な瞬間`
-                  : `${nextBirthday.daysUntil} days until celebration`}
+                {t('daysUntilCelebration', { count: nextBirthday.daysUntil })}
               </div>
             </div>
           </motion.div>

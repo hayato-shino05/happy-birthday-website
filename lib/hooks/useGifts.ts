@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { VirtualGift } from '@/types'
 
 export const GIFT_CATALOG = [
@@ -28,6 +29,11 @@ interface UseGiftsReturn {
 }
 
 export function useGifts(): UseGiftsReturn {
+  const { t } = useLanguage()
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const [gifts, setGifts] = useState<VirtualGift[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +51,7 @@ export function useGifts(): UseGiftsReturn {
       if (fetchError) throw fetchError
       setGifts((data || []) as VirtualGift[])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load gifts')
+      setError(err instanceof Error ? err.message : tRef.current('giftsLoadError'))
     } finally {
       setIsLoading(false)
     }
@@ -69,7 +75,7 @@ export function useGifts(): UseGiftsReturn {
         await fetchGifts()
         return true
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to send gift')
+        setError(err instanceof Error ? err.message : tRef.current('giftSendError'))
         return false
       }
     },

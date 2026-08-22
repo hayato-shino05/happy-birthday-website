@@ -256,6 +256,10 @@ SearchInput.displayName = 'SearchInput'
 export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputProps, 'type' | 'rightIcon'>>(
   (props, ref) => {
     const [showPassword, setShowPassword] = useState(false)
+    const language = useOptionalLanguage()
+    const passwordAriaLabel = showPassword
+      ? (language?.t('passwordHide') ?? translate(DEFAULT_LOCALE, 'passwordHide', DEFAULT_LOCALE))
+      : (language?.t('passwordShow') ?? translate(DEFAULT_LOCALE, 'passwordShow', DEFAULT_LOCALE))
 
     return (
       <Input
@@ -266,7 +270,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputProps, 'type
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="text-white/40 hover:text-white transition-colors cursor-pointer"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={passwordAriaLabel}
           >
             {showPassword ? (
               <Icon name="EyeOff" size={20} className="text-amber-300" />

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 export interface Post {
   id: string
@@ -34,6 +35,11 @@ function toPost(post: PostRecord): Post {
 }
 
 export function usePosts() {
+  const { t } = useLanguage()
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +65,7 @@ export function usePosts() {
       setPosts((queryResult.data ?? []).map((post: any) => toPost(post as PostRecord)))
     } catch (err) {
       console.error('Failed to fetch posts:', err)
-      setError('Failed to load posts')
+      setError(tRef.current('postsLoadError'))
       setPosts([])
     } finally {
       setLoading(false)

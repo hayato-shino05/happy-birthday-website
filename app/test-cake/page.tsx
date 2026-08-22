@@ -1,6 +1,5 @@
 import { BirthdayCake } from '@/components/features/BirthdayCake'
 
-// ケーキテストページ
 export default function TestCakePage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900">

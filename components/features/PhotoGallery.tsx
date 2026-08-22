@@ -125,7 +125,7 @@ export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
             }}
           >
             <Icon name="Upload" size={16} />
-            <span>{language === 'ja' ? '写真をアップロード' : 'Upload Media'}</span>
+            <span>{t('uploadMedia')}</span>
           </button>
 
           {/* スライドショーボタン */}
@@ -222,10 +222,10 @@ export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
             <Icon name="Camera" size={32} />
           </div>
           <p style={{ fontWeight: 600, marginBottom: '8px' }}>
-            {language === 'ja' ? '思い出の写真がまだありません' : 'No photos in album yet'}
+            {t('noPhotosInAlbum')}
           </p>
           <p style={{ fontSize: '0.85em', opacity: 0.8, marginBottom: '16px' }}>
-            {language === 'ja' ? '最初の写真をアップロードして共有しましょう！' : 'Upload the first photo to start sharing memories!'}
+            {t('uploadFirstPhoto')}
           </p>
           {!showUploader && (
             <button
@@ -242,7 +242,7 @@ export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
                 boxShadow: '3px 3px 0 #D4B08C',
               }}
             >
-              {language === 'ja' ? '今すぐ写真をアップロード' : 'Upload Photos Now'}
+              {t('uploadPhotosNow')}
             </button>
           )}
         </div>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase/client'
 
-// GET /api/birthdays/check - 今日が誰かの誕生日かどうかを確認
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabase()

@@ -294,12 +294,12 @@ export default function PhotoFrame() {
             className={`photoframe-cat-btn ${selectedCategory === cat.id ? 'active' : ''}`}
           >
             {cat.id === 'trending'
-              ? (language === 'ja' ? '🔥 トレンド' : '🔥 Trending')
+              ? t('frameCategoryTrending')
               : cat.id === 'classic'
-              ? (language === 'ja' ? '🎈 クラシック' : '🎈 Classic')
+              ? t('frameCategoryClassic')
               : cat.id === 'cute'
-              ? (language === 'ja' ? '💕 かわいい' : '💕 Cute')
-              : (language === 'ja' ? '✨ エレガント' : '✨ Elegant')}
+              ? t('frameCategoryCute')
+              : t('frameCategoryElegant')}
           </button>
         ))}
       </div>

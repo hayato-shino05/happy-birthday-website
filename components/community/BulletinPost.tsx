@@ -143,7 +143,9 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
           ) : (
             <img
               src={post.media_url}
-              alt={locale === 'ja' ? 'メディア' : 'Media'}
+              alt={t('mediaAlt')}
+              loading="lazy"
+              decoding="async"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           )}

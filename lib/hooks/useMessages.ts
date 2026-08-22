@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface Message {
   id: number
@@ -21,6 +22,11 @@ interface UseMessagesReturn {
 }
 
 export function useMessages(): UseMessagesReturn {
+  const { t } = useLanguage()
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +44,7 @@ export function useMessages(): UseMessagesReturn {
       if (fetchError) throw fetchError
       setMessages((data || []) as Message[])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load messages')
+      setError(err instanceof Error ? err.message : tRef.current('messagesLoadError'))
     } finally {
       setIsLoading(false)
     }
@@ -62,7 +68,7 @@ export function useMessages(): UseMessagesReturn {
         await fetchMessages()
         return true
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to send message')
+        setError(err instanceof Error ? err.message : tRef.current('sendMessageFailed'))
         return false
       }
     },

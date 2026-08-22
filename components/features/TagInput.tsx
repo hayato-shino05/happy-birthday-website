@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface TagInputProps {
   tags: string[]
@@ -8,7 +9,9 @@ interface TagInputProps {
   placeholder?: string
 }
 
-export function TagInput({ tags, onChange, placeholder = 'タグを追加...' }: TagInputProps) {
+export function TagInput({ tags, onChange, placeholder }: TagInputProps) {
+  const { t } = useLanguage()
+  const effectivePlaceholder = placeholder ?? t('addTag')
   const [inputValue, setInputValue] = useState('')
 
   const handleKeyDown = useCallback(
@@ -84,7 +87,7 @@ export function TagInput({ tags, onChange, placeholder = 'タグを追加...' }:
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={tags.length === 0 ? placeholder : ''}
+        placeholder={tags.length === 0 ? effectivePlaceholder : ''}
         style={{
           flex: 1,
           minWidth: '100px',

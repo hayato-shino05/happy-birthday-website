@@ -54,7 +54,6 @@ export default function BulletinBoard() {
     )
   }
 
-  // 投稿詳細ビューを表示する場合
   if (selectedPost) {
     return (
       <PostDetail

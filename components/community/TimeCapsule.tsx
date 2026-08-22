@@ -57,7 +57,6 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
       const supabase = getSupabase()
       const now = new Date()
 
-      // リモートデータの取得
       const { data, error } = await supabase
         .from('time_capsules')
         .select('*')
@@ -223,7 +222,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
               : 'text-[#854D27] hover:bg-[#854D27]/5'
           }`}
         >
-          {language === 'ja' ? 'カプセル一覧' : 'View Capsules'}
+          {t('viewCapsules')}
         </button>
         <button
           onClick={() => setActiveTab('create')}
@@ -233,7 +232,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
               : 'text-[#854D27] hover:bg-[#854D27]/5'
           }`}
         >
-          {language === 'ja' ? '新しく封印する' : 'Seal New Capsule'}
+          {t('sealNewCapsule')}
         </button>
       </div>
 
@@ -263,8 +262,8 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#854D27] text-[#FFF9F3]">
                       {capsule.isUnlocked
-                        ? language === 'ja' ? '開封済み' : 'Unlocked'
-                        : `${parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')} まで封印`}
+                        ? t('capsuleUnlocked')
+                        : t('timeCapsuleSealed', { date: parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US') })}
                     </span>
                   </div>
 
@@ -274,7 +273,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                         <div className="w-full h-44 rounded-xl overflow-hidden mb-3 border border-[#D4B08C]/50">
                           <img
                             src={capsule.photoUrl}
-                            alt="Capsule photo"
+                            alt={t('timeCapsulePhotoAlt')}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -302,9 +301,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                 <Icon name="Archive" size={24} />
               </div>
               <p className="text-xs text-[#854D27]/80 mb-4">
-                {language === 'ja'
-                  ? 'まだ封印されたタイムカプセルはありません。未来の記念日に届くメッセージを残してみましょう！'
-                  : 'No sealed time capsules yet. Leave a message for a future celebration!'}
+                {t('timeCapsuleEmptyDesc')}
               </p>
               <button
                 onClick={() => setActiveTab('create')}
@@ -340,13 +337,13 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
 
           <div>
             <label className="block text-xs font-bold text-[#854D27] mb-1">
-              {language === 'ja' ? '受取人（任意）' : 'Recipient (Optional)'}
+              {t('recipientOptional')}
             </label>
             <input
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              placeholder={language === 'ja' ? '例: 1年後の私、未来の家族' : 'e.g. Future Me, Family'}
+              placeholder={t('recipientExamplePlaceholder')}
               className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
@@ -374,14 +371,14 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
               rows={3}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={language === 'ja' ? '未来の記念日に伝えたい言葉を封印...' : 'Write words to be unlocked in the future...'}
+              placeholder={t('capsuleMessagePlaceholder')}
               className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#854D27] mb-1">
-              {language === 'ja' ? '写真を一緒に封印（任意）' : 'Attach Photo (Optional)'}
+              {t('attachPhotoOptional')}
             </label>
             <input
               ref={fileInputRef}
@@ -396,7 +393,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
               className="w-full py-2 px-3 rounded-xl border border-dashed border-[#854D27] text-[#854D27] text-xs font-medium hover:bg-[#854D27]/5 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Icon name="Camera" size={16} />
-              {photoFile ? photoFile.name : (language === 'ja' ? '写真を選択' : 'Select Photo')}
+              {photoFile ? photoFile.name : t('selectPhoto')}
             </button>
           </div>
 
@@ -405,7 +402,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
             disabled={isSubmitting}
             className="w-full py-3 rounded-xl bg-[#854D27] text-[#FFF9F3] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer"
           >
-            {isSubmitting ? t('uploading') : submitSuccess ? (language === 'ja' ? '封印完了！' : 'Sealed!') : t('timeCapsuleSeal')}
+            {isSubmitting ? t('uploading') : submitSuccess ? t('sealedSuccess') : t('timeCapsuleSeal')}
           </button>
         </form>
       )}

@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 // モーダル読み込み中のローディングスピナー
 function ModalLoadingSpinner() {
+  const { t } = useLanguage()
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <div
@@ -14,7 +15,7 @@ function ModalLoadingSpinner() {
         style={{ animationDuration: '0.8s' }}
       />
       <span className="text-sm font-medium text-[#854D27]/80 tracking-wider">
-        Loading...
+        {t('loading')}
       </span>
     </div>
   )
@@ -148,7 +149,6 @@ export function ModalManager() {
   const config = modalConfig[activeModal]
   if (!config) return null
 
-  // 設定されたサイズがあれば使用し、なければデフォルトサイズを使用する
   const size = config.size || 'lg'
 
   return (

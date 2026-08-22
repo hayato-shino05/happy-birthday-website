@@ -50,39 +50,54 @@ export function validateFile(file: File, maxSizeMB: number = 50): { valid: boole
 export async function compressImage(file: File, maxWidth: number = 1920): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      let { width, height } = img
-
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width
-        width = maxWidth
+    let objectUrl: string | null = null
+    const cleanup = () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+        objectUrl = null
       }
-
-      canvas.width = width
-      canvas.height = height
-
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'))
-        return
-      }
-
-      ctx.drawImage(img, 0, 0, width, height)
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob)
-          } else {
-            reject(new Error('Failed to compress image'))
-          }
-        },
-        'image/jpeg',
-        0.85
-      )
     }
-    img.onerror = () => reject(new Error('Failed to load image'))
-    img.src = URL.createObjectURL(file)
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        let { width, height } = img
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'))
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob)
+            } else {
+              reject(new Error('Failed to compress image'))
+            }
+          },
+          'image/jpeg',
+          0.85
+        )
+      } finally {
+        cleanup()
+      }
+    }
+    img.onerror = () => {
+      cleanup()
+      reject(new Error('Failed to load image'))
+    }
+    objectUrl = URL.createObjectURL(file)
+    img.src = objectUrl
   })
 }
 
@@ -92,6 +107,7 @@ export async function generateVideoThumbnail(videoFile: File): Promise<Blob | nu
     const video = document.createElement('video')
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
+    const objectUrl = URL.createObjectURL(videoFile)
 
     video.onloadedmetadata = () => {
       canvas.width = video.videoWidth
@@ -101,6 +117,7 @@ export async function generateVideoThumbnail(videoFile: File): Promise<Blob | nu
 
     video.onseeked = () => {
       if (!ctx) {
+        URL.revokeObjectURL(objectUrl)
         resolve(null)
         return
       }
@@ -108,7 +125,7 @@ export async function generateVideoThumbnail(videoFile: File): Promise<Blob | nu
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
       canvas.toBlob(
         (blob) => {
-          URL.revokeObjectURL(video.src)
+          URL.revokeObjectURL(objectUrl)
           resolve(blob)
         },
         'image/jpeg',
@@ -117,11 +134,11 @@ export async function generateVideoThumbnail(videoFile: File): Promise<Blob | nu
     }
 
     video.onerror = () => {
-      URL.revokeObjectURL(video.src)
+      URL.revokeObjectURL(objectUrl)
       resolve(null)
     }
 
-    video.src = URL.createObjectURL(videoFile)
+    video.src = objectUrl
     video.load()
   })
 }

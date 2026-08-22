@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase/client'
 
-// GET /api/birthdays/next - 次に来る誕生日を取得
 export async function GET() {
   try {
     const supabase = getSupabase()
@@ -9,7 +8,6 @@ export async function GET() {
     const currentMonth = today.getMonth() + 1
     const currentDay = today.getDate()
 
-    // 全ての誕生日データを取得
     const { data: birthdays, error } = await supabase
       .from('birthdays')
       .select('*')
@@ -23,7 +21,6 @@ export async function GET() {
       )
     }
 
-    // 次に来る誕生日を計算
     let nextBirthday = null
     let daysUntil = Infinity
 
@@ -47,7 +44,6 @@ export async function GET() {
       }
     }
 
-    // 今日が誕生日かどうかを確認
     const todayBirthdays = birthdays.filter(
       (b) => b.month === currentMonth && b.day === currentDay
     )

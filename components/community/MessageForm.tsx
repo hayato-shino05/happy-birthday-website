@@ -41,7 +41,6 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // ファイル種別を検証
     const isImage = file.type.startsWith('image/')
     const isVideo = file.type.startsWith('video/')
     
@@ -60,7 +59,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     setSelectedFile(file)
     setError(null)
 
-    // プレビュー用URLを作成
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     const url = URL.createObjectURL(file)
     setPreviewUrl(url)
   }
@@ -106,7 +105,6 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     try {
       let mediaObjectPath: string | null = null
 
-      // ファイルが選択されている場合はアップロード
       if (selectedFile) {
         mediaObjectPath = await uploadFile(selectedFile)
         if (!mediaObjectPath) {
@@ -125,9 +123,9 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       )
 
       if (success) {
-        // Save name to shared storage for other forms
+        // 名前を共有ストレージに保存する（他のフォームと共用）
         localStorage.setItem('birthday_user_name', sender.trim())
-        // Keep sender name, only clear message
+        // 送信者名は保持し、メッセージのみクリアする
         setMessage('')
         removeFile()
         onSuccess?.()
@@ -225,7 +223,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
               <span>{t('chooseFromLibrary')}</span>
             </button>
             
-            {/* Camera buttons */}
+            {/* カメラ撮影ボタン */}
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 type="button"
@@ -307,7 +305,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
               ) : (
                 <img
                   src={previewUrl || ''}
-                  alt="Preview"
+                  alt={t('preview')}
                   style={{
                     width: '100%',
                     maxHeight: '200px',
@@ -417,6 +415,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           mode={cameraMode}
           onCapture={(file) => {
             setSelectedFile(file)
+            if (previewUrl) URL.revokeObjectURL(previewUrl)
             const url = URL.createObjectURL(file)
             setPreviewUrl(url)
             setShowCamera(false)

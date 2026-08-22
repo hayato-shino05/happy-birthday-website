@@ -10,28 +10,13 @@ interface BirthdayCalendarProps {
   onClose?: () => void
 }
 
-const MONTHS_JA = [
-  '1月', '2月', '3月', '4月', '5月', '6月',
-  '7月', '8月', '9月', '10月', '11月', '12月',
-]
-
-const MONTHS_EN = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-
-const MONTHS_EN_SHORT = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-]
-
 export function BirthdayCalendar({}: BirthdayCalendarProps) {
   const { data: birthdays = [] } = useBirthdays()
   const { language, t } = useLanguage()
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
 
   const isJa = language === 'ja'
-  const currentMonthLabel = isJa ? MONTHS_JA[selectedMonth] : MONTHS_EN[selectedMonth]
+  const currentMonthLabel = t('months').split(',')[selectedMonth]
 
   const birthdaysInMonth = birthdays
     .filter((b) => b.month === selectedMonth + 1)
@@ -149,7 +134,7 @@ export function BirthdayCalendar({}: BirthdayCalendarProps) {
           {t('yearOverview')}
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-          {(isJa ? MONTHS_JA : MONTHS_EN_SHORT).map((month, index) => {
+          {(isJa ? t('months') : t('monthsShort')).split(',').map((month, index) => {
             const count = birthdays.filter((b) => b.month === index + 1).length
             const isCurrentMonth = index === selectedMonth
             return (

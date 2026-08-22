@@ -48,7 +48,6 @@ export default function TrackSelector({
                   : 'hover:bg-white/10'
               }`}
             >
-              {/* Play indicator / Music icon */}
               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                 isActive ? 'bg-white/20' : 'bg-white/10'
               }`}>
@@ -72,14 +71,12 @@ export default function TrackSelector({
                 )}
               </div>
 
-              {/* Track info */}
               <div className="flex-1 text-left min-w-0">
                 <p className={`text-sm truncate ${isActive ? 'text-white font-medium' : 'text-white/80'}`}>
                   {track.name}
                 </p>
               </div>
 
-              {/* Duration */}
               <span className="text-xs text-white/50 flex-shrink-0">
                 {formatDuration(track.duration)}
               </span>

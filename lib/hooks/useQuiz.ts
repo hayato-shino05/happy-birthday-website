@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import type { Birthday } from '@/types'
 import type { Language } from '@/lib/i18n/types'
+import { translate } from '@/lib/i18n/resolveLocale'
 
 interface QuizQuestion {
   id: number
@@ -24,23 +25,12 @@ interface UseQuizReturn {
   resetQuiz: () => void
 }
 
-const MONTHS_JA = [
-  '1月', '2月', '3月', '4月', '5月', '6月',
-  '7月', '8月', '9月', '10月', '11月', '12月',
-]
-
-const MONTHS_EN = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-
 function generateQuestions(birthdays: Birthday[], language: Language = 'ja'): QuizQuestion[] {
   if (birthdays.length < 4) return []
 
   const questions: QuizQuestion[] = []
   const shuffled = [...birthdays].sort(() => Math.random() - 0.5)
-  const isJa = language === 'ja'
-  const months = isJa ? MONTHS_JA : MONTHS_EN
+  const months = translate(language, 'months', 'ja').split(',')
 
   // 質問タイプ1: Xの誕生日はいつ？
   for (let i = 0; i < Math.min(3, shuffled.length); i++) {
@@ -54,9 +44,7 @@ function generateQuestions(birthdays: Birthday[], language: Language = 'ja'): Qu
     const options = [correctMonth, ...wrongMonths].sort(() => Math.random() - 0.5)
     const correctAnswer = options.indexOf(correctMonth)
 
-    const question = isJa
-      ? `${person.name}さんの誕生日は何月ですか？`
-      : `Which month is ${person.name}'s birthday?`
+    const question = translate(language, 'quizBirthdayMonthQuestion', 'ja', { name: person.name })
 
     questions.push({
       id: questions.length,
@@ -78,9 +66,7 @@ function generateQuestions(birthdays: Birthday[], language: Language = 'ja'): Qu
     const options = [person.name, ...wrongPeople].sort(() => Math.random() - 0.5)
     const correctAnswer = options.indexOf(person.name)
 
-    const question = isJa
-      ? `${months[person.month - 1]}に誕生日があるのは誰ですか？`
-      : `Who has a birthday in ${months[person.month - 1]}?`
+    const question = translate(language, 'quizWhoHasBirthday', 'ja', { month: months[person.month - 1] })
 
     questions.push({
       id: questions.length,

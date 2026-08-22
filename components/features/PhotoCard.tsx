@@ -41,6 +41,7 @@ export function PhotoCard({ media, onClick }: PhotoCardProps) {
         <video
           src={media.file_path}
           poster={media.thumbnail_url}
+          preload="none"
           style={{
             width: '100%',
             height: '100%',
@@ -53,6 +54,8 @@ export function PhotoCard({ media, onClick }: PhotoCardProps) {
           src={imageError ? '/placeholder-image.png' : media.file_path}
           alt={media.file_name}
           onError={() => setImageError(true)}
+          loading="lazy"
+          decoding="async"
           style={{
             width: '100%',
             height: '100%',
