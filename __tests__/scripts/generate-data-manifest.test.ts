@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, describe, expect, it } from 'vitest'
 
 const scriptPath = join(process.cwd(), 'scripts', 'generate-data-manifest.mjs')
 const temporaryDirectories: string[] = []
@@ -55,11 +55,21 @@ function runGenerator(root: string, ...args: string[]): string {
   })
 }
 
-afterEach(() => {
+function removeTemporaryDirectories(): void {
+  const failures: Error[] = []
   for (const directory of temporaryDirectories.splice(0)) {
-    rmSync(directory, { recursive: true, force: true })
+    try {
+      rmSync(directory, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 })
+    } catch (error) {
+      failures.push(error instanceof Error ? error : new Error(String(error)))
+    }
   }
-})
+  if (failures.length > 0) throw failures[0]
+}
+
+afterEach(removeTemporaryDirectories)
+
+afterAll(removeTemporaryDirectories)
 
 describe('generate-data-manifest', () => {
   it('discovers packs and writes deterministic generated manifests', () => {
@@ -254,5 +264,35 @@ describe('generate-data-manifest', () => {
 
     expect(() => runGenerator(root, '--write')).toThrow(/festival-pack.schema.json/)
     expect(existsSync(join(root, 'data', 'generated', 'festival-packs.ts'))).toBe(false)
+  })
+
+  it('passes --check on a minimal valid fixture after generating manifests', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', 'check-event', 'hanami', 'ja')
+    writePack(root, 'en.json', 'check-event', 'hanami', 'en')
+
+    runGenerator(root, '--write')
+    expect(runGenerator(root, '--check')).toBe('')
+  })
+
+  it('fails --check when the ja festival pack is deleted', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', 'locale-gap-event', 'hanami', 'ja')
+    writePack(root, 'en.json', 'locale-gap-event', 'hanami', 'en')
+    rmSync(join(root, 'data', 'festivals', 'jp', 'ja.json'))
+
+    expect(() => runGenerator(root, '--check')).toThrow(/locale が不足しています: locale-gap-event:ja/)
+  })
+
+  it('fails --check when i18n schema drops the translations requirement', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', 'schema-drift-event', 'hanami', 'ja')
+    writePack(root, 'en.json', 'schema-drift-event', 'hanami', 'en')
+    writeFileSync(
+      join(root, 'data', 'schemas', 'i18n.schema.json'),
+      JSON.stringify({ type: 'object', required: ['locale'] }),
+    )
+
+    expect(() => runGenerator(root, '--check')).toThrow(/i18n\.schema\.json\.required に translations がありません/)
   })
 })

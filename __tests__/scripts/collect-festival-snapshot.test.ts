@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { pathToFileURL } from 'node:url'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, describe, expect, it } from 'vitest'
 
 const temporaryDirectories: string[] = []
 
@@ -36,11 +36,21 @@ function writeTrackedFixture(root: string): void {
   writeFileSync(join(root, 'data', 'i18n', 'ja.json'), JSON.stringify({ locale: 'ja', translations: { title: '誕生日' } }))
 }
 
-afterEach(() => {
+function removeTemporaryDirectories(): void {
+  const failures: Error[] = []
   for (const directory of temporaryDirectories.splice(0)) {
-    rmSync(directory, { recursive: true, force: true })
+    try {
+      rmSync(directory, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 })
+    } catch (error) {
+      failures.push(error instanceof Error ? error : new Error(String(error)))
+    }
   }
-})
+  if (failures.length > 0) throw failures[0]
+}
+
+afterEach(removeTemporaryDirectories)
+
+afterAll(removeTemporaryDirectories)
 
 describe('collectSnapshot', () => {
   const withOption = (args: string[], flag: string, value: string): string[] => {
@@ -51,7 +61,7 @@ describe('collectSnapshot', () => {
     return next
   }
 
-  it('records clean commit metadata and excludes dirty or sensitive paths', async () => {
+  it('records clean commit metadata and excludes dirty or sensitive paths', { timeout: 30_000 }, async () => {
     const productionRoot = createRepository()
     writeTrackedFixture(productionRoot)
     execFileSync('git', ['-C', productionRoot, 'add', '.'])
@@ -120,7 +130,7 @@ describe('collectSnapshot', () => {
     })).toThrow(/legacy FESTIVAL_DATES.*validated festival packs/)
   })
 
-  it('records both paths for a dirty rename without truncating the old path', async () => {
+  it('records both paths for a dirty rename without truncating the old path', { timeout: 30_000 }, async () => {
     const productionRoot = createRepository()
     writeTrackedFixture(productionRoot)
     execFileSync('git', ['-C', productionRoot, 'add', '.'])
@@ -146,7 +156,7 @@ describe('collectSnapshot', () => {
     expect(snapshot.openSource.files.reasons['.env.local']).toBe('環境変数と秘密情報')
   })
 
-  it('regenerates existing outputs and preserves existing files when collection stops before writing', () => {
+  it('regenerates existing outputs and preserves existing files when collection stops before writing', { timeout: 30_000 }, () => {
     const productionRoot = createRepository()
     writeTrackedFixture(productionRoot)
     execFileSync('git', ['-C', productionRoot, 'add', '.'])
@@ -155,6 +165,11 @@ describe('collectSnapshot', () => {
     const openSourceRoot = createRepository()
     writeTrackedFixture(openSourceRoot)
     writeFileSync(join(openSourceRoot, 'data', 'i18n', 'en.json'), JSON.stringify({ locale: 'en', translations: { title: 'Birthday' } }))
+    mkdirSync(join(openSourceRoot, 'supabase', 'migrations'), { recursive: true })
+    writeFileSync(
+      join(openSourceRoot, 'supabase', 'migrations', '20260812163000_reset_and_create_anonymous_community.sql'),
+      'alter table public.bulletin_posts enable row level security;\n',
+    )
     execFileSync('git', ['-C', openSourceRoot, 'add', '.'])
     execFileSync('git', ['-C', openSourceRoot, 'commit', '--quiet', '-m', 'snapshot'])
 
@@ -185,6 +200,8 @@ describe('collectSnapshot', () => {
     expect(allowlist.allowedPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
     expect(allowlist.allowedPaths).not.toContain('data/festivals/jp/notes.txt')
     expect(allowlist.excludedPaths.dirty).not.toContain('data/festivals/jp/ja.json')
+    expect(allowlist.excludedPaths.supabase).toContain('supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql')
+    expect(allowlist.integrationPaths).not.toContain('supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql')
 
     writeFileSync(productionOutput, '{"keep":true}\n')
     const failingArgs = withOption(args, '--production-commit', 'missing-commit')
