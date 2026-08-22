@@ -15,7 +15,7 @@ export default function ShareButton({ url, title, text }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '')
-  const shareTitle = title || 'Happy Birthday!'
+  const shareTitle = title || t('happyBirthday')
   const shareText = text || t('allWishesComeTrue')
 
   const handleNativeShare = async () => {

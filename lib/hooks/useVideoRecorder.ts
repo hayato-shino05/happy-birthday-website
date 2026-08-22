@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface VideoRecorderState {
   isRecording: boolean
@@ -31,6 +32,11 @@ function getSupportedVideoMimeType(): string | undefined {
 }
 
 export function useVideoRecorder() {
+  const { t } = useLanguage()
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const [state, setState] = useState<VideoRecorderState>({
     isRecording: false,
     isPaused: false,
@@ -59,7 +65,7 @@ export function useVideoRecorder() {
     } catch {
       setState(prev => ({
         ...prev,
-        error: 'Cannot access camera/microphone. Please allow permission.',
+        error: tRef.current('cameraMicPermissionError'),
         hasPermission: false,
       }))
       return null
@@ -136,7 +142,7 @@ export function useVideoRecorder() {
     } catch {
       setState(prev => ({
         ...prev,
-        error: 'Failed to start recording.',
+        error: tRef.current('recordingStartError'),
       }))
     }
   }, [requestPermission])

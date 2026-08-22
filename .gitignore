@@ -19,7 +19,7 @@
 
 # 本番ビルド関連
 /build
-
+tmp/
 # その他
 .DS_Store
 *.pem

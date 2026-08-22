@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { localePacks, locales, translationKeys } from '@/data/generated/locales'
-import { validateTranslationPacks } from '@/lib/i18n/resolveLocale'
+import { translate, validateTranslationPacks } from '@/lib/i18n/resolveLocale'
 
 const keys = (value: Record<string, string>) => Object.keys(value).sort()
 
@@ -41,5 +41,29 @@ describe('translation parity', () => {
       { locale: 'ja', translations: completeTranslations },
       { locale: 'en', translations: { ...completeTranslations, extraKey: '余分' } },
     ])).toThrow('translation keys')
+  })
+
+  it('covers localized error keys in both locales with ja fallback', () => {
+    const errorKeys = [
+      'audioMessagesLoadError',
+      'cameraMicPermissionError',
+      'flashbackPhotoAlt',
+      'giftSendError',
+      'giftsLoadError',
+      'mediaLoadError',
+      'messagesLoadError',
+      'microphonePermissionError',
+      'postsLoadError',
+      'recordingStartError',
+      'timeCapsuleEmptyDesc',
+      'timeCapsulePhotoAlt',
+    ] as const
+    for (const key of errorKeys) {
+      for (const pack of localePacks) {
+        expect(pack.translations[key], `${pack.locale}:${key}`).toBeTruthy()
+        expect(pack.translations[key]).not.toBe(key)
+      }
+      expect(translate('fr-FR', key, 'ja')).toBe(localePacks.find((p) => p.locale === 'ja')?.translations[key])
+    }
   })
 })

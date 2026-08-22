@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { LanguageSelector } from '@/components/ui/LanguageSelector'
 import { Icon } from '@/components/ui/Icon'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface HeaderProps {
   title?: string
@@ -12,6 +13,7 @@ interface HeaderProps {
 
 export default function Header({ title, showLanguageSelector = true, onMenuClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { t } = useLanguage()
 
   return (
     <header className="fixed top-4 left-4 right-4 z-50">
@@ -23,7 +25,7 @@ export default function Header({ title, showLanguageSelector = true, onMenuClick
               <span aria-hidden="true"><Icon name="Cake" size={22} /></span>
             </div>
             <h1 className="text-lg font-bold text-white hidden sm:block">
-              {title || 'Happy Birthday'}
+              {title || t('happyBirthday')}
             </h1>
           </div>
           {/* デスクトップ用ナビゲーション */}

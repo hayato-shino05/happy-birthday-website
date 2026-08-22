@@ -75,7 +75,7 @@ export function SocialButtons() {
 
     if (platform === 'native' && navigator.share) {
       try {
-        await navigator.share({ title: 'Happy Birthday', text: shareText, url: shareUrl })
+        await navigator.share({ title: t('happyBirthday'), text: shareText, url: shareUrl })
       } catch {
         // ユーザーがキャンセルしました
       }

@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     
     const birthdayPerson = searchParams.get('birthdayPerson')
-    const limit = searchParams.get('limit')
+    const requestedLimit = Number(searchParams.get('limit'))
+    const validLimit = Number.isInteger(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, 100) : undefined
 
     let query = supabase
       .from('virtual_gifts')
@@ -19,8 +20,8 @@ export async function GET(request: NextRequest) {
       query = query.eq('birthday_person', birthdayPerson)
     }
 
-    if (limit) {
-      query = query.limit(parseInt(limit))
+    if (validLimit) {
+      query = query.limit(validLimit)
     }
 
     const { data, error, count } = await query

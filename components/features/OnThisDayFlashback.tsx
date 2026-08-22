@@ -139,7 +139,7 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
                 ) : (
                   <img
                     src={currentMemory.mediaUrl}
-                    alt="Flashback memory"
+                    alt={t('flashbackPhotoAlt')}
                     className="w-full h-full object-cover"
                   />
                 )}

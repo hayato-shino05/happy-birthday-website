@@ -53,6 +53,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
 
     setSelectedFile(file)
     setError(null)
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(URL.createObjectURL(file))
   }
 
@@ -266,6 +267,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
           mode={cameraMode}
           onCapture={(file) => {
             setSelectedFile(file)
+            if (previewUrl) URL.revokeObjectURL(previewUrl)
             setPreviewUrl(URL.createObjectURL(file))
             setShowCamera(false)
           }}

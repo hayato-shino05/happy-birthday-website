@@ -264,7 +264,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#854D27] text-[#FFF9F3]">
                       {capsule.isUnlocked
                         ? language === 'ja' ? '開封済み' : 'Unlocked'
-                        : `${parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')} まで封印`}
+                        : t('timeCapsuleSealed', { date: parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US') })}
                     </span>
                   </div>
 
@@ -274,7 +274,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                         <div className="w-full h-44 rounded-xl overflow-hidden mb-3 border border-[#D4B08C]/50">
                           <img
                             src={capsule.photoUrl}
-                            alt="Capsule photo"
+                            alt={t('timeCapsulePhotoAlt')}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -302,9 +302,7 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
                 <Icon name="Archive" size={24} />
               </div>
               <p className="text-xs text-[#854D27]/80 mb-4">
-                {language === 'ja'
-                  ? 'まだ封印されたタイムカプセルはありません。未来の記念日に届くメッセージを残してみましょう！'
-                  : 'No sealed time capsules yet. Leave a message for a future celebration!'}
+                {t('timeCapsuleEmptyDesc')}
               </p>
               <button
                 onClick={() => setActiveTab('create')}

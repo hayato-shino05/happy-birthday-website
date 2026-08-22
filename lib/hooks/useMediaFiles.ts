@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import type { MediaFile, MediaStats } from '@/types'
 
@@ -43,6 +44,11 @@ function toMediaFile(submission: MediaSubmission): MediaFile {
 }
 
 export function useMediaFiles(): UseMediaFilesReturn {
+  const { t } = useLanguage()
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const [files, setFiles] = useState<MediaFile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -79,7 +85,7 @@ export function useMediaFiles(): UseMediaFilesReturn {
       })
       setCacheTime(now)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load media')
+      setError(err instanceof Error ? err.message : tRef.current('mediaLoadError'))
       setFiles([])
       setStats({ totalFiles: 0, totalImages: 0, totalVideos: 0, totalSize: 0, recentUploads: [] })
     } finally {
@@ -99,7 +105,7 @@ export function useMediaFiles(): UseMediaFilesReturn {
       await fetchFiles(true)
       return toMediaFile(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload file')
+      setError(err instanceof Error ? err.message : tRef.current('uploadFileFailed'))
       return null
     }
   }, [fetchFiles])

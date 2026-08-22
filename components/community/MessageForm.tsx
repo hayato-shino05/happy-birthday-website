@@ -61,6 +61,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     setError(null)
 
     // プレビュー用URLを作成
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     const url = URL.createObjectURL(file)
     setPreviewUrl(url)
   }
@@ -417,6 +418,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           mode={cameraMode}
           onCapture={(file) => {
             setSelectedFile(file)
+            if (previewUrl) URL.revokeObjectURL(previewUrl)
             const url = URL.createObjectURL(file)
             setPreviewUrl(url)
             setShowCamera(false)
