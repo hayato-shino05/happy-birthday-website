@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MediaFile } from '@/types'
@@ -101,9 +101,28 @@ export function MediaViewer({
     onToggleSlideshow?.()
   }
 
+  const viewerRef = useRef<HTMLDivElement>(null)
+  const lastFocusedRef = useRef<Element | null>(null)
+
+  // ダイアログとしてのフォーカス lifecycle（開いたら奪い、閉じたら返す）
+  useEffect(() => {
+    lastFocusedRef.current = document.activeElement
+    viewerRef.current?.focus()
+    return () => {
+      if (lastFocusedRef.current instanceof HTMLElement) {
+        lastFocusedRef.current.focus()
+      }
+    }
+  }, [])
+
   const viewerContent = (
     <AnimatePresence>
       <motion.div
+        ref={viewerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={media.file_name}
+        tabIndex={-1}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -119,6 +138,7 @@ export function MediaViewer({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          outline: 'none',
         }}
       >
         {/* 上部コントロール */}

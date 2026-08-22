@@ -40,6 +40,7 @@ describe('useMediaQuery', () => {
     expect(result.current).toBe(true)
 
     act(() => {
+      ;(mediaQueryList as unknown as { matches: boolean }).matches = false
       listeners.forEach((cb) => cb({ matches: false } as MediaQueryListEvent))
     })
     expect(result.current).toBe(false)

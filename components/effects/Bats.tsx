@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface BatsProps {
   active: boolean
@@ -21,6 +22,7 @@ interface Bat {
 
 export function Bats({ active, count = 8 }: BatsProps) {
   const [bats, setBats] = useState<Bat[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   const createBat = useCallback((): Bat => {
     const direction = Math.random() > 0.5 ? 'left' : 'right'
@@ -39,9 +41,11 @@ export function Bats({ active, count = 8 }: BatsProps) {
   }, [])
 
   useEffect(() => {
+    if (prefersReducedMotion) return
+
     if (!active) {
-      setBats([])
-      return
+      const raf = requestAnimationFrame(() => setBats([]))
+      return () => cancelAnimationFrame(raf)
     }
 
     const spawnBat = () => {
@@ -65,7 +69,10 @@ export function Bats({ active, count = 8 }: BatsProps) {
       clearInterval(interval)
       clearInterval(cleanup)
     }
-  }, [active, count, createBat])
+  }, [active, count, createBat, prefersReducedMotion])
+
+  // reduced-motion 時は描画もループも停止
+  if (prefersReducedMotion) return null
 
   if (!active) return null
 

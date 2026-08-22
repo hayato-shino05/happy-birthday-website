@@ -82,8 +82,8 @@ export default function Modal({
   useEffect(() => {
     if (isOpen) {
       previousActiveElement.current = document.activeElement as HTMLElement
-      setShouldRender(true)
       requestAnimationFrame(() => {
+        setShouldRender(true)
         setIsAnimating(true)
       })
       document.body.style.overflow = 'hidden'
@@ -98,7 +98,9 @@ export default function Modal({
         firstFocusable?.focus()
       }, 100)
     } else {
-      setIsAnimating(false)
+      requestAnimationFrame(() => {
+        setIsAnimating(false)
+      })
       setTimeout(() => {
         setShouldRender(false)
         document.body.style.overflow = ''
@@ -113,7 +115,7 @@ export default function Modal({
     }
   }, [isOpen, handleEscape, handleTab])
 
-  if (!shouldRender) return null
+  if (!shouldRender && !isOpen) return null
 
   const modalContent = (
     <div

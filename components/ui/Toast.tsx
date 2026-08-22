@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react'
+import { useState, useEffect, createContext, useContext, useCallback, useRef, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
 import { useOptionalLanguage } from '@/lib/i18n/LanguageContext'
@@ -53,15 +53,17 @@ interface ToastProviderProps {
   maxToasts?: number
 }
 
+const subscribeNoop = () => () => {}
+
 export function ToastProvider({ children, position = 'bottom-right', maxToasts = 5 }: ToastProviderProps) {
   const lang = useOptionalLanguage()
   const t = lang?.t ?? ((k: string) => k)
   const [toasts, setToasts] = useState<Toast[]>([])
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false
+  )
 
   const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9)

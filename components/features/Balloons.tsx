@@ -25,22 +25,26 @@ export function Balloons({ active, count = 15 }: BalloonsProps) {
     if (active) {
       const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8']
 
-      const newBalloons = Array.from({ length: count }, (_, i) => ({
-        id: i,
-        x: Math.random() * 90 + 5,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        delay: Math.random() * 2,
-        duration: 4 + Math.random() * 3,
-        size: 40 + Math.random() * 30,
-      }))
-
-      setBalloons(newBalloons)
+      const spawnRaf = requestAnimationFrame(() => {
+        const newBalloons = Array.from({ length: count }, (_, i) => ({
+          id: i,
+          x: Math.random() * 90 + 5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          delay: Math.random() * 2,
+          duration: 4 + Math.random() * 3,
+          size: 40 + Math.random() * 30,
+        }))
+        setBalloons(newBalloons)
+      })
 
       const timer = setTimeout(() => {
         setBalloons([])
       }, 8000)
 
-      return () => clearTimeout(timer)
+      return () => {
+        cancelAnimationFrame(spawnRaf)
+        clearTimeout(timer)
+      }
     }
   }, [active, count])
 
@@ -57,8 +61,8 @@ export function Balloons({ active, count = 15 }: BalloonsProps) {
             }}
             animate={{
               y: '-20vh',
-              x: `${balloon.x + (Math.random() - 0.5) * 20}vw`,
-              rotate: (Math.random() - 0.5) * 30,
+              x: `${balloon.x + (((balloon.id * 37) % 100) / 100 - 0.5) * 20}vw`,
+              rotate: (((balloon.id * 53) % 100) / 100 - 0.5) * 30,
             }}
             exit={{ opacity: 0 }}
             transition={{

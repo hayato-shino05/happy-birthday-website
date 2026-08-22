@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { detectSeasonAndFestival, getThemeConfig } from '@/lib/utils/theme'
 import type { ThemeName } from '@/types'
 import type { ThemeConfig } from '@/config/themes'
@@ -21,14 +21,6 @@ function getInitialTheme(): ThemeName {
 export function useTheme(): UseThemeReturn {
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme)
   const [isAutoDetect, setIsAutoDetect] = useState(true)
-
-  // マウント後にテーマを検出
-  useEffect(() => {
-    if (isAutoDetect) {
-      const detectedTheme = detectSeasonAndFestival()
-      setThemeState(detectedTheme)
-    }
-  }, [isAutoDetect])
 
   // 手動でテーマを設定
   const setTheme = useCallback((newTheme: ThemeName) => {

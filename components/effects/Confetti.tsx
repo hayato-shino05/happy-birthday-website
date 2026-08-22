@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface ConfettiPiece {
   id: number
@@ -37,6 +38,7 @@ export default function Confetti({
   onComplete,
 }: ConfettiProps) {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   const createPiece = useCallback((id: number): ConfettiPiece => {
     const shapes: ConfettiPiece['shape'][] = ['square', 'circle', 'triangle', 'star']
@@ -55,14 +57,17 @@ export default function Confetti({
   }, [colors])
 
   useEffect(() => {
+    if (prefersReducedMotion) return
+
     if (!isActive) {
-      setPieces([])
-      return
+      const raf = requestAnimationFrame(() => setPieces([]))
+      return () => cancelAnimationFrame(raf)
     }
 
     // 初期状態のコンフェッティを生成
-    const initialPieces = Array.from({ length: particleCount }, (_, i) => createPiece(i))
-    setPieces(initialPieces)
+    const initialRaf = requestAnimationFrame(() => {
+      setPieces(Array.from({ length: particleCount }, (_, i) => createPiece(i)))
+    })
 
     // アニメーションループ
     let animationId: number
@@ -97,10 +102,14 @@ export default function Confetti({
     }, duration)
 
     return () => {
+      cancelAnimationFrame(initialRaf)
       cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
-  }, [isActive, particleCount, duration, createPiece, onComplete])
+  }, [isActive, particleCount, duration, createPiece, onComplete, prefersReducedMotion])
+
+  // reduced-motion 時は描画もループも停止
+  if (prefersReducedMotion) return null
 
   if (!isActive && pieces.length === 0) return null
 
@@ -181,28 +190,29 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
 
   useEffect(() => {
     if (!isActive) {
-      setPieces([])
-      return
+      const raf = requestAnimationFrame(() => setPieces([]))
+      return () => cancelAnimationFrame(raf)
     }
 
-    const burstPieces: ConfettiPiece[] = Array.from({ length: 50 }, (_, i) => {
-      const angle = (i / 50) * Math.PI * 2
-      const velocity = 5 + Math.random() * 10
-      return {
-        id: i,
-        x,
-        y,
-        rotation: Math.random() * 360,
-        color: defaultColors[Math.floor(Math.random() * defaultColors.length)],
-        size: 6 + Math.random() * 6,
-        velocityX: Math.cos(angle) * velocity,
-        velocityY: Math.sin(angle) * velocity - 5,
-        rotationSpeed: (Math.random() - 0.5) * 15,
-        shape: 'square',
-      }
+    const burstRaf = requestAnimationFrame(() => {
+      const burstPieces: ConfettiPiece[] = Array.from({ length: 50 }, (_, i) => {
+        const angle = (i / 50) * Math.PI * 2
+        const velocity = 5 + Math.random() * 10
+        return {
+          id: i,
+          x,
+          y,
+          rotation: Math.random() * 360,
+          color: defaultColors[Math.floor(Math.random() * defaultColors.length)],
+          size: 6 + Math.random() * 6,
+          velocityX: Math.cos(angle) * velocity,
+          velocityY: Math.sin(angle) * velocity - 5,
+          rotationSpeed: (Math.random() - 0.5) * 15,
+          shape: 'square',
+        }
+      })
+      setPieces(burstPieces)
     })
-
-    setPieces(burstPieces)
 
     let animationId: number
     const animate = () => {
@@ -233,6 +243,7 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     }, 3000)
 
     return () => {
+      cancelAnimationFrame(burstRaf)
       cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }

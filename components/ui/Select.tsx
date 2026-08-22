@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, SelectHTMLAttributes } from 'react'
+import { forwardRef, SelectHTMLAttributes, useId } from 'react'
 import { Icon } from '@/components/ui/Icon'
 
 interface SelectOption {
@@ -17,7 +17,8 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, options, placeholder, className = '', id, ...props }, ref) => {
-    const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`
+    const autoId = useId()
+    const selectId = id || autoId
 
     return (
       <div className="w-full">

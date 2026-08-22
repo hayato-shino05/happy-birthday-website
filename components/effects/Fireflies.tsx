@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface FirefliesProps {
   active: boolean
@@ -19,6 +20,7 @@ interface Firefly {
 
 export function Fireflies({ active, count = 25 }: FirefliesProps) {
   const [fireflies, setFireflies] = useState<Firefly[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   const createFirefly = useCallback((): Firefly => {
     return {
@@ -32,13 +34,16 @@ export function Fireflies({ active, count = 25 }: FirefliesProps) {
   }, [])
 
   useEffect(() => {
+    if (prefersReducedMotion) return
+
     if (!active) {
-      setFireflies([])
-      return
+      const raf = requestAnimationFrame(() => setFireflies([]))
+      return () => cancelAnimationFrame(raf)
     }
 
-    const initial = Array.from({ length: count }, createFirefly)
-    setFireflies(initial)
+    const initialRaf = requestAnimationFrame(() => {
+      setFireflies(Array.from({ length: count }, createFirefly))
+    })
 
     const interval = setInterval(() => {
       setFireflies(prev => {
@@ -49,8 +54,14 @@ export function Fireflies({ active, count = 25 }: FirefliesProps) {
       })
     }, 1000)
 
-    return () => clearInterval(interval)
-  }, [active, count, createFirefly])
+    return () => {
+      cancelAnimationFrame(initialRaf)
+      clearInterval(interval)
+    }
+  }, [active, count, createFirefly, prefersReducedMotion])
+
+  // reduced-motion 時は描画もループも停止
+  if (prefersReducedMotion) return null
 
   if (!active) return null
 

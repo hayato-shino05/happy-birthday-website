@@ -8,6 +8,7 @@ import { LANGUAGE_COOKIE_NAME } from '@/lib/i18n/cookie'
 import { DEFAULT_LOCALE, resolveLocale } from '@/lib/i18n/resolveLocale'
 import { ThemeProvider } from '@/lib/providers/ThemeProvider'
 import { QueryProvider } from '@/lib/providers/QueryProvider'
+import { MotionConfig } from 'framer-motion'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://happy-birthday.vercel.app'),
@@ -81,7 +82,10 @@ export default async function RootLayout({
         <QueryProvider>
           <ThemeProvider>
             <LanguageProvider initialLocale={locale}>
-              {children}
+              {/* prefers-reduced-motion を framer-motion 全体で尊重 */}
+              <MotionConfig reducedMotion="user">
+                {children}
+              </MotionConfig>
             </LanguageProvider>
           </ThemeProvider>
         </QueryProvider>

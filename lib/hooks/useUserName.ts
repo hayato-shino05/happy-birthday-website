@@ -10,11 +10,14 @@ export function useUserName() {
 
   // マウント時にlocalStorageから読み込み
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      setUserNameState(stored)
-    }
-    setIsLoaded(true)
+    const raf = requestAnimationFrame(() => {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        setUserNameState(stored)
+      }
+      setIsLoaded(true)
+    })
+    return () => cancelAnimationFrame(raf)
   }, [])
 
   // localStorageに保存
