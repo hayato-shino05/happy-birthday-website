@@ -16,6 +16,16 @@ interface CapsuleItem {
   isUnlocked: boolean
 }
 
+interface TimeCapsuleRow {
+  id: string | number
+  sender: string
+  recipient?: string | null
+  message: string
+  photo_url?: string | null
+  unlock_date: string
+  created_at: string
+}
+
 // ローカル日付文字列（YYYY-MM-DD）をローカル時間 00:00:00 の Date オブジェクトに変換
 function parseLocalDate(dateStr: string): Date {
   const parts = dateStr.split('-').map(Number)
@@ -75,16 +85,16 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
 
       let remoteCapsules: CapsuleItem[] = []
       if (!error && data) {
-        remoteCapsules = data.map((c: any) => {
+        remoteCapsules = data.map((c: TimeCapsuleRow) => {
           const unlockTime = parseLocalDate(c.unlock_date)
           const isUnlocked = unlockTime <= now
           return {
             id: c.id,
             sender: c.sender,
-            recipient: c.recipient,
+            recipient: c.recipient ?? undefined,
             // 未開封時は内容を秘匿化
             message: isUnlocked ? c.message : '',
-            photoUrl: isUnlocked ? c.photo_url : undefined,
+            photoUrl: isUnlocked ? (c.photo_url ?? undefined) : undefined,
             unlockDate: c.unlock_date,
             createdAt: c.created_at,
             isUnlocked,

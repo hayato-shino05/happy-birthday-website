@@ -123,6 +123,9 @@ test: omikujiData の整合性テストケースを追加
    # リントチェック
    npm run lint
 
+   # 型検査
+   npm run typecheck
+
    # テスト実行
    npm run test
 

@@ -21,21 +21,28 @@ describe('useMediaQuery', () => {
   it('should update when media query changes', () => {
     const listeners: Array<(e: MediaQueryListEvent) => void> = []
 
-    vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
-      matches: query.includes('768'),
-      media: query,
+    const mediaQueryList = {
+      matches: true,
+      media: '(min-width: 768px)',
       onchange: null,
       addListener: vi.fn(),
       removeListener: vi.fn(),
-      addEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) => {
-        listeners.push(cb)
-      },
+      addEventListener: vi.fn((_type: string, cb: EventListener) => {
+        listeners.push(cb as (e: MediaQueryListEvent) => void)
+      }),
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
-    }))
+    } as unknown as MediaQueryList
+
+    vi.spyOn(window, 'matchMedia').mockImplementation(() => mediaQueryList)
 
     const { result } = renderHook(() => useMediaQuery('(min-width: 768px)'))
     expect(result.current).toBe(true)
+
+    act(() => {
+      listeners.forEach((cb) => cb({ matches: false } as MediaQueryListEvent))
+    })
+    expect(result.current).toBe(false)
   })
 })
 

@@ -1,0 +1,66 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { NextRequest } from 'next/server'
+
+type QueryResult = { data: unknown[]; error: { message: string } | null }
+
+type Builder = Record<string, unknown> & {
+  then: (onFulfilled: (result: QueryResult) => void) => void
+}
+
+function makeBuilder(result: QueryResult): Builder {
+  const builder: Record<string, unknown> = {
+    from: () => builder,
+    select: () => builder,
+    order: () => builder,
+    eq: () => builder,
+    limit: () => builder,
+  }
+  return Object.assign(builder, {
+    then: (onFulfilled: (r: QueryResult) => void) => onFulfilled(result),
+  }) as Builder
+}
+
+let builder: Builder
+
+vi.mock('@/lib/supabase/client', () => ({
+  getSupabase: () => builder,
+}))
+
+import { GET as getBirthdays } from '@/app/api/birthdays/route'
+
+function call(url: string): Promise<Response> {
+  return getBirthdays(new NextRequest(url))
+}
+
+describe('GET /api/birthdays query handling', () => {
+  beforeEach(() => {
+    builder = makeBuilder({ data: [], error: null })
+  })
+
+  it('filters by a valid month via eq(month)', async () => {
+    const response = await call('http://localhost/api/birthdays?month=10')
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body).toHaveProperty('data')
+    expect(body).toHaveProperty('count')
+  })
+
+  it('ignores an out-of-range month instead of erroring', async () => {
+    const response = await call('http://localhost/api/birthdays?month=13')
+    expect(response.status).toBe(200)
+  })
+
+  it('ignores a non-numeric month instead of erroring', async () => {
+    const response = await call('http://localhost/api/birthdays?month=abc')
+    expect(response.status).toBe(200)
+  })
+
+  it('returns the 500 envelope when the data source errors', async () => {
+    builder = makeBuilder({ data: [], error: { message: 'boom' } })
+
+    const response = await call('http://localhost/api/birthdays')
+    expect(response.status).toBe(500)
+    const body = await response.json()
+    expect(typeof body.error).toBe('string')
+  })
+})

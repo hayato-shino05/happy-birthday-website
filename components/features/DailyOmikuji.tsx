@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
@@ -39,32 +39,28 @@ const OmikujiCylinder3D = dynamic(
 export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
   const { t, language } = useLanguage()
   const [isShaking, setIsShaking] = useState(false)
-  const [result, setResult] = useState<OmikujiFortune | null>(null)
-  const [activeCategory, setActiveCategory] = useState<'all' | 'bond' | 'health' | 'wish' | 'blessing'>('all')
-
   // ユーザーのローカル深夜0時に切り替わるキー
   const todayKey = useMemo(() => {
     const now = new Date()
     return `omikuji_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}_${String(now.getDate()).padStart(2, '0')}`
   }, [])
-
-  // 本日すでに引いた結果があればロード（旧スキーマのキャッシュを自動補正・完全復元）
-  useEffect(() => {
+  // 本日すでに引いた結果があれば復元（旧スキーマのキャッシュも自動補正）
+  const [result, setResult] = useState<OmikujiFortune | null>(() => {
+    if (typeof window === 'undefined') return null
     try {
-      const saved = localStorage.getItem(todayKey)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        const matched =
-          OMIKUJI_DATA.find((f) => f.id === parsed?.id) ||
-          OMIKUJI_DATA.find((f) => f.rank === parsed?.rank) ||
-          OMIKUJI_DATA[0]
-        setResult(matched)
-        localStorage.setItem(todayKey, JSON.stringify(matched))
-      }
+      const saved = window.localStorage.getItem(todayKey)
+      if (!saved) return null
+      const parsed = JSON.parse(saved) as { id?: number; rank?: string }
+      return (
+        OMIKUJI_DATA.find((f) => f.id === parsed?.id) ||
+        OMIKUJI_DATA.find((f) => f.rank === parsed?.rank) ||
+        null
+      )
     } catch {
-      // localStorage 利用不可時は無視
+      return null
     }
-  }, [todayKey])
+  })
+  const [activeCategory, setActiveCategory] = useState<'all' | 'bond' | 'health' | 'wish' | 'blessing'>('all')
 
   // おみくじを引くアニメーション処理
   const handleDraw = () => {
