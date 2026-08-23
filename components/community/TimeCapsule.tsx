@@ -196,7 +196,9 @@ export function TimeCapsule() {
 
       if (!isMountedRef.current) return
       setLoadError(Boolean(queryError))
-      setCapsules(combined)
+      if (!queryError || !hasLoadedCapsulesRef.current) {
+        setCapsules(combined)
+      }
       hasLoadedCapsulesRef.current = true
     } catch {
       if (!isMountedRef.current) return

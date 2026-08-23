@@ -256,6 +256,52 @@ describe('TimeCapsule', () => {
     expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy()
   })
 
+  it('preserves loaded capsules when a refresh query fails', async () => {
+    let openedCalls = 0
+    let sealedCalls = 0
+    getSupabaseMock.mockReturnValue({
+      from: (table: string) => ({
+        select: () => ({
+          lte: () => ({
+            order: async () => {
+              openedCalls += 1
+              return openedCalls === 1
+                ? { data: [row({ id: 1, sender: '開封済み', unlock_date: pastDate })], error: null }
+                : { data: [], error: null }
+            },
+          }),
+          gt: () => ({
+            order: async () => {
+              sealedCalls += 1
+              return { data: [], error: new Error('sealed query failed') }
+            },
+          }),
+        }),
+        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
+      }),
+      storage: {
+        from: () => ({
+          upload: async () => ({ data: null, error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        }),
+      },
+    } satisfies SupabaseStub)
+
+    render(<TimeCapsule />)
+    expect(await screen.findByText('開封済み')).toBeTruthy()
+    expect(await screen.findByText('genericError')).toBeTruthy()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'retry' }))
+    })
+
+    await vi.waitFor(() => {
+      expect(openedCalls).toBe(2)
+      expect(sealedCalls).toBe(2)
+    })
+    expect(screen.getByText('開封済み')).toBeTruthy()
+    expect(await screen.findByText('genericError')).toBeTruthy()
+  })
+
   it('formats locked dates for English users', async () => {
     languageMock.value = 'en'
     getSupabaseMock.mockReturnValue(createSupabaseStub({ sealedRows: [row()] }))
