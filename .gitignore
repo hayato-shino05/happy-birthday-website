@@ -38,7 +38,6 @@ yarn-error.log*
 
 # TypeScript 関連
 *.tsbuildinfo
-next-env.d.ts
 
 # エージェント・開発補助ツール関連
 .agents/

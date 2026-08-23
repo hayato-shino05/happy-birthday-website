@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 
 interface KoinoboriProps {
@@ -8,33 +7,23 @@ interface KoinoboriProps {
   count?: number
 }
 
+const KOI_COLORS = [
+  ['#000000', '#333333'],
+  ['#DC143C', '#FF4500'],
+  ['#1E90FF', '#00BFFF'],
+  ['#FF69B4', '#FFB6C1'],
+  ['#32CD32', '#7CFC00'],
+]
+
 export function Koinobori({ active, count = 3 }: KoinoboriProps) {
-  const [kois, setKois] = useState<{ id: number; x: number; colors: string[]; size: number }[]>([])
-
-  const KOI_COLORS = [
-    ['#000000', '#333333'],
-    ['#DC143C', '#FF4500'],
-    ['#1E90FF', '#00BFFF'],
-    ['#FF69B4', '#FFB6C1'],
-    ['#32CD32', '#7CFC00'],
-  ]
-
-  useEffect(() => {
-    if (!active) {
-      setKois([])
-      return
-    }
-
-    const newKois = Array.from({ length: Math.min(count, 5) }, (_, i) => ({
-      id: i,
-      x: 15 + i * 18,
-      colors: KOI_COLORS[i % KOI_COLORS.length],
-      size: i === 0 ? 1.2 : i === 1 ? 1 : 0.8,
-    }))
-    setKois(newKois)
-  }, [active, count])
-
   if (!active) return null
+
+  const kois = Array.from({ length: Math.min(count, 5) }, (_, i) => ({
+    id: i,
+    x: 15 + i * 18,
+    colors: KOI_COLORS[i % KOI_COLORS.length],
+    size: i === 0 ? 1.2 : i === 1 ? 1 : 0.8,
+  }))
 
   return (
     <div className="fixed top-0 left-0 right-0 pointer-events-none z-35 h-64">

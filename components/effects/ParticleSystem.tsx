@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface Particle {
   x: number
@@ -75,6 +76,7 @@ export default function ParticleSystem({
   const particlesRef = useRef<Particle[]>([])
   const mouseRef = useRef({ x: 0, y: 0 })
   const animationRef = useRef<number | null>(null)
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   const config = particleConfigs[type]
 
@@ -107,6 +109,8 @@ export default function ParticleSystem({
   }
 
   useEffect(() => {
+    if (prefersReducedMotion) return
+
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -199,7 +203,10 @@ export default function ParticleSystem({
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [isActive, type, initialX, initialY, followMouse, particleCount, createParticle, config.gravity])
+  }, [isActive, type, initialX, initialY, followMouse, particleCount, createParticle, config.gravity, prefersReducedMotion])
+
+  // reduced-motion 時は描画もループも停止
+  if (prefersReducedMotion) return null
 
   return (
     <canvas

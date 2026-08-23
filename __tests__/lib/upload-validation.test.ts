@@ -22,4 +22,32 @@ describe('validateCommunityMediaFile', () => {
     expect(getMediaKind('video/webm')).toBe('video')
     expect(getMediaKind('audio/webm')).toBe('audio')
   })
+
+  it('rejects files over the 50MB limit', () => {
+    const oversized = new File([new Uint8Array(51)], 'big.png', { type: 'image/png' })
+    Object.defineProperty(oversized, 'size', { value: 50 * 1024 * 1024 + 1 })
+
+    expect(validateCommunityMediaFile(oversized)).toEqual({
+      valid: false,
+      error: 'ファイルサイズは50MB以下にしてください',
+    })
+  })
+
+  it('rejects zero-byte files', () => {
+    const empty = new File([], 'empty.png', { type: 'image/png' })
+
+    expect(validateCommunityMediaFile(empty)).toEqual({
+      valid: false,
+      error: 'ファイルサイズは50MB以下にしてください',
+    })
+  })
+
+  it('rejects unsupported subtypes even when the prefix matches', () => {
+    const heic = new File(['image'], 'photo.heic', { type: 'image/heic' })
+
+    expect(validateCommunityMediaFile(heic)).toEqual({
+      valid: false,
+      error: 'サポートされていないファイル形式です',
+    })
+  })
 })

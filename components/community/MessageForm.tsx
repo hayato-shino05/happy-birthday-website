@@ -150,6 +150,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           value={sender}
           onChange={(e) => setSender(e.target.value)}
           placeholder={t('yourName')}
+          aria-label={t('yourName')}
           style={{
             width: '100%',
             padding: '12px 15px',
@@ -169,6 +170,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder={t('typeMessage')}
+          aria-label={t('messagePlaceholder')}
           rows={4}
           style={{
             width: '100%',
@@ -357,7 +359,14 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
 
       {/* アップロードの進行状況 */}
       {uploadProgress > 0 && uploadProgress < 100 && (
-        <div style={{ marginBottom: '15px' }}>
+        <div
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuenow={uploadProgress}
+          aria-valuemax={100}
+          aria-label={t('uploadProgress', { progress: uploadProgress })}
+          style={{ marginBottom: '15px' }}
+        >
           <div
             style={{
               height: '4px',
@@ -382,7 +391,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       )}
 
       {error && (
-        <p style={{ color: '#dc3545', marginBottom: '15px', fontSize: '0.9rem' }}>{error}</p>
+        <p role="alert" style={{ color: '#dc3545', marginBottom: '15px', fontSize: '0.9rem' }}>{error}</p>
       )}
 
       <motion.button

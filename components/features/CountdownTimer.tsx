@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getTimeUntilBirthday } from '@/lib/utils/birthday'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
@@ -12,14 +12,22 @@ interface CountdownTimerProps {
 
 // ポラロイド風ミニフォトカードによるカウントダウンタイマーコンポーネント（モバイルコンパクト最適化版）
 export function CountdownTimer({ targetDate, onComplete }: CountdownTimerProps) {
-  const [mounted, setMounted] = useState(false)
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: false })
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+  // クライアント側でのみ時間計算を実行（SSR ではゼロ値）
+  const [timeLeft, setTimeLeft] = useState(() =>
+    typeof window === 'undefined'
+      ? { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: false }
+      : getTimeUntilBirthday(targetDate)
+  )
   const { t } = useLanguage()
 
-  // クライアント側でのみ時間計算を実行
   useEffect(() => {
-    setMounted(true)
-    setTimeLeft(getTimeUntilBirthday(targetDate))
+    const raf = requestAnimationFrame(() => setTimeLeft(getTimeUntilBirthday(targetDate)))
+    return () => cancelAnimationFrame(raf)
   }, [targetDate])
 
   useEffect(() => {

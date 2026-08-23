@@ -55,7 +55,7 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
         onUploadComplete()
       }
     },
-    [uploadFile, onUploadComplete]
+    [uploadFile, onUploadComplete, t]
   )
 
   const handleDragOver = useCallback((e: React.DragEvent) => {

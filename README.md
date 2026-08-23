@@ -277,9 +277,11 @@ omoide/
 | `npm run build` | 本番ビルドを作成します。 |
 | `npm run start` | 本番サーバーを起動します。 |
 | `npm run lint` | ESLint を実行します。 |
+| `npm run typecheck` | TypeScript の型検査（`tsc --noEmit`）を実行します。 |
 | `npm run test` | Vitest を 1 回実行します。 |
 | `npm run test:watch` | Vitest を watch mode で実行します。 |
 | `npm run test:coverage` | coverage 付きでテストを実行します。 |
+| `npm run generate:data` | `data/generated/` 配下のマニフェストを再生成します。 |
 
 ## 関連ドキュメント
 

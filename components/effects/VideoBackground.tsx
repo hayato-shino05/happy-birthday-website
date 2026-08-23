@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo, useSyncExternalStore } from 'react'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface VideoBackgroundProps {
   videoUrl?: string
@@ -10,6 +11,10 @@ interface VideoBackgroundProps {
   opacity?: number
   syncToServerTime?: boolean
   videoDuration?: number
+}
+
+function computeStartSeconds(videoDuration: number): number {
+  return Math.floor((Date.now() / 1000) % videoDuration)
 }
 
 export function VideoBackground({
@@ -25,19 +30,28 @@ export function VideoBackground({
   const [currentSrc, setCurrentSrc] = useState(videoUrl)
   const [hasError, setHasError] = useState(false)
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const prefersReducedMotion = usePrefersReducedMotion()
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
+  // props の videoUrl 変更を useEffect で安全に同期
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (videoUrl) {
+    const raf = requestAnimationFrame(() => {
       setCurrentSrc(videoUrl)
       setHasError(false)
       setVideoLoaded(false)
-    }
+    })
+    return () => cancelAnimationFrame(raf)
   }, [videoUrl])
+
+  // YouTube の開始位置を props の最新状態から導出
+  const startSeconds = useMemo(() => {
+    if (!mounted || !syncToServerTime || !videoDuration || videoDuration <= 0) return null
+    return computeStartSeconds(videoDuration)
+  }, [mounted, syncToServerTime, videoDuration])
 
   useEffect(() => {
     const video = videoRef.current
@@ -94,7 +108,10 @@ export function VideoBackground({
 
   if (!active) return null
 
-  if (!isMounted) {
+  // reduced-motion 時は背景動画/YouTube を描画しない（親のグラデーションが代替）
+  if (prefersReducedMotion) return null
+
+  if (!mounted) {
     return (
       <div
         style={{
@@ -114,9 +131,7 @@ export function VideoBackground({
     const origin = window.location.origin
 
     let startParam = ''
-    if (syncToServerTime && videoDuration > 0) {
-      const now = Date.now() / 1000
-      const startSeconds = Math.floor(now % videoDuration)
+    if (startSeconds !== null) {
       startParam = `&start=${startSeconds}`
     }
 

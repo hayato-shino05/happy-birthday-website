@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import {
   useMediaQuery,
@@ -13,6 +13,10 @@ describe('useMediaQuery', () => {
     vi.clearAllMocks()
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('should return false by default', () => {
     const { result } = renderHook(() => useMediaQuery('(min-width: 768px)'))
     expect(result.current).toBe(false)
@@ -21,21 +25,29 @@ describe('useMediaQuery', () => {
   it('should update when media query changes', () => {
     const listeners: Array<(e: MediaQueryListEvent) => void> = []
 
-    vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
-      matches: query.includes('768'),
-      media: query,
+    const mediaQueryList = {
+      matches: true,
+      media: '(min-width: 768px)',
       onchange: null,
       addListener: vi.fn(),
       removeListener: vi.fn(),
-      addEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) => {
-        listeners.push(cb)
-      },
+      addEventListener: vi.fn((_type: string, cb: EventListener) => {
+        listeners.push(cb as (e: MediaQueryListEvent) => void)
+      }),
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
-    }))
+    } as unknown as MediaQueryList
+
+    vi.spyOn(window, 'matchMedia').mockImplementation(() => mediaQueryList)
 
     const { result } = renderHook(() => useMediaQuery('(min-width: 768px)'))
     expect(result.current).toBe(true)
+
+    act(() => {
+      ;(mediaQueryList as unknown as { matches: boolean }).matches = false
+      listeners.forEach((cb) => cb({ matches: false } as MediaQueryListEvent))
+    })
+    expect(result.current).toBe(false)
   })
 })
 
@@ -64,5 +76,23 @@ describe('usePrefersReducedMotion', () => {
   it('should return boolean', () => {
     const { result } = renderHook(() => usePrefersReducedMotion())
     expect(typeof result.current).toBe('boolean')
+  })
+
+  it('should reflect prefers-reduced-motion from matchMedia', () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation((query: string) =>
+      ({
+        matches: query.includes('prefers-reduced-motion'),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }) as unknown as MediaQueryList,
+    )
+
+    const { result } = renderHook(() => usePrefersReducedMotion())
+    expect(result.current).toBe(true)
   })
 })

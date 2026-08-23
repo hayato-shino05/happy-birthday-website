@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '@/components/ui/Icon'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
@@ -13,12 +13,11 @@ interface CameraCaptureProps {
 
 export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) {
   const { t } = useLanguage()
-  const [mounted, setMounted] = useState(false)
-  
-  useEffect(() => {
-    setMounted(true)
-    return () => setMounted(false)
-  }, [])
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
   const videoRef = useRef<HTMLVideoElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -223,8 +222,51 @@ function getSupportedVideoMimeType(): string | undefined {
     onClose()
   }, [stopCamera, onClose])
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const lastFocusedRef = useRef<Element | null>(null)
+
+  // ダイアログとしてのフォーカス lifecycle（開いたら奪い、閉じたら返す）
+  useEffect(() => {
+    lastFocusedRef.current = document.activeElement
+    containerRef.current?.focus()
+    return () => {
+      if (lastFocusedRef.current instanceof HTMLElement) {
+        lastFocusedRef.current.focus()
+      }
+    }
+  }, [])
+
+  // Tab キーによるダイアログ内のフォーカストラップ
+  useEffect(() => {
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !containerRef.current) return
+      const focusableElements = containerRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusableElements.length === 0) return
+      const firstElement = focusableElements[0] as HTMLElement
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
+
+      if (e.shiftKey && (document.activeElement === firstElement || document.activeElement === containerRef.current)) {
+        e.preventDefault()
+        lastElement?.focus()
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault()
+        firstElement?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [])
+
   const cameraContent = (
     <div
+      ref={containerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={mode === 'photo' ? t('takePhoto') : t('takeVideo')}
+      tabIndex={-1}
       style={{
         position: 'fixed',
         inset: 0,
@@ -232,9 +274,17 @@ function getSupportedVideoMimeType(): string | undefined {
         zIndex: 100000,
         display: 'flex',
         flexDirection: 'column',
+        outline: 'none',
       }}
       onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        // Escape で閉じつつ、外側のモーダルへ伝播させない
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          handleClose()
+        }
+        e.stopPropagation()
+      }}
     >
       {/* ヘッダー */}
       <div
