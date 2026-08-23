@@ -173,10 +173,10 @@ export function TimeCapsule() {
       const sealedCapsules = sealedData
         .map((capsule) => parseRemoteCapsule({ ...capsule, message: null, photo_url: null }, now))
         .filter((capsule): capsule is CapsuleItem => capsule !== null)
-      if (!openedResult.error && (openedCapsules.length > 0 || !hasLoadedCapsulesRef.current)) {
+      if (!openedResult.error) {
         openedCapsulesRef.current = openedCapsules
       }
-      if (!sealedResult.error && (sealedCapsules.length > 0 || !hasLoadedCapsulesRef.current)) {
+      if (!sealedResult.error) {
         sealedCapsulesRef.current = sealedCapsules
       }
       const remoteCapsules = [...openedCapsulesRef.current, ...sealedCapsulesRef.current]

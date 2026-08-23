@@ -305,7 +305,7 @@ describe('TimeCapsule', () => {
     expect(screen.getByText('genericError')).toBeTruthy()
   })
 
-  it('preserves loaded capsules when a refresh query fails', async () => {
+  it('clears an empty successful partition during refresh', async () => {
     let openedCalls = 0
     let sealedCalls = 0
     getSupabaseMock.mockReturnValue({
@@ -347,7 +347,7 @@ describe('TimeCapsule', () => {
       expect(openedCalls).toBe(2)
       expect(sealedCalls).toBe(2)
     })
-    expect(screen.getByText('開封済み')).toBeTruthy()
+    expect(screen.queryByText('開封済み')).toBeNull()
     expect(await screen.findByText('genericError')).toBeTruthy()
   })
 
