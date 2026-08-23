@@ -133,6 +133,8 @@ export function TimeCapsule() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
   const hasLoadedCapsulesRef = useRef(false)
+  const openedCapsulesRef = useRef<CapsuleItem[]>([])
+  const sealedCapsulesRef = useRef<CapsuleItem[]>([])
   const refreshInFlightRef = useRef(false)
   const refreshQueuedRef = useRef(false)
 
@@ -165,10 +167,19 @@ export function TimeCapsule() {
 
       const openedData = openedResult.data || []
       const sealedData = sealedResult.data || []
-      const data = [
-        ...openedData.map((capsule) => ({ ...capsule, message: capsule.message, photo_url: capsule.photo_url })),
-        ...sealedData.map((capsule) => ({ ...capsule, message: null, photo_url: null })),
-      ]
+      const openedCapsules = openedData
+        .map((capsule) => parseRemoteCapsule({ ...capsule, message: capsule.message, photo_url: capsule.photo_url }, now))
+        .filter((capsule): capsule is CapsuleItem => capsule !== null)
+      const sealedCapsules = sealedData
+        .map((capsule) => parseRemoteCapsule({ ...capsule, message: null, photo_url: null }, now))
+        .filter((capsule): capsule is CapsuleItem => capsule !== null)
+      if (!openedResult.error && (openedCapsules.length > 0 || !hasLoadedCapsulesRef.current)) {
+        openedCapsulesRef.current = openedCapsules
+      }
+      if (!sealedResult.error && (sealedCapsules.length > 0 || !hasLoadedCapsulesRef.current)) {
+        sealedCapsulesRef.current = sealedCapsules
+      }
+      const remoteCapsules = [...openedCapsulesRef.current, ...sealedCapsulesRef.current]
       const queryError = openedResult.error || sealedResult.error
 
       // ローカルストレージフォールバックデータの取得
@@ -182,10 +193,6 @@ export function TimeCapsule() {
         localCapsules = []
       }
 
-      const remoteCapsules = data
-        .map((capsule) => parseRemoteCapsule(capsule, now))
-        .filter((capsule): capsule is CapsuleItem => capsule !== null)
-
       // リモートとローカルの統合（ID重複を排除）
       const remoteIds = new Set(remoteCapsules.map((c) => String(c.id)))
       const unmergedLocal = localCapsules.filter((c) => !remoteIds.has(String(c.id)))
@@ -196,9 +203,7 @@ export function TimeCapsule() {
 
       if (!isMountedRef.current) return
       setLoadError(Boolean(queryError))
-      if (!queryError || !hasLoadedCapsulesRef.current) {
-        setCapsules(combined)
-      }
+      setCapsules(combined)
       hasLoadedCapsulesRef.current = true
     } catch {
       if (!isMountedRef.current) return
