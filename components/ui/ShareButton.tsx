@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { buildLineShareUrl } from '@/lib/share'
 
 interface ShareButtonProps {
   url?: string
@@ -47,6 +48,11 @@ export default function ShareButton({ url, title, text }: ShareButtonProps) {
       ),
     },
     {
+      name: 'LINE',
+      url: buildLineShareUrl(shareTitle, shareText, shareUrl),
+      icon: <span className="font-bold">LINE</span>,
+    },
+    {
       name: 'Twitter',
       url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
       icon: (
@@ -84,6 +90,7 @@ export default function ShareButton({ url, title, text }: ShareButtonProps) {
             <a
               key={link.name}
               href={link.url}
+              aria-label={link.name === 'LINE' ? t('shareOnLine') : undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors"
