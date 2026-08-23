@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, act } from '@testing-library/react'
 import Confetti, { ConfettiBurst } from '@/components/effects/Confetti'
 import * as mediaQueryHooks from '@/lib/hooks/useMediaQuery'
 
@@ -57,13 +57,17 @@ describe('Confetti and ConfettiBurst reduced-motion lifecycle', () => {
       const { rerender } = render(<Confetti isActive={true} particleCount={100} duration={1000} onComplete={onComplete} />)
 
       expect(onComplete).not.toHaveBeenCalled()
-      vi.advanceTimersByTime(1000)
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
       expect(onComplete).toHaveBeenCalledTimes(1)
 
       // 完了後にエフェクトの依存値（particleCount, duration）が変わっても isActive=true の間は再開・多重発火しないこと
       rerender(<Confetti isActive={true} particleCount={250} duration={2000} onComplete={onComplete} />)
 
-      vi.advanceTimersByTime(2000)
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
       expect(onComplete).toHaveBeenCalledTimes(1)
     } finally {
       vi.useRealTimers()
@@ -91,7 +95,9 @@ describe('Confetti and ConfettiBurst reduced-motion lifecycle', () => {
       )
 
       // 500ms 経過（アニメーション実行中）
-      vi.advanceTimersByTime(500)
+      act(() => {
+        vi.advanceTimersByTime(500)
+      })
       expect(onComplete).not.toHaveBeenCalled()
 
       // 実行中にコールバック・依存プロパティ（colors, particleCount）の参照が変更される
@@ -100,11 +106,15 @@ describe('Confetti and ConfettiBurst reduced-motion lifecycle', () => {
       )
 
       // タイマーがリセットされずに当初の残り 500ms（合計 1000ms）で完了すること
-      vi.advanceTimersByTime(500)
+      act(() => {
+        vi.advanceTimersByTime(500)
+      })
       expect(onComplete).toHaveBeenCalledTimes(1)
 
       // さらなる時間経過で重複発火しないこと
-      vi.advanceTimersByTime(1000)
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
       expect(onComplete).toHaveBeenCalledTimes(1)
     } finally {
       vi.useRealTimers()
