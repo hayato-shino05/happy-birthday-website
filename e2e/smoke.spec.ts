@@ -5,25 +5,22 @@ const MOCK_MESSAGES = [
   { id: 1, sender: 'モック太郎', message: 'モック送信テスト', birthday_person: null, media_object_path: null, created_at: new Date().toISOString() },
 ]
 
-async function mockSupabaseRest(page: import('@playwright/test').Page, onPost?: (body: string) => void, withBroad = true) {
+async function mockSupabaseRest(page: import('@playwright/test').Page) {
   // 広域ハンドラを先に、messages 固有を後に登録（Playwright は後登録が優先）
-  if (withBroad) {
-    await page.route('**/*.supabase.co/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
-    )
-    await page.route('**/storage/v1/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
-    )
-    await page.route('**/auth/v1/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
-    )
-    await page.route('**/rest/v1/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
-    )
-  }
+  await page.route('**/*.supabase.co/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  )
+  await page.route('**/storage/v1/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  )
+  await page.route('**/auth/v1/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+  )
+  await page.route('**/rest/v1/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  )
   await page.route('**/rest/v1/messages**', async (route) => {
     if (route.request().method() === 'POST') {
-      onPost?.(route.request().postData() ?? '')
       return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(MOCK_MESSAGES[0]) })
     }
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_MESSAGES) })
@@ -81,7 +78,7 @@ test.describe('home shell smoke', () => {
     const post = await postRequestPromise
     expect(post.postData()).toContain('モック送信テスト')
     await expect(form).not.toBeVisible()
-    await page.screenshot({ path: `tmp/browser-smoke/anon-post-success-${testInfo.project.name}.png`, fullPage: true })
+    await page.screenshot({ path: testInfo.outputPath('anon-post-success.png'), fullPage: true })
   })
 
   test('camera capture exposes dialog semantics and Escape closes it', async ({ page }) => {

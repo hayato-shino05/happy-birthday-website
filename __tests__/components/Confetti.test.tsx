@@ -49,24 +49,22 @@ describe('Confetti and ConfettiBurst reduced-motion lifecycle', () => {
     expect(onComplete).toHaveBeenCalledTimes(1)
   })
 
-  it('does not restart or duplicate onComplete when onComplete reference changes after timeout', () => {
+  it('does not restart or duplicate onComplete when effect dependencies change after timeout', () => {
     vi.useFakeTimers()
     try {
       vi.spyOn(mediaQueryHooks, 'usePrefersReducedMotion').mockReturnValue(false)
-      const onComplete1 = vi.fn()
-      const { rerender } = render(<Confetti isActive={true} duration={1000} onComplete={onComplete1} />)
+      const onComplete = vi.fn()
+      const { rerender } = render(<Confetti isActive={true} particleCount={100} duration={1000} onComplete={onComplete} />)
 
-      expect(onComplete1).not.toHaveBeenCalled()
+      expect(onComplete).not.toHaveBeenCalled()
       vi.advanceTimersByTime(1000)
-      expect(onComplete1).toHaveBeenCalledTimes(1)
+      expect(onComplete).toHaveBeenCalledTimes(1)
 
-      // 完了後に親が新しい onComplete 参照を渡して再レンダリング
-      const onComplete2 = vi.fn()
-      rerender(<Confetti isActive={true} duration={1000} onComplete={onComplete2} />)
+      // 完了後にエフェクトの依存値（particleCount, duration）が変わっても isActive=true の間は再開・多重発火しないこと
+      rerender(<Confetti isActive={true} particleCount={250} duration={2000} onComplete={onComplete} />)
 
-      // 新しいタイマーが進んでも onComplete2 は呼ばれず、再開しない
-      vi.advanceTimersByTime(1000)
-      expect(onComplete2).not.toHaveBeenCalled()
+      vi.advanceTimersByTime(2000)
+      expect(onComplete).toHaveBeenCalledTimes(1)
     } finally {
       vi.useRealTimers()
     }

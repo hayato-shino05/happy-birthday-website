@@ -18,6 +18,36 @@ interface MediaViewerProps {
   onToggleSlideshow?: () => void
 }
 
+function findVisibleFallback(): HTMLElement | null {
+  if (typeof document === 'undefined') return null
+  const candidates = document.querySelectorAll<HTMLElement>(
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )
+  for (const el of candidates) {
+    if (
+      !el.isConnected ||
+      el.hasAttribute('inert') ||
+      el.closest('[inert]') ||
+      el.getAttribute('aria-hidden') === 'true' ||
+      el.closest('[aria-hidden="true"]')
+    ) {
+      continue
+    }
+    const style = window.getComputedStyle(el)
+    if (style.display === 'none' || style.visibility === 'hidden') {
+      continue
+    }
+    const rect = el.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      return el
+    }
+    if (el.offsetWidth > 0 || el.offsetHeight > 0) {
+      return el
+    }
+  }
+  return null
+}
+
 export function MediaViewer({ 
   media, 
   allMedia, 
@@ -149,8 +179,12 @@ export function MediaViewer({
           element.removeAttribute('aria-hidden')
         }
       }
-      if (lastFocusedRef.current instanceof HTMLElement) {
-        lastFocusedRef.current.focus()
+      const saved = lastFocusedRef.current
+      if (saved instanceof HTMLElement && saved.isConnected) {
+        saved.focus()
+      } else {
+        const fallback = findVisibleFallback()
+        fallback?.focus()
       }
     }
   }, [mounted])

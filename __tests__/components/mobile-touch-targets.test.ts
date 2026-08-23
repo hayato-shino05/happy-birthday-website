@@ -10,16 +10,52 @@ const source = readFileSync(
 )
 
 function getButtonClassName(identifier: string): string {
-  const idx = source.indexOf(identifier)
-  expect(idx, `Missing identifier: ${identifier}`).toBeGreaterThanOrEqual(0)
-  const tagStart = source.lastIndexOf('<button', idx)
-  const tagEnd = source.indexOf('>', idx)
-  expect(tagStart, `Cannot find <button start for: ${identifier}`).toBeGreaterThanOrEqual(0)
-  expect(tagEnd, `Cannot find > end for: ${identifier}`).toBeGreaterThanOrEqual(0)
-  const openingTag = source.slice(tagStart, tagEnd + 1)
-  const classMatch = openingTag.match(/className=(?:\{`([^`]+)`\}|"([^"]+)")/)
-  expect(classMatch, `Missing className attribute in <button> tag for: ${identifier}`).toBeTruthy()
-  return classMatch![1] || classMatch![2] || ''
+  const buttons: Array<{ tag: string; className: string }> = []
+  let pos = 0
+  while (true) {
+    const startIdx = source.indexOf('<button', pos)
+    if (startIdx === -1) break
+
+    let endIdx = -1
+    let braceDepth = 0
+    let inQuote: string | null = null
+
+    for (let i = startIdx + 7; i < source.length; i++) {
+      const char = source[i]
+      if (inQuote) {
+        if (char === inQuote && source[i - 1] !== '\\') {
+          inQuote = null
+        }
+      } else {
+        if (char === '"' || char === "'" || char === '`') {
+          inQuote = char
+        } else if (char === '{') {
+          braceDepth++
+        } else if (char === '}') {
+          braceDepth = Math.max(0, braceDepth - 1)
+        } else if (char === '>' && braceDepth === 0) {
+          endIdx = i
+          break
+        }
+      }
+    }
+
+    if (endIdx !== -1) {
+      const tag = source.slice(startIdx, endIdx + 1)
+      const classMatch = tag.match(/className=(?:\{`([^`]+)`\}|"([^"]+)")/)
+      buttons.push({
+        tag,
+        className: classMatch ? classMatch[1] || classMatch[2] || '' : '',
+      })
+      pos = endIdx + 1
+    } else {
+      pos = startIdx + 7
+    }
+  }
+
+  const found = buttons.find((btn) => btn.tag.includes(identifier))
+  expect(found, `Cannot find <button> opening tag containing identifier: ${identifier}`).toBeTruthy()
+  return found!.className
 }
 
 describe('mobile fixed controls touch targets (scoped)', () => {

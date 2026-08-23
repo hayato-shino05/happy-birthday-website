@@ -69,17 +69,13 @@ export default function Confetti({
   }, [isActive])
 
   useEffect(() => {
-    if (!isActive) {
+    if (!isActive || prefersReducedMotion) {
       const raf = requestAnimationFrame(() => setPieces([]))
-      return () => cancelAnimationFrame(raf)
-    }
-
-    if (prefersReducedMotion) {
-      if (!completedRef.current) {
+      if (prefersReducedMotion && !completedRef.current) {
         completedRef.current = true
         onCompleteRef.current?.()
       }
-      return
+      return () => cancelAnimationFrame(raf)
     }
 
     if (completedRef.current) {
@@ -230,17 +226,13 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
   }, [isActive])
 
   useEffect(() => {
-    if (!isActive) {
+    if (!isActive || prefersReducedMotion) {
       const raf = requestAnimationFrame(() => setPieces([]))
-      return () => cancelAnimationFrame(raf)
-    }
-
-    if (prefersReducedMotion) {
-      if (!completedRef.current) {
+      if (prefersReducedMotion && !completedRef.current) {
         completedRef.current = true
         onCompleteRef.current?.()
       }
-      return
+      return () => cancelAnimationFrame(raf)
     }
 
     if (completedRef.current) {
@@ -273,7 +265,7 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     const animate = () => {
       setPieces((prev) => {
         if (prev.length === 0) return prev
-        return prev
+        const nextPieces = prev
           .map((piece) => ({
             ...piece,
             x: piece.x + piece.velocityX,
@@ -283,9 +275,12 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
             velocityX: piece.velocityX * 0.98,
           }))
           .filter((piece) => piece.y < window.innerHeight + 50)
-      })
 
-      animationId = requestAnimationFrame(animate)
+        if (nextPieces.length > 0) {
+          animationId = requestAnimationFrame(animate)
+        }
+        return nextPieces
+      })
     }
 
     animationId = requestAnimationFrame(animate)
