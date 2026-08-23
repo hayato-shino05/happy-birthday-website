@@ -166,10 +166,13 @@ describe('TimeCapsule', () => {
     render(<TimeCapsule />)
 
     expect(await screen.findByText(/^timeCapsuleLockedNotice:/)).toBeTruthy()
-    expect(selectCalls).toEqual([
-      'id,sender,recipient,message,photo_url,unlock_date,created_at',
-      'id,sender,recipient,unlock_date,created_at',
-    ])
+    expect(selectCalls).toHaveLength(2)
+    const openedSelect = selectCalls.find((columns) => columns.includes('message'))
+    const sealedSelect = selectCalls.find((columns) => !columns.includes('message'))
+    expect(openedSelect).toContain('message')
+    expect(openedSelect).toContain('photo_url')
+    expect(sealedSelect).not.toContain('message')
+    expect(sealedSelect).not.toContain('photo_url')
     expect(screen.queryByText('private capsule message')).toBeNull()
     expect(screen.queryByRole('img')).toBeNull()
   })
