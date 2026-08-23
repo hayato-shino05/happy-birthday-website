@@ -54,4 +54,21 @@ describe('uiStore modal focus lifecycle', () => {
     await new Promise((resolve) => requestAnimationFrame(resolve))
     expect(document.activeElement).toBe(document.body)
   })
+
+  it('falls back to persistent navigation button when original trigger is unmounted', async () => {
+    const nav = document.createElement('nav')
+    const navButton = document.createElement('button')
+    nav.appendChild(navButton)
+    const trigger = document.createElement('button')
+    document.body.append(nav, trigger)
+    trigger.focus()
+
+    act(() => useUIStore.getState().openModal('album'))
+    trigger.remove()
+
+    act(() => useUIStore.getState().closeModal())
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+
+    expect(document.activeElement).toBe(navButton)
+  })
 })

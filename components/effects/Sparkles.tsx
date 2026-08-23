@@ -37,7 +37,7 @@ export function Sparkles({ active, count = 30, colors = ['#FFD700', '#FFFFFF', '
   }, [colors])
 
   useEffect(() => {
-    if (!active) {
+    if (!active || prefersReducedMotion) {
       const raf = requestAnimationFrame(() => setSparkles([]))
       return () => cancelAnimationFrame(raf)
     }

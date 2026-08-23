@@ -57,20 +57,27 @@ export default function Confetti({
   }, [colors])
 
   useEffect(() => {
-    if (prefersReducedMotion) return
+    if (prefersReducedMotion) {
+      if (isActive) {
+        onComplete?.()
+      }
+      return
+    }
 
     if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
       return () => cancelAnimationFrame(raf)
     }
 
+    let initialRaf: number | null = null
+    let animationId: number | null = null
+
     // 初期状態のコンフェッティを生成
-    const initialRaf = requestAnimationFrame(() => {
+    initialRaf = requestAnimationFrame(() => {
       setPieces(Array.from({ length: particleCount }, (_, i) => createPiece(i)))
     })
 
     // アニメーションループ
-    let animationId: number
     let lastTime = performance.now()
 
     const animate = (currentTime: number) => {
@@ -96,14 +103,15 @@ export default function Confetti({
 
     // duration 経過後にアニメーションを停止
     const timeout = setTimeout(() => {
-      cancelAnimationFrame(animationId)
+      if (initialRaf) cancelAnimationFrame(initialRaf)
+      if (animationId) cancelAnimationFrame(animationId)
       setPieces([])
       onComplete?.()
     }, duration)
 
     return () => {
-      cancelAnimationFrame(initialRaf)
-      cancelAnimationFrame(animationId)
+      if (initialRaf) cancelAnimationFrame(initialRaf)
+      if (animationId) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
   }, [isActive, particleCount, duration, createPiece, onComplete, prefersReducedMotion])
@@ -187,14 +195,25 @@ interface ConfettiBurstProps {
 
 export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps) {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      if (isActive) {
+        onComplete?.()
+      }
+      return
+    }
+
     if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
       return () => cancelAnimationFrame(raf)
     }
 
-    const burstRaf = requestAnimationFrame(() => {
+    let burstRaf: number | null = null
+    let animationId: number | null = null
+
+    burstRaf = requestAnimationFrame(() => {
       const burstPieces: ConfettiPiece[] = Array.from({ length: 50 }, (_, i) => {
         const angle = (i / 50) * Math.PI * 2
         const velocity = 5 + Math.random() * 10
@@ -214,7 +233,6 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
       setPieces(burstPieces)
     })
 
-    let animationId: number
     const animate = () => {
       setPieces((prev) =>
         prev
@@ -237,19 +255,20 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     animationId = requestAnimationFrame(animate)
 
     const timeout = setTimeout(() => {
-      cancelAnimationFrame(animationId)
+      if (burstRaf) cancelAnimationFrame(burstRaf)
+      if (animationId) cancelAnimationFrame(animationId)
       setPieces([])
       onComplete?.()
     }, 3000)
 
     return () => {
-      cancelAnimationFrame(burstRaf)
-      cancelAnimationFrame(animationId)
+      if (burstRaf) cancelAnimationFrame(burstRaf)
+      if (animationId) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
-  }, [isActive, x, y, onComplete])
+  }, [isActive, x, y, onComplete, prefersReducedMotion, pieces.length])
 
-  if (pieces.length === 0) return null
+  if (prefersReducedMotion || pieces.length === 0) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">

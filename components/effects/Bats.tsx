@@ -41,9 +41,7 @@ export function Bats({ active, count = 8 }: BatsProps) {
   }, [])
 
   useEffect(() => {
-    if (prefersReducedMotion) return
-
-    if (!active) {
+    if (!active || prefersReducedMotion) {
       const raf = requestAnimationFrame(() => setBats([]))
       return () => cancelAnimationFrame(raf)
     }

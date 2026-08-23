@@ -104,8 +104,9 @@ export function MediaViewer({
   const viewerRef = useRef<HTMLDivElement>(null)
   const lastFocusedRef = useRef<Element | null>(null)
 
-  // ダイアログとしてのフォーカス lifecycle（開いたら奪い、閉じたら返す）
+  // ダイアログとしてのフォーカス lifecycle（portal mount 後にフォーカスを奪い、閉じたら返す）
   useEffect(() => {
+    if (!mounted) return
     lastFocusedRef.current = document.activeElement
     viewerRef.current?.focus()
     return () => {
@@ -113,7 +114,32 @@ export function MediaViewer({
         lastFocusedRef.current.focus()
       }
     }
-  }, [])
+  }, [mounted])
+
+  // Tab キーによるダイアログ内のフォーカストラップ
+  useEffect(() => {
+    if (!mounted) return
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !viewerRef.current) return
+      const focusableElements = viewerRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusableElements.length === 0) return
+      const firstElement = focusableElements[0] as HTMLElement
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault()
+        lastElement?.focus()
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault()
+        firstElement?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [mounted])
 
   const viewerContent = (
     <AnimatePresence>

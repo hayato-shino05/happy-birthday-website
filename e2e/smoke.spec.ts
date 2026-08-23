@@ -1,4 +1,4 @@
-﻿import { expect, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 // Supabase REST をモック（本番データ・本番書き込み不使用）
 const MOCK_MESSAGES = [
@@ -38,6 +38,7 @@ test.describe('home shell smoke', () => {
   test('reduced-motion hides background video', async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: 'reduce' })
     const page = await context.newPage()
+    await mockSupabaseRest(page)
     await page.goto('/')
     await expect(page.locator('video')).toHaveCount(0)
     await context.close()

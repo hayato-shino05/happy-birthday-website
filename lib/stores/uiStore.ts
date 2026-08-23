@@ -30,8 +30,16 @@ function restoreTriggerFocus(): void {
   if (typeof window === 'undefined') return
   requestAnimationFrame(() => {
     const active = document.activeElement
-    if ((active === document.body || active === null) && lastModalTrigger?.isConnected) {
-      lastModalTrigger.focus()
+    if (active === document.body || active === null) {
+      if (lastModalTrigger?.isConnected) {
+        lastModalTrigger.focus()
+      } else {
+        // トリガー要素が unmount された場合（モバイルメニュー等）、永続的なナビゲーションボタンへ安全にフォールバック
+        const fallback = document.querySelector(
+          'header button:not([disabled]), nav button:not([disabled]), .mobile-game-toggle:not([disabled]), main button:not([disabled])'
+        ) as HTMLElement | null
+        fallback?.focus()
+      }
     }
   })
 }

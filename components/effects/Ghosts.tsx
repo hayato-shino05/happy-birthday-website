@@ -34,9 +34,7 @@ export function Ghosts({ active, count = 5 }: GhostsProps) {
   }, [])
 
   useEffect(() => {
-    if (prefersReducedMotion) return
-
-    if (!active) {
+    if (!active || prefersReducedMotion) {
       const raf = requestAnimationFrame(() => setGhosts([]))
       return () => cancelAnimationFrame(raf)
     }

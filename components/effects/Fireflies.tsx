@@ -34,9 +34,7 @@ export function Fireflies({ active, count = 25 }: FirefliesProps) {
   }, [])
 
   useEffect(() => {
-    if (prefersReducedMotion) return
-
-    if (!active) {
+    if (!active || prefersReducedMotion) {
       const raf = requestAnimationFrame(() => setFireflies([]))
       return () => cancelAnimationFrame(raf)
     }

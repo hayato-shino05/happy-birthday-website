@@ -24,7 +24,10 @@ export function FallingSnow({ count = 50, active = true }: FallingSnowProps) {
   const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
-    if (!active || prefersReducedMotion) return
+    if (!active || prefersReducedMotion) {
+      const raf = requestAnimationFrame(() => setSnowflakes([]))
+      return () => cancelAnimationFrame(raf)
+    }
 
     const createSingleSnowflake = (): Snowflake => ({
       id: Date.now() + Math.random() * 10000,

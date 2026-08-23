@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useSyncExternalStore } from 'react'
+import { useState, useRef, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface VideoBackgroundProps {
@@ -30,12 +30,6 @@ export function VideoBackground({
   const [currentSrc, setCurrentSrc] = useState(videoUrl)
   const [hasError, setHasError] = useState(false)
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const [prevVideoUrl, setPrevVideoUrl] = useState(videoUrl)
-  const [startSeconds] = useState(() =>
-    typeof window !== 'undefined' && syncToServerTime && videoDuration > 0
-      ? computeStartSeconds(videoDuration)
-      : null
-  )
   const prefersReducedMotion = usePrefersReducedMotion()
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -43,12 +37,21 @@ export function VideoBackground({
     () => false
   )
 
-  if (videoUrl !== prevVideoUrl) {
-    setPrevVideoUrl(videoUrl)
-    setCurrentSrc(videoUrl)
-    setHasError(false)
-    setVideoLoaded(false)
-  }
+  // props の videoUrl 変更を useEffect で安全に同期
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      setCurrentSrc(videoUrl)
+      setHasError(false)
+      setVideoLoaded(false)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [videoUrl])
+
+  // YouTube の開始位置を props の最新状態から導出
+  const startSeconds = useMemo(() => {
+    if (!mounted || !syncToServerTime || !videoDuration || videoDuration <= 0) return null
+    return computeStartSeconds(videoDuration)
+  }, [mounted, syncToServerTime, videoDuration])
 
   useEffect(() => {
     const video = videoRef.current

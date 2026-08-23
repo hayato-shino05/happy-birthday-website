@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface BalloonsProps {
   active: boolean
@@ -20,33 +21,41 @@ interface Balloon {
 // 風船コンポーネント
 export function Balloons({ active, count = 15 }: BalloonsProps) {
   const [balloons, setBalloons] = useState<Balloon[]>([])
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
-    if (active) {
-      const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8']
+    if (!active || prefersReducedMotion) {
+      const raf = requestAnimationFrame(() => setBalloons([]))
+      return () => cancelAnimationFrame(raf)
+    }
 
-      const spawnRaf = requestAnimationFrame(() => {
-        const newBalloons = Array.from({ length: count }, (_, i) => ({
-          id: i,
-          x: Math.random() * 90 + 5,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          delay: Math.random() * 2,
-          duration: 4 + Math.random() * 3,
-          size: 40 + Math.random() * 30,
-        }))
-        setBalloons(newBalloons)
-      })
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8']
+    let timer: NodeJS.Timeout | null = null
 
-      const timer = setTimeout(() => {
+    const spawnRaf = requestAnimationFrame(() => {
+      const newBalloons = Array.from({ length: count }, (_, i) => ({
+        id: i,
+        x: Math.random() * 90 + 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 2,
+        duration: 4 + Math.random() * 3,
+        size: 40 + Math.random() * 30,
+      }))
+      setBalloons(newBalloons)
+
+      // RAF 実行後にタイマーを開始し、遅延生成との順序逆転を防ぐ
+      timer = setTimeout(() => {
         setBalloons([])
       }, 8000)
+    })
 
-      return () => {
-        cancelAnimationFrame(spawnRaf)
-        clearTimeout(timer)
-      }
+    return () => {
+      cancelAnimationFrame(spawnRaf)
+      if (timer) clearTimeout(timer)
     }
-  }, [active, count])
+  }, [active, count, prefersReducedMotion])
+
+  if (!active || prefersReducedMotion) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">

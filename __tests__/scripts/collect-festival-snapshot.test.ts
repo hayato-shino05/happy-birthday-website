@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { pathToFileURL } from 'node:url'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterAll, afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const temporaryDirectories: string[] = []
 
@@ -49,8 +49,6 @@ function removeTemporaryDirectories(): void {
 }
 
 afterEach(removeTemporaryDirectories)
-
-afterAll(removeTemporaryDirectories)
 
 describe('collectSnapshot', () => {
   const withOption = (args: string[], flag: string, value: string): string[] => {

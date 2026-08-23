@@ -245,6 +245,30 @@ function getSupportedVideoMimeType(): string | undefined {
     return () => document.removeEventListener('keydown', handleDocumentEscape)
   }, [handleClose])
 
+  // Tab キーによるダイアログ内のフォーカストラップ
+  useEffect(() => {
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !containerRef.current) return
+      const focusableElements = containerRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusableElements.length === 0) return
+      const firstElement = focusableElements[0] as HTMLElement
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault()
+        lastElement?.focus()
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault()
+        firstElement?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [])
+
   const cameraContent = (
     <div
       ref={containerRef}

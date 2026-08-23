@@ -12,8 +12,8 @@ function makeBuilder(result: QueryResult): Builder {
     from: () => builder,
     select: () => builder,
     order: () => builder,
-    eq: () => builder,
-    limit: () => builder,
+    eq: vi.fn(() => builder),
+    limit: vi.fn(() => builder),
   }
   return Object.assign(builder, {
     then: (onFulfilled: (r: QueryResult) => void) => onFulfilled(result),
@@ -43,16 +43,19 @@ describe('GET /api/birthdays query handling', () => {
     const body = await response.json()
     expect(body).toHaveProperty('data')
     expect(body).toHaveProperty('count')
+    expect(builder.eq).toHaveBeenCalledWith('month', 10)
   })
 
   it('ignores an out-of-range month instead of erroring', async () => {
     const response = await call('http://localhost/api/birthdays?month=13')
     expect(response.status).toBe(200)
+    expect(builder.eq).not.toHaveBeenCalled()
   })
 
   it('ignores a non-numeric month instead of erroring', async () => {
     const response = await call('http://localhost/api/birthdays?month=abc')
     expect(response.status).toBe(200)
+    expect(builder.eq).not.toHaveBeenCalled()
   })
 
   it('returns the 500 envelope when the data source errors', async () => {
