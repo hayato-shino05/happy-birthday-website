@@ -277,15 +277,16 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     })
   }, [x, y])
 
-  const updatePieces = useCallback((current: ConfettiPiece[]) => {
+  const updatePieces = useCallback((current: ConfettiPiece[], deltaTime: number) => {
+    const drag = Math.pow(0.98, deltaTime)
     return current
       .map((piece) => ({
         ...piece,
-        x: piece.x + piece.velocityX,
-        y: piece.y + piece.velocityY,
-        rotation: piece.rotation + piece.rotationSpeed,
-        velocityY: piece.velocityY + 0.5,
-        velocityX: piece.velocityX * 0.98,
+        x: piece.x + piece.velocityX * deltaTime,
+        y: piece.y + piece.velocityY * deltaTime,
+        rotation: piece.rotation + piece.rotationSpeed * deltaTime,
+        velocityY: piece.velocityY + 0.5 * deltaTime,
+        velocityX: piece.velocityX * drag,
       }))
       .filter((piece) => piece.y < window.innerHeight + 50)
   }, [])
