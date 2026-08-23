@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import TimeCapsule, {
   parseLocalCapsules,
@@ -235,20 +235,28 @@ describe('TimeCapsule', () => {
   })
 
   it('falls back to local storage when insert fails', async () => {
-    getSupabaseMock.mockReturnValue(createSupabaseStub({ insertError: new Error('insert failed') }))
-    const { container } = render(<TimeCapsule />)
-    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
-    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
-    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
-    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    vi.useFakeTimers()
+    try {
+      getSupabaseMock.mockReturnValue(createSupabaseStub({ insertError: new Error('insert failed') }))
+      const { container } = render(<TimeCapsule />)
+      fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+      fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+      fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
 
-    await waitFor(() => {
+      await act(async () => {
+        fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+        await Promise.resolve()
+        await Promise.resolve()
+      })
+
       const saved = JSON.parse(localStorage.getItem('local_time_capsules') || '[]') as Array<{ sender: string; message: string }>
       expect(saved[0]).toMatchObject({ sender: '投稿者', message: '保存する本文' })
-    })
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1200))
-    })
+      act(() => {
+        vi.advanceTimersByTime(1200)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('reports upload failure without local fallback write', async () => {
