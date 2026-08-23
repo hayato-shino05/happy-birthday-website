@@ -85,7 +85,7 @@ export function SocialButtons() {
       return
     }
 
-    window.open(urls[platform], '_blank', 'width=600,height=400')
+    window.open(urls[platform], '_blank', 'width=600,height=400,noopener,noreferrer')
     setShowShareMenu(false)
   }
 
