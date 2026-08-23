@@ -176,7 +176,7 @@ export function TimeCapsule() {
       if (!openedResult.error) {
         openedCapsulesRef.current = openedCapsules
       }
-      if (!sealedResult.error) {
+      if (!sealedResult.error && (!openedResult.error || !hasLoadedCapsulesRef.current)) {
         sealedCapsulesRef.current = sealedCapsules
       }
       const remoteCapsules = Array.from(

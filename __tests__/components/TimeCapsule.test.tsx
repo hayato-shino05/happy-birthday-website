@@ -353,6 +353,55 @@ describe('TimeCapsule', () => {
     expect(screen.getByText('genericError')).toBeTruthy()
   })
 
+  it('preserves a sealed capsule while the opened partition is unavailable', async () => {
+    let openedCalls = 0
+    let sealedCalls = 0
+    const capsuleId = 8
+    getSupabaseMock.mockReturnValue({
+      from: (table: string) => ({
+        select: () => ({
+          lte: () => ({
+            order: async () => {
+              openedCalls += 1
+              return { data: [], error: new Error('opened query failed') }
+            },
+          }),
+          gt: () => ({
+            order: async () => {
+              sealedCalls += 1
+              return sealedCalls === 1
+                ? { data: [row({ id: capsuleId, sender: '保持対象', message: '', photo_url: null })], error: null }
+                : { data: [], error: null }
+            },
+          }),
+        }),
+        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
+      }),
+      storage: {
+        from: () => ({
+          upload: async () => ({ data: null, error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        }),
+      },
+    } satisfies SupabaseStub)
+
+    render(<TimeCapsule />)
+    expect(await screen.findByText('保持対象')).toBeTruthy()
+    expect(await screen.findByText('genericError')).toBeTruthy()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'retry' }))
+    })
+
+    await vi.waitFor(() => {
+      expect(openedCalls).toBe(2)
+      expect(sealedCalls).toBe(2)
+    })
+    expect(screen.getByText('保持対象')).toBeTruthy()
+    expect(await screen.findByText('genericError')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy()
+  })
+
   it('clears an empty successful partition during refresh', async () => {
     let openedCalls = 0
     let sealedCalls = 0
