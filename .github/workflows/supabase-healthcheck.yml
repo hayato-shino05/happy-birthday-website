@@ -1,0 +1,43 @@
+name: Supabase healthcheck
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-healthcheck
+  cancel-in-progress: true
+
+jobs:
+  readonly-healthcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate Supabase configuration
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_URL" || { echo "NEXT_PUBLIC_SUPABASE_URL secret is not configured" >&2; exit 1; }
+          test -n "$SUPABASE_ANON_KEY" || { echo "NEXT_PUBLIC_SUPABASE_ANON_KEY secret is not configured" >&2; exit 1; }
+          case "$SUPABASE_URL" in
+            https://*.supabase.co) ;;
+            *) echo "NEXT_PUBLIC_SUPABASE_URL must use an https://*.supabase.co URL" >&2; exit 1 ;;
+          esac
+
+      - name: Run read-only REST healthcheck
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --max-time 10 \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/" \
+            >/dev/null

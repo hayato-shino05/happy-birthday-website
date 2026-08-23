@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useRef, useState } from 'react'
+import { useEffect, useCallback, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
@@ -45,9 +45,16 @@ export default function Modal({
 }: ModalProps) {
   const { t } = useLanguage()
   const [isAnimating, setIsAnimating] = useState(false)
-  const [shouldRender, setShouldRender] = useState(false)
+  const [shouldRender, setShouldRender] = useState(isOpen)
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<HTMLElement | null>(null)
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   // Escape キー押下時のクローズ処理
   const handleEscape = useCallback(
@@ -81,9 +88,13 @@ export default function Modal({
   // アニメーションとライフサイクル管理
   useEffect(() => {
     if (isOpen) {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+        closeTimeoutRef.current = null
+      }
       previousActiveElement.current = document.activeElement as HTMLElement
-      setShouldRender(true)
       requestAnimationFrame(() => {
+        setShouldRender(true)
         setIsAnimating(true)
       })
       document.body.style.overflow = 'hidden'
@@ -91,15 +102,21 @@ export default function Modal({
       document.addEventListener('keydown', handleTab)
 
       // 最初のフォーカス可能要素へフォーカス
-      setTimeout(() => {
+      focusTimeoutRef.current = setTimeout(() => {
         const firstFocusable = modalRef.current?.querySelector(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         ) as HTMLElement
         firstFocusable?.focus()
       }, 100)
     } else {
-      setIsAnimating(false)
-      setTimeout(() => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current)
+        focusTimeoutRef.current = null
+      }
+      requestAnimationFrame(() => {
+        setIsAnimating(false)
+      })
+      closeTimeoutRef.current = setTimeout(() => {
         setShouldRender(false)
         document.body.style.overflow = ''
         previousActiveElement.current?.focus()
@@ -107,13 +124,22 @@ export default function Modal({
     }
 
     return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+        closeTimeoutRef.current = null
+      }
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current)
+        focusTimeoutRef.current = null
+      }
       document.removeEventListener('keydown', handleEscape)
       document.removeEventListener('keydown', handleTab)
       document.body.style.overflow = ''
     }
   }, [isOpen, handleEscape, handleTab])
 
-  if (!shouldRender) return null
+  if (!mounted) return null
+  if (!shouldRender && !isOpen) return null
 
   const modalContent = (
     <div
@@ -259,11 +285,7 @@ export default function Modal({
   )
 
   // モーダルを document.body にポータルとして描画
-  if (typeof window !== 'undefined') {
-    return createPortal(modalContent, document.body)
-  }
-
-  return modalContent
+  return createPortal(modalContent, document.body)
 }
 
 // 確認用モーダルコンポーネント

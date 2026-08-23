@@ -194,4 +194,27 @@ describe('compareCatalogs', () => {
     expect(report.duplicateIds).toEqual([{ id: 'identity-duplicate' }])
     expect(report.shared).toEqual([])
   })
+
+  it('rejects non-object snapshot entries instead of dropping them', () => {
+    expect(() => compareCatalogs({ events: [null] }, { events: [pack()] })).toThrow(/malformed festival pack/)
+    expect(() => compareCatalogs({ events: [pack()] }, { events: ['broken'] })).toThrow(/malformed festival pack/)
+  })
+
+  it('does not mask runtime contract drift behind matching identity', () => {
+    const report = compareCatalogs(
+      [
+        pack({ id: 'precedence-drift', locale: 'en', enabled: true, status: 'enabled', priority: 10 }),
+        pack({ id: 'precedence-drift', locale: 'ja', enabled: true, status: 'enabled', priority: 10 }),
+      ],
+      [
+        pack({ id: 'precedence-drift', locale: 'en', enabled: false, status: 'disabled', priority: 20 }),
+        pack({ id: 'precedence-drift', locale: 'ja', enabled: false, status: 'disabled', priority: 20 }),
+      ],
+    )
+
+    expect(report.shared).toEqual([])
+    expect(report.sameDateDifferentContent).toEqual([])
+    expect(report.duplicateIds).toEqual([])
+    expect(report.runtimeContractMismatch).toEqual([{ id: 'precedence-drift' }])
+  })
 })

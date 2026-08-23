@@ -50,7 +50,7 @@ export function Candle({ isBlown, delay = 0, onBlown }: CandleProps) {
                   scale: [0, 1, 2],
                   opacity: [0.7, 0.4, 0],
                   y: [0, -20, -40],
-                  x: [(Math.random() - 0.5) * 10, (Math.random() - 0.5) * 20],
+                  x: [(((i * 37) % 100) / 100 - 0.5) * 10, (((i * 61) % 100) / 100 - 0.5) * 20],
                 }}
                 transition={{
                   duration: 2,

@@ -100,7 +100,7 @@ describe('translation parity', () => {
     ] as const
     for (const key of convertedKeys) {
       for (const pack of localePacks) {
-        expect(pack.translations[key], `${pack.locale}:${key}`).toBeTruthy()
+        expect(pack.translations[key]).toBeTruthy()
         expect(pack.translations[key]).not.toBe(key)
       }
       expect(translate('fr-FR', key, 'ja')).toBe(localePacks.find((p) => p.locale === 'ja')?.translations[key])
@@ -112,10 +112,9 @@ describe('translation parity', () => {
       [...value.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort()
     const [enPack, jaPack] = localePacks
     for (const key of translationKeys) {
-      expect(extract(enPack.translations[key]), `${key} (en)`).toEqual(
-        extract(jaPack.translations[key]),
-        `${key} (ja)`,
-      )
+      const enPlaceholders = extract(enPack.translations[key])
+      const jaPlaceholders = extract(jaPack.translations[key])
+      expect(enPlaceholders).toEqual(jaPlaceholders)
     }
   })
 })

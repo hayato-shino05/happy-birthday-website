@@ -16,6 +16,8 @@ export function PhotoCard({ media, onClick }: PhotoCardProps) {
 
   const isVideo = media.file_type === 'video'
 
+  const handleClick = () => onClick?.()
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -24,7 +26,18 @@ export function PhotoCard({ media, onClick }: PhotoCardProps) {
       transition={{ duration: 0.3 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label={media.file_name}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleClick()
+        }
+      }}
       className="photo-card"
       style={{
         position: 'relative',

@@ -10,19 +10,30 @@ interface GiftAnimationProps {
   onComplete?: () => void
 }
 
+// きらめきの表示位置（決定論的：レンダー毎の乱数呼び出しを避けるため固定値）
+const SPARKLE_POSITIONS = [
+  { top: '24%', left: '30%' },
+  { top: '30%', left: '72%' },
+  { top: '38%', left: '22%' },
+  { top: '45%', left: '55%' },
+  { top: '52%', left: '35%' },
+  { top: '60%', left: '76%' },
+  { top: '66%', left: '25%' },
+  { top: '74%', left: '64%' },
+]
+
+// 浮遊パーティクル（決定論的配置：x は均等分散、delay は 0〜0.45 秒）
+const GIFT_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  x: (i * 37) % 100,
+  delay: ((i * 7) % 10) * 0.05,
+}))
+
 export default function GiftAnimation({ emoji, giftName, sender, onComplete }: GiftAnimationProps) {
   const { t } = useLanguage()
   const [isVisible, setIsVisible] = useState(true)
-  const [particles, setParticles] = useState<Array<{ id: number; x: number; delay: number }>>([])
 
   useEffect(() => {
-    const newParticles = Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      delay: Math.random() * 0.5,
-    }))
-    setParticles(newParticles)
-
     // アニメーション終了後に自動で非表示にする
     const timer = setTimeout(() => {
       setIsVisible(false)
@@ -40,7 +51,7 @@ export default function GiftAnimation({ emoji, giftName, sender, onComplete }: G
       <div className="absolute inset-0 bg-black/30 animate-fade-in" />
 
       {/* パーティクル */}
-      {particles.map((particle) => (
+      {GIFT_PARTICLES.map((particle) => (
         <div
           key={particle.id}
           className="absolute text-2xl animate-float-up"
@@ -70,13 +81,13 @@ export default function GiftAnimation({ emoji, giftName, sender, onComplete }: G
 
         {/* きらめきエフェクト */}
         <div className="absolute -inset-8">
-          {[...Array(8)].map((_, i) => (
+          {SPARKLE_POSITIONS.map((sparkle, i) => (
             <div
               key={i}
               className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-sparkle"
               style={{
-                top: `${20 + Math.random() * 60}%`,
-                left: `${20 + Math.random() * 60}%`,
+                top: sparkle.top,
+                left: sparkle.left,
                 animationDelay: `${i * 0.1}s`,
               }}
             />

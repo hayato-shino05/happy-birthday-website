@@ -21,6 +21,16 @@ type PostRecord = Omit<Post, 'media_url' | 'replies_count' | 'likes'> & {
   post_replies?: { count: number }[]
 }
 
+interface PostsQueryError {
+  message?: string | null
+  code?: string | null
+}
+
+interface PostsQueryResult {
+  data: PostRecord[] | null
+  error: PostsQueryError | null
+}
+
 function toPost(post: PostRecord): Post {
   const { data } = post.media_object_path
     ? getSupabase().storage.from('community-media').getPublicUrl(post.media_object_path)
@@ -49,7 +59,7 @@ export function usePosts() {
     setError(null)
 
     try {
-      let queryResult: any = await getSupabase()
+      let queryResult: PostsQueryResult = await getSupabase()
         .from('bulletin_posts')
         .select('id, sender, message, media_object_path, birthday_person, created_at, likes, post_replies(count)')
         .order('created_at', { ascending: false })
@@ -62,7 +72,7 @@ export function usePosts() {
       }
 
       if (queryResult.error) throw queryResult.error
-      setPosts((queryResult.data ?? []).map((post: any) => toPost(post as PostRecord)))
+      setPosts((queryResult.data ?? []).map((post) => toPost(post as PostRecord)))
     } catch (err) {
       console.error('Failed to fetch posts:', err)
       setError(tRef.current('postsLoadError'))

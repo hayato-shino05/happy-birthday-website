@@ -60,7 +60,7 @@ migration の適用後に `supabase/seed.sql` を実行すると、誕生日、�
 | `photo-album` | フォトアルバム・思い出ギャラリー写真/動画 | 50 MiB | 画像全般 (HEIC/HEIF含む), MP4, WebM, QuickTime |
 | `community-media` | 掲示板・チャットの写真・動画・音声メッセージ | 50 MiB | 画像, MP4, WebM, 音声各種 |
 | `music` | カスタム BGM 音楽トラック | 15 MiB | MP3, WAV, OGG, WebM, FLAC, AAC |
-| `avatars` | アバター・スタンプ画像 | 5 MiB | JPEG, PNG, WebP, GIF, SVG |
+| `avatars` | アバター・スタンプ画像 | 5 MiB | JPEG, PNG, WebP, GIF |
 | `time-capsules` | タイムカプセル添付メディア | 50 MiB | 画像, MP4, WebM, 音声各種 |
 
 匿名ユーザーは各バケットのオブジェクトを閲覧・作成できます。更新・削除は許可していません。
