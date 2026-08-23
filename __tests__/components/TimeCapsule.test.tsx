@@ -58,6 +58,8 @@ function createSupabaseStub({
   openedRows = [],
   sealedRows = [],
   selectError = null,
+  openedError = selectError,
+  sealedError = selectError,
   insertError = null,
   uploadError = null,
   selectCalls = [],
@@ -65,14 +67,16 @@ function createSupabaseStub({
   openedRows?: CapsuleRow[]
   sealedRows?: CapsuleRow[]
   selectError?: Error | null
+  openedError?: Error | null
+  sealedError?: Error | null
   insertError?: Error | null
   uploadError?: Error | null
   selectCalls?: string[]
 } = {}): SupabaseStub {
   const from = (table: string) => {
     const query = {
-      lte: () => ({ order: async () => ({ data: openedRows, error: selectError }) }),
-      gt: () => ({ order: async () => ({ data: sealedRows, error: selectError }) }),
+      lte: () => ({ order: async () => ({ data: openedRows, error: openedError }) }),
+      gt: () => ({ order: async () => ({ data: sealedRows, error: sealedError }) }),
     }
 
     return {
@@ -175,6 +179,20 @@ describe('TimeCapsule', () => {
     render(<TimeCapsule />)
 
     expect(await screen.findByText(/private capsule message/)).toBeTruthy()
+  })
+
+  it('shows degraded retry feedback when one query fails', async () => {
+    const selectCalls: string[] = []
+    getSupabaseMock.mockReturnValue(createSupabaseStub({
+      openedRows: [row({ unlock_date: pastDate })],
+      sealedError: new Error('sealed query failed'),
+      selectCalls,
+    }))
+    render(<TimeCapsule />)
+
+    expect(await screen.findByText(/private capsule message/)).toBeTruthy()
+    expect(screen.getByText('genericError')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy()
   })
 
   it('formats locked dates for English users', async () => {

@@ -189,7 +189,7 @@ export function TimeCapsule() {
       )
 
       if (!isMountedRef.current) return
-      setLoadError(Boolean(queryError) && combined.length === 0)
+      setLoadError(Boolean(queryError))
       setCapsules(combined)
     } catch {
       if (!isMountedRef.current) return
@@ -336,7 +336,16 @@ export function TimeCapsule() {
               </button>
             </div>
           ) : capsules.length > 0 ? (
-            <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
+            <div>
+              {loadError && (
+                <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  <span>{t('genericError')}</span>{' '}
+                  <button type="button" onClick={fetchCapsules} className="font-bold underline cursor-pointer">
+                    {t('retry')}
+                  </button>
+                </div>
+              )}
+              <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
               {capsules.map((capsule) => (
                 <div
                   key={capsule.id}
@@ -384,7 +393,8 @@ export function TimeCapsule() {
                     </p>
                   )}
                 </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-12 bg-[#FFF9F3] border-2 border-dashed border-[#D4B08C] rounded-2xl p-6">
@@ -447,7 +457,7 @@ export function TimeCapsule() {
               type="date"
               required
               value={unlockDate}
-              min={new Date().toISOString().slice(0, 10)}
+              min={formatLocalDate(new Date())}
               onChange={(e) => setUnlockDate(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
