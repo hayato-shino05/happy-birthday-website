@@ -31,21 +31,26 @@
 ### 手順
 
 1. リポジトリを Fork してローカルに clone します。
+
    ```bash
    git clone https://github.com/<your-username>/happy-birthday-website.git
    cd happy-birthday-website
    ```
 
 2. 依存パッケージをインストールします。
+
    ```bash
    npm install
    ```
 
 3. 環境変数を設定します。
+
    ```bash
    cp .env.example .env.local
    ```
+
    `.env.local` を開き、Supabase の接続情報を設定します。
+
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
@@ -53,6 +58,7 @@
    ```
 
 4. 静的データマニフェストを生成します。
+
    ```bash
    npm run generate:data
    ```
@@ -69,12 +75,12 @@
 
 `main` ブランチに直接 push せず、目的ごとの作業ブランチを作成して作業します。
 
-| 種類 | 命名規則 | 例 |
-|------|----------|-----|
-| 新機能 | `feat/機能名` | `feat/interactive-3d-omikuji` |
-| バグ修正 | `fix/内容` | `fix/mobile-dock-zindex` |
-| ドキュメント | `docs/内容` | `docs/update-architecture` |
-| リファクタリング | `refactor/内容` | `refactor/music-store` |
+| 種類             | 命名規則        | 例                            |
+| ---------------- | --------------- | ----------------------------- |
+| 新機能           | `feat/機能名`   | `feat/interactive-3d-omikuji` |
+| バグ修正         | `fix/内容`      | `fix/mobile-dock-zindex`      |
+| ドキュメント     | `docs/内容`     | `docs/update-architecture`    |
+| リファクタリング | `refactor/内容` | `refactor/music-store`        |
 
 ### データベースとマイグレーション
 
@@ -103,7 +109,9 @@ UI のテキストや祝祭日データを追加・修正した場合は、以�
 ### スタイリング
 
 - Tailwind CSS 4 のユーティリティクラスを優先します。
-- テーマカラーやフォント指定には、`app/globals.css` に定義された CSS 変数および `@theme` トークンを使用します。
+- テーマカラー、surface、text、border、shadow、font は `app/globals.css` の CSS 変数および `@theme` トークンを使用します。
+- 既存の inline style と固定値は一括置換せず、変更対象の機能やアクセシビリティ修正に触れる範囲で段階的に token 化します。
+- 色の意味やコントラストを変える広範な visual redesign は、個別 Issue で方針を確認してから実施します。
 
 ## コミット規約
 
@@ -119,6 +127,7 @@ test: omikujiData の整合性テストケースを追加
 ## Pull Request の作成
 
 1. 変更を実装し、ローカルでテストとビルドを実行します。
+
    ```bash
    # リントチェック
    npm run lint
@@ -134,6 +143,7 @@ test: omikujiData の整合性テストケースを追加
    ```
 
 2. 変更をコミットしてリモートブランチに push します。
+
    ```bash
    git push origin feat/your-feature-name
    ```
