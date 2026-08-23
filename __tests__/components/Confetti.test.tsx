@@ -69,4 +69,15 @@ describe('Confetti and ConfettiBurst reduced-motion lifecycle', () => {
       vi.useRealTimers()
     }
   })
+
+  it('does not call onComplete when !isActive and prefersReducedMotion is true', () => {
+    vi.spyOn(mediaQueryHooks, 'usePrefersReducedMotion').mockReturnValue(true)
+    const onComplete = vi.fn()
+
+    render(<Confetti isActive={false} onComplete={onComplete} />)
+    expect(onComplete).not.toHaveBeenCalled()
+
+    render(<ConfettiBurst x={50} y={50} isActive={false} onComplete={onComplete} />)
+    expect(onComplete).not.toHaveBeenCalled()
+  })
 })

@@ -140,34 +140,47 @@ export function MediaViewer({
     lastFocusedRef.current = document.activeElement
     viewerRef.current?.focus()
 
-    // viewerRef.current 以外のすべての body 直下要素（背景・親モーダル・ポータル）を inert / aria-hidden 化
+    // viewerRef.current 以外のすべての body 直下要素（背景・親モーダル・動的ポータル）を inert / aria-hidden 化
     const viewerElement = viewerRef.current
-    const restoredElements: Array<{
-      element: HTMLElement
-      originalInert: string | null
-      originalAriaHidden: string | null
-    }> = []
+    const modifiedElements = new Map<HTMLElement, { originalInert: string | null; originalAriaHidden: string | null }>()
 
-    const bodyChildren = Array.from(document.body.children)
-    for (const child of bodyChildren) {
+    const isolateNode = (node: Node) => {
       if (
-        child instanceof HTMLElement &&
-        child !== viewerElement &&
-        !child.contains(viewerElement) &&
-        !['SCRIPT', 'STYLE', 'LINK'].includes(child.tagName)
+        node instanceof HTMLElement &&
+        node !== viewerElement &&
+        !node.contains(viewerElement) &&
+        !['SCRIPT', 'STYLE', 'LINK'].includes(node.tagName)
       ) {
-        restoredElements.push({
-          element: child,
-          originalInert: child.getAttribute('inert'),
-          originalAriaHidden: child.getAttribute('aria-hidden'),
-        })
-        child.setAttribute('inert', '')
-        child.setAttribute('aria-hidden', 'true')
+        if (!modifiedElements.has(node)) {
+          modifiedElements.set(node, {
+            originalInert: node.getAttribute('inert'),
+            originalAriaHidden: node.getAttribute('aria-hidden'),
+          })
+          node.setAttribute('inert', '')
+          node.setAttribute('aria-hidden', 'true')
+        }
       }
     }
 
+    // 初期 body 直下要素を隔離
+    const bodyChildren = Array.from(document.body.children)
+    for (const child of bodyChildren) {
+      isolateNode(child)
+    }
+
+    // viewer マウント後に追加されたポータル／兄弟要素も動的に隔離
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const addedNode of Array.from(mutation.addedNodes)) {
+          isolateNode(addedNode)
+        }
+      }
+    })
+    observer.observe(document.body, { childList: true })
+
     return () => {
-      for (const { element, originalInert, originalAriaHidden } of restoredElements) {
+      observer.disconnect()
+      for (const [element, { originalInert, originalAriaHidden }] of modifiedElements) {
         if (originalInert !== null) {
           element.setAttribute('inert', originalInert)
         } else {

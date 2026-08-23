@@ -69,9 +69,14 @@ export default function Confetti({
   }, [isActive])
 
   useEffect(() => {
-    if (!isActive || prefersReducedMotion) {
+    if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
-      if (prefersReducedMotion && !completedRef.current) {
+      return () => cancelAnimationFrame(raf)
+    }
+
+    if (prefersReducedMotion) {
+      const raf = requestAnimationFrame(() => setPieces([]))
+      if (!completedRef.current) {
         completedRef.current = true
         onCompleteRef.current?.()
       }
@@ -84,21 +89,24 @@ export default function Confetti({
 
     let initialRaf: number | null = null
     let animationId: number | null = null
+    let currentPieces: ConfettiPiece[] = []
+    let lastTime = performance.now()
+    let isRunning = true
 
     // 初期状態のコンフェッティを生成
     initialRaf = requestAnimationFrame(() => {
-      setPieces(Array.from({ length: particleCount }, (_, i) => createPiece(i)))
-    })
+      if (!isRunning) return
+      currentPieces = Array.from({ length: particleCount }, (_, i) => createPiece(i))
+      setPieces(currentPieces)
 
-    // アニメーションループ
-    let lastTime = performance.now()
+      const step = (currentTime: number) => {
+        if (!isRunning) return
+        if (currentPieces.length === 0) return
 
-    const animate = (currentTime: number) => {
-      const deltaTime = (currentTime - lastTime) / 16.67 // 約60fps基準に正規化
-      lastTime = currentTime
+        const deltaTime = (currentTime - lastTime) / 16.67 // 約60fps基準に正規化
+        lastTime = currentTime
 
-      setPieces((prev) =>
-        prev
+        currentPieces = currentPieces
           .map((piece) => ({
             ...piece,
             x: piece.x + piece.velocityX * deltaTime * 0.5,
@@ -107,15 +115,23 @@ export default function Confetti({
             velocityY: piece.velocityY + 0.1 * deltaTime, // 重力
           }))
           .filter((piece) => piece.y < 120) // 画面外に落ちたピースを除去
-      )
 
-      animationId = requestAnimationFrame(animate)
-    }
+        setPieces(currentPieces)
 
-    animationId = requestAnimationFrame(animate)
+        if (isRunning && currentPieces.length > 0) {
+          animationId = requestAnimationFrame(step)
+        }
+      }
+
+      lastTime = performance.now()
+      if (isRunning && currentPieces.length > 0) {
+        animationId = requestAnimationFrame(step)
+      }
+    })
 
     // duration 経過後にアニメーションを停止
     const timeout = setTimeout(() => {
+      isRunning = false
       if (initialRaf !== null) cancelAnimationFrame(initialRaf)
       if (animationId !== null) cancelAnimationFrame(animationId)
       setPieces([])
@@ -126,6 +142,7 @@ export default function Confetti({
     }, duration)
 
     return () => {
+      isRunning = false
       if (initialRaf !== null) cancelAnimationFrame(initialRaf)
       if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
@@ -226,9 +243,14 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
   }, [isActive])
 
   useEffect(() => {
-    if (!isActive || prefersReducedMotion) {
+    if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
-      if (prefersReducedMotion && !completedRef.current) {
+      return () => cancelAnimationFrame(raf)
+    }
+
+    if (prefersReducedMotion) {
+      const raf = requestAnimationFrame(() => setPieces([]))
+      if (!completedRef.current) {
         completedRef.current = true
         onCompleteRef.current?.()
       }
@@ -241,9 +263,12 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
 
     let burstRaf: number | null = null
     let animationId: number | null = null
+    let currentPieces: ConfettiPiece[] = []
+    let isRunning = true
 
     burstRaf = requestAnimationFrame(() => {
-      const burstPieces: ConfettiPiece[] = Array.from({ length: 50 }, (_, i) => {
+      if (!isRunning) return
+      currentPieces = Array.from({ length: 50 }, (_, i) => {
         const angle = (i / 50) * Math.PI * 2
         const velocity = 5 + Math.random() * 10
         return {
@@ -259,13 +284,13 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
           shape: 'square',
         }
       })
-      setPieces(burstPieces)
-    })
+      setPieces(currentPieces)
 
-    const animate = () => {
-      setPieces((prev) => {
-        if (prev.length === 0) return prev
-        const nextPieces = prev
+      const step = () => {
+        if (!isRunning) return
+        if (currentPieces.length === 0) return
+
+        currentPieces = currentPieces
           .map((piece) => ({
             ...piece,
             x: piece.x + piece.velocityX,
@@ -276,16 +301,20 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
           }))
           .filter((piece) => piece.y < window.innerHeight + 50)
 
-        if (nextPieces.length > 0) {
-          animationId = requestAnimationFrame(animate)
-        }
-        return nextPieces
-      })
-    }
+        setPieces(currentPieces)
 
-    animationId = requestAnimationFrame(animate)
+        if (isRunning && currentPieces.length > 0) {
+          animationId = requestAnimationFrame(step)
+        }
+      }
+
+      if (isRunning && currentPieces.length > 0) {
+        animationId = requestAnimationFrame(step)
+      }
+    })
 
     const timeout = setTimeout(() => {
+      isRunning = false
       if (burstRaf !== null) cancelAnimationFrame(burstRaf)
       if (animationId !== null) cancelAnimationFrame(animationId)
       setPieces([])
@@ -296,6 +325,7 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     }, 3000)
 
     return () => {
+      isRunning = false
       if (burstRaf !== null) cancelAnimationFrame(burstRaf)
       if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
