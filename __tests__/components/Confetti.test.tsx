@@ -48,4 +48,27 @@ describe('Confetti and ConfettiBurst reduced-motion lifecycle', () => {
     rerender(<ConfettiBurst x={100} y={100} isActive={true} onComplete={onComplete} />)
     expect(onComplete).toHaveBeenCalledTimes(1)
   })
+
+  it('does not restart or duplicate onComplete when onComplete reference changes after timeout', () => {
+    vi.useFakeTimers()
+    try {
+      vi.spyOn(mediaQueryHooks, 'usePrefersReducedMotion').mockReturnValue(false)
+      const onComplete1 = vi.fn()
+      const { rerender } = render(<Confetti isActive={true} duration={1000} onComplete={onComplete1} />)
+
+      expect(onComplete1).not.toHaveBeenCalled()
+      vi.advanceTimersByTime(1000)
+      expect(onComplete1).toHaveBeenCalledTimes(1)
+
+      // 完了後に親が新しい onComplete 参照を渡して再レンダリング
+      const onComplete2 = vi.fn()
+      rerender(<Confetti isActive={true} duration={1000} onComplete={onComplete2} />)
+
+      // 新しいタイマーが進んでも onComplete2 は呼ばれず、再開しない
+      vi.advanceTimersByTime(1000)
+      expect(onComplete2).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

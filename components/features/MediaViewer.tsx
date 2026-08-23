@@ -110,27 +110,43 @@ export function MediaViewer({
     lastFocusedRef.current = document.activeElement
     viewerRef.current?.focus()
 
-    // 背後要素を inert / aria-hidden 化してアクセシビリティ上の脱出を防止
-    const mainEl = document.querySelector('main')
-    const originalInert = mainEl?.getAttribute('inert')
-    const originalAriaHidden = mainEl?.getAttribute('aria-hidden')
+    // viewerRef.current 以外のすべての body 直下要素（背景・親モーダル・ポータル）を inert / aria-hidden 化
+    const viewerElement = viewerRef.current
+    const restoredElements: Array<{
+      element: HTMLElement
+      originalInert: string | null
+      originalAriaHidden: string | null
+    }> = []
 
-    if (mainEl) {
-      mainEl.setAttribute('inert', '')
-      mainEl.setAttribute('aria-hidden', 'true')
+    const bodyChildren = Array.from(document.body.children)
+    for (const child of bodyChildren) {
+      if (
+        child instanceof HTMLElement &&
+        child !== viewerElement &&
+        !child.contains(viewerElement) &&
+        !['SCRIPT', 'STYLE', 'LINK'].includes(child.tagName)
+      ) {
+        restoredElements.push({
+          element: child,
+          originalInert: child.getAttribute('inert'),
+          originalAriaHidden: child.getAttribute('aria-hidden'),
+        })
+        child.setAttribute('inert', '')
+        child.setAttribute('aria-hidden', 'true')
+      }
     }
 
     return () => {
-      if (mainEl) {
-        if (originalInert !== null && originalInert !== undefined) {
-          mainEl.setAttribute('inert', originalInert)
+      for (const { element, originalInert, originalAriaHidden } of restoredElements) {
+        if (originalInert !== null) {
+          element.setAttribute('inert', originalInert)
         } else {
-          mainEl.removeAttribute('inert')
+          element.removeAttribute('inert')
         }
-        if (originalAriaHidden !== null && originalAriaHidden !== undefined) {
-          mainEl.setAttribute('aria-hidden', originalAriaHidden)
+        if (originalAriaHidden !== null) {
+          element.setAttribute('aria-hidden', originalAriaHidden)
         } else {
-          mainEl.removeAttribute('aria-hidden')
+          element.removeAttribute('aria-hidden')
         }
       }
       if (lastFocusedRef.current instanceof HTMLElement) {

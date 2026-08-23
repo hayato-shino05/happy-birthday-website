@@ -8,6 +8,15 @@ const MOCK_MESSAGES = [
 async function mockSupabaseRest(page: import('@playwright/test').Page, onPost?: (body: string) => void, withBroad = true) {
   // 広域ハンドラを先に、messages 固有を後に登録（Playwright は後登録が優先）
   if (withBroad) {
+    await page.route('**/*.supabase.co/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+    )
+    await page.route('**/storage/v1/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+    )
+    await page.route('**/auth/v1/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    )
     await page.route('**/rest/v1/**', (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
     )

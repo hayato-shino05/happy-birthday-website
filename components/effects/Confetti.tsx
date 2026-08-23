@@ -40,6 +40,11 @@ export default function Confetti({
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
   const prefersReducedMotion = usePrefersReducedMotion()
   const completedRef = useRef(false)
+  const onCompleteRef = useRef(onComplete)
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
 
   const createPiece = useCallback((id: number): ConfettiPiece => {
     const shapes: ConfettiPiece['shape'][] = ['square', 'circle', 'triangle', 'star']
@@ -72,8 +77,12 @@ export default function Confetti({
     if (prefersReducedMotion) {
       if (!completedRef.current) {
         completedRef.current = true
-        onComplete?.()
+        onCompleteRef.current?.()
       }
+      return
+    }
+
+    if (completedRef.current) {
       return
     }
 
@@ -116,7 +125,7 @@ export default function Confetti({
       setPieces([])
       if (!completedRef.current) {
         completedRef.current = true
-        onComplete?.()
+        onCompleteRef.current?.()
       }
     }, duration)
 
@@ -125,7 +134,7 @@ export default function Confetti({
       if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
-  }, [isActive, particleCount, duration, createPiece, onComplete, prefersReducedMotion])
+  }, [isActive, particleCount, duration, createPiece, prefersReducedMotion])
 
   // reduced-motion 時は描画もループも停止
   if (prefersReducedMotion) return null
@@ -208,6 +217,11 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
   const prefersReducedMotion = usePrefersReducedMotion()
   const completedRef = useRef(false)
+  const onCompleteRef = useRef(onComplete)
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
 
   useEffect(() => {
     if (!isActive) {
@@ -224,8 +238,12 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     if (prefersReducedMotion) {
       if (!completedRef.current) {
         completedRef.current = true
-        onComplete?.()
+        onCompleteRef.current?.()
       }
+      return
+    }
+
+    if (completedRef.current) {
       return
     }
 
@@ -278,7 +296,7 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
       setPieces([])
       if (!completedRef.current) {
         completedRef.current = true
-        onComplete?.()
+        onCompleteRef.current?.()
       }
     }, 3000)
 
@@ -287,7 +305,7 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
       if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
-  }, [isActive, x, y, onComplete, prefersReducedMotion])
+  }, [isActive, x, y, prefersReducedMotion])
 
   if (prefersReducedMotion || pieces.length === 0) return null
 

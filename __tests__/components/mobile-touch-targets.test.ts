@@ -68,6 +68,7 @@ describe('mobile fixed controls touch targets (scoped)', () => {
       "openModal('memoryGame')",
       "openModal('puzzleGame')",
       "openModal('calendar')",
+      "openModal('timeCapsule')",
     ]
 
     for (const action of sheetActions) {
