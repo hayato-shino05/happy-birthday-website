@@ -30,13 +30,21 @@ const defaultColors = [
   '#BB8FCE', '#85C1E9', '#F8B500', '#FF69B4',
 ]
 
-export default function Confetti({
+interface ConfettiAnimationConfig {
+  isActive: boolean
+  duration: number
+  onComplete?: () => void
+  createInitialPieces: () => ConfettiPiece[]
+  updatePieces: (pieces: ConfettiPiece[], deltaTime: number) => ConfettiPiece[]
+}
+
+function useConfettiAnimation({
   isActive,
-  duration = 5000,
-  particleCount = 150,
-  colors = defaultColors,
+  duration,
   onComplete,
-}: ConfettiProps) {
+  createInitialPieces,
+  updatePieces,
+}: ConfettiAnimationConfig) {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
   const prefersReducedMotion = usePrefersReducedMotion()
   const completedRef = useRef(false)
@@ -45,22 +53,6 @@ export default function Confetti({
   useEffect(() => {
     onCompleteRef.current = onComplete
   }, [onComplete])
-
-  const createPiece = useCallback((id: number): ConfettiPiece => {
-    const shapes: ConfettiPiece['shape'][] = ['square', 'circle', 'triangle', 'star']
-    return {
-      id,
-      x: Math.random() * 100,
-      y: -10,
-      rotation: Math.random() * 360,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      size: 8 + Math.random() * 8,
-      velocityX: (Math.random() - 0.5) * 4,
-      velocityY: 2 + Math.random() * 3,
-      rotationSpeed: (Math.random() - 0.5) * 10,
-      shape: shapes[Math.floor(Math.random() * shapes.length)],
-    }
-  }, [colors])
 
   useEffect(() => {
     if (!isActive) {
@@ -93,29 +85,19 @@ export default function Confetti({
     let lastTime = performance.now()
     let isRunning = true
 
-    // 初期状態のコンフェッティを生成
     initialRaf = requestAnimationFrame(() => {
       if (!isRunning) return
-      currentPieces = Array.from({ length: particleCount }, (_, i) => createPiece(i))
+      currentPieces = createInitialPieces()
       setPieces(currentPieces)
 
       const step = (currentTime: number) => {
         if (!isRunning) return
         if (currentPieces.length === 0) return
 
-        const deltaTime = (currentTime - lastTime) / 16.67 // 約60fps基準に正規化
+        const deltaTime = (currentTime - lastTime) / 16.67
         lastTime = currentTime
 
-        currentPieces = currentPieces
-          .map((piece) => ({
-            ...piece,
-            x: piece.x + piece.velocityX * deltaTime * 0.5,
-            y: piece.y + piece.velocityY * deltaTime * 0.5,
-            rotation: piece.rotation + piece.rotationSpeed * deltaTime,
-            velocityY: piece.velocityY + 0.1 * deltaTime, // 重力
-          }))
-          .filter((piece) => piece.y < 120) // 画面外に落ちたピースを除去
-
+        currentPieces = updatePieces(currentPieces, deltaTime)
         setPieces(currentPieces)
 
         if (isRunning && currentPieces.length > 0) {
@@ -129,7 +111,6 @@ export default function Confetti({
       }
     })
 
-    // duration 経過後にアニメーションを停止
     const timeout = setTimeout(() => {
       isRunning = false
       if (initialRaf !== null) cancelAnimationFrame(initialRaf)
@@ -147,7 +128,57 @@ export default function Confetti({
       if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
-  }, [isActive, particleCount, duration, createPiece, prefersReducedMotion])
+  }, [isActive, duration, createInitialPieces, updatePieces, prefersReducedMotion])
+
+  return { pieces, prefersReducedMotion }
+}
+
+export default function Confetti({
+  isActive,
+  duration = 5000,
+  particleCount = 150,
+  colors = defaultColors,
+  onComplete,
+}: ConfettiProps) {
+  const createPiece = useCallback((id: number): ConfettiPiece => {
+    const shapes: ConfettiPiece['shape'][] = ['square', 'circle', 'triangle', 'star']
+    return {
+      id,
+      x: Math.random() * 100,
+      y: -10,
+      rotation: Math.random() * 360,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: 8 + Math.random() * 8,
+      velocityX: (Math.random() - 0.5) * 4,
+      velocityY: 2 + Math.random() * 3,
+      rotationSpeed: (Math.random() - 0.5) * 10,
+      shape: shapes[Math.floor(Math.random() * shapes.length)],
+    }
+  }, [colors])
+
+  const createInitialPieces = useCallback(() => {
+    return Array.from({ length: particleCount }, (_, i) => createPiece(i))
+  }, [particleCount, createPiece])
+
+  const updatePieces = useCallback((current: ConfettiPiece[], deltaTime: number) => {
+    return current
+      .map((piece) => ({
+        ...piece,
+        x: piece.x + piece.velocityX * deltaTime * 0.5,
+        y: piece.y + piece.velocityY * deltaTime * 0.5,
+        rotation: piece.rotation + piece.rotationSpeed * deltaTime,
+        velocityY: piece.velocityY + 0.1 * deltaTime,
+      }))
+      .filter((piece) => piece.y < 120)
+  }, [])
+
+  const { pieces, prefersReducedMotion } = useConfettiAnimation({
+    isActive,
+    duration,
+    onComplete,
+    createInitialPieces,
+    updatePieces,
+  })
 
   // reduced-motion 時は描画もループも停止
   if (prefersReducedMotion) return null
@@ -227,110 +258,45 @@ interface ConfettiBurstProps {
 }
 
 export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps) {
-  const [pieces, setPieces] = useState<ConfettiPiece[]>([])
-  const prefersReducedMotion = usePrefersReducedMotion()
-  const completedRef = useRef(false)
-  const onCompleteRef = useRef(onComplete)
-
-  useEffect(() => {
-    onCompleteRef.current = onComplete
-  }, [onComplete])
-
-  useEffect(() => {
-    if (!isActive) {
-      completedRef.current = false
-    }
-  }, [isActive])
-
-  useEffect(() => {
-    if (!isActive) {
-      const raf = requestAnimationFrame(() => setPieces([]))
-      return () => cancelAnimationFrame(raf)
-    }
-
-    if (prefersReducedMotion) {
-      const raf = requestAnimationFrame(() => setPieces([]))
-      if (!completedRef.current) {
-        completedRef.current = true
-        onCompleteRef.current?.()
-      }
-      return () => cancelAnimationFrame(raf)
-    }
-
-    if (completedRef.current) {
-      return
-    }
-
-    let burstRaf: number | null = null
-    let animationId: number | null = null
-    let currentPieces: ConfettiPiece[] = []
-    let isRunning = true
-
-    burstRaf = requestAnimationFrame(() => {
-      if (!isRunning) return
-      currentPieces = Array.from({ length: 50 }, (_, i) => {
-        const angle = (i / 50) * Math.PI * 2
-        const velocity = 5 + Math.random() * 10
-        return {
-          id: i,
-          x,
-          y,
-          rotation: Math.random() * 360,
-          color: defaultColors[Math.floor(Math.random() * defaultColors.length)],
-          size: 6 + Math.random() * 6,
-          velocityX: Math.cos(angle) * velocity,
-          velocityY: Math.sin(angle) * velocity - 5,
-          rotationSpeed: (Math.random() - 0.5) * 15,
-          shape: 'square',
-        }
-      })
-      setPieces(currentPieces)
-
-      const step = () => {
-        if (!isRunning) return
-        if (currentPieces.length === 0) return
-
-        currentPieces = currentPieces
-          .map((piece) => ({
-            ...piece,
-            x: piece.x + piece.velocityX,
-            y: piece.y + piece.velocityY,
-            rotation: piece.rotation + piece.rotationSpeed,
-            velocityY: piece.velocityY + 0.5,
-            velocityX: piece.velocityX * 0.98,
-          }))
-          .filter((piece) => piece.y < window.innerHeight + 50)
-
-        setPieces(currentPieces)
-
-        if (isRunning && currentPieces.length > 0) {
-          animationId = requestAnimationFrame(step)
-        }
-      }
-
-      if (isRunning && currentPieces.length > 0) {
-        animationId = requestAnimationFrame(step)
+  const createInitialPieces = useCallback(() => {
+    return Array.from({ length: 50 }, (_, i) => {
+      const angle = (i / 50) * Math.PI * 2
+      const velocity = 5 + Math.random() * 10
+      return {
+        id: i,
+        x,
+        y,
+        rotation: Math.random() * 360,
+        color: defaultColors[Math.floor(Math.random() * defaultColors.length)],
+        size: 6 + Math.random() * 6,
+        velocityX: Math.cos(angle) * velocity,
+        velocityY: Math.sin(angle) * velocity - 5,
+        rotationSpeed: (Math.random() - 0.5) * 15,
+        shape: 'square' as const,
       }
     })
+  }, [x, y])
 
-    const timeout = setTimeout(() => {
-      isRunning = false
-      if (burstRaf !== null) cancelAnimationFrame(burstRaf)
-      if (animationId !== null) cancelAnimationFrame(animationId)
-      setPieces([])
-      if (!completedRef.current) {
-        completedRef.current = true
-        onCompleteRef.current?.()
-      }
-    }, 3000)
+  const updatePieces = useCallback((current: ConfettiPiece[]) => {
+    return current
+      .map((piece) => ({
+        ...piece,
+        x: piece.x + piece.velocityX,
+        y: piece.y + piece.velocityY,
+        rotation: piece.rotation + piece.rotationSpeed,
+        velocityY: piece.velocityY + 0.5,
+        velocityX: piece.velocityX * 0.98,
+      }))
+      .filter((piece) => piece.y < window.innerHeight + 50)
+  }, [])
 
-    return () => {
-      isRunning = false
-      if (burstRaf !== null) cancelAnimationFrame(burstRaf)
-      if (animationId !== null) cancelAnimationFrame(animationId)
-      clearTimeout(timeout)
-    }
-  }, [isActive, x, y, prefersReducedMotion])
+  const { pieces, prefersReducedMotion } = useConfettiAnimation({
+    isActive,
+    duration: 3000,
+    onComplete,
+    createInitialPieces,
+    updatePieces,
+  })
 
   if (prefersReducedMotion || pieces.length === 0) return null
 
