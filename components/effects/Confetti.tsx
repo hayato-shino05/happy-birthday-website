@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { usePrefersReducedMotion } from '@/lib/hooks/useMediaQuery'
 
 interface ConfettiPiece {
@@ -39,13 +39,14 @@ export default function Confetti({
 }: ConfettiProps) {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
   const prefersReducedMotion = usePrefersReducedMotion()
+  const wasActiveRef = useRef(false)
 
   const createPiece = useCallback((id: number): ConfettiPiece => {
     const shapes: ConfettiPiece['shape'][] = ['square', 'circle', 'triangle', 'star']
     return {
       id,
       x: Math.random() * 100,
-      y: -10 - Math.random() * 20,
+      y: -10,
       rotation: Math.random() * 360,
       color: colors[Math.floor(Math.random() * colors.length)],
       size: 8 + Math.random() * 8,
@@ -58,11 +59,13 @@ export default function Confetti({
 
   useEffect(() => {
     if (prefersReducedMotion) {
-      if (isActive) {
+      if (isActive && !wasActiveRef.current) {
         onComplete?.()
       }
+      wasActiveRef.current = isActive
       return
     }
+    wasActiveRef.current = isActive
 
     if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
@@ -196,14 +199,17 @@ interface ConfettiBurstProps {
 export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps) {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
   const prefersReducedMotion = usePrefersReducedMotion()
+  const wasActiveRef = useRef(false)
 
   useEffect(() => {
     if (prefersReducedMotion) {
-      if (isActive) {
+      if (isActive && !wasActiveRef.current) {
         onComplete?.()
       }
+      wasActiveRef.current = isActive
       return
     }
+    wasActiveRef.current = isActive
 
     if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
@@ -234,8 +240,9 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     })
 
     const animate = () => {
-      setPieces((prev) =>
-        prev
+      setPieces((prev) => {
+        if (prev.length === 0) return prev
+        return prev
           .map((piece) => ({
             ...piece,
             x: piece.x + piece.velocityX,
@@ -245,11 +252,9 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
             velocityX: piece.velocityX * 0.98,
           }))
           .filter((piece) => piece.y < window.innerHeight + 50)
-      )
+      })
 
-      if (pieces.length > 0) {
-        animationId = requestAnimationFrame(animate)
-      }
+      animationId = requestAnimationFrame(animate)
     }
 
     animationId = requestAnimationFrame(animate)
@@ -266,7 +271,7 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
       if (animationId) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
-  }, [isActive, x, y, onComplete, prefersReducedMotion, pieces.length])
+  }, [isActive, x, y, onComplete, prefersReducedMotion])
 
   if (prefersReducedMotion || pieces.length === 0) return null
 

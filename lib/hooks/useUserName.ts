@@ -1,13 +1,25 @@
 'use client'
 
-import { useState, useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 
 const STORAGE_KEY = 'birthday_user_name'
 
+const listeners = new Set<() => void>()
+
+function emitChange() {
+  for (const listener of listeners) {
+    listener()
+  }
+}
+
 function subscribe(callback: () => void) {
   if (typeof window === 'undefined') return () => {}
+  listeners.add(callback)
   window.addEventListener('storage', callback)
-  return () => window.removeEventListener('storage', callback)
+  return () => {
+    listeners.delete(callback)
+    window.removeEventListener('storage', callback)
+  }
 }
 
 function getSnapshot() {
@@ -24,15 +36,12 @@ function getServerSnapshot() {
 }
 
 export function useUserName() {
-  const storedName = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
-  const [localOverride, setLocalOverride] = useState<string | null>(null)
+  const userName = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
   )
-
-  const userName = localOverride !== null ? localOverride : storedName
 
   // localStorageに保存
   const setUserName = useCallback((name: string) => {
@@ -41,7 +50,7 @@ export function useUserName() {
       try {
         localStorage.setItem(STORAGE_KEY, trimmed)
       } catch {}
-      setLocalOverride(trimmed)
+      emitChange()
     }
   }, [])
 
@@ -50,7 +59,7 @@ export function useUserName() {
     try {
       localStorage.removeItem(STORAGE_KEY)
     } catch {}
-    setLocalOverride('')
+    emitChange()
   }, [])
 
   return {

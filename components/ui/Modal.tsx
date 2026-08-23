@@ -124,6 +124,14 @@ export default function Modal({
     }
 
     return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+        closeTimeoutRef.current = null
+      }
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current)
+        focusTimeoutRef.current = null
+      }
       document.removeEventListener('keydown', handleEscape)
       document.removeEventListener('keydown', handleTab)
       document.body.style.overflow = ''

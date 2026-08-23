@@ -236,15 +236,6 @@ function getSupportedVideoMimeType(): string | undefined {
     }
   }, [])
 
-  // フォーカス位置に依存しないよう、document レベルでも Escape を処理する
-  useEffect(() => {
-    const handleDocumentEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose()
-    }
-    document.addEventListener('keydown', handleDocumentEscape)
-    return () => document.removeEventListener('keydown', handleDocumentEscape)
-  }, [handleClose])
-
   // Tab キーによるダイアログ内のフォーカストラップ
   useEffect(() => {
     const handleTab = (e: KeyboardEvent) => {
@@ -256,7 +247,7 @@ function getSupportedVideoMimeType(): string | undefined {
       const firstElement = focusableElements[0] as HTMLElement
       const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
 
-      if (e.shiftKey && document.activeElement === firstElement) {
+      if (e.shiftKey && (document.activeElement === firstElement || document.activeElement === containerRef.current)) {
         e.preventDefault()
         lastElement?.focus()
       } else if (!e.shiftKey && document.activeElement === lastElement) {

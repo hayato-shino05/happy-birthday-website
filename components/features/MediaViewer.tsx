@@ -122,13 +122,13 @@ export function MediaViewer({
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== 'Tab' || !viewerRef.current) return
       const focusableElements = viewerRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])'
       )
       if (focusableElements.length === 0) return
       const firstElement = focusableElements[0] as HTMLElement
       const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
 
-      if (e.shiftKey && document.activeElement === firstElement) {
+      if (e.shiftKey && (document.activeElement === firstElement || document.activeElement === viewerRef.current)) {
         e.preventDefault()
         lastElement?.focus()
       } else if (!e.shiftKey && document.activeElement === lastElement) {

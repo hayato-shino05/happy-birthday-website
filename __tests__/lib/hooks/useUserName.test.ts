@@ -40,4 +40,20 @@ describe('useUserName', () => {
     expect(result.current.hasUserName).toBe(false)
     expect(localStorage.getItem('birthday_user_name')).toBeNull()
   })
+
+  it('updates userName on subsequent storage event even after setUserName in same tab', () => {
+    const { result } = renderHook(() => useUserName())
+
+    act(() => {
+      result.current.setUserName('ローカル太郎')
+    })
+    expect(result.current.userName).toBe('ローカル太郎')
+
+    act(() => {
+      localStorage.setItem('birthday_user_name', '別タブ次郎')
+      window.dispatchEvent(new StorageEvent('storage', { key: 'birthday_user_name', newValue: '別タブ次郎' }))
+    })
+
+    expect(result.current.userName).toBe('別タブ次郎')
+  })
 })

@@ -23,31 +23,61 @@ interface UIState {
 
 // モーダルを開く直前にフォーカスされていた要素（閉じた際の復元先）
 let lastModalTrigger: HTMLElement | null = null
+let restoreRafId: number | null = null
+
+function isVisible(el: HTMLElement): boolean {
+  if (!el.isConnected || el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') {
+    return false
+  }
+  if (el.style.display === 'none' || el.style.visibility === 'hidden') {
+    return false
+  }
+  return true
+}
+
+function findVisibleFallback(): HTMLElement | null {
+  if (typeof document === 'undefined') return null
+  const candidates = document.querySelectorAll<HTMLElement>(
+    'header button:not([disabled]), nav button:not([disabled]), .mobile-game-toggle:not([disabled]), main button:not([disabled])'
+  )
+  for (let i = 0; i < candidates.length; i++) {
+    const el = candidates[i]
+    if (isVisible(el)) return el
+  }
+  return null
+}
 
 // モーダル unmount 後にトリガーへフォーカスを返す共有ライフサイクル。
 // 個別モーダル側の restore が unmount 順序で失敗しても、ここで最終保証する。
 function restoreTriggerFocus(): void {
   if (typeof window === 'undefined') return
-  requestAnimationFrame(() => {
+  if (restoreRafId !== null) {
+    cancelAnimationFrame(restoreRafId)
+  }
+  restoreRafId = requestAnimationFrame(() => {
+    restoreRafId = null
     const active = document.activeElement
     if (active === document.body || active === null) {
-      if (lastModalTrigger?.isConnected) {
+      if (lastModalTrigger && isVisible(lastModalTrigger)) {
         lastModalTrigger.focus()
       } else {
-        // トリガー要素が unmount された場合（モバイルメニュー等）、永続的なナビゲーションボタンへ安全にフォールバック
-        const fallback = document.querySelector(
-          'header button:not([disabled]), nav button:not([disabled]), .mobile-game-toggle:not([disabled]), main button:not([disabled])'
-        ) as HTMLElement | null
+        // トリガー要素が unmount/非表示化された場合（モバイルメニュー等）、永続的かつ可視なナビゲーションボタンへ安全にフォールバック
+        const fallback = findVisibleFallback()
         fallback?.focus()
       }
     }
   })
 }
 
-export const useUIStore = create<UIState>((set) => ({
+export const useUIStore = create<UIState>((set, get) => ({
   activeModal: null,
   openModal: (modal) => {
-    if (typeof document !== 'undefined') {
+    if (restoreRafId !== null) {
+      cancelAnimationFrame(restoreRafId)
+      restoreRafId = null
+    }
+    // 最初のモーダル展開時のみページ上の起動元トリガーを記録（モーダル間直接遷移時は元のトリガーを維持）
+    if (typeof document !== 'undefined' && get().activeModal === null) {
       lastModalTrigger =
         document.activeElement instanceof HTMLElement ? document.activeElement : null
     }

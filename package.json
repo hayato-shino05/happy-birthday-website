@@ -9,6 +9,7 @@
     "predev": "npm run generate:data",
     "prebuild": "npm run generate:data",
     "pretest": "node scripts/generate-data-manifest.mjs --check",
+    "pretypecheck": "npm run generate:data",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

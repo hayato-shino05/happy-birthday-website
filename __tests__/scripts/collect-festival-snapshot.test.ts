@@ -192,6 +192,7 @@ describe('collectSnapshot', () => {
     execFileSync(process.execPath, args)
 
     const allowlist = JSON.parse(readFileSync(allowlistOutput, 'utf8'))
+    const openSource = JSON.parse(readFileSync(openSourceOutput, 'utf8'))
     expect(JSON.parse(readFileSync(productionOutput, 'utf8'))).not.toHaveProperty('stale')
     expect(allowlist.allowedPathScopes).toEqual(['data/festivals/', 'data/i18n/'])
     expect(allowlist.integrationPaths).toEqual(['data/festivals/jp/ja.json', 'data/i18n/ja.json'])
@@ -199,7 +200,8 @@ describe('collectSnapshot', () => {
     expect(allowlist.allowedPaths).not.toContain('data/festivals/jp/notes.txt')
     expect(allowlist.excludedPaths.dirty).not.toContain('data/festivals/jp/ja.json')
     expect(allowlist.excludedPaths.supabase).toContain('supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql')
-    expect(allowlist.integrationPaths).not.toContain('supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql')
+    expect(openSource.files.excluded).toContain('supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql')
+    expect(openSource.files.reasons['supabase/migrations/20260812163000_reset_and_create_anonymous_community.sql']).toBe('Supabase 設定とスキーマ')
 
     writeFileSync(productionOutput, '{"keep":true}\n')
     const failingArgs = withOption(args, '--production-commit', 'missing-commit')

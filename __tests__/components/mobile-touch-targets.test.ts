@@ -9,16 +9,70 @@ const source = readFileSync(
   'utf8',
 )
 
-describe('mobile fixed controls touch targets', () => {
-  it('keeps the raised 44px hit-area classes', () => {
-    const hits = source.match(/min-(?:w|h)-\[44px\]|min-h-\[48px\]|min-w-\[50px\]/g) ?? []
-    // ドック5ボタン＋カプセル3＋シートClose＋シェア5 の最低ライン
-    expect(hits.length).toBeGreaterThanOrEqual(12)
+describe('mobile fixed controls touch targets (scoped)', () => {
+  it('ensures all 5 main bottom dock navigation buttons meet 48px target', () => {
+    const dockButtons = [
+      "openModal('album')",
+      "openModal('message')",
+      "openModal('bulletin')",
+      "openModal('chat')",
+      "setShowMenuSheet(!showMenuSheet)",
+    ]
+
+    for (const action of dockButtons) {
+      const idx = source.indexOf(action)
+      expect(idx, `Missing dock action: ${action}`).toBeGreaterThanOrEqual(0)
+      const buttonStart = source.lastIndexOf('<button', idx)
+      const buttonEnd = source.indexOf('</button>', idx)
+      const buttonChunk = source.slice(buttonStart, buttonEnd + 9)
+      expect(buttonChunk).toMatch(/min-h-\[48px\]/)
+      expect(buttonChunk).toMatch(/min-w-\[50px\]/)
+    }
   })
 
-  it('ensures fixed navigation controls have sufficient touch target sizing', () => {
-    // 固定ドックおよびコントロールボタンに min-h-[44px] または min-h-[48px] が設定されていることを検証
-    const touchTargetClasses = source.match(/min-h-\[(?:44|48)px\]/g) ?? []
-    expect(touchTargetClasses.length).toBeGreaterThanOrEqual(8)
+  it('ensures music capsule player controls meet >=44px target', () => {
+    const musicControls = [
+      "aria-label={t('selectMusic')}",
+      "aria-label={t('previousTrack')}",
+      "aria-label={isPlaying ? t('pause') : t('play')}",
+      "aria-label={t('nextTrack')}",
+    ]
+
+    for (const label of musicControls) {
+      const idx = source.indexOf(label)
+      expect(idx, `Missing player control: ${label}`).toBeGreaterThanOrEqual(0)
+      const buttonStart = source.lastIndexOf('<button', idx)
+      const buttonEnd = source.indexOf('</button>', idx)
+      const buttonChunk = source.slice(buttonStart, buttonEnd + 9)
+      expect(buttonChunk).toMatch(/min-h-\[44px\]/)
+    }
+  })
+
+  it('ensures sheet close and modal trigger buttons meet >=44px / >=48px target', () => {
+    const sheetCloseIdx = source.indexOf("aria-label={t('close')}")
+    expect(sheetCloseIdx).toBeGreaterThanOrEqual(0)
+    const closeStart = source.lastIndexOf('<button', sheetCloseIdx)
+    const closeEnd = source.indexOf('</button>', sheetCloseIdx)
+    const closeChunk = source.slice(closeStart, closeEnd + 9)
+    expect(closeChunk).toMatch(/min-h-\[44px\]/)
+    expect(closeChunk).toMatch(/min-w-\[44px\]/)
+
+    const sheetActions = [
+      "openModal('omikuji')",
+      "openModal('flashback')",
+      "openModal('quiz')",
+      "openModal('memoryGame')",
+      "openModal('puzzleGame')",
+      "openModal('calendar')",
+    ]
+
+    for (const action of sheetActions) {
+      const idx = source.indexOf(action)
+      expect(idx, `Missing sheet action: ${action}`).toBeGreaterThanOrEqual(0)
+      const buttonStart = source.lastIndexOf('<button', idx)
+      const buttonEnd = source.indexOf('</button>', idx)
+      const buttonChunk = source.slice(buttonStart, buttonEnd + 9)
+      expect(buttonChunk).toMatch(/min-h-\[48px\]/)
+    }
   })
 })

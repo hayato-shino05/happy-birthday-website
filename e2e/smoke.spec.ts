@@ -49,6 +49,7 @@ test.describe('home shell smoke', () => {
     await page.getByRole('button', { name: /VIEW MEMORY ALBUM|思い出アルバム/ }).first().click()
     const dialog = page.locator('[role="dialog"]').first()
     await expect(dialog).toBeVisible()
+    await expect(dialog.locator(':focus')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(dialog).not.toBeVisible()
   })
@@ -74,7 +75,7 @@ test.describe('home shell smoke', () => {
   test('camera capture exposes dialog semantics and Escape closes it', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: /SEND WISHES|お祝いメッセージ/ }).first().click()
-    await page.getByRole('button', { name: /Take video|ビデオを撮る/ }).first().click()
+    await page.getByRole('button', { name: /Record Video|ビデオを撮る/ }).first().click()
     const captureDialog = page.getByRole('dialog', { name: /Record Video|ビデオを撮る/ })
     await expect(captureDialog).toBeVisible()
     await page.keyboard.press('Escape')

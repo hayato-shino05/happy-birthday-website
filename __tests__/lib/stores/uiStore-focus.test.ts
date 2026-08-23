@@ -71,4 +71,48 @@ describe('uiStore modal focus lifecycle', () => {
 
     expect(document.activeElement).toBe(navButton)
   })
+
+  it('preserves initial page trigger when transitioning directly between modals', async () => {
+    const pageTrigger = document.createElement('button')
+    document.body.appendChild(pageTrigger)
+    pageTrigger.focus()
+
+    act(() => useUIStore.getState().openModal('album'))
+
+    // モーダルA内部のボタンにフォーカスがある状態でモーダルBへ直接遷移
+    const modalInnerButton = document.createElement('button')
+    document.body.appendChild(modalInnerButton)
+    modalInnerButton.focus()
+
+    act(() => useUIStore.getState().openModal('message'))
+
+    // モーダルBを閉じた際、モーダル内部ボタンではなく最初のページトリガーへ復元されること
+    modalInnerButton.remove()
+    act(() => useUIStore.getState().closeModal())
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+
+    expect(document.activeElement).toBe(pageTrigger)
+  })
+
+  it('skips disabled or hidden fallback buttons', async () => {
+    const nav = document.createElement('nav')
+    const disabledButton = document.createElement('button')
+    disabledButton.setAttribute('disabled', 'true')
+    const hiddenButton = document.createElement('button')
+    hiddenButton.style.display = 'none'
+    const visibleButton = document.createElement('button')
+    nav.append(disabledButton, hiddenButton, visibleButton)
+
+    const trigger = document.createElement('button')
+    document.body.append(nav, trigger)
+    trigger.focus()
+
+    act(() => useUIStore.getState().openModal('album'))
+    trigger.remove()
+
+    act(() => useUIStore.getState().closeModal())
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+
+    expect(document.activeElement).toBe(visibleButton)
+  })
 })
