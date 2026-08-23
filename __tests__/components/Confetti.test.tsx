@@ -80,4 +80,34 @@ describe('Confetti and ConfettiBurst reduced-motion lifecycle', () => {
     render(<ConfettiBurst x={50} y={50} isActive={false} onComplete={onComplete} />)
     expect(onComplete).not.toHaveBeenCalled()
   })
+
+  it('does not reset timer or duplicate onComplete when props change mid-flight', () => {
+    vi.useFakeTimers()
+    try {
+      vi.spyOn(mediaQueryHooks, 'usePrefersReducedMotion').mockReturnValue(false)
+      const onComplete = vi.fn()
+      const { rerender } = render(
+        <Confetti isActive={true} particleCount={100} duration={1000} colors={['#FF0000']} onComplete={onComplete} />
+      )
+
+      // 500ms 経過（アニメーション実行中）
+      vi.advanceTimersByTime(500)
+      expect(onComplete).not.toHaveBeenCalled()
+
+      // 実行中にコールバック・依存プロパティ（colors, particleCount）の参照が変更される
+      rerender(
+        <Confetti isActive={true} particleCount={200} duration={1000} colors={['#00FF00', '#0000FF']} onComplete={onComplete} />
+      )
+
+      // タイマーがリセットされずに当初の残り 500ms（合計 1000ms）で完了すること
+      vi.advanceTimersByTime(500)
+      expect(onComplete).toHaveBeenCalledTimes(1)
+
+      // さらなる時間経過で重複発火しないこと
+      vi.advanceTimersByTime(1000)
+      expect(onComplete).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

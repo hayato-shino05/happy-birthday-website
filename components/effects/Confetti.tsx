@@ -49,10 +49,25 @@ function useConfettiAnimation({
   const prefersReducedMotion = usePrefersReducedMotion()
   const completedRef = useRef(false)
   const onCompleteRef = useRef(onComplete)
+  const createInitialPiecesRef = useRef(createInitialPieces)
+  const updatePiecesRef = useRef(updatePieces)
+  const durationRef = useRef(duration)
 
   useEffect(() => {
     onCompleteRef.current = onComplete
   }, [onComplete])
+
+  useEffect(() => {
+    createInitialPiecesRef.current = createInitialPieces
+  }, [createInitialPieces])
+
+  useEffect(() => {
+    updatePiecesRef.current = updatePieces
+  }, [updatePieces])
+
+  useEffect(() => {
+    durationRef.current = duration
+  }, [duration])
 
   useEffect(() => {
     if (!isActive) {
@@ -87,7 +102,7 @@ function useConfettiAnimation({
 
     initialRaf = requestAnimationFrame(() => {
       if (!isRunning) return
-      currentPieces = createInitialPieces()
+      currentPieces = createInitialPiecesRef.current()
       setPieces(currentPieces)
 
       const step = (currentTime: number) => {
@@ -97,7 +112,7 @@ function useConfettiAnimation({
         const deltaTime = (currentTime - lastTime) / 16.67
         lastTime = currentTime
 
-        currentPieces = updatePieces(currentPieces, deltaTime)
+        currentPieces = updatePiecesRef.current(currentPieces, deltaTime)
         setPieces(currentPieces)
 
         if (isRunning && currentPieces.length > 0) {
@@ -120,7 +135,7 @@ function useConfettiAnimation({
         completedRef.current = true
         onCompleteRef.current?.()
       }
-    }, duration)
+    }, durationRef.current)
 
     return () => {
       isRunning = false
@@ -128,7 +143,7 @@ function useConfettiAnimation({
       if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
-  }, [isActive, duration, createInitialPieces, updatePieces, prefersReducedMotion])
+  }, [isActive, prefersReducedMotion])
 
   return { pieces, prefersReducedMotion }
 }
