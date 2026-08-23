@@ -56,7 +56,7 @@ export function MobileBottomDock() {
         window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer')
         break
       case 'line':
-        window.open(buildLineShareUrl(t('happyBirthday'), shareText, shareUrl), '_blank', 'noopener,noreferrer')
+        window.open(buildLineShareUrl('', shareText, shareUrl), '_blank', 'noopener,noreferrer')
         break
       case 'copy':
         if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
