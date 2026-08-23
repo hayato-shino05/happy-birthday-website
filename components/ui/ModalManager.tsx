@@ -141,7 +141,7 @@ export function ModalManager() {
     },
     timeCapsule: {
       title: t('timeCapsuleTitle'),
-      content: <TimeCapsule onClose={closeModal} />,
+      content: <TimeCapsule />,
       size: 'md' as const,
     },
   }

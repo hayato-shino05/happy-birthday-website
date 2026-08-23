@@ -5,7 +5,7 @@ import { getSupabase } from '@/lib/supabase/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
-interface CapsuleItem {
+export interface CapsuleItem {
   id: string | number
   sender: string
   recipient?: string
@@ -16,20 +16,102 @@ interface CapsuleItem {
   isUnlocked: boolean
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isValidDateValue(value: string): boolean {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+  }
+
+  return !Number.isNaN(new Date(value).getTime())
+}
+
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // ローカル日付文字列（YYYY-MM-DD）をローカル時間 00:00:00 の Date オブジェクトに変換
 function parseLocalDate(dateStr: string): Date {
   const parts = dateStr.split('-').map(Number)
-  if (parts.length === 3) {
+  if (parts.length === 3 && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     return new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0)
   }
   return new Date(dateStr)
 }
 
+function parseCapsuleItem(
+  value: unknown,
+  now: Date,
+  format: 'remote' | 'local'
+): CapsuleItem | null {
+  if (!isRecord(value)) return null
+
+  const id = value.id
+  const sender = value.sender
+  const message = value.message
+  const unlockDate = format === 'remote' ? value.unlock_date : value.unlockDate
+  const createdAt = format === 'remote' ? value.created_at : value.createdAt
+  const recipient = value.recipient
+  const photoUrl = format === 'remote' ? value.photo_url : value.photoUrl
+
+  if (
+    !(typeof id === 'string' || typeof id === 'number') ||
+    typeof sender !== 'string' ||
+    (typeof message !== 'string' && message !== null && message !== undefined) ||
+    typeof unlockDate !== 'string' ||
+    typeof createdAt !== 'string' ||
+    !isValidDateValue(unlockDate) ||
+    Number.isNaN(new Date(createdAt).getTime()) ||
+    (recipient !== undefined && recipient !== null && typeof recipient !== 'string') ||
+    (photoUrl !== undefined && photoUrl !== null && typeof photoUrl !== 'string')
+  ) {
+    return null
+  }
+
+  const isUnlocked = parseLocalDate(unlockDate) <= now
+  if (
+    (format === 'local' && typeof message !== 'string') ||
+    (format === 'remote' && isUnlocked && typeof message !== 'string')
+  ) {
+    return null
+  }
+
+  return {
+    id,
+    sender,
+    recipient: recipient || undefined,
+    message: isUnlocked && typeof message === 'string' ? message : '',
+    photoUrl: isUnlocked && typeof photoUrl === 'string' ? photoUrl : undefined,
+    unlockDate,
+    createdAt,
+    isUnlocked,
+  }
+}
+
+export function parseRemoteCapsule(value: unknown, now = new Date()): CapsuleItem | null {
+  return parseCapsuleItem(value, now, 'remote')
+}
+
+export function parseLocalCapsules(value: unknown, now = new Date()): CapsuleItem[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((item) => parseCapsuleItem(item, now, 'local'))
+    .filter((item): item is CapsuleItem => item !== null)
+}
+
 // 未来の記念日に届くタイムカプセルコンポーネント
-export function TimeCapsule({ onClose }: { onClose?: () => void }) {
+export function TimeCapsule() {
   const { t, language } = useLanguage()
   const [capsules, setCapsules] = useState<CapsuleItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [activeTab, setActiveTab] = useState<'view' | 'create'>('view')
 
   // 作成フォームの状態
@@ -49,89 +131,87 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const isMountedRef = useRef(true)
+  const refreshInFlightRef = useRef(false)
 
   // タイムカプセル一覧の取得およびローカル保存データの統合
   const fetchCapsules = async () => {
+    if (!isMountedRef.current || refreshInFlightRef.current) return
+    refreshInFlightRef.current = true
     setLoading(true)
+    setLoadError(false)
     try {
       const supabase = getSupabase()
       const now = new Date()
+      const today = formatLocalDate(now)
 
-      const { data, error } = await supabase
+      const openedQuery = supabase
         .from('time_capsules')
-        .select('*')
+        .select('id,sender,recipient,message,photo_url,unlock_date,created_at')
+        .lte('unlock_date', today)
         .order('unlock_date', { ascending: true })
+      const sealedQuery = supabase
+        .from('time_capsules')
+        .select('id,sender,recipient,unlock_date,created_at')
+        .gt('unlock_date', today)
+        .order('unlock_date', { ascending: true })
+      const [openedResult, sealedResult] = await Promise.all([openedQuery, sealedQuery])
+
+      const openedData = openedResult.data || []
+      const sealedData = sealedResult.data || []
+      const data = [
+        ...openedData.map((capsule) => ({ ...capsule, message: capsule.message, photo_url: capsule.photo_url })),
+        ...sealedData.map((capsule) => ({ ...capsule, message: null, photo_url: null })),
+      ]
+      const queryError = openedResult.error || sealedResult.error
 
       // ローカルストレージフォールバックデータの取得
       let localCapsules: CapsuleItem[] = []
       try {
         const localSaved = localStorage.getItem('local_time_capsules')
         if (localSaved) {
-          localCapsules = JSON.parse(localSaved) as CapsuleItem[]
+          localCapsules = parseLocalCapsules(JSON.parse(localSaved), now)
         }
       } catch {
         localCapsules = []
       }
 
-      let remoteCapsules: CapsuleItem[] = []
-      if (!error && data) {
-        remoteCapsules = data.map((c: any) => {
-          const unlockTime = parseLocalDate(c.unlock_date)
-          const isUnlocked = unlockTime <= now
-          return {
-            id: c.id,
-            sender: c.sender,
-            recipient: c.recipient,
-            // 未開封時は内容を秘匿化
-            message: isUnlocked ? c.message : '',
-            photoUrl: isUnlocked ? c.photo_url : undefined,
-            unlockDate: c.unlock_date,
-            createdAt: c.created_at,
-            isUnlocked,
-          }
-        })
-      }
+      const remoteCapsules = data
+        .map((capsule) => parseRemoteCapsule(capsule, now))
+        .filter((capsule): capsule is CapsuleItem => capsule !== null)
 
       // リモートとローカルの統合（ID重複を排除）
       const remoteIds = new Set(remoteCapsules.map((c) => String(c.id)))
-      const unmergedLocal = localCapsules
-        .filter((c) => !remoteIds.has(String(c.id)))
-        .map((c) => {
-          const unlockTime = parseLocalDate(c.unlockDate)
-          const isUnlocked = unlockTime <= now
-          return {
-            ...c,
-            isUnlocked,
-            message: isUnlocked ? c.message : '',
-            photoUrl: isUnlocked ? c.photoUrl : undefined,
-          }
-        })
+      const unmergedLocal = localCapsules.filter((c) => !remoteIds.has(String(c.id)))
 
       const combined = [...remoteCapsules, ...unmergedLocal].sort(
         (a, b) => parseLocalDate(a.unlockDate).getTime() - parseLocalDate(b.unlockDate).getTime()
       )
 
+      if (!isMountedRef.current) return
+      setLoadError(Boolean(queryError) && combined.length === 0)
       setCapsules(combined)
     } catch {
+      if (!isMountedRef.current) return
+      setLoadError(true)
       setCapsules([])
     } finally {
-      setLoading(false)
+      refreshInFlightRef.current = false
+      if (isMountedRef.current) setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchCapsules()
-    // 定期的に開封状態を再計算
+    isMountedRef.current = true
+    void fetchCapsules()
     const interval = setInterval(() => {
-      setCapsules((prev) =>
-        prev.map((c) => ({
-          ...c,
-          isUnlocked: parseLocalDate(c.unlockDate) <= new Date(),
-        }))
-      )
+      void fetchCapsules()
     }, 30000)
 
-    return () => clearInterval(interval)
+    return () => {
+      isMountedRef.current = false
+      clearInterval(interval)
+    }
   }, [])
 
   // タイムカプセルの封印処理
@@ -243,6 +323,17 @@ export function TimeCapsule({ onClose }: { onClose?: () => void }) {
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <div className="w-8 h-8 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin" />
               <span className="text-xs text-[#854D27]/80">{t('loading')}</span>
+            </div>
+          ) : loadError && capsules.length === 0 ? (
+            <div className="text-center py-12 bg-[#FFF9F3] border-2 border-dashed border-red-200 rounded-2xl p-6">
+              <p className="text-xs text-red-600 mb-4">{t('genericError')}</p>
+              <button
+                type="button"
+                onClick={fetchCapsules}
+                className="px-4 py-2 rounded-xl bg-[#854D27] text-[#FFF9F3] text-xs font-bold hover:brightness-110 transition-all cursor-pointer"
+              >
+                {t('retry')}
+              </button>
             </div>
           ) : capsules.length > 0 ? (
             <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
