@@ -243,10 +243,9 @@ describe('TimeCapsule', () => {
       fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
       fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
 
-      await act(async () => {
-        fireEvent.submit(container.querySelector('form') as HTMLFormElement)
-        await Promise.resolve()
-        await Promise.resolve()
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await vi.waitFor(() => {
+        expect(screen.getByText('sealedSuccess')).toBeTruthy()
       })
 
       const saved = JSON.parse(localStorage.getItem('local_time_capsules') || '[]') as Array<{ sender: string; message: string }>
