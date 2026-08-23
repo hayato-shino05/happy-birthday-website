@@ -132,6 +132,7 @@ export function TimeCapsule() {
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
+  const hasLoadedCapsulesRef = useRef(false)
   const refreshInFlightRef = useRef(false)
   const refreshQueuedRef = useRef(false)
 
@@ -143,7 +144,7 @@ export function TimeCapsule() {
       return
     }
     refreshInFlightRef.current = true
-    setLoading(true)
+    if (!hasLoadedCapsulesRef.current) setLoading(true)
     setLoadError(false)
     try {
       const supabase = getSupabase()
@@ -196,10 +197,14 @@ export function TimeCapsule() {
       if (!isMountedRef.current) return
       setLoadError(Boolean(queryError))
       setCapsules(combined)
+      hasLoadedCapsulesRef.current = true
     } catch {
       if (!isMountedRef.current) return
       setLoadError(true)
-      setCapsules([])
+      if (!hasLoadedCapsulesRef.current) {
+        setCapsules([])
+        hasLoadedCapsulesRef.current = true
+      }
     } finally {
       refreshInFlightRef.current = false
       if (!isMountedRef.current) return

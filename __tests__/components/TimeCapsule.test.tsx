@@ -184,6 +184,64 @@ describe('TimeCapsule', () => {
     expect(await screen.findByText(/private capsule message/)).toBeTruthy()
   })
 
+  it('keeps loaded capsules visible during a refresh', async () => {
+    let resolveOpened!: (result: QueryResult) => void
+    let resolveSealed!: (result: QueryResult) => void
+    let openedCalls = 0
+    let sealedCalls = 0
+    const pendingOpened = new Promise<QueryResult>((resolve) => {
+      resolveOpened = resolve
+    })
+    const pendingSealed = new Promise<QueryResult>((resolve) => {
+      resolveSealed = resolve
+    })
+    const openedResult: QueryResult = { data: [row({ unlock_date: pastDate })], error: null }
+    const sealedError = new Error('sealed query failed')
+    const emptyResult: QueryResult = { data: [], error: null }
+
+    getSupabaseMock.mockReturnValue({
+      from: (table: string) => ({
+        select: () => ({
+          lte: () => ({
+            order: async () => {
+              openedCalls += 1
+              return openedCalls === 1 ? openedResult : pendingOpened
+            },
+          }),
+          gt: () => ({
+            order: async () => {
+              sealedCalls += 1
+              return sealedCalls === 1 ? { data: [], error: sealedError } : pendingSealed
+            },
+          }),
+        }),
+        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
+      }),
+      storage: {
+        from: () => ({
+          upload: async () => ({ data: null, error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        }),
+      },
+    } satisfies SupabaseStub)
+
+    render(<TimeCapsule />)
+    expect(await screen.findByText(/private capsule message/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'retry' }))
+    await vi.waitFor(() => {
+      expect(openedCalls).toBe(2)
+      expect(sealedCalls).toBe(2)
+    })
+    expect(screen.getByText(/private capsule message/)).toBeTruthy()
+    expect(screen.queryByText('loading')).toBeNull()
+
+    await act(async () => {
+      resolveOpened(emptyResult)
+      resolveSealed(emptyResult)
+      await Promise.all([pendingOpened, pendingSealed])
+    })
+  })
+
   it('shows degraded retry feedback when one query fails', async () => {
     const selectCalls: string[] = []
     getSupabaseMock.mockReturnValue(createSupabaseStub({
