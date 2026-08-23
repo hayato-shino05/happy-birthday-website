@@ -40,16 +40,19 @@ describe('mobile fixed controls touch targets (scoped)', () => {
   })
 
   it('ensures music capsule player controls meet >=44px target in className', () => {
-    const musicControls = [
-      "aria-label={t('selectMusic')}",
-      "aria-label={t('previousTrack')}",
-      "aria-label={isPlaying ? t('pause') : t('play')}",
-      "aria-label={t('nextTrack')}",
+    const selectMusicClass = getButtonClassName('setShowMusicList(!showMusicList)')
+    expect(selectMusicClass).toMatch(/min-h-\[44px\]/)
+
+    const transportControls = [
+      'onClick={prevTrack}',
+      'onClick={toggle}',
+      'onClick={nextTrack}',
     ]
 
-    for (const label of musicControls) {
-      const className = getButtonClassName(label)
+    for (const control of transportControls) {
+      const className = getButtonClassName(control)
       expect(className).toMatch(/min-h-\[44px\]/)
+      expect(className).toMatch(/min-w-\[44px\]/)
     }
   })
 

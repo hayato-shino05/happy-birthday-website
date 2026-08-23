@@ -111,8 +111,8 @@ export default function Confetti({
 
     // duration 経過後にアニメーションを停止
     const timeout = setTimeout(() => {
-      if (initialRaf) cancelAnimationFrame(initialRaf)
-      if (animationId) cancelAnimationFrame(animationId)
+      if (initialRaf !== null) cancelAnimationFrame(initialRaf)
+      if (animationId !== null) cancelAnimationFrame(animationId)
       setPieces([])
       if (!completedRef.current) {
         completedRef.current = true
@@ -121,8 +121,8 @@ export default function Confetti({
     }, duration)
 
     return () => {
-      if (initialRaf) cancelAnimationFrame(initialRaf)
-      if (animationId) cancelAnimationFrame(animationId)
+      if (initialRaf !== null) cancelAnimationFrame(initialRaf)
+      if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
   }, [isActive, particleCount, duration, createPiece, onComplete, prefersReducedMotion])
@@ -273,8 +273,8 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     animationId = requestAnimationFrame(animate)
 
     const timeout = setTimeout(() => {
-      if (burstRaf) cancelAnimationFrame(burstRaf)
-      if (animationId) cancelAnimationFrame(animationId)
+      if (burstRaf !== null) cancelAnimationFrame(burstRaf)
+      if (animationId !== null) cancelAnimationFrame(animationId)
       setPieces([])
       if (!completedRef.current) {
         completedRef.current = true
@@ -283,8 +283,8 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
     }, 3000)
 
     return () => {
-      if (burstRaf) cancelAnimationFrame(burstRaf)
-      if (animationId) cancelAnimationFrame(animationId)
+      if (burstRaf !== null) cancelAnimationFrame(burstRaf)
+      if (animationId !== null) cancelAnimationFrame(animationId)
       clearTimeout(timeout)
     }
   }, [isActive, x, y, onComplete, prefersReducedMotion])

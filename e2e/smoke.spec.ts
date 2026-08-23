@@ -57,7 +57,7 @@ test.describe('home shell smoke', () => {
     await expect(dialog).not.toBeVisible()
   })
 
-  test('anonymous message POST flows through mocked REST and closes the form', async ({ page }) => {
+  test('anonymous message POST flows through mocked REST and closes the form', async ({ page }, testInfo) => {
     await page.goto('/')
     const postRequestPromise = page.waitForRequest(
       (r) => r.method() === 'POST' && r.url().includes('/rest/v1/messages'),
@@ -65,14 +65,14 @@ test.describe('home shell smoke', () => {
     await page.getByRole('button', { name: /SEND WISHES|お祝いメッセージ/ }).first().click()
     const form = page.locator('form').filter({ has: page.getByRole('button', { name: /Send your wish|お祝いを送る/ }) }).first()
     await form.getByRole('textbox', { name: /Your name|あなたの名前/ }).fill('モック太郎')
-    await form.getByRole('textbox', { name: /Type a message|メッセージを入力/ }).fill('モック送信テスト')
+    await form.getByRole('textbox', { name: /Write your birthday message|Your birthday wish|Type your message|お祝いメッセージ|メッセージ/i }).fill('モック送信テスト')
     await form.getByRole('button', { name: /Send your wish|お祝いを送る/ }).click()
 
     // 成功時は onSuccess でモーダルが閉じる（成功コピーはフォーム内に表示されない設計）
     const post = await postRequestPromise
     expect(post.postData()).toContain('モック送信テスト')
     await expect(form).not.toBeVisible()
-    await page.screenshot({ path: 'tmp/browser-smoke/anon-post-success.png', fullPage: true })
+    await page.screenshot({ path: `tmp/browser-smoke/anon-post-success-${testInfo.project.name}.png`, fullPage: true })
   })
 
   test('camera capture exposes dialog semantics and Escape closes it', async ({ page }) => {

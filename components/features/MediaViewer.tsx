@@ -109,7 +109,30 @@ export function MediaViewer({
     if (!mounted) return
     lastFocusedRef.current = document.activeElement
     viewerRef.current?.focus()
+
+    // 背後要素を inert / aria-hidden 化してアクセシビリティ上の脱出を防止
+    const mainEl = document.querySelector('main')
+    const originalInert = mainEl?.getAttribute('inert')
+    const originalAriaHidden = mainEl?.getAttribute('aria-hidden')
+
+    if (mainEl) {
+      mainEl.setAttribute('inert', '')
+      mainEl.setAttribute('aria-hidden', 'true')
+    }
+
     return () => {
+      if (mainEl) {
+        if (originalInert !== null && originalInert !== undefined) {
+          mainEl.setAttribute('inert', originalInert)
+        } else {
+          mainEl.removeAttribute('inert')
+        }
+        if (originalAriaHidden !== null && originalAriaHidden !== undefined) {
+          mainEl.setAttribute('aria-hidden', originalAriaHidden)
+        } else {
+          mainEl.removeAttribute('aria-hidden')
+        }
+      }
       if (lastFocusedRef.current instanceof HTMLElement) {
         lastFocusedRef.current.focus()
       }
