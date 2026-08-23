@@ -305,6 +305,54 @@ describe('TimeCapsule', () => {
     expect(screen.getByText('genericError')).toBeTruthy()
   })
 
+  it('deduplicates a capsule that moves from sealed to opened', async () => {
+    let openedCalls = 0
+    let sealedCalls = 0
+    const capsuleId = 7
+    getSupabaseMock.mockReturnValue({
+      from: (table: string) => ({
+        select: () => ({
+          lte: () => ({
+            order: async () => {
+              openedCalls += 1
+              return openedCalls === 1
+                ? { data: [], error: new Error('opened query failed') }
+                : { data: [row({ id: capsuleId, sender: '開封済み', unlock_date: pastDate })], error: null }
+            },
+          }),
+          gt: () => ({
+            order: async () => {
+              sealedCalls += 1
+              return sealedCalls === 1
+                ? { data: [row({ id: capsuleId, sender: '封印済み', message: '', photo_url: null })], error: null }
+                : { data: [], error: new Error('sealed query failed') }
+            },
+          }),
+        }),
+        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
+      }),
+      storage: {
+        from: () => ({
+          upload: async () => ({ data: null, error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        }),
+      },
+    } satisfies SupabaseStub)
+
+    render(<TimeCapsule />)
+    expect(await screen.findByText('封印済み')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'retry' }))
+
+    await vi.waitFor(() => {
+      expect(openedCalls).toBe(2)
+      expect(sealedCalls).toBe(2)
+    })
+    expect(await screen.findByText('開封済み')).toBeTruthy()
+    expect(screen.queryByText('封印済み')).toBeNull()
+    expect(screen.getByText((content) => content.includes('private capsule message'))).toBeTruthy()
+    expect(screen.getByText('genericError')).toBeTruthy()
+  })
+
   it('clears an empty successful partition during refresh', async () => {
     let openedCalls = 0
     let sealedCalls = 0

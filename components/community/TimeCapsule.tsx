@@ -179,7 +179,16 @@ export function TimeCapsule() {
       if (!sealedResult.error) {
         sealedCapsulesRef.current = sealedCapsules
       }
-      const remoteCapsules = [...openedCapsulesRef.current, ...sealedCapsulesRef.current]
+      const remoteCapsules = Array.from(
+        [...openedCapsulesRef.current, ...sealedCapsulesRef.current].reduce(
+          (capsulesById, capsule) => {
+            const id = String(capsule.id)
+            if (!capsulesById.has(id)) capsulesById.set(id, capsule)
+            return capsulesById
+          },
+          new Map<string, CapsuleItem>()
+        ).values()
+      )
       const queryError = openedResult.error || sealedResult.error
 
       // ローカルストレージフォールバックデータの取得
