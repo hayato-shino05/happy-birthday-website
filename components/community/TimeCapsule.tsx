@@ -133,10 +133,15 @@ export function TimeCapsule() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
   const refreshInFlightRef = useRef(false)
+  const refreshQueuedRef = useRef(false)
 
   // タイムカプセル一覧の取得およびローカル保存データの統合
   const fetchCapsules = async () => {
-    if (!isMountedRef.current || refreshInFlightRef.current) return
+    if (!isMountedRef.current) return
+    if (refreshInFlightRef.current) {
+      refreshQueuedRef.current = true
+      return
+    }
     refreshInFlightRef.current = true
     setLoading(true)
     setLoadError(false)
@@ -197,7 +202,12 @@ export function TimeCapsule() {
       setCapsules([])
     } finally {
       refreshInFlightRef.current = false
-      if (isMountedRef.current) setLoading(false)
+      if (!isMountedRef.current) return
+      setLoading(false)
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false
+        void fetchCapsules()
+      }
     }
   }
 

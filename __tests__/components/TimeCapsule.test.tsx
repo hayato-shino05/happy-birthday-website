@@ -263,7 +263,7 @@ describe('TimeCapsule', () => {
     expect(localStorage.getItem('local_time_capsules')).toBeNull()
   })
 
-  it('cleans up the unlock interval on unmount', async () => {
+  it('cleans up the refresh interval on unmount', async () => {
     const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
     getSupabaseMock.mockReturnValue(createSupabaseStub())
     const { unmount } = render(<TimeCapsule />)
