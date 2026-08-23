@@ -273,6 +273,69 @@ describe('TimeCapsule', () => {
     expect(localStorage.getItem('local_time_capsules')).toBeNull()
   })
 
+  it('retries a queued refresh after the active fetch completes', async () => {
+    let triggerRefresh: (() => void) | undefined
+    let resolveOpened!: (result: QueryResult) => void
+    let resolveSealed!: (result: QueryResult) => void
+    let openedCalls = 0
+    let sealedCalls = 0
+    const firstOpened = new Promise<QueryResult>((resolve) => {
+      resolveOpened = resolve
+    })
+    const firstSealed = new Promise<QueryResult>((resolve) => {
+      resolveSealed = resolve
+    })
+    const emptyResult: QueryResult = { data: [], error: null }
+
+    vi.spyOn(globalThis, 'setInterval').mockImplementation((callback) => {
+      triggerRefresh = callback as () => void
+      return 0 as unknown as ReturnType<typeof setInterval>
+    })
+    getSupabaseMock.mockReturnValue({
+      from: (table: string) => ({
+        select: () => ({
+          lte: () => ({
+            order: async () => {
+              openedCalls += 1
+              return openedCalls === 1 ? firstOpened : emptyResult
+            },
+          }),
+          gt: () => ({
+            order: async () => {
+              sealedCalls += 1
+              return sealedCalls === 1 ? firstSealed : emptyResult
+            },
+          }),
+        }),
+        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
+      }),
+      storage: {
+        from: () => ({
+          upload: async () => ({ data: null, error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        }),
+      },
+    } satisfies SupabaseStub)
+
+    render(<TimeCapsule />)
+    act(() => {
+      triggerRefresh?.()
+    })
+    expect(openedCalls).toBe(1)
+    expect(sealedCalls).toBe(1)
+
+    await act(async () => {
+      resolveOpened(emptyResult)
+      resolveSealed(emptyResult)
+      await Promise.all([firstOpened, firstSealed])
+    })
+
+    await vi.waitFor(() => {
+      expect(openedCalls).toBe(2)
+      expect(sealedCalls).toBe(2)
+    })
+  })
+
   it('cleans up the refresh interval on unmount', async () => {
     const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
     getSupabaseMock.mockReturnValue(createSupabaseStub())
