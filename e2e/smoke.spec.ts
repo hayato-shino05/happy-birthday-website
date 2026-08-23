@@ -37,11 +37,14 @@ test.describe('home shell smoke', () => {
 
   test('reduced-motion hides background video', async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: 'reduce' })
-    const page = await context.newPage()
-    await mockSupabaseRest(page)
-    await page.goto('/')
-    await expect(page.locator('video')).toHaveCount(0)
-    await context.close()
+    try {
+      const page = await context.newPage()
+      await mockSupabaseRest(page)
+      await page.goto('/')
+      await expect(page.locator('video')).toHaveCount(0)
+    } finally {
+      await context.close()
+    }
   })
 
   test('album dialog opens with focus and closes on Escape', async ({ page }) => {

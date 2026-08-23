@@ -39,7 +39,7 @@ export default function Confetti({
 }: ConfettiProps) {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
   const prefersReducedMotion = usePrefersReducedMotion()
-  const wasActiveRef = useRef(false)
+  const completedRef = useRef(false)
 
   const createPiece = useCallback((id: number): ConfettiPiece => {
     const shapes: ConfettiPiece['shape'][] = ['square', 'circle', 'triangle', 'star']
@@ -58,18 +58,23 @@ export default function Confetti({
   }, [colors])
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      if (isActive && !wasActiveRef.current) {
-        onComplete?.()
-      }
-      wasActiveRef.current = isActive
-      return
+    if (!isActive) {
+      completedRef.current = false
     }
-    wasActiveRef.current = isActive
+  }, [isActive])
 
+  useEffect(() => {
     if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
       return () => cancelAnimationFrame(raf)
+    }
+
+    if (prefersReducedMotion) {
+      if (!completedRef.current) {
+        completedRef.current = true
+        onComplete?.()
+      }
+      return
     }
 
     let initialRaf: number | null = null
@@ -109,7 +114,10 @@ export default function Confetti({
       if (initialRaf) cancelAnimationFrame(initialRaf)
       if (animationId) cancelAnimationFrame(animationId)
       setPieces([])
-      onComplete?.()
+      if (!completedRef.current) {
+        completedRef.current = true
+        onComplete?.()
+      }
     }, duration)
 
     return () => {
@@ -199,21 +207,26 @@ interface ConfettiBurstProps {
 export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps) {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([])
   const prefersReducedMotion = usePrefersReducedMotion()
-  const wasActiveRef = useRef(false)
+  const completedRef = useRef(false)
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      if (isActive && !wasActiveRef.current) {
-        onComplete?.()
-      }
-      wasActiveRef.current = isActive
-      return
+    if (!isActive) {
+      completedRef.current = false
     }
-    wasActiveRef.current = isActive
+  }, [isActive])
 
+  useEffect(() => {
     if (!isActive) {
       const raf = requestAnimationFrame(() => setPieces([]))
       return () => cancelAnimationFrame(raf)
+    }
+
+    if (prefersReducedMotion) {
+      if (!completedRef.current) {
+        completedRef.current = true
+        onComplete?.()
+      }
+      return
     }
 
     let burstRaf: number | null = null
@@ -263,7 +276,10 @@ export function ConfettiBurst({ x, y, isActive, onComplete }: ConfettiBurstProps
       if (burstRaf) cancelAnimationFrame(burstRaf)
       if (animationId) cancelAnimationFrame(animationId)
       setPieces([])
-      onComplete?.()
+      if (!completedRef.current) {
+        completedRef.current = true
+        onComplete?.()
+      }
     }, 3000)
 
     return () => {

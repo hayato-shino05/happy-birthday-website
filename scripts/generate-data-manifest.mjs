@@ -364,17 +364,6 @@ async function generate(root) {
   return generatedContents(packs, locales, themeKeys, translationKeys)
 }
 
-async function ensureNextEnv(root) {
-  const nextEnvPath = join(root, 'next-env.d.ts')
-  if (!existsSync(nextEnvPath)) {
-    await writeFile(
-      nextEnvPath,
-      '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n\n// NOTE: This file should not be edited\n// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.\n',
-      'utf8'
-    )
-  }
-}
-
 async function main() {
   const args = process.argv.slice(2)
   const rootIndex = args.indexOf('--root')
@@ -392,7 +381,6 @@ async function main() {
     }
     return
   }
-  await ensureNextEnv(root)
   await writeAtomically(root, contents)
 }
 

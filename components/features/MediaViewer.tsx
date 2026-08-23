@@ -149,6 +149,7 @@ export function MediaViewer({
         aria-modal="true"
         aria-label={media.file_name}
         tabIndex={-1}
+        className="focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#D4B08C] focus:outline-none"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -164,7 +165,6 @@ export function MediaViewer({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          outline: 'none',
         }}
       >
         {/* 上部コントロール */}

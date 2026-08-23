@@ -56,4 +56,43 @@ describe('useUserName', () => {
 
     expect(result.current.userName).toBe('別タブ次郎')
   })
+
+  it('preserves user input in memory when localStorage.setItem throws', () => {
+    const originalSetItem = localStorage.setItem
+    localStorage.setItem = () => {
+      throw new Error('QuotaExceededError')
+    }
+
+    try {
+      const { result } = renderHook(() => useUserName())
+      act(() => {
+        result.current.setUserName('フォールバック太郎')
+      })
+
+      expect(result.current.userName).toBe('フォールバック太郎')
+      expect(result.current.hasUserName).toBe(true)
+    } finally {
+      localStorage.setItem = originalSetItem
+    }
+  })
+
+  it('safely clears memory state when localStorage.removeItem throws', () => {
+    localStorage.setItem('birthday_user_name', '花子')
+    const originalRemoveItem = localStorage.removeItem
+    localStorage.removeItem = () => {
+      throw new Error('SecurityError')
+    }
+
+    try {
+      const { result } = renderHook(() => useUserName())
+      act(() => {
+        result.current.clearUserName()
+      })
+
+      expect(result.current.userName).toBe('')
+      expect(result.current.hasUserName).toBe(false)
+    } finally {
+      localStorage.removeItem = originalRemoveItem
+    }
+  })
 })

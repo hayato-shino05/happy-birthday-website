@@ -9,8 +9,21 @@ const source = readFileSync(
   'utf8',
 )
 
+function getButtonClassName(identifier: string): string {
+  const idx = source.indexOf(identifier)
+  expect(idx, `Missing identifier: ${identifier}`).toBeGreaterThanOrEqual(0)
+  const tagStart = source.lastIndexOf('<button', idx)
+  const tagEnd = source.indexOf('>', idx)
+  expect(tagStart, `Cannot find <button start for: ${identifier}`).toBeGreaterThanOrEqual(0)
+  expect(tagEnd, `Cannot find > end for: ${identifier}`).toBeGreaterThanOrEqual(0)
+  const openingTag = source.slice(tagStart, tagEnd + 1)
+  const classMatch = openingTag.match(/className=(?:\{`([^`]+)`\}|"([^"]+)")/)
+  expect(classMatch, `Missing className attribute in <button> tag for: ${identifier}`).toBeTruthy()
+  return classMatch![1] || classMatch![2] || ''
+}
+
 describe('mobile fixed controls touch targets (scoped)', () => {
-  it('ensures all 5 main bottom dock navigation buttons meet 48px target', () => {
+  it('ensures all 5 main bottom dock navigation buttons meet 48px target in className', () => {
     const dockButtons = [
       "openModal('album')",
       "openModal('message')",
@@ -20,17 +33,13 @@ describe('mobile fixed controls touch targets (scoped)', () => {
     ]
 
     for (const action of dockButtons) {
-      const idx = source.indexOf(action)
-      expect(idx, `Missing dock action: ${action}`).toBeGreaterThanOrEqual(0)
-      const buttonStart = source.lastIndexOf('<button', idx)
-      const buttonEnd = source.indexOf('</button>', idx)
-      const buttonChunk = source.slice(buttonStart, buttonEnd + 9)
-      expect(buttonChunk).toMatch(/min-h-\[48px\]/)
-      expect(buttonChunk).toMatch(/min-w-\[50px\]/)
+      const className = getButtonClassName(action)
+      expect(className).toMatch(/min-h-\[48px\]/)
+      expect(className).toMatch(/min-w-\[50px\]/)
     }
   })
 
-  it('ensures music capsule player controls meet >=44px target', () => {
+  it('ensures music capsule player controls meet >=44px target in className', () => {
     const musicControls = [
       "aria-label={t('selectMusic')}",
       "aria-label={t('previousTrack')}",
@@ -39,23 +48,15 @@ describe('mobile fixed controls touch targets (scoped)', () => {
     ]
 
     for (const label of musicControls) {
-      const idx = source.indexOf(label)
-      expect(idx, `Missing player control: ${label}`).toBeGreaterThanOrEqual(0)
-      const buttonStart = source.lastIndexOf('<button', idx)
-      const buttonEnd = source.indexOf('</button>', idx)
-      const buttonChunk = source.slice(buttonStart, buttonEnd + 9)
-      expect(buttonChunk).toMatch(/min-h-\[44px\]/)
+      const className = getButtonClassName(label)
+      expect(className).toMatch(/min-h-\[44px\]/)
     }
   })
 
-  it('ensures sheet close and modal trigger buttons meet >=44px / >=48px target', () => {
-    const sheetCloseIdx = source.indexOf("aria-label={t('close')}")
-    expect(sheetCloseIdx).toBeGreaterThanOrEqual(0)
-    const closeStart = source.lastIndexOf('<button', sheetCloseIdx)
-    const closeEnd = source.indexOf('</button>', sheetCloseIdx)
-    const closeChunk = source.slice(closeStart, closeEnd + 9)
-    expect(closeChunk).toMatch(/min-h-\[44px\]/)
-    expect(closeChunk).toMatch(/min-w-\[44px\]/)
+  it('ensures sheet close and modal trigger buttons meet >=44px / >=48px target in className', () => {
+    const sheetCloseClass = getButtonClassName("aria-label={t('close')}")
+    expect(sheetCloseClass).toMatch(/min-h-\[44px\]/)
+    expect(sheetCloseClass).toMatch(/min-w-\[44px\]/)
 
     const sheetActions = [
       "openModal('omikuji')",
@@ -67,12 +68,8 @@ describe('mobile fixed controls touch targets (scoped)', () => {
     ]
 
     for (const action of sheetActions) {
-      const idx = source.indexOf(action)
-      expect(idx, `Missing sheet action: ${action}`).toBeGreaterThanOrEqual(0)
-      const buttonStart = source.lastIndexOf('<button', idx)
-      const buttonEnd = source.indexOf('</button>', idx)
-      const buttonChunk = source.slice(buttonStart, buttonEnd + 9)
-      expect(buttonChunk).toMatch(/min-h-\[48px\]/)
+      const className = getButtonClassName(action)
+      expect(className).toMatch(/min-h-\[48px\]/)
     }
   })
 })
