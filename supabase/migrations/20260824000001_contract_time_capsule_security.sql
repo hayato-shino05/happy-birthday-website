@@ -5,6 +5,9 @@ begin
   if to_regclass('public.time_capsules') is null then
     raise exception 'public.time_capsules must exist before contracting Time Capsule access';
   end if;
+  if not exists (select 1 from storage.buckets where id = 'time-capsules') then
+    raise exception 'storage bucket time-capsules must exist before contracting Time Capsule storage';
+  end if;
   if not exists (select 1 from storage.buckets where id = 'time-capsules-private') then
     raise exception 'storage bucket time-capsules-private must exist before contracting Time Capsule storage';
   end if;
