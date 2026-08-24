@@ -4,6 +4,7 @@ import {
   errorResponse,
   parseId,
   requireUser,
+  createServiceClient,
 } from '@/lib/time-capsule/server'
 
 interface RouteParams {
@@ -12,7 +13,8 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { client, user } = await requireUser(request)
+    const { user } = await requireUser(request)
+    const client = createServiceClient()
     const id = parseId((await params).id)
     const { data, error } = await client
       .from('time_capsules')

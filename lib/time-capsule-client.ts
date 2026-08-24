@@ -33,6 +33,13 @@ interface TimeCapsuleResponse {
   data: TimeCapsuleRow[]
 }
 
+export interface CreateTimeCapsuleResponse {
+  data: TimeCapsuleRow
+  inviteToken?: string
+  inviteTokenExpiresAt?: string
+  idempotent?: boolean
+}
+
 let browserClient: SupabaseClient | null = null
 
 function getBrowserClient(): SupabaseClient {
@@ -122,7 +129,7 @@ export async function createTimeCapsule(
   input: CreateTimeCapsuleInput,
   idempotencyKey: string,
   signal?: AbortSignal
-): Promise<{ data: TimeCapsuleRow }> {
+): Promise<CreateTimeCapsuleResponse> {
   const accessToken = await ensureAccessToken()
   const response = await fetch('/api/time-capsules', {
     method: 'POST',
@@ -136,8 +143,20 @@ export async function createTimeCapsule(
     signal,
   })
   const body = await readJson(response)
-  if (!response.ok || !isRecord(body) || !isApiCapsule(body.data)) {
+  if (
+    !response.ok ||
+    !isRecord(body) ||
+    !isApiCapsule(body.data) ||
+    (body.inviteToken !== undefined && typeof body.inviteToken !== 'string') ||
+    (body.inviteTokenExpiresAt !== undefined && typeof body.inviteTokenExpiresAt !== 'string') ||
+    (body.idempotent !== undefined && typeof body.idempotent !== 'boolean')
+  ) {
     throw new Error('タイムカプセルを保存できません')
   }
-  return { data: toRemoteRow(body.data) }
+  return {
+    data: toRemoteRow(body.data),
+    inviteToken: body.inviteToken,
+    inviteTokenExpiresAt: body.inviteTokenExpiresAt,
+    idempotent: body.idempotent,
+  }
 }

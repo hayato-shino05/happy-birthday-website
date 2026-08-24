@@ -138,6 +138,24 @@ describe('TimeCapsule', () => {
       expect(createMock).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps a synced pending capsule when remote refresh fails', async () => {
+    const pendingKey = 'same-key'
+    localStorage.setItem('local_time_capsules', JSON.stringify([{
+      id: 'local-1',
+      sender: '保留送信者',
+      message: '保留本文',
+      unlockDate: futureDate,
+      createdAt: '2026-08-23T00:00:00.000Z',
+      pendingKey,
+    }]))
+    createMock.mockResolvedValue({ data: row() })
+    listMock.mockRejectedValue(new Error('offline'))
+
+    render(<TimeCapsule />)
+    expect(await screen.findByText('保留送信者')).toBeTruthy()
+    expect(JSON.parse(localStorage.getItem('local_time_capsules') || '[]')).toHaveLength(1)
+  })
+
   it('syncs pending capsules using the persisted idempotency key', async () => {
     const pendingKey = 'same-key'
     localStorage.setItem('local_time_capsules', JSON.stringify([{

@@ -9,11 +9,13 @@ import {
   parseIdempotencyKey,
   requireUser,
   serializeCapsule,
+  createServiceClient,
 } from '@/lib/time-capsule/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const { client, user } = await requireUser(request)
+    const { user } = await requireUser(request)
+    const client = createServiceClient()
     const { data, error } = await client
       .from('time_capsules')
       .select(TIME_CAPSULE_SELECT)
@@ -32,7 +34,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { client, user } = await requireUser(request)
+    const { user } = await requireUser(request)
+    const client = createServiceClient()
     const idempotencyKey = parseIdempotencyKey(request)
     const input = parseCapsuleInput(await request.json(), user.id)
     const inviteToken = createInviteToken()
@@ -54,7 +57,11 @@ export async function POST(request: NextRequest) {
       .select(TIME_CAPSULE_SELECT)
       .single()
 
-    if (error?.code === '23505') {
+    if (
+      error?.code === '23505' &&
+      (error.message?.includes('time_capsules_owner_idempotency_key_uidx') ||
+        error.details?.includes('time_capsules_owner_idempotency_key_uidx'))
+    ) {
       const existing = await client
         .from('time_capsules')
         .select(TIME_CAPSULE_SELECT)

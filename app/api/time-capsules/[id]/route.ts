@@ -8,6 +8,7 @@ import {
   parseInviteToken,
   requireUser,
   serializeCapsule,
+  createServiceClient,
 } from '@/lib/time-capsule/server'
 
 interface RouteParams {
@@ -26,7 +27,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const { client, user } = await requireUser(request)
+    const { user } = await requireUser(request)
+    const client = createServiceClient()
     const { data, error } = await client
       .from('time_capsules')
       .select(TIME_CAPSULE_SELECT)

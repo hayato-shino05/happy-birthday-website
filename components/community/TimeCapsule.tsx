@@ -184,12 +184,12 @@ export function TimeCapsule() {
           // Keep pending entries for the next refresh.
         }
       }))
+      const result = await listTimeCapsules()
       if (syncedIds.size > 0) {
         localRaw = localRaw.filter((item) => !isRecord(item) || !syncedIds.has(String(item.id)))
         localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify(localRaw))
       }
 
-      const result = await listTimeCapsules()
       const remoteCapsules = result.data
         .map((capsule) => parseRemoteCapsule(capsule, now))
         .filter((capsule): capsule is CapsuleItem => capsule !== null)

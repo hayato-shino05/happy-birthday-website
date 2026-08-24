@@ -4,7 +4,7 @@ const createClientMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: createClientMock }))
 
-import { listTimeCapsules } from '@/lib/time-capsule-client'
+import { createTimeCapsule, listTimeCapsules } from '@/lib/time-capsule-client'
 
 const capsule = {
   id: 1,
@@ -39,5 +39,14 @@ describe('time-capsule auth bootstrap', () => {
     expect(signInAnonymously).toHaveBeenCalledTimes(1)
     const [, request] = vi.mocked(fetch).mock.calls[0]
     expect(new Headers(request?.headers).get('Authorization')).toBe('Bearer anonymous-token')
+
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({
+      data: capsule,
+      inviteToken: 'invite-token',
+      inviteTokenExpiresAt: '2026-09-23T00:00:00.000Z',
+      idempotent: false,
+    }), { status: 201 }))
+    await expect(createTimeCapsule({ sender: '送信者', message: '本文', unlockDate: '2999-12-31' }, 'key'))
+      .resolves.toMatchObject({ inviteToken: 'invite-token', inviteTokenExpiresAt: '2026-09-23T00:00:00.000Z' })
   })
 })
