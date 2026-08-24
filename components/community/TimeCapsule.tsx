@@ -140,6 +140,7 @@ export function TimeCapsule() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [inviteAccess, setInviteAccess] = useState<{ token: string; expiresAt: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
   const hasLoadedCapsulesRef = useRef(false)
@@ -257,6 +258,7 @@ export function TimeCapsule() {
 
     setIsSubmitting(true)
     setSubmitError(null)
+    setInviteAccess(null)
     const idempotencyKey = createIdempotencyKey()
     try {
       const newCapsule: CapsuleItem = {
@@ -268,21 +270,25 @@ export function TimeCapsule() {
         createdAt: new Date().toISOString(),
         isUnlocked: parseLocalDate(unlockDate) <= new Date(),
       }
-      await createTimeCapsule({
+      const created = await createTimeCapsule({
         sender: newCapsule.sender,
         recipient: newCapsule.recipient,
         message: newCapsule.message,
         unlockDate: newCapsule.unlockDate,
       }, idempotencyKey)
 
+      if (created.inviteToken && created.inviteTokenExpiresAt) {
+        setInviteAccess({ token: created.inviteToken, expiresAt: created.inviteTokenExpiresAt })
+      }
       setSubmitSuccess(true)
+      const hasInviteAccess = Boolean(created.inviteToken && created.inviteTokenExpiresAt)
       setTimeout(() => {
         setSubmitSuccess(false)
         setSender('')
         setRecipient('')
         setMessage('')
         setPhotoFile(null)
-        setActiveTab('view')
+        if (!hasInviteAccess) setActiveTab('view')
         fetchCapsules()
       }, 1200)
     } catch (err) {
@@ -440,6 +446,19 @@ export function TimeCapsule() {
           {submitError && (
             <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
               {submitError}
+            </div>
+          )}
+
+          {inviteAccess && (
+            <div className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
+              <p className="font-bold">{t('timeCapsuleInviteTitle')}</p>
+              <p>{t('timeCapsuleInviteDescription')}</p>
+              <code className="block break-all rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
+                {inviteAccess.token}
+              </code>
+              <p>{t('timeCapsuleInviteExpires', {
+                date: new Date(inviteAccess.expiresAt).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US'),
+              })}</p>
             </div>
           )}
 
