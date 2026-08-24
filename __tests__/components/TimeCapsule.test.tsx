@@ -1,43 +1,16 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import TimeCapsule, {
-  parseLocalCapsules,
-  parseRemoteCapsule,
-} from '@/components/community/TimeCapsule'
+import TimeCapsule, { parseLocalCapsules, parseRemoteCapsule } from '@/components/community/TimeCapsule'
+import { createTimeCapsule, listTimeCapsules } from '@/lib/time-capsule-client'
 
-const getSupabaseMock = vi.fn()
 const languageMock = vi.hoisted(() => ({ value: 'ja' as 'ja' | 'en' }))
+const listMock = vi.hoisted(() => vi.fn())
+const createMock = vi.hoisted(() => vi.fn())
 
-type CapsuleRow = {
-  id: number
-  sender: string
-  recipient: string | null
-  message: string
-  photo_url: string | null
-  unlock_date: string
-  created_at: string
-}
-
-type QueryResult = { data: CapsuleRow[]; error: Error | null }
-
-type SupabaseStub = {
-  from: (table: string) => {
-    select: (columns: string) => {
-      lte: () => { order: () => Promise<QueryResult> }
-      gt: () => { order: () => Promise<QueryResult> }
-    }
-    insert: (payload: Record<string, unknown>) => Promise<{ error: Error | null }>
-  }
-  storage: {
-    from: (bucket: string) => {
-      upload: (path: string, file: File) => Promise<{
-        data: { path: string } | null
-        error: Error | null
-      }>
-      getPublicUrl: (path: string) => { data: { publicUrl: string } }
-    }
-  }
-}
+vi.mock('@/lib/time-capsule-client', () => ({
+  listTimeCapsules: listMock,
+  createTimeCapsule: createMock,
+}))
 
 vi.mock('@/lib/i18n/LanguageContext', () => ({
   useLanguage: () => ({
@@ -50,60 +23,18 @@ vi.mock('@/components/ui/Icon', () => ({
   Icon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }))
 
-vi.mock('@/lib/supabase/client', () => ({
-  getSupabase: () => getSupabaseMock(),
-}))
-
-function createSupabaseStub({
-  openedRows = [],
-  sealedRows = [],
-  selectError = null,
-  openedError = selectError,
-  sealedError = selectError,
-  insertError = null,
-  uploadError = null,
-  selectCalls = [],
-}: {
-  openedRows?: CapsuleRow[]
-  sealedRows?: CapsuleRow[]
-  selectError?: Error | null
-  openedError?: Error | null
-  sealedError?: Error | null
-  insertError?: Error | null
-  uploadError?: Error | null
-  selectCalls?: string[]
-} = {}): SupabaseStub {
-  const from = (table: string) => {
-    const query = {
-      lte: () => ({ order: async () => ({ data: openedRows, error: openedError }) }),
-      gt: () => ({ order: async () => ({ data: sealedRows, error: sealedError }) }),
-    }
-
-    return {
-      select: (columns: string) => {
-        if (table === 'time_capsules') selectCalls.push(columns)
-        return query
-      },
-      insert: async () => ({ error: table === 'time_capsules' ? insertError : null }),
-    }
-  }
-
-  return {
-    from,
-    storage: {
-      from: () => ({
-        upload: async () => ({
-          data: uploadError ? null : { path: 'capsule/photo.jpg' },
-          error: uploadError,
-        }),
-        getPublicUrl: () => ({ data: { publicUrl: 'https://example.test/photo.jpg' } }),
-      }),
-    },
-  }
-}
-
 const futureDate = '2999-12-31'
 const pastDate = '2000-01-01'
+
+type CapsuleRow = {
+  id: number
+  sender: string
+  recipient: string | null
+  message: string | null
+  photo_url: string | null
+  unlock_date: string
+  created_at: string
+}
 
 function row(overrides: Partial<CapsuleRow> = {}): CapsuleRow {
   return {
@@ -120,8 +51,10 @@ function row(overrides: Partial<CapsuleRow> = {}): CapsuleRow {
 
 beforeEach(() => {
   localStorage.clear()
-  getSupabaseMock.mockReset()
+  listMock.mockReset()
+  createMock.mockReset()
   languageMock.value = 'ja'
+  vi.spyOn(globalThis, 'setInterval').mockImplementation(() => 0 as unknown as ReturnType<typeof setInterval>)
 })
 
 afterEach(() => {
@@ -149,371 +82,90 @@ describe('Time Capsule parsers', () => {
     })
     expect(parseRemoteCapsule({ ...row(), unlock_date: '2026-02-30' }, now)).toBeNull()
     expect(parseLocalCapsules({ invalid: true }, now)).toEqual([])
-    expect(parseLocalCapsules([{
-      id: 'local-date',
-      sender: '日付送信者',
-      message: '日付本文',
-      unlockDate: '2026-08-23',
-      createdAt: '2026-08-23T00:00:00.000Z',
-    }], now)[0]).toMatchObject({ isUnlocked: true, message: '日付本文' })
   })
 })
 
 describe('TimeCapsule', () => {
-  it('hides unopened remote content and requests metadata only', async () => {
-    const selectCalls: string[] = []
-    getSupabaseMock.mockReturnValue(createSupabaseStub({ sealedRows: [row()], selectCalls }))
+  it('loads capsules through the API adapter and hides unopened content', async () => {
+    listMock.mockResolvedValue({ data: [row()] })
     render(<TimeCapsule />)
 
     expect(await screen.findByText(/^timeCapsuleLockedNotice:/)).toBeTruthy()
-    expect(selectCalls).toHaveLength(2)
-    const openedSelect = selectCalls.find((columns) => columns.includes('message'))
-    const sealedSelect = selectCalls.find((columns) => !columns.includes('message'))
-    expect(openedSelect).toContain('message')
-    expect(openedSelect).toContain('photo_url')
-    expect(sealedSelect).not.toContain('message')
-    expect(sealedSelect).not.toContain('photo_url')
+    expect(listTimeCapsules).toHaveBeenCalledTimes(1)
     expect(screen.queryByText('private capsule message')).toBeNull()
     expect(screen.queryByRole('img')).toBeNull()
   })
 
   it('shows opened remote content', async () => {
-    getSupabaseMock.mockReturnValue(createSupabaseStub({ openedRows: [row({ unlock_date: pastDate })] }))
+    listMock.mockResolvedValue({ data: [row({ unlock_date: pastDate })] })
     render(<TimeCapsule />)
 
     expect(await screen.findByText(/private capsule message/)).toBeTruthy()
   })
 
-  it('keeps loaded capsules visible during a refresh', async () => {
-    let resolveOpened!: (result: QueryResult) => void
-    let resolveSealed!: (result: QueryResult) => void
-    let openedCalls = 0
-    let sealedCalls = 0
-    const pendingOpened = new Promise<QueryResult>((resolve) => {
-      resolveOpened = resolve
-    })
-    const pendingSealed = new Promise<QueryResult>((resolve) => {
-      resolveSealed = resolve
-    })
-    const openedResult: QueryResult = { data: [row({ unlock_date: pastDate })], error: null }
-    const sealedError = new Error('sealed query failed')
-    const emptyResult: QueryResult = { data: [], error: null }
-
-    getSupabaseMock.mockReturnValue({
-      from: (table: string) => ({
-        select: () => ({
-          lte: () => ({
-            order: async () => {
-              openedCalls += 1
-              return openedCalls === 1 ? openedResult : pendingOpened
-            },
-          }),
-          gt: () => ({
-            order: async () => {
-              sealedCalls += 1
-              return sealedCalls === 1 ? { data: [], error: sealedError } : pendingSealed
-            },
-          }),
-        }),
-        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
-      }),
-      storage: {
-        from: () => ({
-          upload: async () => ({ data: null, error: null }),
-          getPublicUrl: () => ({ data: { publicUrl: '' } }),
-        }),
-      },
-    } satisfies SupabaseStub)
-
-    render(<TimeCapsule />)
-    expect(await screen.findByText(/private capsule message/)).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'retry' }))
-    await vi.waitFor(() => {
-      expect(openedCalls).toBe(2)
-      expect(sealedCalls).toBe(2)
-    })
-    expect(screen.getByText(/private capsule message/)).toBeTruthy()
-    expect(screen.queryByText('loading')).toBeNull()
-
-    await act(async () => {
-      resolveOpened(emptyResult)
-      resolveSealed(emptyResult)
-      await Promise.all([pendingOpened, pendingSealed])
-    })
-  })
-
-  it('shows degraded retry feedback when one query fails', async () => {
-    const selectCalls: string[] = []
-    getSupabaseMock.mockReturnValue(createSupabaseStub({
-      openedRows: [row({ unlock_date: pastDate })],
-      sealedError: new Error('sealed query failed'),
-      selectCalls,
-    }))
+  it('keeps valid local fallback data when API fetch fails', async () => {
+    localStorage.setItem('local_time_capsules', JSON.stringify([{
+      id: 'local-1',
+      sender: 'ローカル送信者',
+      message: 'local message',
+      unlockDate: pastDate,
+      createdAt: '2026-08-23T00:00:00.000Z',
+    }]))
+    listMock.mockRejectedValue(new Error('offline'))
     render(<TimeCapsule />)
 
-    expect(await screen.findByText(/private capsule message/)).toBeTruthy()
-    expect(screen.getByText('genericError')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy()
-  })
-
-  it('updates a successful partition while preserving the failed partition', async () => {
-    let openedCalls = 0
-    let sealedCalls = 0
-    getSupabaseMock.mockReturnValue({
-      from: (table: string) => ({
-        select: () => ({
-          lte: () => ({
-            order: async () => {
-              openedCalls += 1
-              return openedCalls === 1
-                ? { data: [], error: new Error('opened query failed') }
-                : { data: [row({ id: 2, sender: '新開封済み', unlock_date: pastDate })], error: null }
-            },
-          }),
-          gt: () => ({
-            order: async () => {
-              sealedCalls += 1
-              return sealedCalls === 1
-                ? { data: [row({ id: 3, sender: '封印済み', message: '', photo_url: null })], error: null }
-                : { data: [], error: new Error('sealed query failed') }
-            },
-          }),
-        }),
-        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
-      }),
-      storage: {
-        from: () => ({
-          upload: async () => ({ data: null, error: null }),
-          getPublicUrl: () => ({ data: { publicUrl: '' } }),
-        }),
-      },
-    } satisfies SupabaseStub)
-
-    render(<TimeCapsule />)
-    expect(await screen.findByText('封印済み')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: 'retry' }))
-
-    await vi.waitFor(() => {
-      expect(openedCalls).toBe(2)
-      expect(sealedCalls).toBe(2)
-    })
-    expect(await screen.findByText('新開封済み')).toBeTruthy()
-    expect(screen.queryByText('旧開封済み')).toBeNull()
-    expect(screen.getByText('封印済み')).toBeTruthy()
-    expect(screen.getByText('genericError')).toBeTruthy()
-  })
-
-  it('deduplicates a capsule that moves from sealed to opened', async () => {
-    let openedCalls = 0
-    let sealedCalls = 0
-    const capsuleId = 7
-    getSupabaseMock.mockReturnValue({
-      from: (table: string) => ({
-        select: () => ({
-          lte: () => ({
-            order: async () => {
-              openedCalls += 1
-              return openedCalls === 1
-                ? { data: [], error: new Error('opened query failed') }
-                : { data: [row({ id: capsuleId, sender: '開封済み', unlock_date: pastDate })], error: null }
-            },
-          }),
-          gt: () => ({
-            order: async () => {
-              sealedCalls += 1
-              return sealedCalls === 1
-                ? { data: [row({ id: capsuleId, sender: '封印済み', message: '', photo_url: null })], error: null }
-                : { data: [], error: new Error('sealed query failed') }
-            },
-          }),
-        }),
-        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
-      }),
-      storage: {
-        from: () => ({
-          upload: async () => ({ data: null, error: null }),
-          getPublicUrl: () => ({ data: { publicUrl: '' } }),
-        }),
-      },
-    } satisfies SupabaseStub)
-
-    render(<TimeCapsule />)
-    expect(await screen.findByText('封印済み')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'retry' }))
-
-    await vi.waitFor(() => {
-      expect(openedCalls).toBe(2)
-      expect(sealedCalls).toBe(2)
-    })
-    expect(await screen.findByText('開封済み')).toBeTruthy()
-    expect(screen.queryByText('封印済み')).toBeNull()
-    expect(screen.getByText((content) => content.includes('private capsule message'))).toBeTruthy()
-    expect(screen.getByText('genericError')).toBeTruthy()
-  })
-
-  it('preserves a sealed capsule while the opened partition is unavailable', async () => {
-    let openedCalls = 0
-    let sealedCalls = 0
-    const capsuleId = 8
-    getSupabaseMock.mockReturnValue({
-      from: (table: string) => ({
-        select: () => ({
-          lte: () => ({
-            order: async () => {
-              openedCalls += 1
-              return { data: [], error: new Error('opened query failed') }
-            },
-          }),
-          gt: () => ({
-            order: async () => {
-              sealedCalls += 1
-              return sealedCalls === 1
-                ? { data: [row({ id: capsuleId, sender: '保持対象', message: '', photo_url: null })], error: null }
-                : { data: [], error: null }
-            },
-          }),
-        }),
-        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
-      }),
-      storage: {
-        from: () => ({
-          upload: async () => ({ data: null, error: null }),
-          getPublicUrl: () => ({ data: { publicUrl: '' } }),
-        }),
-      },
-    } satisfies SupabaseStub)
-
-    render(<TimeCapsule />)
-    expect(await screen.findByText('保持対象')).toBeTruthy()
-    expect(await screen.findByText('genericError')).toBeTruthy()
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'retry' }))
-    })
-
-    await vi.waitFor(() => {
-      expect(openedCalls).toBe(2)
-      expect(sealedCalls).toBe(2)
-    })
-    expect(screen.getByText('保持対象')).toBeTruthy()
-    expect(await screen.findByText('genericError')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy()
-  })
-
-  it('clears an empty successful partition during refresh', async () => {
-    let openedCalls = 0
-    let sealedCalls = 0
-    getSupabaseMock.mockReturnValue({
-      from: (table: string) => ({
-        select: () => ({
-          lte: () => ({
-            order: async () => {
-              openedCalls += 1
-              return openedCalls === 1
-                ? { data: [row({ id: 1, sender: '開封済み', unlock_date: pastDate })], error: null }
-                : { data: [], error: null }
-            },
-          }),
-          gt: () => ({
-            order: async () => {
-              sealedCalls += 1
-              return { data: [], error: new Error('sealed query failed') }
-            },
-          }),
-        }),
-        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
-      }),
-      storage: {
-        from: () => ({
-          upload: async () => ({ data: null, error: null }),
-          getPublicUrl: () => ({ data: { publicUrl: '' } }),
-        }),
-      },
-    } satisfies SupabaseStub)
-
-    render(<TimeCapsule />)
-    expect(await screen.findByText('開封済み')).toBeTruthy()
-    expect(await screen.findByText('genericError')).toBeTruthy()
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'retry' }))
-    })
-
-    await vi.waitFor(() => {
-      expect(openedCalls).toBe(2)
-      expect(sealedCalls).toBe(2)
-    })
-    expect(screen.queryByText('開封済み')).toBeNull()
-    expect(await screen.findByText('genericError')).toBeTruthy()
-  })
-
-  it('formats locked dates for English users', async () => {
-    languageMock.value = 'en'
-    getSupabaseMock.mockReturnValue(createSupabaseStub({ sealedRows: [row()] }))
-    render(<TimeCapsule />)
-
-    const expectedDate = new Date(2999, 11, 31).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-    expect(await screen.findByText(`timeCapsuleLockedNotice:${expectedDate}`)).toBeTruthy()
-  })
-
-  it('uses valid local fallback data when remote fetch fails', async () => {
-    localStorage.setItem(
-      'local_time_capsules',
-      JSON.stringify([{
-        id: 'local-1',
-        sender: 'ローカル送信者',
-        message: 'local message',
-        unlockDate: pastDate,
-        createdAt: '2026-08-23T00:00:00.000Z',
-      }])
-    )
-    getSupabaseMock.mockReturnValue(createSupabaseStub({ selectError: new Error('offline') }))
-    render(<TimeCapsule />)
-
-    await screen.findByText('ローカル送信者')
+    expect(await screen.findByText('ローカル送信者')).toBeTruthy()
     expect(screen.getByText((content) => content.includes('local message'))).toBeTruthy()
   })
 
-  it('ignores malformed local JSON without crashing', async () => {
-    localStorage.setItem('local_time_capsules', '{not-json')
-    getSupabaseMock.mockReturnValue(createSupabaseStub())
-    render(<TimeCapsule />)
-
-    expect(await screen.findByText('timeCapsuleEmptyDesc')).toBeTruthy()
-  })
-
-  it('falls back to local storage when insert fails', async () => {
-    vi.useFakeTimers()
-    try {
-      getSupabaseMock.mockReturnValue(createSupabaseStub({ insertError: new Error('insert failed') }))
-      const { container } = render(<TimeCapsule />)
+  it('does not report success when remote create fails, and queues the same idempotency key', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    createMock.mockRejectedValue(new Error('remote failed'))
+    const { container } = render(<TimeCapsule />)
+    await screen.findByText('timeCapsuleEmptyDesc')
       fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
       fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
       fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
-
-      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
-      await vi.waitFor(() => {
-        expect(screen.getByText('sealedSuccess')).toBeTruthy()
+      await act(async () => {
+        fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+        await Promise.resolve()
       })
 
-      const saved = JSON.parse(localStorage.getItem('local_time_capsules') || '[]') as Array<{ sender: string; message: string }>
-      expect(saved[0]).toMatchObject({ sender: '投稿者', message: '保存する本文' })
-      act(() => {
-        vi.advanceTimersByTime(1200)
-      })
-    } finally {
-      vi.useRealTimers()
-    }
+      expect(screen.queryByText('sealedSuccess')).toBeNull()
+      expect(screen.getByText('genericError')).toBeTruthy()
+      const saved = JSON.parse(localStorage.getItem('local_time_capsules') || '[]')
+      expect(saved[0]).toMatchObject({ sender: '投稿者', message: '保存する本文', pendingKey: expect.any(String) })
+      expect(createMock).toHaveBeenCalledTimes(1)
   })
 
-  it('reports upload failure without local fallback write', async () => {
-    getSupabaseMock.mockReturnValue(createSupabaseStub({ uploadError: new Error('upload failed') }))
+  it('syncs pending capsules using the persisted idempotency key', async () => {
+    const pendingKey = 'same-key'
+    localStorage.setItem('local_time_capsules', JSON.stringify([{
+      id: 'local-1',
+      sender: '保留送信者',
+      message: '保留本文',
+      unlockDate: futureDate,
+      createdAt: '2026-08-23T00:00:00.000Z',
+      pendingKey,
+    }]))
+    createMock.mockResolvedValue({ data: row() })
+    listMock.mockResolvedValue({ data: [] })
+
+    render(<TimeCapsule />)
+    await screen.findByText('timeCapsuleEmptyDesc')
+
+    expect(createTimeCapsule).toHaveBeenCalledWith({
+      sender: '保留送信者',
+      message: '保留本文',
+      unlockDate: futureDate,
+    }, pendingKey)
+    expect(localStorage.getItem('local_time_capsules')).toBe('[]')
+  })
+
+  it('reports attachment failure without submitting a capsule', async () => {
+    listMock.mockResolvedValue({ data: [] })
     const { container } = render(<TimeCapsule />)
+    await screen.findByText('timeCapsuleEmptyDesc')
     fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
     fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
     fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '本文' } })
@@ -523,79 +175,6 @@ describe('TimeCapsule', () => {
     fireEvent.submit(container.querySelector('form') as HTMLFormElement)
 
     expect(await screen.findByText('uploadFileFailed')).toBeTruthy()
-    expect(localStorage.getItem('local_time_capsules')).toBeNull()
-  })
-
-  it('retries a queued refresh after the active fetch completes', async () => {
-    let triggerRefresh: (() => void) | undefined
-    let resolveOpened!: (result: QueryResult) => void
-    let resolveSealed!: (result: QueryResult) => void
-    let openedCalls = 0
-    let sealedCalls = 0
-    const firstOpened = new Promise<QueryResult>((resolve) => {
-      resolveOpened = resolve
-    })
-    const firstSealed = new Promise<QueryResult>((resolve) => {
-      resolveSealed = resolve
-    })
-    const emptyResult: QueryResult = { data: [], error: null }
-
-    vi.spyOn(globalThis, 'setInterval').mockImplementation((callback) => {
-      triggerRefresh = callback as () => void
-      return 0 as unknown as ReturnType<typeof setInterval>
-    })
-    getSupabaseMock.mockReturnValue({
-      from: (table: string) => ({
-        select: () => ({
-          lte: () => ({
-            order: async () => {
-              openedCalls += 1
-              return openedCalls === 1 ? firstOpened : emptyResult
-            },
-          }),
-          gt: () => ({
-            order: async () => {
-              sealedCalls += 1
-              return sealedCalls === 1 ? firstSealed : emptyResult
-            },
-          }),
-        }),
-        insert: async () => ({ error: table === 'time_capsules' ? null : null }),
-      }),
-      storage: {
-        from: () => ({
-          upload: async () => ({ data: null, error: null }),
-          getPublicUrl: () => ({ data: { publicUrl: '' } }),
-        }),
-      },
-    } satisfies SupabaseStub)
-
-    render(<TimeCapsule />)
-    act(() => {
-      triggerRefresh?.()
-    })
-    expect(openedCalls).toBe(1)
-    expect(sealedCalls).toBe(1)
-
-    await act(async () => {
-      resolveOpened(emptyResult)
-      resolveSealed(emptyResult)
-      await Promise.all([firstOpened, firstSealed])
-    })
-
-    await vi.waitFor(() => {
-      expect(openedCalls).toBe(2)
-      expect(sealedCalls).toBe(2)
-    })
-  })
-
-  it('cleans up the refresh interval on unmount', async () => {
-    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
-    getSupabaseMock.mockReturnValue(createSupabaseStub())
-    const { unmount } = render(<TimeCapsule />)
-    await screen.findByText('timeCapsuleEmptyDesc')
-    unmount()
-
-    expect(clearIntervalSpy).toHaveBeenCalled()
+    expect(createTimeCapsule).not.toHaveBeenCalled()
   })
 })

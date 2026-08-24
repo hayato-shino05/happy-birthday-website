@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getSupabase } from '@/lib/supabase/client'
+import { createTimeCapsule, listTimeCapsules } from '@/lib/time-capsule-client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
@@ -15,6 +15,10 @@ export interface CapsuleItem {
   createdAt: string
   isUnlocked: boolean
 }
+
+type PendingCapsule = CapsuleItem & { pendingKey?: string }
+
+const LOCAL_CAPSULES_KEY = 'local_time_capsules'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -35,6 +39,12 @@ function formatLocalDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function createIdempotencyKey(): string {
+  return typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `capsule-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 // ローカル日付文字列（YYYY-MM-DD）をローカル時間 00:00:00 の Date オブジェクトに変換
@@ -133,8 +143,6 @@ export function TimeCapsule() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
   const hasLoadedCapsulesRef = useRef(false)
-  const openedCapsulesRef = useRef<CapsuleItem[]>([])
-  const sealedCapsulesRef = useRef<CapsuleItem[]>([])
   const refreshInFlightRef = useRef(false)
   const refreshQueuedRef = useRef(false)
 
@@ -149,58 +157,44 @@ export function TimeCapsule() {
     if (!hasLoadedCapsulesRef.current) setLoading(true)
     setLoadError(false)
     try {
-      const supabase = getSupabase()
       const now = new Date()
-      const today = formatLocalDate(now)
-
-      const openedQuery = supabase
-        .from('time_capsules')
-        .select('id,sender,recipient,message,photo_url,unlock_date,created_at')
-        .lte('unlock_date', today)
-        .order('unlock_date', { ascending: true })
-      const sealedQuery = supabase
-        .from('time_capsules')
-        .select('id,sender,recipient,unlock_date,created_at')
-        .gt('unlock_date', today)
-        .order('unlock_date', { ascending: true })
-      const [openedResult, sealedResult] = await Promise.all([openedQuery, sealedQuery])
-
-      const openedData = openedResult.data || []
-      const sealedData = sealedResult.data || []
-      const openedCapsules = openedData
-        .map((capsule) => parseRemoteCapsule({ ...capsule, message: capsule.message, photo_url: capsule.photo_url }, now))
-        .filter((capsule): capsule is CapsuleItem => capsule !== null)
-      const sealedCapsules = sealedData
-        .map((capsule) => parseRemoteCapsule({ ...capsule, message: null, photo_url: null }, now))
-        .filter((capsule): capsule is CapsuleItem => capsule !== null)
-      if (!openedResult.error) {
-        openedCapsulesRef.current = openedCapsules
-      }
-      if (!sealedResult.error && (!openedResult.error || !hasLoadedCapsulesRef.current)) {
-        sealedCapsulesRef.current = sealedCapsules
-      }
-      const remoteCapsules = Array.from(
-        [...openedCapsulesRef.current, ...sealedCapsulesRef.current].reduce(
-          (capsulesById, capsule) => {
-            const id = String(capsule.id)
-            if (!capsulesById.has(id)) capsulesById.set(id, capsule)
-            return capsulesById
-          },
-          new Map<string, CapsuleItem>()
-        ).values()
-      )
-      const queryError = openedResult.error || sealedResult.error
-
-      // ローカルストレージフォールバックデータの取得
-      let localCapsules: CapsuleItem[] = []
+      let localRaw: unknown[] = []
       try {
-        const localSaved = localStorage.getItem('local_time_capsules')
-        if (localSaved) {
-          localCapsules = parseLocalCapsules(JSON.parse(localSaved), now)
-        }
+        const localSaved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+        const parsed = localSaved ? JSON.parse(localSaved) : []
+        if (Array.isArray(parsed)) localRaw = parsed
       } catch {
-        localCapsules = []
+        localRaw = []
       }
+
+      const pendingRaw = localRaw.filter((item): item is PendingCapsule => (
+        isRecord(item) && typeof item.pendingKey === 'string'
+      ))
+      const syncedIds = new Set<string>()
+      await Promise.all(pendingRaw.map(async (pending) => {
+        try {
+          await createTimeCapsule({
+            sender: pending.sender,
+            recipient: pending.recipient,
+            message: pending.message,
+            unlockDate: pending.unlockDate,
+          }, pending.pendingKey as string)
+          syncedIds.add(String(pending.id))
+        } catch {
+          // Keep pending entries for the next refresh.
+        }
+      }))
+      if (syncedIds.size > 0) {
+        localRaw = localRaw.filter((item) => !isRecord(item) || !syncedIds.has(String(item.id)))
+        localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify(localRaw))
+      }
+
+      const result = await listTimeCapsules()
+      const remoteCapsules = result.data
+        .map((capsule) => parseRemoteCapsule(capsule, now))
+        .filter((capsule): capsule is CapsuleItem => capsule !== null)
+      const queryError = null
+      const localCapsules = parseLocalCapsules(localRaw, now)
 
       // リモートとローカルの統合（ID重複を排除）
       const remoteIds = new Set(remoteCapsules.map((c) => String(c.id)))
@@ -216,9 +210,16 @@ export function TimeCapsule() {
       hasLoadedCapsulesRef.current = true
     } catch {
       if (!isMountedRef.current) return
+      let localCapsules: CapsuleItem[] = []
+      try {
+        const localSaved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+        localCapsules = parseLocalCapsules(localSaved ? JSON.parse(localSaved) : [], new Date())
+      } catch {
+        localCapsules = []
+      }
       setLoadError(true)
       if (!hasLoadedCapsulesRef.current) {
-        setCapsules([])
+        setCapsules(localCapsules)
         hasLoadedCapsulesRef.current = true
       }
     } finally {
@@ -249,59 +250,30 @@ export function TimeCapsule() {
   const handleSeal = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!sender.trim() || !message.trim() || !unlockDate) return
+    if (photoFile) {
+      setSubmitError(t('uploadFileFailed'))
+      return
+    }
 
     setIsSubmitting(true)
     setSubmitError(null)
+    const idempotencyKey = createIdempotencyKey()
     try {
-      const supabase = getSupabase()
-      let photoUrl: string | undefined = undefined
-
-      if (photoFile) {
-        const fileExt = photoFile.name.split('.').pop() || 'jpg'
-        const fileName = `capsule_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('time-capsules')
-          .upload(fileName, photoFile)
-
-        if (uploadErr || !uploadData) {
-          // 写真アップロード失敗時は封印を中断してエラーを表示
-          setSubmitError(t('uploadFileFailed'))
-          setIsSubmitting(false)
-          return
-        }
-
-        photoUrl = supabase.storage.from('time-capsules').getPublicUrl(fileName).data.publicUrl
-      }
-
       const newCapsule: CapsuleItem = {
         id: `capsule-${Date.now()}`,
         sender: sender.trim(),
         recipient: recipient.trim() || undefined,
         message: message.trim(),
-        photoUrl,
         unlockDate,
         createdAt: new Date().toISOString(),
         isUnlocked: parseLocalDate(unlockDate) <= new Date(),
       }
-
-      // Supabase へ保存、失敗時はローカルストレージへフォールバック保存
-      const { error: insertErr } = await supabase.from('time_capsules').insert({
+      await createTimeCapsule({
         sender: newCapsule.sender,
         recipient: newCapsule.recipient,
         message: newCapsule.message,
-        photo_url: newCapsule.photoUrl,
-        unlock_date: newCapsule.unlockDate,
-      })
-
-      if (insertErr) {
-        try {
-          const localSaved = localStorage.getItem('local_time_capsules')
-          const currentList = localSaved ? JSON.parse(localSaved) : []
-          localStorage.setItem('local_time_capsules', JSON.stringify([newCapsule, ...currentList]))
-        } catch {
-          // ストレージエラーは無視
-        }
-      }
+        unlockDate: newCapsule.unlockDate,
+      }, idempotencyKey)
 
       setSubmitSuccess(true)
       setTimeout(() => {
@@ -315,6 +287,24 @@ export function TimeCapsule() {
       }, 1200)
     } catch (err) {
       console.error('Failed to seal time capsule:', err)
+      const pendingCapsule: PendingCapsule = {
+        id: `capsule-${Date.now()}`,
+        sender: sender.trim(),
+        recipient: recipient.trim() || undefined,
+        message: message.trim(),
+        unlockDate,
+        createdAt: new Date().toISOString(),
+        isUnlocked: parseLocalDate(unlockDate) <= new Date(),
+        pendingKey: idempotencyKey,
+      }
+      try {
+        const saved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+        const currentList = saved ? JSON.parse(saved) : []
+        const nextList = Array.isArray(currentList) ? currentList : []
+        localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify([pendingCapsule, ...nextList]))
+      } catch {
+        // Local fallback is best effort when storage is unavailable.
+      }
       setSubmitError(t('genericError'))
     } finally {
       setIsSubmitting(false)
