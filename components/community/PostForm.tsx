@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { getSupabase } from '@/lib/supabase/client'
 import { CameraCapture } from './CameraCapture'
+import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { Icon } from '@/components/ui/Icon'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -195,6 +196,8 @@ export default function PostForm({ onSubmit }: PostFormProps) {
               resize: 'none',
             }}
           />
+
+          <ContributorPromptButtons hasContent={content.trim().length > 0} onSelect={setContent} />
 
           {/* メディアアップロード */}
           <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} style={{ display: 'none' }} />

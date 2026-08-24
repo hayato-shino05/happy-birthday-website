@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
+import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import { Icon } from '@/components/ui/Icon'
 
@@ -186,6 +187,8 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           }}
         />
       </div>
+
+      <ContributorPromptButtons hasContent={message.trim().length > 0} onSelect={setMessage} />
 
       {/* ファイルアップロードエリア */}
       <div style={{ marginBottom: '15px' }}>
