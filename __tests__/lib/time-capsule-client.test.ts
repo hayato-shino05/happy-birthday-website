@@ -4,7 +4,7 @@ const createClientMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: createClientMock }))
 
-import { createTimeCapsule, listTimeCapsules, redeemTimeCapsule } from '@/lib/time-capsule-client'
+import { createTimeCapsule, listTimeCapsules, redeemTimeCapsule, redeemTimeCapsuleByCode } from '@/lib/time-capsule-client'
 
 const capsule = {
   id: 1,
@@ -42,12 +42,13 @@ describe('time-capsule auth bootstrap', () => {
 
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({
       data: capsule,
+      accessCode: 'ABCD-EFGH',
       inviteToken: 'invite-token',
       inviteTokenExpiresAt: '2026-09-23T00:00:00.000Z',
       idempotent: false,
     }), { status: 201 }))
     await expect(createTimeCapsule({ sender: '送信者', message: '本文', unlockDate: '2999-12-31' }, 'key'))
-      .resolves.toMatchObject({ inviteToken: 'invite-token', inviteTokenExpiresAt: '2026-09-23T00:00:00.000Z' })
+      .resolves.toMatchObject({ accessCode: 'ABCD-EFGH', inviteToken: 'invite-token', inviteTokenExpiresAt: '2026-09-23T00:00:00.000Z' })
   })
 
   it('redeems a capsule with its invite token without anonymous auth', async () => {
@@ -59,6 +60,17 @@ describe('time-capsule auth bootstrap', () => {
     expect(fetch).toHaveBeenCalledWith('/api/time-capsules/123/access', expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({ inviteToken: 'invite-token' }),
+    }))
+  })
+
+  it('redeems a capsule with an access code', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ data: capsule }), { status: 200 }))
+
+    await expect(redeemTimeCapsuleByCode('ABCD-EFGH')).resolves.toMatchObject({ data: { id: 1 } })
+
+    expect(fetch).toHaveBeenCalledWith('/api/time-capsules/access', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ accessCode: 'ABCD-EFGH' }),
     }))
   })
 })

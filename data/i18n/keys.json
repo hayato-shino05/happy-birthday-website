@@ -300,6 +300,8 @@
   "timeCapsuleInviteDescription",
   "timeCapsuleInviteExpires",
   "timeCapsuleInviteTitle",
+  "timeCapsuleAccessCodeLabel",
+  "timeCapsuleAccessCodeHint",
   "timeCapsuleIdLabel",
   "timeCapsuleInviteTokenLabel",
   "timeCapsuleRedeemAction",

@@ -302,6 +302,8 @@
     "timeCapsuleInviteDescription": "このトークンを受け取る相手に安全な方法で共有してください。再表示はできません。",
     "timeCapsuleInviteExpires": "有効期限: {date}",
     "timeCapsuleInviteTitle": "招待トークン",
+    "timeCapsuleAccessCodeLabel": "6桁のアクセスコード",
+    "timeCapsuleAccessCodeHint": "カプセルの作成者から共有された6桁のコードを入力してください。",
     "timeCapsuleIdLabel": "カプセルID",
     "timeCapsuleInviteTokenLabel": "招待トークン",
     "timeCapsuleRedeemAction": "カプセルを確認",

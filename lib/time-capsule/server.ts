@@ -1,4 +1,4 @@
-import { createHash, createHmac } from 'node:crypto'
+import { createHash, createHmac, randomInt } from 'node:crypto'
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js'
 
 export const TIME_CAPSULE_SELECT =
@@ -97,6 +97,28 @@ export function hashInviteToken(token: string): string {
   return createHash('sha256').update(token, 'utf8').digest('hex')
 }
 
+export function createAccessCode(ownerId?: string, idempotencyKey?: string, attempt = 0): string {
+  if (ownerId && idempotencyKey) {
+    const digest = createHmac('sha256', getServiceKey())
+      .update(`time-capsule-access:v1|${ownerId}|${idempotencyKey}|${attempt}`, 'utf8')
+      .digest('hex')
+    return String((Number.parseInt(digest.slice(0, 12), 16) % 900000) + 100000)
+  }
+  return String(randomInt(100000, 1000000))
+}
+
+export function parseAccessCode(value: string | null): string {
+  const normalized = value?.replace(/[ -]/g, '') ?? ''
+  if (!/^\d{6}$/.test(normalized)) {
+    throw new TimeCapsuleError('invalid_access_code', 401, 'アクセスコードが無効です')
+  }
+  return normalized
+}
+
+export function hashAccessCode(code: string): string {
+  return createHmac('sha256', getServiceKey()).update(`time-capsule-access:v1|${code}`, 'utf8').digest('hex')
+}
+
 export function createInviteToken(ownerId: string, idempotencyKey: string): string {
   return createHmac('sha256', getServiceKey())
     .update(`time-capsule-invite:v1|${ownerId}|${idempotencyKey}`, 'utf8')
@@ -185,4 +207,26 @@ export async function findByInviteToken(token: string, id?: number) {
   const { data, error } = await query.maybeSingle()
   if (error || !data) throw new TimeCapsuleError('invite_not_found', 404, 'Time Capsuleが見つかりません')
   return { client, row: data as unknown as CapsuleRow }
+}
+
+export async function findByAccessCode(code: string) {
+  const client = createServiceClient()
+  const access = await client.rpc('consume_time_capsule_access_code', {
+    input_code_hash: hashAccessCode(code),
+  })
+  const accessRow = Array.isArray(access.data) ? access.data[0] : null
+  if (access.error || !accessRow || typeof accessRow.capsule_id !== 'number') {
+    throw new TimeCapsuleError('access_not_found', 404, 'Time Capsuleが見つかりません')
+  }
+
+  const capsule = await client
+    .from('time_capsules')
+    .select(TIME_CAPSULE_SELECT)
+    .eq('id', accessRow.capsule_id)
+    .is('invite_revoked_at', null)
+    .maybeSingle()
+  if (capsule.error || !capsule.data) {
+    throw new TimeCapsuleError('access_not_found', 404, 'Time Capsuleが見つかりません')
+  }
+  return { client, row: capsule.data as unknown as CapsuleRow }
 }

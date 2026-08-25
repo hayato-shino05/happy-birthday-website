@@ -6,14 +6,14 @@ import { createTimeCapsule, listTimeCapsules } from '@/lib/time-capsule-client'
 const languageMock = vi.hoisted(() => ({ value: 'ja' as 'ja' | 'en' }))
 const listMock = vi.hoisted(() => vi.fn())
 const createMock = vi.hoisted(() => vi.fn())
-const redeemMock = vi.hoisted(() => vi.fn())
+const redeemByCodeMock = vi.hoisted(() => vi.fn())
 const uploadMock = vi.hoisted(() => vi.fn())
 const deletePhotoMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/time-capsule-client', () => ({
   listTimeCapsules: listMock,
   createTimeCapsule: createMock,
-  redeemTimeCapsule: redeemMock,
+  redeemTimeCapsuleByCode: redeemByCodeMock,
   uploadTimeCapsulePhoto: uploadMock,
   deleteTimeCapsulePhoto: deletePhotoMock,
 }))
@@ -42,6 +42,8 @@ type CapsuleRow = {
   created_at: string
 }
 
+type CreateResult = { data: CapsuleRow; accessCode?: string }
+
 function row(overrides: Partial<CapsuleRow> = {}): CapsuleRow {
   return {
     id: 1,
@@ -59,7 +61,7 @@ beforeEach(() => {
   localStorage.clear()
   listMock.mockReset()
   createMock.mockReset()
-  redeemMock.mockReset()
+  redeemByCodeMock.mockReset()
   uploadMock.mockReset()
   deletePhotoMock.mockReset()
   languageMock.value = 'ja'
@@ -127,20 +129,19 @@ describe('TimeCapsule', () => {
     expect(screen.getByText((content) => content.includes('local message'))).toBeTruthy()
   })
 
-  it('shows unlocked content after redeeming an invite token', async () => {
+  it('normalizes and redeems a six-digit access code', async () => {
     listMock.mockResolvedValue({ data: [] })
-    redeemMock.mockResolvedValue({ data: row({ unlock_date: pastDate }) })
+    redeemByCodeMock.mockResolvedValue({ data: row({ unlock_date: pastDate }) })
     const { container } = render(<TimeCapsule />)
 
     await screen.findByText('timeCapsuleEmptyDesc')
-    fireEvent.change(screen.getByLabelText('timeCapsuleIdLabel'), { target: { value: '1' } })
-    fireEvent.change(screen.getByLabelText('timeCapsuleInviteTokenLabel'), { target: { value: 'invite-token' } })
+    fireEvent.change(screen.getByLabelText('timeCapsuleAccessCodeLabel'), { target: { value: '482 913' } })
     await act(async () => {
       fireEvent.submit(container.querySelector('form') as HTMLFormElement)
       await Promise.resolve()
     })
 
-    expect(redeemMock).toHaveBeenCalledWith('1', 'invite-token')
+    expect(redeemByCodeMock).toHaveBeenCalledWith('482913')
     expect(screen.getByText('private capsule message')).toBeTruthy()
   })
 
@@ -164,13 +165,11 @@ describe('TimeCapsule', () => {
       expect(createMock).toHaveBeenCalledTimes(1)
   })
 
-  it('shows the invite token details after sealing a capsule', async () => {
-    const expiresAt = '2030-01-02T00:00:00.000Z'
+  it('shows the access code after sealing a capsule', async () => {
     listMock.mockResolvedValue({ data: [] })
     createMock.mockResolvedValue({
       data: row(),
-      inviteToken: 'invite-token-for-test',
-      inviteTokenExpiresAt: expiresAt,
+      accessCode: '482913',
     })
     const { container } = render(<TimeCapsule />)
 
@@ -183,20 +182,19 @@ describe('TimeCapsule', () => {
       await Promise.resolve()
     })
 
-    const inviteToken = screen.getByText('invite-token-for-test')
-    const invitePanel = inviteToken.parentElement?.parentElement
-    expect(invitePanel).toHaveTextContent('timeCapsuleInviteTitle')
-    expect(invitePanel).toHaveTextContent('invite-token-for-test')
-    expect(invitePanel).toHaveTextContent('timeCapsuleInviteDescription')
-    expect(invitePanel).toHaveTextContent('timeCapsuleIdLabel')
-    expect(invitePanel).toHaveTextContent('1')
-    expect(invitePanel).toHaveTextContent(`timeCapsuleInviteExpires:${new Date(expiresAt).toLocaleDateString('ja-JP')}`)
+    const accessCode = screen.getByText('482913')
+    const accessPanel = accessCode.parentElement?.parentElement
+    expect(accessPanel).toHaveTextContent('timeCapsuleInviteTitle')
+    expect(accessPanel).toHaveTextContent('482913')
+    expect(accessPanel).toHaveTextContent('timeCapsuleInviteDescription')
+    expect(accessPanel).not.toHaveTextContent('timeCapsuleIdLabel')
+    expect(accessPanel).not.toHaveTextContent('invite-token-for-test')
   })
 
-  it('keeps the first invite token and does not create a second capsule after repeated submits', async () => {
-    let resolveCreate: ((value: { data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }) => void) | undefined
+  it('keeps the first access code and does not create a second capsule after repeated submits', async () => {
+    let resolveCreate: ((value: CreateResult | PromiseLike<CreateResult>) => void) | undefined
     listMock.mockResolvedValue({ data: [] })
-    createMock.mockImplementation(() => new Promise<{ data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }>((resolve) => {
+    createMock.mockImplementation(() => new Promise<CreateResult>((resolve) => {
       resolveCreate = resolve
     }))
     const { container } = render(<TimeCapsule />)
@@ -212,13 +210,40 @@ describe('TimeCapsule', () => {
     await act(async () => {
       resolveCreate?.({
         data: row(),
-        inviteToken: 'invite-token-for-test',
-        inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z',
+        accessCode: '482913',
       })
       await Promise.resolve()
     })
 
-    expect(screen.getByText('invite-token-for-test')).toBeTruthy()
+    expect(screen.getByText('482913')).toBeTruthy()
+  })
+
+  it('allows creating another capsule after showing an access code', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    createMock
+      .mockResolvedValueOnce({ data: row(), accessCode: '482913' })
+      .mockResolvedValueOnce({ data: row({ id: 2 }), accessCode: '731604' })
+    const { container } = render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+    expect(await screen.findByText('482913')).toBeTruthy()
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '二人目' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '二つ目の本文' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+
+    expect(createMock).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('731604')).toBeTruthy()
   })
 
   it('keeps a synced pending capsule when remote refresh fails', async () => {
@@ -263,7 +288,7 @@ describe('TimeCapsule', () => {
     expect(localStorage.getItem('local_time_capsules')).toBe('[]')
   })
 
-  it('shows the invite token returned while synchronizing a pending capsule', async () => {
+  it('shows the access code returned while synchronizing a pending capsule', async () => {
     localStorage.setItem('local_time_capsules', JSON.stringify([{
       id: 'local-1',
       sender: '保留送信者',
@@ -274,20 +299,19 @@ describe('TimeCapsule', () => {
     }]))
     createMock.mockResolvedValue({
       data: row(),
-      inviteToken: 'synced-invite-token',
-      inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z',
+      accessCode: '482913',
     })
     listMock.mockResolvedValue({ data: [] })
 
     render(<TimeCapsule />)
 
-    expect(await screen.findByText('synced-invite-token')).toBeTruthy()
+    expect(await screen.findByText('482913')).toBeTruthy()
     expect(localStorage.getItem('local_time_capsules')).toBe('[]')
   })
 
-  it('keeps a synchronized invite token when a direct create finishes later', async () => {
-    let resolveSync: ((value: { data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }) => void) | undefined
-    let resolveDirect: ((value: { data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }) => void) | undefined
+  it('keeps synchronized access codes when a direct create finishes later', async () => {
+    let resolveSync: ((value: { data: CapsuleRow; accessCode: string }) => void) | undefined
+    let resolveDirect: ((value: { data: CapsuleRow; accessCode: string }) => void) | undefined
     localStorage.setItem('local_time_capsules', JSON.stringify([{
       id: 'local-1', sender: '保留送信者', message: '保留本文', unlockDate: futureDate,
       createdAt: '2026-08-23T00:00:00.000Z', pendingKey: 'same-key',
@@ -302,14 +326,14 @@ describe('TimeCapsule', () => {
     fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
     fireEvent.submit(container.querySelector('form') as HTMLFormElement)
     await act(async () => {
-      resolveSync?.({ data: row({ id: 1 }), inviteToken: 'synced-token', inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z' })
+      resolveSync?.({ data: row({ id: 1 }), accessCode: '482913' })
       await Promise.resolve()
-      resolveDirect?.({ data: row({ id: 2 }), inviteToken: 'direct-token', inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z' })
+      resolveDirect?.({ data: row({ id: 2 }), accessCode: '731604' })
       await Promise.resolve()
     })
 
-    expect(screen.getByText('synced-token')).toBeTruthy()
-    expect(screen.getByText('direct-token')).toBeTruthy()
+    expect(screen.getByText('482913')).toBeTruthy()
+    expect(screen.getByText('731604')).toBeTruthy()
   })
 
   it('uploads an attachment before creating a capsule', async () => {

@@ -35,6 +35,7 @@ interface TimeCapsuleResponse {
 
 export interface CreateTimeCapsuleResponse {
   data: TimeCapsuleRow
+  accessCode?: string
   inviteToken?: string
   inviteTokenExpiresAt?: string
   idempotent?: boolean
@@ -169,6 +170,23 @@ export async function redeemTimeCapsule(
   return { data: toRemoteRow(body.data) }
 }
 
+export async function redeemTimeCapsuleByCode(
+  accessCode: string,
+  signal?: AbortSignal
+): Promise<{ data: TimeCapsuleRow }> {
+  const response = await fetch('/api/time-capsules/access', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessCode }),
+    signal,
+  })
+  const body = await readJson(response)
+  if (!response.ok || !isRecord(body) || !isApiCapsule(body.data)) {
+    throw new Error('タイムカプセルを開けません')
+  }
+  return { data: toRemoteRow(body.data) }
+}
+
 export async function createTimeCapsule(
   input: CreateTimeCapsuleInput,
   idempotencyKey: string,
@@ -191,6 +209,7 @@ export async function createTimeCapsule(
     !response.ok ||
     !isRecord(body) ||
     !isApiCapsule(body.data) ||
+    (body.accessCode !== undefined && typeof body.accessCode !== 'string') ||
     (body.inviteToken !== undefined && typeof body.inviteToken !== 'string') ||
     (body.inviteTokenExpiresAt !== undefined && typeof body.inviteTokenExpiresAt !== 'string') ||
     (body.idempotent !== undefined && typeof body.idempotent !== 'boolean')
@@ -199,6 +218,7 @@ export async function createTimeCapsule(
   }
   return {
     data: toRemoteRow(body.data),
+    accessCode: body.accessCode,
     inviteToken: body.inviteToken,
     inviteTokenExpiresAt: body.inviteTokenExpiresAt,
     idempotent: body.idempotent,

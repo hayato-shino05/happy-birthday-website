@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { maybeSingle, query, createClient } = vi.hoisted(() => {
+const { maybeSingle, query, rpc, createClient } = vi.hoisted(() => {
   const maybeSingle = vi.fn()
+  const rpc = vi.fn()
   const query = {
     select: vi.fn(() => query),
     eq: vi.fn(() => query),
@@ -12,8 +13,10 @@ const { maybeSingle, query, createClient } = vi.hoisted(() => {
   return {
     maybeSingle,
     query,
+    rpc,
     createClient: vi.fn(() => ({
       from: vi.fn(() => query),
+      rpc,
       storage: { from: vi.fn() },
     })),
   }
@@ -22,9 +25,13 @@ const { maybeSingle, query, createClient } = vi.hoisted(() => {
 vi.mock('@supabase/supabase-js', () => ({ createClient }))
 
 import {
+  createAccessCode,
+  findByAccessCode,
   createInviteToken,
   findByInviteToken,
+  hashAccessCode,
   hashInviteToken,
+  parseAccessCode,
   parseInviteToken,
   serializeCapsule,
   TimeCapsuleError,
@@ -82,5 +89,47 @@ describe('Time Capsule server boundary', () => {
     const token = 'a'.repeat(43)
     expect(hashInviteToken(token)).toMatch(/^[a-f0-9]{64}$/)
     expect(hashInviteToken(token)).not.toBe(token)
+  })
+
+  it('creates the same six-digit access code for an idempotent replay', () => {
+    const code = createAccessCode('owner-1', 'same-key')
+    expect(code).toMatch(/^\d{6}$/)
+    expect(createAccessCode('owner-1', 'same-key')).toBe(code)
+    expect(createAccessCode('owner-1', 'different-key')).not.toBe(code)
+    expect(parseAccessCode(` ${code.slice(0, 3)}-${code.slice(3)} `)).toBe(code)
+    expect(hashAccessCode(code)).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  it('rejects malformed access codes', () => {
+    expect(() => parseAccessCode('12345')).toThrowError(TimeCapsuleError)
+    expect(() => parseAccessCode('1234567')).toThrowError(TimeCapsuleError)
+    expect(() => parseAccessCode('abcdef')).toThrowError(TimeCapsuleError)
+  })
+
+  it('consumes an access code through the atomic RPC and loads its capsule', async () => {
+    rpc.mockResolvedValue({ data: [{ capsule_id: 1 }], error: null })
+    maybeSingle.mockResolvedValue({ data: { id: 1 }, error: null })
+
+    const result = await findByAccessCode('123456')
+
+    expect(result.row).toEqual({ id: 1 })
+    expect(rpc).toHaveBeenCalledWith('consume_time_capsule_access_code', {
+      input_code_hash: expect.any(String),
+    })
+    expect(query.eq).toHaveBeenCalledWith('id', 1)
+  })
+
+  it('rejects an access code when the RPC returns no access row', async () => {
+    rpc.mockResolvedValue({ data: [], error: null })
+
+    await expect(findByAccessCode('123456')).rejects.toMatchObject({ code: 'access_not_found', status: 404 })
+    expect(maybeSingle).not.toHaveBeenCalled()
+  })
+
+  it('rejects an access code when its capsule row is missing', async () => {
+    rpc.mockResolvedValue({ data: [{ capsule_id: 1 }], error: null })
+    maybeSingle.mockResolvedValue({ data: null, error: null })
+
+    await expect(findByAccessCode('123456')).rejects.toMatchObject({ code: 'access_not_found', status: 404 })
   })
 })

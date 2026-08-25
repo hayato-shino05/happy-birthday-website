@@ -2,8 +2,10 @@ import { NextRequest } from 'next/server'
 import {
   TIME_CAPSULE_SELECT,
   TimeCapsuleError,
+  createAccessCode,
   createInviteToken,
   errorResponse,
+  hashAccessCode,
   hashInviteToken,
   parseCapsuleInput,
   parseIdempotencyKey,
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
     const idempotencyKey = parseIdempotencyKey(request)
     const input = parseCapsuleInput(await request.json(), user.id)
     const inviteToken = createInviteToken(user.id, idempotencyKey)
+    let accessCode = createAccessCode(user.id, idempotencyKey, 0)
     const inviteTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
     const { data, error } = await client
@@ -72,21 +75,52 @@ export async function POST(request: NextRequest) {
       if (existing.data.invite_token_hash !== hashInviteToken(inviteToken)) {
         throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
       }
+      const existingAccess = await client
+        .from('time_capsule_access_codes')
+        .select('derivation_attempt')
+        .eq('capsule_id', existing.data.id)
+        .maybeSingle()
+      if (existingAccess.error || !existingAccess.data) {
+        throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
+      }
+      accessCode = createAccessCode(user.id, idempotencyKey, existingAccess.data.derivation_attempt)
       const capsule = await serializeCapsule(client, existing.data)
       return Response.json({
         data: capsule,
         inviteToken,
         inviteTokenExpiresAt: existing.data.invite_token_expires_at,
+        accessCode,
         idempotent: true,
       })
     }
     if (error || !data) throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
+
+    let accessCodeCreated = false
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const candidate = createAccessCode(user.id, idempotencyKey, attempt)
+      const result = await client
+        .from('time_capsule_access_codes')
+        .insert({ capsule_id: data.id, code_hash: hashAccessCode(candidate), derivation_attempt: attempt })
+        .select('id')
+        .single()
+      if (!result.error) {
+        accessCode = candidate
+        accessCodeCreated = true
+        break
+      }
+      if (result.error.code !== '23505') break
+    }
+    if (!accessCodeCreated) {
+      await client.from('time_capsules').delete().eq('id', data.id)
+      throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
+    }
 
     return Response.json(
       {
         data: await serializeCapsule(client, data),
         inviteToken,
         inviteTokenExpiresAt,
+        accessCode,
         idempotent: false,
       },
       { status: 201 }

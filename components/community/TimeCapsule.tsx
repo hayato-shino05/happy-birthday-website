@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createTimeCapsule, deleteTimeCapsulePhoto, listTimeCapsules, redeemTimeCapsule, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
+import { createTimeCapsule, deleteTimeCapsulePhoto, listTimeCapsules, redeemTimeCapsuleByCode, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
@@ -17,7 +17,7 @@ export interface CapsuleItem {
 }
 
 type PendingCapsule = CapsuleItem & { pendingKey?: string }
-type InviteAccess = { capsuleId: string; token: string; expiresAt: string }
+type InviteAccess = { accessCode: string }
 
 const LOCAL_CAPSULES_KEY = 'local_time_capsules'
 
@@ -40,6 +40,10 @@ function formatLocalDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function normalizeAccessCode(value: string): string {
+  return value.replace(/[\s-]/g, '')
 }
 
 function createIdempotencyKey(): string {
@@ -142,8 +146,7 @@ export function TimeCapsule() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [inviteAccesses, setInviteAccesses] = useState<InviteAccess[]>([])
-  const [accessCapsuleId, setAccessCapsuleId] = useState('')
-  const [accessInviteToken, setAccessInviteToken] = useState('')
+  const [accessCodeInput, setAccessCodeInput] = useState('')
   const [accessError, setAccessError] = useState<string | null>(null)
   const [accessedCapsule, setAccessedCapsule] = useState<CapsuleItem | null>(null)
   const [isAccessing, setIsAccessing] = useState(false)
@@ -189,12 +192,8 @@ export function TimeCapsule() {
             unlockDate: pending.unlockDate,
           }, pending.pendingKey as string)
           syncedIds.add(String(pending.id))
-          if (created.inviteToken && created.inviteTokenExpiresAt) {
-            syncedInviteAccesses.push({
-              capsuleId: String(created.data.id),
-              token: created.inviteToken,
-              expiresAt: created.inviteTokenExpiresAt,
-            })
+          if (created.accessCode) {
+            syncedInviteAccesses.push({ accessCode: created.accessCode })
           }
         } catch {
           // Keep pending entries for the next refresh.
@@ -269,7 +268,7 @@ export function TimeCapsule() {
   // タイムカプセルの封印処理
   const handleSeal = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (isSealingRef.current || isSubmitting || inviteAccesses.length > 0 || !sender.trim() || !message.trim() || !unlockDate) return
+    if (isSealingRef.current || isSubmitting || !sender.trim() || !message.trim() || !unlockDate) return
     isSealingRef.current = true
     setIsSubmitting(true)
     setSubmitError(null)
@@ -295,16 +294,12 @@ export function TimeCapsule() {
         photoObjectPath,
       }, idempotencyKey)
 
-      if (created.inviteToken && created.inviteTokenExpiresAt) {
-        const inviteAccess: InviteAccess = {
-          capsuleId: String(created.data.id),
-          token: created.inviteToken,
-          expiresAt: created.inviteTokenExpiresAt,
-        }
-        setInviteAccesses((current) => [...current, inviteAccess])
+      const accessCode = created.accessCode
+      if (accessCode) {
+        setInviteAccesses((current) => [...current, { accessCode }])
       }
       setSubmitSuccess(true)
-      const hasInviteAccess = Boolean(created.inviteToken && created.inviteTokenExpiresAt)
+      const hasInviteAccess = Boolean(created.accessCode)
       setTimeout(() => {
         setSubmitSuccess(false)
         setSender('')
@@ -346,13 +341,15 @@ export function TimeCapsule() {
 
   const handleRedeem = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!accessCapsuleId.trim() || !accessInviteToken.trim()) return
+    const normalizedCode = normalizeAccessCode(accessCodeInput.trim())
+    const hasValidAccessCode = /^\d{6}$/.test(normalizedCode)
+    if (!hasValidAccessCode) return
 
     setIsAccessing(true)
     setAccessError(null)
     setAccessedCapsule(null)
     try {
-      const result = await redeemTimeCapsule(accessCapsuleId.trim(), accessInviteToken.trim())
+      const result = await redeemTimeCapsuleByCode(normalizedCode)
       const capsule = parseRemoteCapsule(result.data)
       if (!capsule) throw new Error('invalid capsule response')
       setAccessedCapsule(capsule)
@@ -395,23 +392,18 @@ export function TimeCapsule() {
           <form onSubmit={handleRedeem} className="mb-4 space-y-3 rounded-2xl border border-[#D4B08C] bg-[#FFF9F3] p-4">
             <p className="text-xs font-bold text-[#854D27]">{t('timeCapsuleRedeemTitle')}</p>
             <label className="block text-xs font-bold text-[#854D27]">
-              {t('timeCapsuleIdLabel')}
+              {t('timeCapsuleAccessCodeLabel')}
               <input
-                required
-                value={accessCapsuleId}
-                onChange={(event) => setAccessCapsuleId(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 text-xs text-[#854D27]"
-              />
-            </label>
-            <label className="block text-xs font-bold text-[#854D27]">
-              {t('timeCapsuleInviteTokenLabel')}
-              <input
-                required
-                value={accessInviteToken}
-                onChange={(event) => setAccessInviteToken(event.target.value)}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={7}
+                value={accessCodeInput}
+                onChange={(event) => setAccessCodeInput(event.target.value)}
+                placeholder="123 456"
                 className="mt-1 w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 font-mono text-xs text-[#854D27]"
               />
             </label>
+            <p className="text-[10px] text-[#854D27]/70">{t('timeCapsuleAccessCodeHint')}</p>
             {accessError && <p className="text-xs text-red-600">{accessError}</p>}
             <button type="submit" disabled={isAccessing} className="w-full rounded-xl bg-[#854D27] py-2 text-xs font-bold text-[#FFF9F3] disabled:opacity-50">
               {t('timeCapsuleRedeemAction')}
@@ -529,18 +521,12 @@ export function TimeCapsule() {
           )}
 
           {inviteAccesses.map((inviteAccess) => (
-            <div key={inviteAccess.capsuleId} className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
+            <div key={inviteAccess.accessCode} className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
               <p className="font-bold">{t('timeCapsuleInviteTitle')}</p>
               <p>{t('timeCapsuleInviteDescription')}</p>
-              <p>
-                {t('timeCapsuleIdLabel')}: <code className="select-all font-mono">{inviteAccess.capsuleId}</code>
-              </p>
-              <code className="block break-all rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
-                {inviteAccess.token}
+              <code className="block rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
+                {inviteAccess.accessCode}
               </code>
-              <p>{t('timeCapsuleInviteExpires', {
-                date: new Date(inviteAccess.expiresAt).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US'),
-              })}</p>
             </div>
           ))}
 

@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
 const server = vi.hoisted(() => ({
+  createAccessCode: vi.fn(),
   createInviteToken: vi.fn(),
   createServiceClient: vi.fn(),
   errorResponse: vi.fn(),
+  hashAccessCode: vi.fn(),
   hashInviteToken: vi.fn(),
   parseCapsuleInput: vi.fn(),
   parseIdempotencyKey: vi.fn(),
@@ -51,7 +53,9 @@ beforeEach(() => {
   server.requireUser.mockResolvedValue({ user: { id: 'owner-1' } })
   server.parseIdempotencyKey.mockReturnValue('same-key')
   server.parseCapsuleInput.mockReturnValue(input)
+  server.createAccessCode.mockReturnValue('123456')
   server.createInviteToken.mockReturnValue('invite-token')
+  server.hashAccessCode.mockReturnValue('access-hash')
   server.hashInviteToken.mockReturnValue('token-hash')
   server.serializeCapsule.mockResolvedValue({ id: 1, isUnlocked: false })
   server.errorResponse.mockImplementation((error: { code?: string; status?: number }) =>
@@ -67,9 +71,12 @@ describe('POST /api/time-capsules idempotency', () => {
     }) })) }))
     const maybeSingle = vi.fn().mockResolvedValue({ data: row, error: null })
     const select = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })) }))
+    const existingAccess = vi.fn().mockResolvedValue({ data: { derivation_attempt: 0 }, error: null })
+    const accessSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: existingAccess })) }))
     server.createServiceClient.mockReturnValue({ from: vi.fn()
       .mockReturnValueOnce({ insert })
-      .mockReturnValueOnce({ select }) })
+      .mockReturnValueOnce({ select })
+      .mockReturnValueOnce({ select: accessSelect }) })
 
     const response = await POST(request())
 
@@ -77,6 +84,30 @@ describe('POST /api/time-capsules idempotency', () => {
     expect(server.createInviteToken).toHaveBeenCalledWith('owner-1', 'same-key')
     expect(server.hashInviteToken).toHaveBeenCalledWith('invite-token')
     expect(await response.json()).toMatchObject({ inviteToken: 'invite-token', idempotent: true })
+  })
+
+  it('returns the candidate code from the successful collision retry', async () => {
+    const insertCapsule = vi.fn(() => ({
+      select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: { id: 2 }, error: null }) })),
+    }))
+    const accessInsert = vi.fn()
+      .mockReturnValueOnce({
+        select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: null, error: { code: '23505' } }) })),
+      })
+      .mockReturnValueOnce({
+        select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: { id: 9 }, error: null }) })),
+      })
+    server.createAccessCode.mockImplementation((_owner: string, _key: string, attempt: number) => String(100000 + attempt))
+    server.createServiceClient.mockReturnValue({
+      from: vi.fn((table: string) =>
+        table === 'time_capsules' ? { insert: insertCapsule } : { insert: accessInsert }
+      ),
+    })
+
+    const response = await POST(request())
+
+    expect(response.status).toBe(201)
+    expect(await response.json()).toMatchObject({ accessCode: '100001' })
   })
 
   it('rejects a replay when the existing token was issued by the legacy scheme', async () => {

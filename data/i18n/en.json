@@ -302,6 +302,8 @@
     "timeCapsuleInviteDescription": "Share this token with the recipient through a secure channel. It cannot be shown again.",
     "timeCapsuleInviteExpires": "Expires: {date}",
     "timeCapsuleInviteTitle": "Invite token",
+    "timeCapsuleAccessCodeLabel": "6-digit access code",
+    "timeCapsuleAccessCodeHint": "Enter the 6-digit code shared by the capsule owner.",
     "timeCapsuleIdLabel": "Capsule ID",
     "timeCapsuleInviteTokenLabel": "Invite token",
     "timeCapsuleRedeemAction": "Check capsule",
