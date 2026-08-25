@@ -6,10 +6,16 @@ import { createTimeCapsule, listTimeCapsules } from '@/lib/time-capsule-client'
 const languageMock = vi.hoisted(() => ({ value: 'ja' as 'ja' | 'en' }))
 const listMock = vi.hoisted(() => vi.fn())
 const createMock = vi.hoisted(() => vi.fn())
+const redeemMock = vi.hoisted(() => vi.fn())
+const uploadMock = vi.hoisted(() => vi.fn())
+const deletePhotoMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/time-capsule-client', () => ({
   listTimeCapsules: listMock,
   createTimeCapsule: createMock,
+  redeemTimeCapsule: redeemMock,
+  uploadTimeCapsulePhoto: uploadMock,
+  deleteTimeCapsulePhoto: deletePhotoMock,
 }))
 
 vi.mock('@/lib/i18n/LanguageContext', () => ({
@@ -53,6 +59,9 @@ beforeEach(() => {
   localStorage.clear()
   listMock.mockReset()
   createMock.mockReset()
+  redeemMock.mockReset()
+  uploadMock.mockReset()
+  deletePhotoMock.mockReset()
   languageMock.value = 'ja'
   vi.spyOn(globalThis, 'setInterval').mockImplementation(() => 0 as unknown as ReturnType<typeof setInterval>)
 })
@@ -116,6 +125,23 @@ describe('TimeCapsule', () => {
 
     expect(await screen.findByText('ローカル送信者')).toBeTruthy()
     expect(screen.getByText((content) => content.includes('local message'))).toBeTruthy()
+  })
+
+  it('shows unlocked content after redeeming an invite token', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    redeemMock.mockResolvedValue({ data: row({ unlock_date: pastDate }) })
+    const { container } = render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.change(screen.getByLabelText('timeCapsuleIdLabel'), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText('timeCapsuleInviteTokenLabel'), { target: { value: 'invite-token' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+
+    expect(redeemMock).toHaveBeenCalledWith('1', 'invite-token')
+    expect(screen.getByText('private capsule message')).toBeTruthy()
   })
 
   it('does not report success when remote create fails, and queues the same idempotency key', async () => {
@@ -207,8 +233,30 @@ describe('TimeCapsule', () => {
     expect(localStorage.getItem('local_time_capsules')).toBe('[]')
   })
 
-  it('reports attachment failure without submitting a capsule', async () => {
+  it('uploads an attachment before creating a capsule', async () => {
     listMock.mockResolvedValue({ data: [] })
+    uploadMock.mockResolvedValue('owner/photo.jpg')
+    createMock.mockResolvedValue({ data: row() })
+    const { container } = render(<TimeCapsule />)
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '本文' } })
+    fireEvent.change(container.querySelector('input[type="file"]') as HTMLInputElement, {
+      target: { files: [new File(['image'], 'photo.jpg', { type: 'image/jpeg' })] },
+    })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+
+    expect(uploadMock).toHaveBeenCalledTimes(1)
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ photoObjectPath: 'owner/photo.jpg' }), expect.any(String))
+  })
+
+  it('reports attachment upload failure without creating a capsule', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    uploadMock.mockRejectedValue(new Error('upload failed'))
     const { container } = render(<TimeCapsule />)
     await screen.findByText('timeCapsuleEmptyDesc')
     fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
@@ -219,7 +267,7 @@ describe('TimeCapsule', () => {
     })
     fireEvent.submit(container.querySelector('form') as HTMLFormElement)
 
-    expect(await screen.findByText('uploadFileFailed')).toBeTruthy()
+    expect(await screen.findByText('genericError')).toBeTruthy()
     expect(createTimeCapsule).not.toHaveBeenCalled()
   })
 })

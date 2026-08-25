@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createTimeCapsule, listTimeCapsules } from '@/lib/time-capsule-client'
+import { createTimeCapsule, deleteTimeCapsulePhoto, listTimeCapsules, redeemTimeCapsule, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
@@ -140,7 +140,12 @@ export function TimeCapsule() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-  const [inviteAccess, setInviteAccess] = useState<{ token: string; expiresAt: string } | null>(null)
+  const [inviteAccess, setInviteAccess] = useState<{ capsuleId: string; token: string; expiresAt: string } | null>(null)
+  const [accessCapsuleId, setAccessCapsuleId] = useState('')
+  const [accessInviteToken, setAccessInviteToken] = useState('')
+  const [accessError, setAccessError] = useState<string | null>(null)
+  const [accessedCapsule, setAccessedCapsule] = useState<CapsuleItem | null>(null)
+  const [isAccessing, setIsAccessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
   const hasLoadedCapsulesRef = useRef(false)
@@ -251,15 +256,11 @@ export function TimeCapsule() {
   const handleSeal = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!sender.trim() || !message.trim() || !unlockDate) return
-    if (photoFile) {
-      setSubmitError(t('uploadFileFailed'))
-      return
-    }
-
     setIsSubmitting(true)
     setSubmitError(null)
     setInviteAccess(null)
     const idempotencyKey = createIdempotencyKey()
+    let photoObjectPath: string | undefined
     try {
       const newCapsule: CapsuleItem = {
         id: `capsule-${Date.now()}`,
@@ -270,15 +271,17 @@ export function TimeCapsule() {
         createdAt: new Date().toISOString(),
         isUnlocked: parseLocalDate(unlockDate) <= new Date(),
       }
+      if (photoFile) photoObjectPath = await uploadTimeCapsulePhoto(photoFile)
       const created = await createTimeCapsule({
         sender: newCapsule.sender,
         recipient: newCapsule.recipient,
         message: newCapsule.message,
         unlockDate: newCapsule.unlockDate,
+        photoObjectPath,
       }, idempotencyKey)
 
       if (created.inviteToken && created.inviteTokenExpiresAt) {
-        setInviteAccess({ token: created.inviteToken, expiresAt: created.inviteTokenExpiresAt })
+        setInviteAccess({ capsuleId: String(created.data.id), token: created.inviteToken, expiresAt: created.inviteTokenExpiresAt })
       }
       setSubmitSuccess(true)
       const hasInviteAccess = Boolean(created.inviteToken && created.inviteTokenExpiresAt)
@@ -292,6 +295,9 @@ export function TimeCapsule() {
         fetchCapsules()
       }, 1200)
     } catch (err) {
+      if (photoObjectPath) {
+        void deleteTimeCapsulePhoto(photoObjectPath)
+      }
       console.error('Failed to seal time capsule:', err)
       const pendingCapsule: PendingCapsule = {
         id: `capsule-${Date.now()}`,
@@ -314,6 +320,25 @@ export function TimeCapsule() {
       setSubmitError(t('genericError'))
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleRedeem = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!accessCapsuleId.trim() || !accessInviteToken.trim()) return
+
+    setIsAccessing(true)
+    setAccessError(null)
+    setAccessedCapsule(null)
+    try {
+      const result = await redeemTimeCapsule(accessCapsuleId.trim(), accessInviteToken.trim())
+      const capsule = parseRemoteCapsule(result.data)
+      if (!capsule) throw new Error('invalid capsule response')
+      setAccessedCapsule(capsule)
+    } catch {
+      setAccessError(t('timeCapsuleRedeemError'))
+    } finally {
+      setIsAccessing(false)
     }
   }
 
@@ -346,6 +371,39 @@ export function TimeCapsule() {
       {activeTab === 'view' ? (
         /* カプセル一覧 */
         <div>
+          <form onSubmit={handleRedeem} className="mb-4 space-y-3 rounded-2xl border border-[#D4B08C] bg-[#FFF9F3] p-4">
+            <p className="text-xs font-bold text-[#854D27]">{t('timeCapsuleRedeemTitle')}</p>
+            <label className="block text-xs font-bold text-[#854D27]">
+              {t('timeCapsuleIdLabel')}
+              <input
+                required
+                value={accessCapsuleId}
+                onChange={(event) => setAccessCapsuleId(event.target.value)}
+                className="mt-1 w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 text-xs text-[#854D27]"
+              />
+            </label>
+            <label className="block text-xs font-bold text-[#854D27]">
+              {t('timeCapsuleInviteTokenLabel')}
+              <input
+                required
+                value={accessInviteToken}
+                onChange={(event) => setAccessInviteToken(event.target.value)}
+                className="mt-1 w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 font-mono text-xs text-[#854D27]"
+              />
+            </label>
+            {accessError && <p className="text-xs text-red-600">{accessError}</p>}
+            <button type="submit" disabled={isAccessing} className="w-full rounded-xl bg-[#854D27] py-2 text-xs font-bold text-[#FFF9F3] disabled:opacity-50">
+              {t('timeCapsuleRedeemAction')}
+            </button>
+            {accessedCapsule && (
+              <div className="rounded-xl border border-[#D4B08C] p-3 text-xs text-[#854D27]">
+                <p className="font-bold">{accessedCapsule.sender}</p>
+                {accessedCapsule.isUnlocked
+                  ? <p className="mt-2">{accessedCapsule.message}</p>
+                  : <p className="mt-2">{t('timeCapsuleLockedNotice', { date: parseLocalDate(accessedCapsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US') })}</p>}
+              </div>
+            )}
+          </form>
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <div className="w-8 h-8 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin" />

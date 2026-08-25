@@ -125,6 +125,50 @@ export function listTimeCapsules(signal?: AbortSignal): Promise<TimeCapsuleRespo
   })
 }
 
+export async function uploadTimeCapsulePhoto(file: File): Promise<string> {
+  const accessToken = await ensureAccessToken()
+  const response = await fetch('/api/time-capsules/uploads', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ contentType: file.type, sizeBytes: file.size }),
+  })
+  const body = await readJson(response)
+  if (!response.ok || !isRecord(body) || typeof body.path !== 'string' || typeof body.token !== 'string') {
+    throw new Error('写真をアップロードできません')
+  }
+  const { error } = await getBrowserClient().storage.from('time-capsules-private').uploadToSignedUrl(body.path, body.token, file)
+  if (error) throw new Error('写真をアップロードできません')
+  return body.path
+}
+
+export async function deleteTimeCapsulePhoto(path: string): Promise<void> {
+  const accessToken = await ensureAccessToken()
+  const response = await fetch('/api/time-capsules/uploads', {
+    method: 'DELETE',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ path }),
+  })
+  if (!response.ok) throw new Error('写真を削除できません')
+}
+
+export async function redeemTimeCapsule(
+  capsuleId: string,
+  inviteToken: string,
+  signal?: AbortSignal
+): Promise<{ data: TimeCapsuleRow }> {
+  const response = await fetch(`/api/time-capsules/${encodeURIComponent(capsuleId)}/access`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inviteToken }),
+    signal,
+  })
+  const body = await readJson(response)
+  if (!response.ok || !isRecord(body) || !isApiCapsule(body.data)) {
+    throw new Error('タイムカプセルを開けません')
+  }
+  return { data: toRemoteRow(body.data) }
+}
+
 export async function createTimeCapsule(
   input: CreateTimeCapsuleInput,
   idempotencyKey: string,
