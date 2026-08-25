@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         ...(inviteTokenActive
           ? { inviteToken, inviteTokenExpiresAt: existing.data.invite_token_expires_at }
           : {}),
-        accessCode,
+        ...(existing.data.invite_revoked_at === null ? { accessCode } : {}),
         idempotent: true,
       })
     }

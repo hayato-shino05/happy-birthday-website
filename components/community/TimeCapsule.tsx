@@ -201,8 +201,15 @@ export function TimeCapsule() {
       }))
       const result = await listTimeCapsules()
       if (syncedIds.size > 0) {
-        localRaw = localRaw.filter((item) => !isRecord(item) || !syncedIds.has(String(item.id)))
-        localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify(localRaw))
+        try {
+          const latestSaved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+          const latestParsed = latestSaved ? JSON.parse(latestSaved) : []
+          const latestRaw = Array.isArray(latestParsed) ? latestParsed : localRaw
+          localRaw = latestRaw.filter((item) => !isRecord(item) || !syncedIds.has(String(item.id)))
+          localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify(localRaw))
+        } catch {
+          // ストレージを再読込できない場合は、取得開始時のデータを維持する。
+        }
       }
 
       const remoteCapsules = result.data

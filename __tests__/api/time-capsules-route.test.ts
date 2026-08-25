@@ -149,4 +149,21 @@ describe('POST /api/time-capsules', () => {
     expect(body).not.toHaveProperty('inviteToken')
     expect(body).toMatchObject({ accessCode: '100000', idempotent: true })
   })
+
+  it('does not expose an access code or invite token when the capsule is revoked', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [{ capsule_id: 1, derivation_attempt: 0, idempotent: true }], error: null })
+    const capsule = vi.fn(() => ({ select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({
+      data: { ...row, invite_revoked_at: '2026-08-26T00:00:00.000Z' },
+      error: null,
+    }) })) })) }))
+    server.createServiceClient.mockReturnValue({ rpc, from: vi.fn(() => capsule()) })
+
+    const response = await POST(request())
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).not.toHaveProperty('inviteToken')
+    expect(body).not.toHaveProperty('accessCode')
+    expect(body).toMatchObject({ idempotent: true })
+  })
 })

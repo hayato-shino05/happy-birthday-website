@@ -354,6 +354,36 @@ describe('TimeCapsule', () => {
     expect(screen.getByText('731604')).toBeTruthy()
   })
 
+  it('does not erase a newly queued fallback while synchronizing an older capsule', async () => {
+    let resolveSync: ((value: { data: CapsuleRow; accessCode?: string }) => void) | undefined
+    localStorage.setItem('local_time_capsules', JSON.stringify([{
+      id: 'local-1', sender: '保留送信者', message: '保留本文', unlockDate: futureDate,
+      createdAt: '2026-08-23T00:00:00.000Z', pendingKey: 'same-key',
+    }]))
+    createMock.mockImplementationOnce(() => new Promise((resolve) => { resolveSync = resolve }))
+    createMock.mockRejectedValueOnce(new Error('remote failed'))
+    listMock.mockResolvedValue({ data: [] })
+    const { container } = render(<TimeCapsule />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '新規送信者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '新規本文' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+
+    await act(async () => {
+      resolveSync?.({ data: row({ id: 1 }), accessCode: '482913' })
+      await Promise.resolve()
+    })
+
+    const saved = JSON.parse(localStorage.getItem('local_time_capsules') || '[]')
+    expect(saved).toHaveLength(1)
+    expect(saved[0]).toMatchObject({ sender: '新規送信者', message: '新規本文', pendingKey: expect.any(String) })
+    expect(screen.getByText('482913')).toBeTruthy()
+  })
+
   it('uploads an attachment before creating a capsule', async () => {
     listMock.mockResolvedValue({ data: [] })
     uploadMock.mockResolvedValue('owner/photo.jpg')
