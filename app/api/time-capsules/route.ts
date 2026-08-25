@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const client = createServiceClient()
     const idempotencyKey = parseIdempotencyKey(request)
     const input = parseCapsuleInput(await request.json(), user.id)
-    const inviteToken = createInviteToken()
+    const inviteToken = createInviteToken(user.id, idempotencyKey)
     const inviteTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
     const { data, error } = await client
@@ -62,25 +62,21 @@ export async function POST(request: NextRequest) {
       (error.message?.includes('time_capsules_owner_idempotency_key_uidx') ||
         error.details?.includes('time_capsules_owner_idempotency_key_uidx'))
     ) {
-      const refreshedInviteToken = createInviteToken()
-      const refreshedInviteTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       const existing = await client
         .from('time_capsules')
-        .update({
-          invite_token_hash: hashInviteToken(refreshedInviteToken),
-          invite_token_expires_at: refreshedInviteTokenExpiresAt,
-          invite_revoked_at: null,
-        })
+        .select(TIME_CAPSULE_SELECT)
         .eq('owner_id', user.id)
         .eq('idempotency_key', idempotencyKey)
-        .select(TIME_CAPSULE_SELECT)
         .maybeSingle()
       if (existing.error || !existing.data) throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
+      if (existing.data.invite_token_hash !== hashInviteToken(inviteToken)) {
+        throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
+      }
       const capsule = await serializeCapsule(client, existing.data)
       return Response.json({
         data: capsule,
-        inviteToken: refreshedInviteToken,
-        inviteTokenExpiresAt: refreshedInviteTokenExpiresAt,
+        inviteToken,
+        inviteTokenExpiresAt: existing.data.invite_token_expires_at,
         idempotent: true,
       })
     }

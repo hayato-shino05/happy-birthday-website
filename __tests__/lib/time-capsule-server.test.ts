@@ -22,6 +22,7 @@ const { maybeSingle, query, createClient } = vi.hoisted(() => {
 vi.mock('@supabase/supabase-js', () => ({ createClient }))
 
 import {
+  createInviteToken,
   findByInviteToken,
   hashInviteToken,
   parseInviteToken,
@@ -61,6 +62,7 @@ describe('Time Capsule server boundary', () => {
       photo_object_path: 'owner-1/photo.jpg',
       unlock_date: '2999-01-01',
       created_at: '2026-01-01T00:00:00.000Z',
+      invite_token_hash: null,
       invite_token_expires_at: null,
       invite_revoked_at: null,
     })
@@ -68,6 +70,12 @@ describe('Time Capsule server boundary', () => {
     expect(result).not.toHaveProperty('message')
     expect(result).not.toHaveProperty('photoUrl')
     expect(result.isUnlocked).toBe(false)
+  })
+
+  it('derives the same invite token for an idempotent replay', () => {
+    const original = createInviteToken('owner-1', 'same-key')
+    expect(createInviteToken('owner-1', 'same-key')).toBe(original)
+    expect(createInviteToken('owner-1', 'different-key')).not.toBe(original)
   })
 
   it('hashes invite tokens without exposing the raw token', () => {

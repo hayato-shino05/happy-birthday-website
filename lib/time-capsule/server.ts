@@ -1,8 +1,8 @@
-import { createHash, randomBytes } from 'node:crypto'
+import { createHash, createHmac } from 'node:crypto'
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js'
 
 export const TIME_CAPSULE_SELECT =
-  'id,owner_id,sender,recipient,message,photo_url,photo_object_path,unlock_date,created_at,invite_token_expires_at,invite_revoked_at'
+  'id,owner_id,sender,recipient,message,photo_url,photo_object_path,unlock_date,created_at,invite_token_hash,invite_token_expires_at,invite_revoked_at'
 
 export type CapsuleRow = {
   id: number
@@ -14,6 +14,7 @@ export type CapsuleRow = {
   photo_object_path: string | null
   unlock_date: string
   created_at: string
+  invite_token_hash: string | null
   invite_token_expires_at: string | null
   invite_revoked_at: string | null
 }
@@ -96,8 +97,10 @@ export function hashInviteToken(token: string): string {
   return createHash('sha256').update(token, 'utf8').digest('hex')
 }
 
-export function createInviteToken(): string {
-  return randomBytes(32).toString('base64url')
+export function createInviteToken(ownerId: string, idempotencyKey: string): string {
+  return createHmac('sha256', getServiceKey())
+    .update(`time-capsule-invite:v1|${ownerId}|${idempotencyKey}`, 'utf8')
+    .digest('base64url')
 }
 
 export function todayUtc(): string {
