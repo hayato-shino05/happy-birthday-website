@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 const server = vi.hoisted(() => ({
   errorResponse: vi.fn(),
   findByAccessCode: vi.fn(),
+  getAccessAttemptBucketFingerprint: vi.fn(),
   parseAccessCode: vi.fn(),
   serializeCapsule: vi.fn(),
 }))
@@ -19,10 +20,10 @@ vi.mock('@/lib/time-capsule/server', () => ({
 
 import { POST } from '@/app/api/time-capsules/access/route'
 
-function request(body: unknown): NextRequest {
+function request(body: unknown, headers: Record<string, string> = {}): NextRequest {
   return new NextRequest('http://localhost/api/time-capsules/access', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify(body),
   })
 }
@@ -38,6 +39,7 @@ function malformedRequest(): NextRequest {
 beforeEach(() => {
   vi.resetAllMocks()
   server.parseAccessCode.mockReturnValue('123456')
+  server.getAccessAttemptBucketFingerprint.mockReturnValue('a'.repeat(64))
   server.findByAccessCode.mockResolvedValue({ client: {}, row: { id: 1 } })
   server.serializeCapsule.mockResolvedValue({ id: 1, isUnlocked: false })
   server.errorResponse.mockImplementation((error: { code?: string; status?: number }) =>
@@ -51,7 +53,7 @@ describe('POST /api/time-capsules/access', () => {
 
     expect(response.status).toBe(200)
     expect(server.parseAccessCode).toHaveBeenCalledWith('123 456')
-    expect(server.findByAccessCode).toHaveBeenCalledWith('123456')
+    expect(server.findByAccessCode).toHaveBeenCalledWith('123456', 'a'.repeat(64))
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual({ data: { id: 1, isUnlocked: false } })
   })
@@ -61,6 +63,16 @@ describe('POST /api/time-capsules/access', () => {
 
     expect(response.status).toBe(401)
     expect(server.findByAccessCode).not.toHaveBeenCalled()
+  })
+
+  it('derives a bucket fingerprint from the user agent without trusting proxy headers', async () => {
+    await POST(request({ accessCode: '123456' }, { 'user-agent': 'test-browser', 'x-forwarded-for': '203.0.113.10' }))
+
+    const firstRequest = request({ accessCode: '123456' }, { 'user-agent': 'test-browser', 'x-forwarded-for': '203.0.113.10' })
+    await POST(firstRequest)
+
+    expect(server.getAccessAttemptBucketFingerprint).toHaveBeenCalledWith(firstRequest)
+    expect(server.findByAccessCode).toHaveBeenCalledWith('123456', 'a'.repeat(64))
   })
 
   it('returns invalid_input for malformed JSON', async () => {

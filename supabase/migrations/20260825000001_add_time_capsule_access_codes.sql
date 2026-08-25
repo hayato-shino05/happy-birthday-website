@@ -24,6 +24,101 @@ revoke all on public.time_capsule_access_codes from anon, authenticated;
 grant select, insert, update on public.time_capsule_access_codes to service_role;
 grant usage, select on sequence public.time_capsule_access_codes_id_seq to service_role;
 
+create or replace function public.create_time_capsule_with_access_code(
+  input_owner_id uuid,
+  input_idempotency_key text,
+  input_sender text,
+  input_recipient text,
+  input_message text,
+  input_unlock_date date,
+  input_photo_object_path text,
+  input_invite_token_hash text,
+  input_invite_token_expires_at timestamptz,
+  input_access_code_hashes text[]
+)
+returns table (capsule_id bigint, derivation_attempt integer, idempotent boolean)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  capsule_row public.time_capsules%rowtype;
+  attempt integer;
+begin
+  if coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role' then
+    raise exception 'service_role_required';
+  end if;
+
+  insert into public.time_capsules (
+    owner_id,
+    idempotency_key,
+    sender,
+    recipient,
+    message,
+    unlock_date,
+    photo_object_path,
+    invite_token_hash,
+    invite_token_expires_at
+  )
+  values (
+    input_owner_id,
+    input_idempotency_key,
+    input_sender,
+    input_recipient,
+    input_message,
+    input_unlock_date,
+    input_photo_object_path,
+    input_invite_token_hash,
+    input_invite_token_expires_at
+  )
+  on conflict (owner_id, idempotency_key)
+    where owner_id is not null and idempotency_key is not null
+    do nothing
+  returning * into capsule_row;
+
+  if not found then
+    select * into capsule_row
+    from public.time_capsules
+    where owner_id = input_owner_id
+      and idempotency_key = input_idempotency_key
+    for update;
+
+    if not found or capsule_row.invite_token_hash is distinct from input_invite_token_hash then
+      raise exception 'idempotency_replay_unavailable';
+    end if;
+
+    select access.derivation_attempt into attempt
+    from public.time_capsule_access_codes as access
+    where access.capsule_id = capsule_row.id
+    order by access.id
+    limit 1;
+
+    if not found then
+      raise exception 'idempotency_replay_unavailable';
+    end if;
+
+    return query select capsule_row.id, attempt, true;
+    return;
+  end if;
+
+  for attempt in 1..coalesce(array_length(input_access_code_hashes, 1), 0) loop
+    begin
+      insert into public.time_capsule_access_codes (capsule_id, code_hash, derivation_attempt)
+      values (capsule_row.id, input_access_code_hashes[attempt], attempt - 1);
+      return query select capsule_row.id, attempt - 1, false;
+      return;
+    exception when unique_violation then
+      null;
+    end;
+  end loop;
+
+  raise exception 'access_code_collision_exhausted';
+end;
+$$;
+
+revoke all on function public.create_time_capsule_with_access_code(uuid, text, text, text, text, date, text, text, timestamptz, text[]) from public;
+grant execute on function public.create_time_capsule_with_access_code(uuid, text, text, text, text, date, text, text, timestamptz, text[]) to service_role;
+
 create or replace function public.consume_time_capsule_access_code(input_code_hash text)
 returns table (capsule_id bigint)
 language plpgsql

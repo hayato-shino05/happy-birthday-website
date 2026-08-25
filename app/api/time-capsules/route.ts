@@ -41,55 +41,60 @@ export async function POST(request: NextRequest) {
     const idempotencyKey = parseIdempotencyKey(request)
     const input = parseCapsuleInput(await request.json(), user.id)
     const inviteToken = createInviteToken(user.id, idempotencyKey)
-    let accessCode = createAccessCode(user.id, idempotencyKey, 0)
+    const inviteTokenHash = hashInviteToken(inviteToken)
     const inviteTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    const accessCodes = Array.from({ length: 5 }, (_, attempt) => createAccessCode(user.id, idempotencyKey, attempt))
 
-    const { data, error } = await client
-      .from('time_capsules')
-      .insert({
-        owner_id: user.id,
-        idempotency_key: idempotencyKey,
-        sender: input.sender,
-        recipient: input.recipient,
-        message: input.message,
-        unlock_date: input.unlockDate,
-        photo_object_path: input.photoObjectPath,
-        invite_token_hash: hashInviteToken(inviteToken),
-        invite_token_expires_at: inviteTokenExpiresAt,
-      })
-      .select(TIME_CAPSULE_SELECT)
-      .single()
+    const { data: result, error } = await client.rpc('create_time_capsule_with_access_code', {
+      input_owner_id: user.id,
+      input_idempotency_key: idempotencyKey,
+      input_sender: input.sender,
+      input_recipient: input.recipient,
+      input_message: input.message,
+      input_unlock_date: input.unlockDate,
+      input_photo_object_path: input.photoObjectPath,
+      input_invite_token_hash: inviteTokenHash,
+      input_invite_token_expires_at: inviteTokenExpiresAt,
+      input_access_code_hashes: accessCodes.map(hashAccessCode),
+    })
 
+    if (error) {
+      if (error.message?.includes('idempotency_replay_unavailable')) {
+        throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
+      }
+      throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
+    }
+
+    const rpcRow = Array.isArray(result) ? result[0] : null
+    const capsuleId =
+      rpcRow && typeof rpcRow.capsule_id === 'number'
+        ? rpcRow.capsule_id
+        : rpcRow && typeof rpcRow.capsule_id === 'string' && /^\d+$/.test(rpcRow.capsule_id)
+          ? Number(rpcRow.capsule_id)
+          : null
     if (
-      error?.code === '23505' &&
-      (error.message?.includes('time_capsules_owner_idempotency_key_uidx') ||
-        error.details?.includes('time_capsules_owner_idempotency_key_uidx'))
+      !rpcRow ||
+      capsuleId === null ||
+      !Number.isSafeInteger(capsuleId) ||
+      capsuleId < 1 ||
+      !Number.isInteger(rpcRow.derivation_attempt) ||
+      (rpcRow.idempotent !== true && rpcRow.idempotent !== false)
     ) {
-      const existing = await client
-        .from('time_capsules')
-        .select(TIME_CAPSULE_SELECT)
-        .eq('owner_id', user.id)
-        .eq('idempotency_key', idempotencyKey)
-        .maybeSingle()
-      if (existing.error || !existing.data) throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
-      if (existing.data.invite_token_hash !== hashInviteToken(inviteToken)) {
-        throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
-      }
-      let existingAccess: { data: { derivation_attempt: number } | null; error: unknown } = { data: null, error: null }
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        existingAccess = await client
-          .from('time_capsule_access_codes')
-          .select('derivation_attempt')
-          .eq('capsule_id', existing.data.id)
-          .maybeSingle()
-        if (!existingAccess.error && existingAccess.data) break
-        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 10 * (attempt + 1)))
-      }
-      if (existingAccess.error || !existingAccess.data) {
-        throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
-      }
-      accessCode = createAccessCode(user.id, idempotencyKey, existingAccess.data.derivation_attempt)
-      const capsule = await serializeCapsule(client, existing.data)
+      throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
+    }
+
+    const existing = await client
+      .from('time_capsules')
+      .select(TIME_CAPSULE_SELECT)
+      .eq('id', capsuleId)
+      .maybeSingle()
+    if (existing.error || !existing.data) throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
+
+    const accessCode = accessCodes[rpcRow.derivation_attempt]
+    if (!accessCode) throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
+    const capsule = await serializeCapsule(client, existing.data)
+
+    if (rpcRow.idempotent) {
       const inviteTokenActive =
         existing.data.invite_revoked_at === null &&
         typeof existing.data.invite_token_expires_at === 'string' &&
@@ -103,36 +108,9 @@ export async function POST(request: NextRequest) {
         idempotent: true,
       })
     }
-    if (error || !data) throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
-
-    let accessCodeCreated = false
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const candidate = createAccessCode(user.id, idempotencyKey, attempt)
-      const result = await client
-        .from('time_capsule_access_codes')
-        .insert({ capsule_id: data.id, code_hash: hashAccessCode(candidate), derivation_attempt: attempt })
-        .select('id')
-        .single()
-      if (!result.error) {
-        accessCode = candidate
-        accessCodeCreated = true
-        break
-      }
-      if (result.error.code !== '23505') break
-    }
-    if (!accessCodeCreated) {
-      await client.from('time_capsules').delete().eq('id', data.id)
-      throw new TimeCapsuleError('write_failed', 500, 'Time Capsuleを作成できません')
-    }
 
     return Response.json(
-      {
-        data: await serializeCapsule(client, data),
-        inviteToken,
-        inviteTokenExpiresAt,
-        accessCode,
-        idempotent: false,
-      },
+      { data: capsule, inviteToken, inviteTokenExpiresAt, accessCode, idempotent: false },
       { status: 201 }
     )
   } catch (error) {

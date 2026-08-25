@@ -27,6 +27,7 @@ vi.mock('@supabase/supabase-js', () => ({ createClient }))
 import {
   createAccessCode,
   findByAccessCode,
+  getAccessAttemptBucketFingerprint,
   createInviteToken,
   findByInviteToken,
   hashAccessCode,
@@ -106,15 +107,28 @@ describe('Time Capsule server boundary', () => {
     expect(() => parseAccessCode('abcdef')).toThrowError(TimeCapsuleError)
   })
 
+  it('does not use spoofable proxy headers for the attempt bucket', () => {
+    const first = new Request('http://localhost', {
+      headers: { 'user-agent': 'test-browser', 'x-forwarded-for': '203.0.113.10' },
+    })
+    const second = new Request('http://localhost', {
+      headers: { 'user-agent': 'test-browser', 'x-forwarded-for': '198.51.100.2' },
+    })
+
+    expect(getAccessAttemptBucketFingerprint(first)).toBe(getAccessAttemptBucketFingerprint(second))
+    expect(getAccessAttemptBucketFingerprint(first)).toMatch(/^[a-f0-9]{64}$/)
+  })
+
   it('consumes an access code through the atomic RPC and loads its capsule', async () => {
     rpc.mockResolvedValue({ data: [{ capsule_id: 1 }], error: null })
     maybeSingle.mockResolvedValue({ data: { id: 1 }, error: null })
 
-    const result = await findByAccessCode('123456')
+    const result = await findByAccessCode('123456', 'a'.repeat(64))
 
     expect(result.row).toEqual({ id: 1 })
     expect(rpc).toHaveBeenCalledWith('consume_time_capsule_access_code', {
       input_code_hash: expect.any(String),
+      input_attempt_bucket: expect.stringMatching(/^[a-f0-9]{64}$/),
     })
     expect(query.eq).toHaveBeenCalledWith('id', 1)
   })
@@ -122,7 +136,7 @@ describe('Time Capsule server boundary', () => {
   it('rejects an access code when the RPC returns no access row', async () => {
     rpc.mockResolvedValue({ data: [], error: null })
 
-    await expect(findByAccessCode('123456')).rejects.toMatchObject({ code: 'access_not_found', status: 404 })
+    await expect(findByAccessCode('123456', 'a'.repeat(64))).rejects.toMatchObject({ code: 'access_not_found', status: 404 })
     expect(maybeSingle).not.toHaveBeenCalled()
   })
 
@@ -130,6 +144,6 @@ describe('Time Capsule server boundary', () => {
     rpc.mockResolvedValue({ data: [{ capsule_id: 1 }], error: null })
     maybeSingle.mockResolvedValue({ data: null, error: null })
 
-    await expect(findByAccessCode('123456')).rejects.toMatchObject({ code: 'access_not_found', status: 404 })
+    await expect(findByAccessCode('123456', 'a'.repeat(64))).rejects.toMatchObject({ code: 'access_not_found', status: 404 })
   })
 })

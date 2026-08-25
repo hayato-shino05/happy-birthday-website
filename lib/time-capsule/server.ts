@@ -119,6 +119,16 @@ export function hashAccessCode(code: string): string {
   return createHmac('sha256', getServiceKey()).update(`time-capsule-access:v1|${code}`, 'utf8').digest('hex')
 }
 
+export function hashAccessAttemptBucket(identity: string): string {
+  return createHash('sha256').update(`time-capsule-access-bucket:v1|${identity}`, 'utf8').digest('hex')
+}
+
+export function getAccessAttemptBucketFingerprint(request: Request): string {
+  // X-Forwarded-For は偽装可能なため、信頼できる送信元情報として扱わない。
+  const identity = request.headers.get('user-agent')?.trim() || 'unknown-client'
+  return hashAccessAttemptBucket(identity)
+}
+
 export function createInviteToken(ownerId: string, idempotencyKey: string): string {
   return createHmac('sha256', getServiceKey())
     .update(`time-capsule-invite:v1|${ownerId}|${idempotencyKey}`, 'utf8')
@@ -209,10 +219,11 @@ export async function findByInviteToken(token: string, id?: number) {
   return { client, row: data as unknown as CapsuleRow }
 }
 
-export async function findByAccessCode(code: string) {
+export async function findByAccessCode(code: string, attemptBucketFingerprint: string) {
   const client = createServiceClient()
   const access = await client.rpc('consume_time_capsule_access_code', {
     input_code_hash: hashAccessCode(code),
+    input_attempt_bucket: attemptBucketFingerprint,
   })
   const accessRow = Array.isArray(access.data) ? access.data[0] : null
   if (access.error || !accessRow || typeof accessRow.capsule_id !== 'number') {

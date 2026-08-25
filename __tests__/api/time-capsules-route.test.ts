@@ -54,9 +54,9 @@ beforeEach(() => {
   server.requireUser.mockResolvedValue({ user: { id: 'owner-1' } })
   server.parseIdempotencyKey.mockReturnValue('same-key')
   server.parseCapsuleInput.mockReturnValue(input)
-  server.createAccessCode.mockReturnValue('123456')
+  server.createAccessCode.mockImplementation((_owner: string, _key: string, attempt: number) => String(100000 + attempt))
   server.createInviteToken.mockReturnValue('invite-token')
-  server.hashAccessCode.mockReturnValue('access-hash')
+  server.hashAccessCode.mockImplementation((code: string) => `hash-${code}`)
   server.hashInviteToken.mockReturnValue('token-hash')
   server.serializeCapsule.mockResolvedValue({ id: 1, isUnlocked: false })
   server.errorResponse.mockImplementation((error: { code?: string; status?: number }) =>
@@ -64,118 +64,89 @@ beforeEach(() => {
   )
 })
 
-describe('POST /api/time-capsules idempotency', () => {
-  it('returns the deterministic token without updating an existing capsule on replay', async () => {
-    const insert = vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({
-      data: null,
-      error: { code: '23505', message: 'time_capsules_owner_idempotency_key_uidx' },
-    }) })) }))
-    const maybeSingle = vi.fn().mockResolvedValue({ data: row, error: null })
-    const select = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })) }))
-    const existingAccess = vi.fn().mockResolvedValue({ data: { derivation_attempt: 0 }, error: null })
-    const accessSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: existingAccess })) }))
-    server.createServiceClient.mockReturnValue({ from: vi.fn()
-      .mockReturnValueOnce({ insert })
-      .mockReturnValueOnce({ select })
-      .mockReturnValueOnce({ select: accessSelect }) })
-
-    const response = await POST(request())
-
-    expect(response.status).toBe(200)
-    expect(server.createInviteToken).toHaveBeenCalledWith('owner-1', 'same-key')
-    expect(server.hashInviteToken).toHaveBeenCalledWith('invite-token')
-    expect(await response.json()).toMatchObject({ inviteToken: 'invite-token', idempotent: true })
-  })
-
-  it('waits for the access row before deriving the replay access code', async () => {
-    const insert = vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({
-      data: null,
-      error: { code: '23505', message: 'time_capsules_owner_idempotency_key_uidx' },
-    }) })) }))
-    const maybeSingle = vi.fn().mockResolvedValue({ data: row, error: null })
-    const select = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })) }))
-    const existingAccess = vi.fn()
-      .mockResolvedValueOnce({ data: null, error: null })
-      .mockResolvedValueOnce({ data: { derivation_attempt: 0 }, error: null })
-    const accessSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: existingAccess })) }))
-    server.createServiceClient.mockReturnValue({ from: vi.fn()
-      .mockReturnValueOnce({ insert })
-      .mockReturnValueOnce({ select })
-      .mockReturnValueOnce({ select: accessSelect })
-      .mockReturnValueOnce({ select: accessSelect }) })
-
-    const response = await POST(request())
-    const body = await response.json()
-
-    expect(response.status).toBe(200)
-    expect(body).toMatchObject({ accessCode: '123456', idempotent: true })
-    expect(existingAccess).toHaveBeenCalledTimes(2)
-  })
-
-  it('returns the candidate code from the successful collision retry', async () => {
-    const insertCapsule = vi.fn(() => ({
-      select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: { id: 2 }, error: null }) })),
-    }))
-    const accessInsert = vi.fn()
-      .mockReturnValueOnce({
-        select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: null, error: { code: '23505' } }) })),
-      })
-      .mockReturnValueOnce({
-        select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: { id: 9 }, error: null }) })),
-      })
-    server.createAccessCode.mockImplementation((_owner: string, _key: string, attempt: number) => String(100000 + attempt))
-    server.createServiceClient.mockReturnValue({
-      from: vi.fn((table: string) =>
-        table === 'time_capsules' ? { insert: insertCapsule } : { insert: accessInsert }
-      ),
-    })
+describe('POST /api/time-capsules', () => {
+  it('creates the capsule and access code through one RPC while preserving the response contract', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [{ capsule_id: '1', derivation_attempt: 0, idempotent: false }], error: null })
+    const capsule = vi.fn(() => ({ select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: row, error: null }) })) })) }))
+    server.createServiceClient.mockReturnValue({ rpc, from: vi.fn(() => capsule()) })
 
     const response = await POST(request())
 
     expect(response.status).toBe(201)
-    expect(await response.json()).toMatchObject({ accessCode: '100001' })
+    expect(rpc).toHaveBeenCalledWith('create_time_capsule_with_access_code', expect.objectContaining({
+      input_owner_id: 'owner-1',
+      input_idempotency_key: 'same-key',
+      input_access_code_hashes: ['hash-100000', 'hash-100001', 'hash-100002', 'hash-100003', 'hash-100004'],
+    }))
+    expect(await response.json()).toMatchObject({
+      data: { id: 1, isUnlocked: false },
+      inviteToken: 'invite-token',
+      accessCode: '100000',
+      idempotent: false,
+    })
+  })
+
+  it('returns the deterministic access code on an idempotent replay', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [{ capsule_id: 1, derivation_attempt: 2, idempotent: true }], error: null })
+    const capsule = vi.fn(() => ({ select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: row, error: null }) })) })) }))
+    server.createServiceClient.mockReturnValue({ rpc, from: vi.fn(() => capsule()) })
+
+    const response = await POST(request())
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      inviteToken: 'invite-token',
+      accessCode: '100002',
+      idempotent: true,
+    })
+  })
+
+  it('maps an RPC collision exhaustion to the existing write error contract', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: { message: 'access_code_collision_exhausted' } })
+    server.createServiceClient.mockReturnValue({ rpc })
+
+    const response = await POST(request())
+
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({ error: { code: 'write_failed' } })
+  })
+
+  it('rejects an unsafe string capsule id from the RPC', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [{ capsule_id: '9007199254740992', derivation_attempt: 0, idempotent: false }], error: null })
+    server.createServiceClient.mockReturnValue({ rpc })
+
+    const response = await POST(request())
+
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({ error: { code: 'write_failed' } })
   })
 
   it.each([
-    ['expired', { invite_token_expires_at: '2020-01-01T00:00:00.000Z', invite_revoked_at: null }],
-    ['revoked', { invite_token_expires_at: '2030-01-01T00:00:00.000Z', invite_revoked_at: '2026-08-25T00:00:00.000Z' }],
-  ])('does not return an %s invite token on replay while keeping the permanent access code', async (_state, inviteState) => {
-    const insert = vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({
-      data: null,
-      error: { code: '23505', message: 'time_capsules_owner_idempotency_key_uidx' },
-    }) })) }))
-    const maybeSingle = vi.fn().mockResolvedValue({ data: { ...row, ...inviteState }, error: null })
-    const select = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })) }))
-    const existingAccess = vi.fn().mockResolvedValue({ data: { derivation_attempt: 0, revoked_at: '2026-08-25T00:00:00.000Z' }, error: null })
-    const accessSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: existingAccess })) }))
-    server.createServiceClient.mockReturnValue({ from: vi.fn()
-      .mockReturnValueOnce({ insert })
-      .mockReturnValueOnce({ select })
-      .mockReturnValueOnce({ select: accessSelect }) })
+    ['legacy invite hash mismatch', 'idempotency_replay_unavailable'],
+    ['existing capsule without access row', 'idempotency_replay_unavailable'],
+  ])('keeps %s unavailable', async (_case, message) => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: { message } })
+    server.createServiceClient.mockReturnValue({ rpc })
+
+    const response = await POST(request())
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({ error: { code: 'idempotency_replay_unavailable' } })
+  })
+
+  it('does not expose a replay token when the existing invite is expired', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [{ capsule_id: 1, derivation_attempt: 0, idempotent: true }], error: null })
+    const capsule = vi.fn(() => ({ select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({
+      data: { ...row, invite_token_expires_at: '2020-01-01T00:00:00.000Z' },
+      error: null,
+    }) })) })) }))
+    server.createServiceClient.mockReturnValue({ rpc, from: vi.fn(() => capsule()) })
 
     const response = await POST(request())
     const body = await response.json()
 
     expect(response.status).toBe(200)
     expect(body).not.toHaveProperty('inviteToken')
-    expect(body).not.toHaveProperty('inviteTokenExpiresAt')
-    expect(body).toMatchObject({ accessCode: '123456', idempotent: true })
-  })
-
-  it('rejects a replay when the existing token was issued by the legacy scheme', async () => {
-    const insert = vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({
-      data: null,
-      error: { code: '23505', message: 'time_capsules_owner_idempotency_key_uidx' },
-    }) })) }))
-    const maybeSingle = vi.fn().mockResolvedValue({ data: { ...row, invite_token_hash: 'legacy-hash' }, error: null })
-    const select = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })) }))
-    server.createServiceClient.mockReturnValue({ from: vi.fn()
-      .mockReturnValueOnce({ insert })
-      .mockReturnValueOnce({ select }) })
-
-    const response = await POST(request())
-
-    expect(response.status).toBe(409)
-    expect(await response.json()).toEqual({ error: { code: 'idempotency_replay_unavailable' } })
+    expect(body).toMatchObject({ accessCode: '100000', idempotent: true })
   })
 })

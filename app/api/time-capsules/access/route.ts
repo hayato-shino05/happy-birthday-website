@@ -3,6 +3,7 @@ import {
   TimeCapsuleError,
   errorResponse,
   findByAccessCode,
+  getAccessAttemptBucketFingerprint,
   parseAccessCode,
   serializeCapsule,
 } from '@/lib/time-capsule/server'
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (typeof accessCode !== 'string') {
       throw new TimeCapsuleError('invalid_access_code', 401, 'アクセスコードが無効です')
     }
-    const { client, row } = await findByAccessCode(parseAccessCode(accessCode))
+    const { client, row } = await findByAccessCode(parseAccessCode(accessCode), getAccessAttemptBucketFingerprint(request))
     return Response.json(
       { data: await serializeCapsule(client, row) },
       { headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } }
