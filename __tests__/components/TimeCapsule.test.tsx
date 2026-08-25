@@ -243,6 +243,7 @@ describe('TimeCapsule', () => {
     })
 
     expect(createMock).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('482913')).toBeTruthy()
     expect(screen.getByText('731604')).toBeTruthy()
   })
 

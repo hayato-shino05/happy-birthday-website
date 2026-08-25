@@ -272,7 +272,6 @@ export function TimeCapsule() {
     isSealingRef.current = true
     setIsSubmitting(true)
     setSubmitError(null)
-    setInviteAccesses([])
     const idempotencyKey = createIdempotencyKey()
     let photoObjectPath: string | undefined
     try {
