@@ -307,7 +307,7 @@
     "timeCapsuleIdLabel": "カプセルID",
     "timeCapsuleInviteTokenLabel": "招待トークン",
     "timeCapsuleRedeemAction": "カプセルを確認",
-    "timeCapsuleRedeemError": "カプセルを確認できませんでした。IDと招待トークンを確認してください。",
+    "timeCapsuleRedeemError": "アクセスコードを確認できませんでした。コードを確認して、もう一度お試しください。",
     "timeCapsuleRedeemTitle": "招待されたカプセルを確認",
     "timeCapsuleLockedNotice": "この想い出は大切に封印されています。{date} の開封をお楽しみに。",
     "timeCapsulePhotoAlt": "タイムカプセルの写真",

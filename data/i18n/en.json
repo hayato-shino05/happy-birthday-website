@@ -307,7 +307,7 @@
     "timeCapsuleIdLabel": "Capsule ID",
     "timeCapsuleInviteTokenLabel": "Invite token",
     "timeCapsuleRedeemAction": "Check capsule",
-    "timeCapsuleRedeemError": "We could not check this capsule. Confirm the ID and invite token.",
+    "timeCapsuleRedeemError": "We could not verify the access code. Check the code and try again.",
     "timeCapsuleRedeemTitle": "Check an invited capsule",
     "timeCapsuleLockedNotice": "This capsule is safely locked and will open on {date}.",
     "timeCapsulePhotoAlt": "Time capsule photo",
