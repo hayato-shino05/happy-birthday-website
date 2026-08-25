@@ -296,7 +296,12 @@ export function TimeCapsule() {
       }, idempotencyKey)
 
       if (created.inviteToken && created.inviteTokenExpiresAt) {
-        setInviteAccesses([{ capsuleId: String(created.data.id), token: created.inviteToken, expiresAt: created.inviteTokenExpiresAt }])
+        const inviteAccess: InviteAccess = {
+          capsuleId: String(created.data.id),
+          token: created.inviteToken,
+          expiresAt: created.inviteTokenExpiresAt,
+        }
+        setInviteAccesses((current) => [...current, inviteAccess])
       }
       setSubmitSuccess(true)
       const hasInviteAccess = Boolean(created.inviteToken && created.inviteTokenExpiresAt)

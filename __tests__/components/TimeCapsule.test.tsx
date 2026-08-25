@@ -285,6 +285,33 @@ describe('TimeCapsule', () => {
     expect(localStorage.getItem('local_time_capsules')).toBe('[]')
   })
 
+  it('keeps a synchronized invite token when a direct create finishes later', async () => {
+    let resolveSync: ((value: { data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }) => void) | undefined
+    let resolveDirect: ((value: { data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }) => void) | undefined
+    localStorage.setItem('local_time_capsules', JSON.stringify([{
+      id: 'local-1', sender: '保留送信者', message: '保留本文', unlockDate: futureDate,
+      createdAt: '2026-08-23T00:00:00.000Z', pendingKey: 'same-key',
+    }]))
+    createMock.mockImplementationOnce(() => new Promise((resolve) => { resolveSync = resolve }))
+    createMock.mockImplementationOnce(() => new Promise((resolve) => { resolveDirect = resolve }))
+    listMock.mockResolvedValue({ data: [] })
+    const { container } = render(<TimeCapsule />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    await act(async () => {
+      resolveSync?.({ data: row({ id: 1 }), inviteToken: 'synced-token', inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z' })
+      await Promise.resolve()
+      resolveDirect?.({ data: row({ id: 2 }), inviteToken: 'direct-token', inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z' })
+      await Promise.resolve()
+    })
+
+    expect(screen.getByText('synced-token')).toBeTruthy()
+    expect(screen.getByText('direct-token')).toBeTruthy()
+  })
+
   it('uploads an attachment before creating a capsule', async () => {
     listMock.mockResolvedValue({ data: [] })
     uploadMock.mockResolvedValue('owner/photo.jpg')
