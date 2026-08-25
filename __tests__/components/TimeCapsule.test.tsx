@@ -188,7 +188,37 @@ describe('TimeCapsule', () => {
     expect(invitePanel).toHaveTextContent('timeCapsuleInviteTitle')
     expect(invitePanel).toHaveTextContent('invite-token-for-test')
     expect(invitePanel).toHaveTextContent('timeCapsuleInviteDescription')
+    expect(invitePanel).toHaveTextContent('timeCapsuleIdLabel')
+    expect(invitePanel).toHaveTextContent('1')
     expect(invitePanel).toHaveTextContent(`timeCapsuleInviteExpires:${new Date(expiresAt).toLocaleDateString('ja-JP')}`)
+  })
+
+  it('keeps the first invite token and does not create a second capsule after repeated submits', async () => {
+    let resolveCreate: ((value: { data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }) => void) | undefined
+    listMock.mockResolvedValue({ data: [] })
+    createMock.mockImplementation(() => new Promise<{ data: CapsuleRow; inviteToken: string; inviteTokenExpiresAt: string }>((resolve) => {
+      resolveCreate = resolve
+    }))
+    const { container } = render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+
+    expect(createMock).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      resolveCreate?.({
+        data: row(),
+        inviteToken: 'invite-token-for-test',
+        inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z',
+      })
+      await Promise.resolve()
+    })
+
+    expect(screen.getByText('invite-token-for-test')).toBeTruthy()
   })
 
   it('keeps a synced pending capsule when remote refresh fails', async () => {
@@ -230,6 +260,28 @@ describe('TimeCapsule', () => {
       message: '保留本文',
       unlockDate: futureDate,
     }, pendingKey)
+    expect(localStorage.getItem('local_time_capsules')).toBe('[]')
+  })
+
+  it('shows the invite token returned while synchronizing a pending capsule', async () => {
+    localStorage.setItem('local_time_capsules', JSON.stringify([{
+      id: 'local-1',
+      sender: '保留送信者',
+      message: '保留本文',
+      unlockDate: futureDate,
+      createdAt: '2026-08-23T00:00:00.000Z',
+      pendingKey: 'same-key',
+    }]))
+    createMock.mockResolvedValue({
+      data: row(),
+      inviteToken: 'synced-invite-token',
+      inviteTokenExpiresAt: '2030-01-02T00:00:00.000Z',
+    })
+    listMock.mockResolvedValue({ data: [] })
+
+    render(<TimeCapsule />)
+
+    expect(await screen.findByText('synced-invite-token')).toBeTruthy()
     expect(localStorage.getItem('local_time_capsules')).toBe('[]')
   })
 

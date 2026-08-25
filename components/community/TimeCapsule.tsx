@@ -17,6 +17,7 @@ export interface CapsuleItem {
 }
 
 type PendingCapsule = CapsuleItem & { pendingKey?: string }
+type InviteAccess = { capsuleId: string; token: string; expiresAt: string }
 
 const LOCAL_CAPSULES_KEY = 'local_time_capsules'
 
@@ -140,7 +141,7 @@ export function TimeCapsule() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
-  const [inviteAccess, setInviteAccess] = useState<{ capsuleId: string; token: string; expiresAt: string } | null>(null)
+  const [inviteAccesses, setInviteAccesses] = useState<InviteAccess[]>([])
   const [accessCapsuleId, setAccessCapsuleId] = useState('')
   const [accessInviteToken, setAccessInviteToken] = useState('')
   const [accessError, setAccessError] = useState<string | null>(null)
@@ -151,6 +152,7 @@ export function TimeCapsule() {
   const hasLoadedCapsulesRef = useRef(false)
   const refreshInFlightRef = useRef(false)
   const refreshQueuedRef = useRef(false)
+  const isSealingRef = useRef(false)
 
   // タイムカプセル一覧の取得およびローカル保存データの統合
   const fetchCapsules = async () => {
@@ -177,15 +179,23 @@ export function TimeCapsule() {
         isRecord(item) && typeof item.pendingKey === 'string'
       ))
       const syncedIds = new Set<string>()
+      const syncedInviteAccesses: InviteAccess[] = []
       await Promise.all(pendingRaw.map(async (pending) => {
         try {
-          await createTimeCapsule({
+          const created = await createTimeCapsule({
             sender: pending.sender,
             recipient: pending.recipient,
             message: pending.message,
             unlockDate: pending.unlockDate,
           }, pending.pendingKey as string)
           syncedIds.add(String(pending.id))
+          if (created.inviteToken && created.inviteTokenExpiresAt) {
+            syncedInviteAccesses.push({
+              capsuleId: String(created.data.id),
+              token: created.inviteToken,
+              expiresAt: created.inviteTokenExpiresAt,
+            })
+          }
         } catch {
           // Keep pending entries for the next refresh.
         }
@@ -211,6 +221,10 @@ export function TimeCapsule() {
       )
 
       if (!isMountedRef.current) return
+      if (syncedInviteAccesses.length > 0) {
+        setInviteAccesses((current) => [...current, ...syncedInviteAccesses])
+        setActiveTab('create')
+      }
       setLoadError(Boolean(queryError))
       setCapsules(combined)
       hasLoadedCapsulesRef.current = true
@@ -255,10 +269,11 @@ export function TimeCapsule() {
   // タイムカプセルの封印処理
   const handleSeal = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!sender.trim() || !message.trim() || !unlockDate) return
+    if (isSealingRef.current || isSubmitting || inviteAccesses.length > 0 || !sender.trim() || !message.trim() || !unlockDate) return
+    isSealingRef.current = true
     setIsSubmitting(true)
     setSubmitError(null)
-    setInviteAccess(null)
+    setInviteAccesses([])
     const idempotencyKey = createIdempotencyKey()
     let photoObjectPath: string | undefined
     try {
@@ -281,7 +296,7 @@ export function TimeCapsule() {
       }, idempotencyKey)
 
       if (created.inviteToken && created.inviteTokenExpiresAt) {
-        setInviteAccess({ capsuleId: String(created.data.id), token: created.inviteToken, expiresAt: created.inviteTokenExpiresAt })
+        setInviteAccesses([{ capsuleId: String(created.data.id), token: created.inviteToken, expiresAt: created.inviteTokenExpiresAt }])
       }
       setSubmitSuccess(true)
       const hasInviteAccess = Boolean(created.inviteToken && created.inviteTokenExpiresAt)
@@ -319,6 +334,7 @@ export function TimeCapsule() {
       }
       setSubmitError(t('genericError'))
     } finally {
+      isSealingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -507,10 +523,13 @@ export function TimeCapsule() {
             </div>
           )}
 
-          {inviteAccess && (
-            <div className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
+          {inviteAccesses.map((inviteAccess) => (
+            <div key={inviteAccess.capsuleId} className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
               <p className="font-bold">{t('timeCapsuleInviteTitle')}</p>
               <p>{t('timeCapsuleInviteDescription')}</p>
+              <p>
+                {t('timeCapsuleIdLabel')}: <code className="select-all font-mono">{inviteAccess.capsuleId}</code>
+              </p>
               <code className="block break-all rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
                 {inviteAccess.token}
               </code>
@@ -518,7 +537,7 @@ export function TimeCapsule() {
                 date: new Date(inviteAccess.expiresAt).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US'),
               })}</p>
             </div>
-          )}
+          ))}
 
           <div>
             <label className="block text-xs font-bold text-[#854D27] mb-1">
