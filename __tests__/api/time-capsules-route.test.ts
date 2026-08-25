@@ -87,6 +87,31 @@ describe('POST /api/time-capsules idempotency', () => {
     expect(await response.json()).toMatchObject({ inviteToken: 'invite-token', idempotent: true })
   })
 
+  it('waits for the access row before deriving the replay access code', async () => {
+    const insert = vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: '23505', message: 'time_capsules_owner_idempotency_key_uidx' },
+    }) })) }))
+    const maybeSingle = vi.fn().mockResolvedValue({ data: row, error: null })
+    const select = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })) }))
+    const existingAccess = vi.fn()
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: { derivation_attempt: 0 }, error: null })
+    const accessSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: existingAccess })) }))
+    server.createServiceClient.mockReturnValue({ from: vi.fn()
+      .mockReturnValueOnce({ insert })
+      .mockReturnValueOnce({ select })
+      .mockReturnValueOnce({ select: accessSelect })
+      .mockReturnValueOnce({ select: accessSelect }) })
+
+    const response = await POST(request())
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).toMatchObject({ accessCode: '123456', idempotent: true })
+    expect(existingAccess).toHaveBeenCalledTimes(2)
+  })
+
   it('returns the candidate code from the successful collision retry', async () => {
     const insertCapsule = vi.fn(() => ({
       select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: { id: 2 }, error: null }) })),

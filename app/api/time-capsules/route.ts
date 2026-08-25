@@ -75,11 +75,16 @@ export async function POST(request: NextRequest) {
       if (existing.data.invite_token_hash !== hashInviteToken(inviteToken)) {
         throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
       }
-      const existingAccess = await client
-        .from('time_capsule_access_codes')
-        .select('derivation_attempt')
-        .eq('capsule_id', existing.data.id)
-        .maybeSingle()
+      let existingAccess: { data: { derivation_attempt: number } | null; error: unknown } = { data: null, error: null }
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        existingAccess = await client
+          .from('time_capsule_access_codes')
+          .select('derivation_attempt')
+          .eq('capsule_id', existing.data.id)
+          .maybeSingle()
+        if (!existingAccess.error && existingAccess.data) break
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 10 * (attempt + 1)))
+      }
       if (existingAccess.error || !existingAccess.data) {
         throw new TimeCapsuleError('idempotency_replay_unavailable', 409, 'Time Capsuleの再送結果を復元できません')
       }
