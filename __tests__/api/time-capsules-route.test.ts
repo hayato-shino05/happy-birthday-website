@@ -38,6 +38,7 @@ const row = {
   id: 1,
   invite_token_hash: 'token-hash',
   invite_token_expires_at: '2030-01-01T00:00:00.000Z',
+  invite_revoked_at: null,
 }
 
 function request(): NextRequest {
@@ -108,6 +109,32 @@ describe('POST /api/time-capsules idempotency', () => {
 
     expect(response.status).toBe(201)
     expect(await response.json()).toMatchObject({ accessCode: '100001' })
+  })
+
+  it.each([
+    ['expired', { invite_token_expires_at: '2020-01-01T00:00:00.000Z', invite_revoked_at: null }],
+    ['revoked', { invite_token_expires_at: '2030-01-01T00:00:00.000Z', invite_revoked_at: '2026-08-25T00:00:00.000Z' }],
+  ])('does not return an %s invite token on replay while keeping the permanent access code', async (_state, inviteState) => {
+    const insert = vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: '23505', message: 'time_capsules_owner_idempotency_key_uidx' },
+    }) })) }))
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { ...row, ...inviteState }, error: null })
+    const select = vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })) }))
+    const existingAccess = vi.fn().mockResolvedValue({ data: { derivation_attempt: 0, revoked_at: '2026-08-25T00:00:00.000Z' }, error: null })
+    const accessSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: existingAccess })) }))
+    server.createServiceClient.mockReturnValue({ from: vi.fn()
+      .mockReturnValueOnce({ insert })
+      .mockReturnValueOnce({ select })
+      .mockReturnValueOnce({ select: accessSelect }) })
+
+    const response = await POST(request())
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).not.toHaveProperty('inviteToken')
+    expect(body).not.toHaveProperty('inviteTokenExpiresAt')
+    expect(body).toMatchObject({ accessCode: '123456', idempotent: true })
   })
 
   it('rejects a replay when the existing token was issued by the legacy scheme', async () => {

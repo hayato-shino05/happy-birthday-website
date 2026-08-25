@@ -218,7 +218,8 @@ describe('TimeCapsule', () => {
     expect(screen.getByText('482913')).toBeTruthy()
   })
 
-  it('allows creating another capsule after showing an access code', async () => {
+  it('blocks a submit during success feedback and allows one after the delayed reset', async () => {
+    const resetCallbacks: Array<() => void> = []
     listMock.mockResolvedValue({ data: [] })
     createMock
       .mockResolvedValueOnce({ data: row(), accessCode: '482913' })
@@ -226,6 +227,10 @@ describe('TimeCapsule', () => {
     const { container } = render(<TimeCapsule />)
 
     await screen.findByText('timeCapsuleEmptyDesc')
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(((callback: TimerHandler) => {
+      if (typeof callback === 'function') resetCallbacks.push(callback as () => void)
+      return 0
+    }) as typeof setTimeout)
     fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
     fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
     fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '保存する本文' } })
@@ -233,8 +238,20 @@ describe('TimeCapsule', () => {
       fireEvent.submit(container.querySelector('form') as HTMLFormElement)
       await Promise.resolve()
     })
-    expect(await screen.findByText('482913')).toBeTruthy()
+    expect(screen.getByText('482913')).toBeTruthy()
 
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '二人目' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '二つ目の本文' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+    expect(createMock).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      resetCallbacks[0]?.()
+      await Promise.resolve()
+    })
     fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '二人目' } })
     fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '二つ目の本文' } })
     await act(async () => {

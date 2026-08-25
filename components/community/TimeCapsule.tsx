@@ -268,7 +268,7 @@ export function TimeCapsule() {
   // タイムカプセルの封印処理
   const handleSeal = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (isSealingRef.current || isSubmitting || !sender.trim() || !message.trim() || !unlockDate) return
+    if (isSealingRef.current || isSubmitting || submitSuccess || !sender.trim() || !message.trim() || !unlockDate) return
     isSealingRef.current = true
     setIsSubmitting(true)
     setSubmitError(null)

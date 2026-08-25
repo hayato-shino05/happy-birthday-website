@@ -85,10 +85,15 @@ export async function POST(request: NextRequest) {
       }
       accessCode = createAccessCode(user.id, idempotencyKey, existingAccess.data.derivation_attempt)
       const capsule = await serializeCapsule(client, existing.data)
+      const inviteTokenActive =
+        existing.data.invite_revoked_at === null &&
+        typeof existing.data.invite_token_expires_at === 'string' &&
+        existing.data.invite_token_expires_at > new Date().toISOString()
       return Response.json({
         data: capsule,
-        inviteToken,
-        inviteTokenExpiresAt: existing.data.invite_token_expires_at,
+        ...(inviteTokenActive
+          ? { inviteToken, inviteTokenExpiresAt: existing.data.invite_token_expires_at }
+          : {}),
         accessCode,
         idempotent: true,
       })
