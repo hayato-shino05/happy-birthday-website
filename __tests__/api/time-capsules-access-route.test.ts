@@ -6,6 +6,7 @@ const server = vi.hoisted(() => ({
   findByAccessCode: vi.fn(),
   getAccessAttemptBucketFingerprint: vi.fn(),
   parseAccessCode: vi.fn(),
+  recordFirstOpen: vi.fn(),
   serializeCapsule: vi.fn(),
 }))
 
@@ -41,6 +42,7 @@ beforeEach(() => {
   server.parseAccessCode.mockReturnValue('123456')
   server.getAccessAttemptBucketFingerprint.mockReturnValue('a'.repeat(64))
   server.findByAccessCode.mockResolvedValue({ client: {}, row: { id: 1 } })
+  server.recordFirstOpen.mockResolvedValue(true)
   server.serializeCapsule.mockResolvedValue({ id: 1, isUnlocked: false })
   server.errorResponse.mockImplementation((error: { code?: string; status?: number }) =>
     Response.json({ error: { code: error.code ?? 'internal_error' } }, { status: error.status ?? 500 })
@@ -73,6 +75,17 @@ describe('POST /api/time-capsules/access', () => {
 
     expect(server.getAccessAttemptBucketFingerprint).toHaveBeenCalledWith(firstRequest)
     expect(server.findByAccessCode).toHaveBeenCalledWith('123456', 'a'.repeat(64))
+  })
+
+  it('returns the unlocked capsule when first-open persistence fails', async () => {
+    const data = { id: 1, isUnlocked: true, message: '本文' }
+    server.serializeCapsule.mockResolvedValue(data)
+    server.recordFirstOpen.mockRejectedValue(new Error('database unavailable'))
+
+    const response = await POST(request({ accessCode: '123456' }))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ data })
   })
 
   it('returns invalid_input for malformed JSON', async () => {

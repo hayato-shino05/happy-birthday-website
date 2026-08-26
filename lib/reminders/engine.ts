@@ -2,6 +2,7 @@ export const REMINDER_EVENT_TYPES = ['birthday', 'capsule_unlock'] as const
 export type ReminderEventType = (typeof REMINDER_EVENT_TYPES)[number]
 
 export const REMINDER_CHANNELS = ['in_app', 'email', 'web_push', 'line'] as const
+export const APPROVED_REMINDER_CHANNELS = ['in_app'] as const
 export type ReminderChannel = (typeof REMINDER_CHANNELS)[number]
 
 export const REMINDER_STATUSES = ['pending', 'processing', 'sent', 'retryable', 'failed', 'cancelled', 'expired'] as const
@@ -71,6 +72,7 @@ function validateScheduledAt(value: string): Date {
 export function createReminderEngine(options: ReminderEngineOptions) {
   const maxAttempts = Math.max(1, Math.floor(options.maxAttempts ?? 3))
   const results = new Map<string, ReminderResult>()
+  const inFlight = new Map<string, Promise<ReminderResult>>()
 
   const validate = (job: ReminderJob): void => {
     if (!job.eventId.trim() || !job.recipientRef.trim() || !job.idempotencyKey.trim()) {
@@ -78,6 +80,7 @@ export function createReminderEngine(options: ReminderEngineOptions) {
     }
     if (!isAllowed(job.eventType, REMINDER_EVENT_TYPES)) throw new Error('Invalid reminder event type')
     if (!isAllowed(job.channel, REMINDER_CHANNELS)) throw new Error('Invalid reminder channel')
+    if (!isAllowed(job.channel, APPROVED_REMINDER_CHANNELS)) throw new Error('Reminder channel is not approved')
     validateTimezone(job.timezone)
     validateScheduledAt(job.scheduledAt)
     if (job.expiresAt) validateScheduledAt(job.expiresAt)
@@ -107,27 +110,39 @@ export function createReminderEngine(options: ReminderEngineOptions) {
       return result
     }
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      try {
-        await options.provider.send(job)
-        const result: ReminderResult = { status: 'sent', attemptCount: attempt }
-        results.set(job.idempotencyKey, result)
-        return result
-      } catch (error) {
-        const failure = parseFailure(error)
-        if (!failure.transient || attempt === maxAttempts) {
-          const result: ReminderResult = {
-            status: 'failed',
-            attemptCount: attempt,
-            errorCode: failure.code ?? 'provider_failure',
-          }
+    const existingInFlight = inFlight.get(job.idempotencyKey)
+    if (existingInFlight) return { ...(await existingInFlight), duplicate: true }
+
+    const operation = (async (): Promise<ReminderResult> => {
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          await options.provider.send(job)
+          const result: ReminderResult = { status: 'sent', attemptCount: attempt }
           results.set(job.idempotencyKey, result)
           return result
+        } catch (error) {
+          const failure = parseFailure(error)
+          if (!failure.transient || attempt === maxAttempts) {
+            const result: ReminderResult = {
+              status: 'failed',
+              attemptCount: attempt,
+              errorCode: failure.code ?? 'provider_failure',
+            }
+            results.set(job.idempotencyKey, result)
+            return result
+          }
         }
       }
-    }
 
-    throw new Error('Reminder processing did not settle')
+      throw new Error('Reminder processing did not settle')
+    })()
+    inFlight.set(job.idempotencyKey, operation)
+
+    try {
+      return await operation
+    } finally {
+      inFlight.delete(job.idempotencyKey)
+    }
   }
 
   return { validate, process }

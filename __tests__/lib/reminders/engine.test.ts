@@ -128,4 +128,28 @@ describe('ReminderEngine', () => {
     expect(() => createReminderEngine({ now: () => new Date(), provider: provider() }).validate(baseJob({ eventType: 'unknown' as never }))).toThrow()
     expect(() => createReminderEngine({ now: () => new Date(), provider: provider() }).validate(baseJob({ channel: 'sms' as never }))).toThrow()
   })
+
+  it('sends a concurrent duplicate only once', async () => {
+    let release!: () => void
+    const send = vi.fn(() => new Promise<void>((resolve) => {
+      release = resolve
+    }))
+    const engine = createReminderEngine({ now: () => new Date('2026-08-26T10:00:00.000Z'), provider: provider(send) })
+
+    const first = engine.process(baseJob())
+    const second = engine.process(baseJob())
+    await Promise.resolve()
+    expect(send).toHaveBeenCalledTimes(1)
+
+    release()
+    const results = await Promise.all([first, second])
+    expect(results[0].status).toBe('sent')
+    expect(results[1].status).toBe('sent')
+  })
+
+  it.each(['email', 'web_push', 'line'] as const)('rejects unapproved channel %s', (channel) => {
+    const engine = createReminderEngine({ now: () => new Date(), provider: provider() })
+
+    expect(() => engine.validate(baseJob({ channel }))).toThrow('Reminder channel is not approved')
+  })
 })

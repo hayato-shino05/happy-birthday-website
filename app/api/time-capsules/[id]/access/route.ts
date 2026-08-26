@@ -26,7 +26,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     const { client, row } = await findByInviteToken(parseInviteToken(token), id)
     const data = await serializeCapsule(client, row)
-    if (data.isUnlocked === true) await recordFirstOpen(client, row)
+    if (data.isUnlocked === true) {
+      try {
+        await recordFirstOpen(client, row)
+      } catch (error) {
+        console.warn('[TimeCapsule] first-open tracking failed', {
+          error: error instanceof Error ? error.name : 'unknown_error',
+        })
+      }
+    }
     return Response.json(
       { data },
       { headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } }
