@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getSupabase } from '@/lib/supabase/client'
+import { createTimeCapsule, deleteTimeCapsulePhoto, listTimeCapsules, redeemTimeCapsuleByCode, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
@@ -15,6 +15,11 @@ export interface CapsuleItem {
   createdAt: string
   isUnlocked: boolean
 }
+
+type PendingCapsule = CapsuleItem & { pendingKey?: string }
+type InviteAccess = { accessCode: string }
+
+const LOCAL_CAPSULES_KEY = 'local_time_capsules'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -35,6 +40,16 @@ function formatLocalDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function normalizeAccessCode(value: string): string {
+  return value.replace(/[\s-]/g, '')
+}
+
+function createIdempotencyKey(): string {
+  return typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `capsule-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 // ローカル日付文字列（YYYY-MM-DD）をローカル時間 00:00:00 の Date オブジェクトに変換
@@ -130,13 +145,17 @@ export function TimeCapsule() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [inviteAccesses, setInviteAccesses] = useState<InviteAccess[]>([])
+  const [accessCodeInput, setAccessCodeInput] = useState('')
+  const [accessError, setAccessError] = useState<string | null>(null)
+  const [accessedCapsule, setAccessedCapsule] = useState<CapsuleItem | null>(null)
+  const [isAccessing, setIsAccessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
   const hasLoadedCapsulesRef = useRef(false)
-  const openedCapsulesRef = useRef<CapsuleItem[]>([])
-  const sealedCapsulesRef = useRef<CapsuleItem[]>([])
   const refreshInFlightRef = useRef(false)
   const refreshQueuedRef = useRef(false)
+  const isSealingRef = useRef(false)
 
   // タイムカプセル一覧の取得およびローカル保存データの統合
   const fetchCapsules = async () => {
@@ -149,58 +168,55 @@ export function TimeCapsule() {
     if (!hasLoadedCapsulesRef.current) setLoading(true)
     setLoadError(false)
     try {
-      const supabase = getSupabase()
       const now = new Date()
-      const today = formatLocalDate(now)
-
-      const openedQuery = supabase
-        .from('time_capsules')
-        .select('id,sender,recipient,message,photo_url,unlock_date,created_at')
-        .lte('unlock_date', today)
-        .order('unlock_date', { ascending: true })
-      const sealedQuery = supabase
-        .from('time_capsules')
-        .select('id,sender,recipient,unlock_date,created_at')
-        .gt('unlock_date', today)
-        .order('unlock_date', { ascending: true })
-      const [openedResult, sealedResult] = await Promise.all([openedQuery, sealedQuery])
-
-      const openedData = openedResult.data || []
-      const sealedData = sealedResult.data || []
-      const openedCapsules = openedData
-        .map((capsule) => parseRemoteCapsule({ ...capsule, message: capsule.message, photo_url: capsule.photo_url }, now))
-        .filter((capsule): capsule is CapsuleItem => capsule !== null)
-      const sealedCapsules = sealedData
-        .map((capsule) => parseRemoteCapsule({ ...capsule, message: null, photo_url: null }, now))
-        .filter((capsule): capsule is CapsuleItem => capsule !== null)
-      if (!openedResult.error) {
-        openedCapsulesRef.current = openedCapsules
-      }
-      if (!sealedResult.error && (!openedResult.error || !hasLoadedCapsulesRef.current)) {
-        sealedCapsulesRef.current = sealedCapsules
-      }
-      const remoteCapsules = Array.from(
-        [...openedCapsulesRef.current, ...sealedCapsulesRef.current].reduce(
-          (capsulesById, capsule) => {
-            const id = String(capsule.id)
-            if (!capsulesById.has(id)) capsulesById.set(id, capsule)
-            return capsulesById
-          },
-          new Map<string, CapsuleItem>()
-        ).values()
-      )
-      const queryError = openedResult.error || sealedResult.error
-
-      // ローカルストレージフォールバックデータの取得
-      let localCapsules: CapsuleItem[] = []
+      let localRaw: unknown[] = []
       try {
-        const localSaved = localStorage.getItem('local_time_capsules')
-        if (localSaved) {
-          localCapsules = parseLocalCapsules(JSON.parse(localSaved), now)
-        }
+        const localSaved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+        const parsed = localSaved ? JSON.parse(localSaved) : []
+        if (Array.isArray(parsed)) localRaw = parsed
       } catch {
-        localCapsules = []
+        localRaw = []
       }
+
+      const pendingRaw = localRaw.filter((item): item is PendingCapsule => (
+        isRecord(item) && typeof item.pendingKey === 'string'
+      ))
+      const syncedIds = new Set<string>()
+      const syncedInviteAccesses: InviteAccess[] = []
+      await Promise.all(pendingRaw.map(async (pending) => {
+        try {
+          const created = await createTimeCapsule({
+            sender: pending.sender,
+            recipient: pending.recipient,
+            message: pending.message,
+            unlockDate: pending.unlockDate,
+          }, pending.pendingKey as string)
+          syncedIds.add(String(pending.id))
+          if (created.accessCode) {
+            syncedInviteAccesses.push({ accessCode: created.accessCode })
+          }
+        } catch {
+          // Keep pending entries for the next refresh.
+        }
+      }))
+      const result = await listTimeCapsules()
+      if (syncedIds.size > 0) {
+        try {
+          const latestSaved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+          const latestParsed = latestSaved ? JSON.parse(latestSaved) : []
+          const latestRaw = Array.isArray(latestParsed) ? latestParsed : localRaw
+          localRaw = latestRaw.filter((item) => !isRecord(item) || !syncedIds.has(String(item.id)))
+          localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify(localRaw))
+        } catch {
+          // ストレージを再読込できない場合は、取得開始時のデータを維持する。
+        }
+      }
+
+      const remoteCapsules = result.data
+        .map((capsule) => parseRemoteCapsule(capsule, now))
+        .filter((capsule): capsule is CapsuleItem => capsule !== null)
+      const queryError = null
+      const localCapsules = parseLocalCapsules(localRaw, now)
 
       // リモートとローカルの統合（ID重複を排除）
       const remoteIds = new Set(remoteCapsules.map((c) => String(c.id)))
@@ -211,14 +227,25 @@ export function TimeCapsule() {
       )
 
       if (!isMountedRef.current) return
+      if (syncedInviteAccesses.length > 0) {
+        setInviteAccesses((current) => [...current, ...syncedInviteAccesses])
+        setActiveTab('create')
+      }
       setLoadError(Boolean(queryError))
       setCapsules(combined)
       hasLoadedCapsulesRef.current = true
     } catch {
       if (!isMountedRef.current) return
+      let localCapsules: CapsuleItem[] = []
+      try {
+        const localSaved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+        localCapsules = parseLocalCapsules(localSaved ? JSON.parse(localSaved) : [], new Date())
+      } catch {
+        localCapsules = []
+      }
       setLoadError(true)
       if (!hasLoadedCapsulesRef.current) {
-        setCapsules([])
+        setCapsules(localCapsules)
         hasLoadedCapsulesRef.current = true
       }
     } finally {
@@ -248,76 +275,94 @@ export function TimeCapsule() {
   // タイムカプセルの封印処理
   const handleSeal = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!sender.trim() || !message.trim() || !unlockDate) return
-
+    if (isSealingRef.current || isSubmitting || submitSuccess || !sender.trim() || !message.trim() || !unlockDate) return
+    isSealingRef.current = true
     setIsSubmitting(true)
     setSubmitError(null)
+    const idempotencyKey = createIdempotencyKey()
+    let photoObjectPath: string | undefined
     try {
-      const supabase = getSupabase()
-      let photoUrl: string | undefined = undefined
-
-      if (photoFile) {
-        const fileExt = photoFile.name.split('.').pop() || 'jpg'
-        const fileName = `capsule_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('time-capsules')
-          .upload(fileName, photoFile)
-
-        if (uploadErr || !uploadData) {
-          // 写真アップロード失敗時は封印を中断してエラーを表示
-          setSubmitError(t('uploadFileFailed'))
-          setIsSubmitting(false)
-          return
-        }
-
-        photoUrl = supabase.storage.from('time-capsules').getPublicUrl(fileName).data.publicUrl
-      }
-
       const newCapsule: CapsuleItem = {
         id: `capsule-${Date.now()}`,
         sender: sender.trim(),
         recipient: recipient.trim() || undefined,
         message: message.trim(),
-        photoUrl,
         unlockDate,
         createdAt: new Date().toISOString(),
         isUnlocked: parseLocalDate(unlockDate) <= new Date(),
       }
-
-      // Supabase へ保存、失敗時はローカルストレージへフォールバック保存
-      const { error: insertErr } = await supabase.from('time_capsules').insert({
+      if (photoFile) photoObjectPath = await uploadTimeCapsulePhoto(photoFile)
+      const created = await createTimeCapsule({
         sender: newCapsule.sender,
         recipient: newCapsule.recipient,
         message: newCapsule.message,
-        photo_url: newCapsule.photoUrl,
-        unlock_date: newCapsule.unlockDate,
-      })
+        unlockDate: newCapsule.unlockDate,
+        photoObjectPath,
+      }, idempotencyKey)
 
-      if (insertErr) {
-        try {
-          const localSaved = localStorage.getItem('local_time_capsules')
-          const currentList = localSaved ? JSON.parse(localSaved) : []
-          localStorage.setItem('local_time_capsules', JSON.stringify([newCapsule, ...currentList]))
-        } catch {
-          // ストレージエラーは無視
-        }
+      const accessCode = created.accessCode
+      if (accessCode) {
+        setInviteAccesses((current) => [...current, { accessCode }])
       }
-
       setSubmitSuccess(true)
+      const hasInviteAccess = Boolean(created.accessCode)
       setTimeout(() => {
         setSubmitSuccess(false)
         setSender('')
         setRecipient('')
         setMessage('')
         setPhotoFile(null)
-        setActiveTab('view')
+        if (!hasInviteAccess) setActiveTab('view')
         fetchCapsules()
       }, 1200)
     } catch (err) {
+      if (photoObjectPath) {
+        void deleteTimeCapsulePhoto(photoObjectPath)
+      }
       console.error('Failed to seal time capsule:', err)
+      const pendingCapsule: PendingCapsule = {
+        id: `capsule-${Date.now()}`,
+        sender: sender.trim(),
+        recipient: recipient.trim() || undefined,
+        message: message.trim(),
+        unlockDate,
+        createdAt: new Date().toISOString(),
+        isUnlocked: parseLocalDate(unlockDate) <= new Date(),
+        pendingKey: idempotencyKey,
+      }
+      try {
+        const saved = localStorage.getItem(LOCAL_CAPSULES_KEY)
+        const currentList = saved ? JSON.parse(saved) : []
+        const nextList = Array.isArray(currentList) ? currentList : []
+        localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify([pendingCapsule, ...nextList]))
+      } catch {
+        // Local fallback is best effort when storage is unavailable.
+      }
       setSubmitError(t('genericError'))
     } finally {
+      isSealingRef.current = false
       setIsSubmitting(false)
+    }
+  }
+
+  const handleRedeem = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const normalizedCode = normalizeAccessCode(accessCodeInput.trim())
+    const hasValidAccessCode = /^\d{6}$/.test(normalizedCode)
+    if (!hasValidAccessCode) return
+
+    setIsAccessing(true)
+    setAccessError(null)
+    setAccessedCapsule(null)
+    try {
+      const result = await redeemTimeCapsuleByCode(normalizedCode)
+      const capsule = parseRemoteCapsule(result.data)
+      if (!capsule) throw new Error('invalid capsule response')
+      setAccessedCapsule(capsule)
+    } catch {
+      setAccessError(t('timeCapsuleRedeemError'))
+    } finally {
+      setIsAccessing(false)
     }
   }
 
@@ -350,6 +395,34 @@ export function TimeCapsule() {
       {activeTab === 'view' ? (
         /* カプセル一覧 */
         <div>
+          <form onSubmit={handleRedeem} className="mb-4 space-y-3 rounded-2xl border border-[#D4B08C] bg-[#FFF9F3] p-4">
+            <p className="text-xs font-bold text-[#854D27]">{t('timeCapsuleRedeemTitle')}</p>
+            <label className="block text-xs font-bold text-[#854D27]">
+              {t('timeCapsuleAccessCodeLabel')}
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={7}
+                value={accessCodeInput}
+                onChange={(event) => setAccessCodeInput(event.target.value)}
+                placeholder="123 456"
+                className="mt-1 w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 font-mono text-xs text-[#854D27]"
+              />
+            </label>
+            <p className="text-[10px] text-[#854D27]/70">{t('timeCapsuleAccessCodeHint')}</p>
+            {accessError && <p className="text-xs text-red-600">{accessError}</p>}
+            <button type="submit" disabled={isAccessing} className="w-full rounded-xl bg-[#854D27] py-2 text-xs font-bold text-[#FFF9F3] disabled:opacity-50">
+              {t('timeCapsuleRedeemAction')}
+            </button>
+            {accessedCapsule && (
+              <div className="rounded-xl border border-[#D4B08C] p-3 text-xs text-[#854D27]">
+                <p className="font-bold">{accessedCapsule.sender}</p>
+                {accessedCapsule.isUnlocked
+                  ? <p className="mt-2">{accessedCapsule.message}</p>
+                  : <p className="mt-2">{t('timeCapsuleLockedNotice', { date: parseLocalDate(accessedCapsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US') })}</p>}
+              </div>
+            )}
+          </form>
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <div className="w-8 h-8 border-3 border-[#D4B08C]/30 border-t-[#854D27] rounded-full animate-spin" />
@@ -452,6 +525,16 @@ export function TimeCapsule() {
               {submitError}
             </div>
           )}
+
+          {inviteAccesses.map((inviteAccess) => (
+            <div key={inviteAccess.accessCode} className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
+              <p className="font-bold">{t('timeCapsuleInviteTitle')}</p>
+              <p>{t('timeCapsuleInviteDescription')}</p>
+              <code className="block rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
+                {inviteAccess.accessCode}
+              </code>
+            </div>
+          ))}
 
           <div>
             <label className="block text-xs font-bold text-[#854D27] mb-1">
