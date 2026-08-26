@@ -5,6 +5,7 @@ import {
   findByInviteToken,
   parseId,
   parseInviteToken,
+  recordFirstOpen,
   serializeCapsule,
 } from '@/lib/time-capsule/server'
 
@@ -24,8 +25,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       throw new TimeCapsuleError('invalid_invite_token', 401, '招待トークンが無効です')
     }
     const { client, row } = await findByInviteToken(parseInviteToken(token), id)
+    const data = await serializeCapsule(client, row)
+    if (data.isUnlocked === true) await recordFirstOpen(client, row)
     return Response.json(
-      { data: await serializeCapsule(client, row) },
+      { data },
       { headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } }
     )
   } catch (error) {

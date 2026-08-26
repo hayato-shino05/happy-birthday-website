@@ -25,6 +25,16 @@
 
 `optedIn=false` の recipient には送信しません。job/log は最小限の metadata と safe error code だけを保持し、本文、写真、secret、IP、device fingerprint は保持しません。具体的な retention 期間は production storage を追加する前に承認します。
 
+## 承認状態
+
+- 状態: `approved`
+- 承認範囲: `in_app` のみ
+- `email`、`web_push`、`line` は provider、privacy、運用手順の承認が完了するまで無効にします
+- opt-in の既定値は `false` とし、明示的な同意がない recipient には送信しません
+- retry は transient failure に限り、最大 3 回までとします
+- `opened_at` の保存期間は 90 日とし、期限後に削除します
+- retention の実装は、対象 storage と削除ジョブの承認後に追加します
+
 ## 承認境界
 
 この PR では contract と pure domain validation のみを追加します。production scheduler、database migration、provider への実送信は実行しません。
