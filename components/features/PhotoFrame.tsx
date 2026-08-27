@@ -7,7 +7,7 @@ import { photoStrips, frameCategories, PhotoStripConfig } from '@/config/frames'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 export default function PhotoFrame() {
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const [selectedStrip, setSelectedStrip] = useState<PhotoStripConfig>(photoStrips[0])
   const [selectedCategory, setSelectedCategory] = useState<string>('trending')
   const [userImages, setUserImages] = useState<(string | null)[]>([null, null, null, null])
@@ -356,6 +356,7 @@ export default function PhotoFrame() {
                   style={{ borderColor: activeSlot === i ? selectedStrip.borderColor : undefined }}
                 >
                   {userImages[i] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={userImages[i]!} alt={t('photoPlaceholder', { index: i + 1 })} />
                   ) : (
                     <Plus size={20} color="#999" />

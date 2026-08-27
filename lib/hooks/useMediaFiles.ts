@@ -46,6 +46,8 @@ function toMediaFile(submission: MediaSubmission): MediaFile {
 export function useMediaFiles(): UseMediaFilesReturn {
   const { t } = useLanguage()
   const tRef = useRef(t)
+  const cacheTimeRef = useRef(0)
+  const filesLengthRef = useRef(0)
   useEffect(() => {
     tRef.current = t
   }, [t])
@@ -55,9 +57,12 @@ export function useMediaFiles(): UseMediaFilesReturn {
   const [stats, setStats] = useState<MediaStats | null>(null)
   const [cacheTime, setCacheTime] = useState(0)
 
+  cacheTimeRef.current = cacheTime
+  filesLengthRef.current = files.length
+
   const fetchFiles = useCallback(async (forceRefresh = false) => {
     const now = Date.now()
-    if (!forceRefresh && cacheTime > 0 && now - cacheTime < CACHE_EXPIRY_TIME && files.length > 0) return
+    if (!forceRefresh && cacheTimeRef.current > 0 && now - cacheTimeRef.current < CACHE_EXPIRY_TIME && filesLengthRef.current > 0) return
 
     setIsLoading(true)
     setError(null)
@@ -91,11 +96,11 @@ export function useMediaFiles(): UseMediaFilesReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [cacheTime, files.length])
+  }, [])
 
   useEffect(() => {
     void fetchFiles()
-  }, [])
+  }, [fetchFiles])
 
   const uploadFile = useCallback(async (file: File): Promise<MediaFile | null> => {
     try {

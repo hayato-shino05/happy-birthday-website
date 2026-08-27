@@ -5,6 +5,7 @@ const { maybeSingle, query, rpc, createClient } = vi.hoisted(() => {
   const rpc = vi.fn()
   const query = {
     select: vi.fn(() => query),
+    update: vi.fn(() => query),
     eq: vi.fn(() => query),
     is: vi.fn(() => query),
     gt: vi.fn(() => query),
@@ -27,6 +28,7 @@ vi.mock('@supabase/supabase-js', () => ({ createClient }))
 import {
   createAccessCode,
   findByAccessCode,
+  TIME_CAPSULE_SELECT,
   getAccessAttemptBucketFingerprint,
   createInviteToken,
   findByInviteToken,
@@ -35,6 +37,7 @@ import {
   parseAccessCode,
   parseInviteToken,
   serializeCapsule,
+  recordFirstOpen,
   TimeCapsuleError,
 } from '@/lib/time-capsule/server'
 
@@ -47,8 +50,18 @@ describe('Time Capsule server boundary', () => {
   })
 
   it('rejects malformed invite tokens before lookup', () => {
-    expect(() => parseInviteToken('short')).toThrowError(TimeCapsuleError)
+    expect(() => parseInviteToken('short')).toThrow(TimeCapsuleError)
     expect(createClient).not.toHaveBeenCalled()
+  })
+
+  it('keeps reads compatible before the open-tracking migration', async () => {
+    maybeSingle.mockResolvedValue({ data: { id: 1, message: 'secret' }, error: null })
+
+    const result = await findByInviteToken('a'.repeat(43))
+
+    expect(result.row).toEqual({ id: 1, message: 'secret' })
+    expect(query.select).toHaveBeenCalledWith(TIME_CAPSULE_SELECT)
+    expect(TIME_CAPSULE_SELECT).not.toContain('opened_at')
   })
 
   it('rejects expired or revoked invite lookup results', async () => {
@@ -102,9 +115,9 @@ describe('Time Capsule server boundary', () => {
   })
 
   it('rejects malformed access codes', () => {
-    expect(() => parseAccessCode('12345')).toThrowError(TimeCapsuleError)
-    expect(() => parseAccessCode('1234567')).toThrowError(TimeCapsuleError)
-    expect(() => parseAccessCode('abcdef')).toThrowError(TimeCapsuleError)
+    expect(() => parseAccessCode('12345')).toThrow(TimeCapsuleError)
+    expect(() => parseAccessCode('1234567')).toThrow(TimeCapsuleError)
+    expect(() => parseAccessCode('abcdef')).toThrow(TimeCapsuleError)
   })
 
   it('does not use spoofable proxy headers for the attempt bucket', () => {
@@ -145,5 +158,57 @@ describe('Time Capsule server boundary', () => {
     maybeSingle.mockResolvedValue({ data: null, error: null })
 
     await expect(findByAccessCode('123456', 'a'.repeat(64))).rejects.toMatchObject({ code: 'access_not_found', status: 404 })
+  })
+
+  it('records first open once for an unlocked capsule', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 1 }, error: null })
+    const select = vi.fn(() => ({ maybeSingle }))
+    const is = vi.fn(() => ({ select }))
+    const eq = vi.fn(() => ({ is }))
+    const update = vi.fn(() => ({ eq }))
+    const client = { from: vi.fn(() => ({ update })) } as never
+
+    const recorded = await recordFirstOpen(client, {
+      id: 1,
+      owner_id: 'owner-1',
+      sender: 'A',
+      recipient: null,
+      message: 'secret',
+      photo_url: null,
+      photo_object_path: null,
+      unlock_date: '2026-08-26',
+      created_at: '2026-01-01T00:00:00.000Z',
+      invite_token_hash: null,
+      invite_token_expires_at: null,
+      invite_revoked_at: null,
+    }, '2026-08-26T10:00:00.000Z')
+
+    expect(recorded).toBe(true)
+    expect(update).toHaveBeenCalledWith({ opened_at: '2026-08-26T10:00:00.000Z' })
+    expect(eq).toHaveBeenCalledWith('id', 1)
+    expect(is).toHaveBeenCalledWith('opened_at', null)
+  })
+
+  it('does not record a sealed capsule', async () => {
+    const from = vi.fn()
+    const client = { from } as never
+
+    const recorded = await recordFirstOpen(client, {
+      id: 1,
+      owner_id: 'owner-1',
+      sender: 'A',
+      recipient: null,
+      message: 'secret',
+      photo_url: null,
+      photo_object_path: null,
+      unlock_date: '2999-01-01',
+      created_at: '2026-01-01T00:00:00.000Z',
+      invite_token_hash: null,
+      invite_token_expires_at: null,
+      invite_revoked_at: null,
+    }, '2026-08-26T10:00:00.000Z')
+
+    expect(recorded).toBe(false)
+    expect(from).not.toHaveBeenCalled()
   })
 })

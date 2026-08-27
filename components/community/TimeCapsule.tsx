@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { createTimeCapsule, deleteTimeCapsulePhoto, listTimeCapsules, redeemTimeCapsuleByCode, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
@@ -158,7 +158,7 @@ export function TimeCapsule() {
   const isSealingRef = useRef(false)
 
   // タイムカプセル一覧の取得およびローカル保存データの統合
-  const fetchCapsules = async () => {
+  const fetchCapsules = useCallback(async () => {
     if (!isMountedRef.current) return
     if (refreshInFlightRef.current) {
       refreshQueuedRef.current = true
@@ -176,6 +176,13 @@ export function TimeCapsule() {
         if (Array.isArray(parsed)) localRaw = parsed
       } catch {
         localRaw = []
+      }
+
+      const initialLocalCapsules = parseLocalCapsules(localRaw, now)
+      if (!hasLoadedCapsulesRef.current && initialLocalCapsules.length > 0) {
+        setCapsules(initialLocalCapsules)
+        hasLoadedCapsulesRef.current = true
+        setLoading(false)
       }
 
       const pendingRaw = localRaw.filter((item): item is PendingCapsule => (
@@ -257,7 +264,7 @@ export function TimeCapsule() {
         void fetchCapsules()
       }
     }
-  }
+  }, [])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -270,7 +277,7 @@ export function TimeCapsule() {
       isMountedRef.current = false
       clearInterval(interval)
     }
-  }, [])
+  }, [fetchCapsules])
 
   // タイムカプセルの封印処理
   const handleSeal = async (e: React.FormEvent) => {
@@ -400,6 +407,8 @@ export function TimeCapsule() {
             <label className="block text-xs font-bold text-[#854D27]">
               {t('timeCapsuleAccessCodeLabel')}
               <input
+                id="time-capsule-access-code"
+                name="accessCode"
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 maxLength={7}
@@ -475,6 +484,7 @@ export function TimeCapsule() {
                     <div>
                       {capsule.photoUrl && (
                         <div className="w-full h-44 rounded-xl overflow-hidden mb-3 border border-[#D4B08C]/50">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={capsule.photoUrl}
                             alt={t('timeCapsulePhotoAlt')}
@@ -541,6 +551,8 @@ export function TimeCapsule() {
               {t('yourName')} <span className="text-red-500">*</span>
             </label>
             <input
+              id="time-capsule-sender"
+              name="sender"
               type="text"
               required
               value={sender}
@@ -555,6 +567,8 @@ export function TimeCapsule() {
               {t('recipientOptional')}
             </label>
             <input
+              id="time-capsule-recipient"
+              name="recipient"
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
@@ -568,6 +582,8 @@ export function TimeCapsule() {
               {t('timeCapsuleUnlockDate')} <span className="text-red-500">*</span>
             </label>
             <input
+              id="time-capsule-unlock-date"
+              name="unlockDate"
               type="date"
               required
               value={unlockDate}
@@ -582,6 +598,8 @@ export function TimeCapsule() {
               {t('typeMessage')} <span className="text-red-500">*</span>
             </label>
             <textarea
+              id="time-capsule-message"
+              name="message"
               required
               rows={3}
               value={message}
@@ -596,6 +614,8 @@ export function TimeCapsule() {
               {t('attachPhotoOptional')}
             </label>
             <input
+              id="time-capsule-photo"
+              name="photo"
               ref={fileInputRef}
               type="file"
               accept="image/*"

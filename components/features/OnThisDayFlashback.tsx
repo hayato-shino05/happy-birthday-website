@@ -135,6 +135,8 @@ export function OnThisDayFlashback({ onClose }: { onClose?: () => void }) {
                     <audio src={currentMemory.mediaUrl} controls className="w-full" />
                   </div>
                 ) : (
+                  // Dynamic community media URLs are not statically allowlisted for next/image.
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={currentMemory.mediaUrl}
                     alt={t('flashbackPhotoAlt')}

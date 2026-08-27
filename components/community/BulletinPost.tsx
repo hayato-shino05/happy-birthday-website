@@ -141,6 +141,7 @@ export default function BulletinPost({ post, onLike, onReply }: BulletinPostProp
               preload="metadata"
             />
           ) : (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={post.media_url}
               alt={t('mediaAlt')}

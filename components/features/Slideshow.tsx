@@ -103,6 +103,8 @@ export function Slideshow({ media, autoPlay = true, interval = 5000, onClose }: 
                 }}
               />
             ) : (
+              // Media paths may be private or signed URLs and are not statically allowlisted.
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={currentMedia.file_path}
                 alt={currentMedia.file_name}

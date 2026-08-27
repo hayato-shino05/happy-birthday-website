@@ -1,6 +1,6 @@
 # Omoide
 
-> **Omoide Bako**  
+> **Omoide Bako**
 > An interactive celebration and keepsake space for birthdays, cherished memories, and friends.
 
 <p align="center">

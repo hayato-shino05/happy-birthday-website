@@ -22,11 +22,16 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
-  
+  const translateRef = useRef(t)
+
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [cameraReady, setCameraReady] = useState(false)
+
+  useEffect(() => {
+    translateRef.current = t
+  }, [t])
 
   useEffect(() => {
     let mounted = true
@@ -67,7 +72,7 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
                 })
                 .catch(err => {
                   console.error('Video play error:', err)
-                  if (mounted) setError(t('cameraPlaybackError'))
+                  if (mounted) setError(translateRef.current('cameraPlaybackError'))
                 })
             }
           }
@@ -77,11 +82,11 @@ export function CameraCapture({ mode, onCapture, onClose }: CameraCaptureProps) 
         const errorMessage = err instanceof Error ? err.message : 'Unknown error'
         if (mounted) {
           if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
-            setError(t('cameraPermission'))
+            setError(translateRef.current('cameraPermission'))
           } else if (errorMessage.includes('NotFoundError') || errorMessage.includes('DevicesNotFoundError')) {
-            setError(t('cameraUnavailable'))
+            setError(translateRef.current('cameraUnavailable'))
           } else {
-            setError(`${t('accessCameraError')}: ${errorMessage}`)
+            setError(`${translateRef.current('accessCameraError')}: ${errorMessage}`)
           }
         }
       }

@@ -308,6 +308,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
                   controls
                 />
               ) : (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewUrl || ''}
                   alt={t('preview')}

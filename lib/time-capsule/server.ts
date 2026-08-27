@@ -17,6 +17,7 @@ export type CapsuleRow = {
   invite_token_hash: string | null
   invite_token_expires_at: string | null
   invite_revoked_at: string | null
+  opened_at?: string | null
 }
 
 export type CapsuleInput = {
@@ -203,6 +204,25 @@ export async function serializeCapsule(client: SupabaseClient, row: CapsuleRow):
     if (data?.signedUrl) result.photoUrl = data.signedUrl
   }
   return result
+}
+
+export async function recordFirstOpen(
+  client: SupabaseClient,
+  row: CapsuleRow,
+  openedAt = new Date().toISOString()
+): Promise<boolean> {
+  if (row.invite_revoked_at !== null || row.unlock_date > openedAt.slice(0, 10)) return false
+
+  const { data, error } = await client
+    .from('time_capsules')
+    .update({ opened_at: openedAt })
+    .eq('id', row.id)
+    .is('opened_at', null)
+    .select('id')
+    .maybeSingle()
+
+  if (error) throw new TimeCapsuleError('tracking_failed', 500, '開封記録を保存できません')
+  return data !== null
 }
 
 export async function findByInviteToken(token: string, id?: number) {
