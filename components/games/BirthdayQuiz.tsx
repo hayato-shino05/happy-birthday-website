@@ -9,7 +9,7 @@ interface BirthdayQuizProps {
   onClose: () => void
 }
 
-export function BirthdayQuiz({ onClose }: BirthdayQuizProps) {
+export function BirthdayQuiz({}: BirthdayQuizProps) {
   const { language, t } = useLanguage()
   const {
     questions,

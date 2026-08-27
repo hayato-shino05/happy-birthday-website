@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useMediaFiles } from '@/lib/hooks/useMediaFiles'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { validateFile, formatFileSize } from '@/lib/utils/media'
+import { validateFile } from '@/lib/utils/media'
 import { Icon } from '@/components/ui/Icon'
 
 interface MediaUploaderProps {
@@ -13,7 +13,7 @@ interface MediaUploaderProps {
 
 export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
   const { uploadFile } = useMediaFiles()
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)

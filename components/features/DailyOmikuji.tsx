@@ -36,7 +36,7 @@ const OmikujiCylinder3D = dynamic(
 )
 
 // 和風 3D 想い出みくじコンポーネント
-export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
+export function DailyOmikuji({}: { onClose?: () => void }) {
   const { t, language } = useLanguage()
   const [isShaking, setIsShaking] = useState(false)
   // ユーザーのローカル深夜0時に切り替わるキー
@@ -60,8 +60,6 @@ export function DailyOmikuji({ onClose }: { onClose?: () => void }) {
       return null
     }
   })
-  const [activeCategory, setActiveCategory] = useState<'all' | 'bond' | 'health' | 'wish' | 'blessing'>('all')
-
   // おみくじを引くアニメーション処理
   const handleDraw = () => {
     if (isShaking || result) return
