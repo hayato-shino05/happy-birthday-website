@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useState, useEffect, useRef } from 'react'
-import { createTimeCapsule, deleteTimeCapsulePhoto, listTimeCapsules, redeemTimeCapsuleByCode, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
+import { createTimeCapsule, listTimeCapsules, redeemTimeCapsuleByCode, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
@@ -16,7 +16,7 @@ export interface CapsuleItem {
   isUnlocked: boolean
 }
 
-type PendingCapsule = CapsuleItem & { pendingKey?: string }
+type PendingCapsule = CapsuleItem & { pendingKey?: string; photoObjectPath?: string }
 type InviteAccess = { accessCode: string }
 
 const LOCAL_CAPSULES_KEY = 'local_time_capsules'
@@ -144,6 +144,7 @@ export function TimeCapsule() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [pendingRetryKey, setPendingRetryKey] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [inviteAccesses, setInviteAccesses] = useState<InviteAccess[]>([])
   const [accessCodeInput, setAccessCodeInput] = useState('')
@@ -197,6 +198,7 @@ export function TimeCapsule() {
             recipient: pending.recipient,
             message: pending.message,
             unlockDate: pending.unlockDate,
+            ...(typeof pending.photoObjectPath === 'string' ? { photoObjectPath: pending.photoObjectPath } : {}),
           }, pending.pendingKey as string)
           syncedIds.add(String(pending.id))
           if (created.accessCode) {
@@ -206,6 +208,9 @@ export function TimeCapsule() {
           // Keep pending entries for the next refresh.
         }
       }))
+      if (pendingRaw.length > 0) {
+        setPendingRetryKey(pendingRaw[0].pendingKey ?? null)
+      }
       const result = await listTimeCapsules()
       if (syncedIds.size > 0) {
         try {
@@ -214,6 +219,12 @@ export function TimeCapsule() {
           const latestRaw = Array.isArray(latestParsed) ? latestParsed : localRaw
           localRaw = latestRaw.filter((item) => !isRecord(item) || !syncedIds.has(String(item.id)))
           localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify(localRaw))
+          const remainingPending = localRaw.find((item): item is PendingCapsule => (
+            isRecord(item) && typeof item.pendingKey === 'string'
+          ))
+          const remainingPendingKey = remainingPending?.pendingKey ?? null
+          setPendingRetryKey(remainingPendingKey)
+          if (!remainingPendingKey) setSubmitError(null)
         } catch {
           // ストレージを再読込できない場合は、取得開始時のデータを維持する。
         }
@@ -323,10 +334,11 @@ export function TimeCapsule() {
         fetchCapsules()
       }, 1200)
     } catch (err) {
-      if (photoObjectPath) {
-        void deleteTimeCapsulePhoto(photoObjectPath)
-      }
       console.error('Failed to seal time capsule:', err)
+      if (photoFile && !photoObjectPath) {
+        setSubmitError(t('genericError'))
+        return
+      }
       const pendingCapsule: PendingCapsule = {
         id: `capsule-${Date.now()}`,
         sender: sender.trim(),
@@ -336,15 +348,19 @@ export function TimeCapsule() {
         createdAt: new Date().toISOString(),
         isUnlocked: parseLocalDate(unlockDate) <= new Date(),
         pendingKey: idempotencyKey,
+        photoObjectPath,
       }
+      let pendingSaved = false
       try {
         const saved = localStorage.getItem(LOCAL_CAPSULES_KEY)
         const currentList = saved ? JSON.parse(saved) : []
         const nextList = Array.isArray(currentList) ? currentList : []
         localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify([pendingCapsule, ...nextList]))
+        pendingSaved = true
       } catch {
-        // Local fallback is best effort when storage is unavailable.
+        pendingSaved = false
       }
+      if (pendingSaved) setPendingRetryKey(idempotencyKey)
       setSubmitError(t('genericError'))
     } finally {
       isSealingRef.current = false
@@ -530,9 +546,18 @@ export function TimeCapsule() {
       ) : (
         /* 新規封印フォーム */
         <form onSubmit={handleSeal} className="bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-5 shadow-lg space-y-4">
-          {submitError && (
-            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
-              {submitError}
+          {(submitError || pendingRetryKey) && (
+            <div aria-live="polite" className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
+              <p>{submitError ?? t('genericError')}</p>
+              {pendingRetryKey && (
+                <button
+                  type="button"
+                  onClick={() => void fetchCapsules()}
+                  className="mt-2 font-bold underline cursor-pointer"
+                >
+                  {t('retry')}
+                </button>
+              )}
             </div>
           )}
 

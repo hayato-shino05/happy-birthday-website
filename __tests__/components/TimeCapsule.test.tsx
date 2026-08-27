@@ -165,6 +165,76 @@ describe('TimeCapsule', () => {
       expect(createMock).toHaveBeenCalledTimes(1)
   })
 
+  it('does not show retry when local fallback storage fails', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    createMock.mockRejectedValue(new Error('remote failed'))
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('storage unavailable')
+    })
+    const { container } = render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '本文' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+
+    expect(screen.getByText('genericError')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'retry' })).toBeNull()
+    expect(setItem).toHaveBeenCalled()
+  })
+
+  it('persists uploaded photo path for retry after create failure', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    uploadMock.mockResolvedValue('owner/photo.jpg')
+    createMock
+      .mockRejectedValueOnce(new Error('remote failed'))
+      .mockResolvedValueOnce({ data: row() })
+    const { container } = render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '本文' } })
+    fireEvent.change(container.querySelector('input[type="file"]') as HTMLInputElement, {
+      target: { files: [new File(['image'], 'photo.jpg', { type: 'image/jpeg' })] },
+    })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+
+    const saved = JSON.parse(localStorage.getItem('local_time_capsules') || '[]')
+    expect(saved[0]).toMatchObject({ photoObjectPath: 'owner/photo.jpg', pendingKey: expect.any(String) })
+    expect(deletePhotoMock).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'retry' }))
+      await Promise.resolve()
+    })
+    expect(createMock).toHaveBeenNthCalledWith(2, expect.objectContaining({ photoObjectPath: 'owner/photo.jpg' }), expect.any(String))
+    expect(screen.queryByRole('button', { name: 'retry' })).toBeNull()
+  })
+
+  it('clears retry state after a pending capsule syncs', async () => {
+    const pendingKey = 'same-key'
+    localStorage.setItem('local_time_capsules', JSON.stringify([{
+      id: 'local-1', sender: '保留送信者', message: '保留本文', unlockDate: futureDate,
+      createdAt: '2026-08-23T00:00:00.000Z', pendingKey,
+    }]))
+    createMock.mockResolvedValue({ data: row() })
+    listMock.mockResolvedValue({ data: [] })
+    render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+    expect(screen.queryByRole('button', { name: 'retry' })).toBeNull()
+  })
+
   it('shows the access code after sealing a capsule', async () => {
     listMock.mockResolvedValue({ data: [] })
     createMock.mockResolvedValue({
