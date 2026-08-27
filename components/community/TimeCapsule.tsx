@@ -545,8 +545,9 @@ export function TimeCapsule() {
                 {t('timeCapsuleEmptyDesc')}
               </p>
               <button
+                type="button"
                 onClick={() => setActiveTab('create')}
-                className="px-4 py-2 rounded-xl bg-[#854D27] text-[#FFF9F3] text-xs font-bold hover:brightness-110 transition-all cursor-pointer"
+                className="min-h-[44px] px-4 py-2 rounded-xl bg-[#854D27] text-[#FFF9F3] text-xs font-bold hover:brightness-110 transition-all cursor-pointer"
               >
                 {t('timeCapsuleSeal')}
               </button>

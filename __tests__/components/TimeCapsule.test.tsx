@@ -107,6 +107,17 @@ describe('TimeCapsule', () => {
     expect(screen.queryByRole('img')).toBeNull()
   })
 
+  it('keeps the empty-state seal action keyboard and touch accessible', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    const sealButton = screen.getByRole('button', { name: 'timeCapsuleSeal' })
+
+    expect(sealButton).toHaveClass('min-h-[44px]')
+    expect(sealButton).toHaveAttribute('type', 'button')
+  })
+
   it('associates the unlock date label with its input', async () => {
     listMock.mockResolvedValue({ data: [] })
     render(<TimeCapsule />)
