@@ -6,7 +6,6 @@ const MOCK_MESSAGES = [
 ]
 
 async function mockSupabaseRest(page: import('@playwright/test').Page) {
-  // 広域ハンドラを先に、messages 固有を後に登録（Playwright は後登録が優先）
   await page.route('**/*.supabase.co/**', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
   )
@@ -21,7 +20,12 @@ async function mockSupabaseRest(page: import('@playwright/test').Page) {
   )
   await page.route('**/rest/v1/messages**', async (route) => {
     if (route.request().method() === 'POST') {
-      return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(MOCK_MESSAGES[0]) })
+      return route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        headers: { 'content-range': '*/1' },
+        body: '[]',
+      })
     }
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_MESSAGES) })
   })
@@ -69,10 +73,14 @@ test.describe('home shell smoke', () => {
       (r) => r.method() === 'POST' && r.url().includes('/rest/v1/messages'),
     )
     await page.getByRole('button', { name: /SEND WISHES|お祝いメッセージ/ }).first().click()
-    const form = page.locator('form').filter({ has: page.getByRole('button', { name: /Send your wish|お祝いを送る/ }) }).first()
+    const modal = page.getByRole('dialog').last()
+    await expect(modal).toBeVisible()
+    const form = modal.locator('form')
     await form.getByRole('textbox', { name: /Your name|あなたの名前/ }).fill('モック太郎')
-    await form.getByRole('textbox', { name: /Write your birthday message|Your birthday wish|Type your message|お祝いメッセージ|メッセージ/i }).fill('モック送信テスト')
-    await form.getByRole('button', { name: /Send your wish|お祝いを送る/ }).click()
+    await form.getByRole('textbox', { name: /Write your birthday message|Your birthday wish|Type your message|メッセージを入力/i }).fill('モック送信テスト')
+    const submitButton = form.getByRole('button', { name: /Send your wish|お祝いを送る|メッセージを送る/ })
+    await submitButton.scrollIntoViewIfNeeded()
+    await submitButton.click()
 
     // 成功時は onSuccess でモーダルが閉じる（成功コピーはフォーム内に表示されない設計）
     const post = await postRequestPromise
@@ -85,9 +93,11 @@ test.describe('home shell smoke', () => {
     await page.goto('/')
     await page.getByRole('button', { name: /SEND WISHES|お祝いメッセージ/ }).first().click()
     await page.getByRole('button', { name: /Record Video|ビデオを撮る/ }).first().click()
-    const captureDialog = page.getByRole('dialog', { name: /Record Video|ビデオを撮る/ })
+    const dialogs = page.getByRole('dialog')
+    await expect(dialogs).toHaveCount(2)
+    const captureDialog = dialogs.nth(1)
     await expect(captureDialog).toBeVisible()
     await page.keyboard.press('Escape')
-    await expect(captureDialog).not.toBeVisible()
+    await expect(dialogs).toHaveCount(1)
   })
 })
