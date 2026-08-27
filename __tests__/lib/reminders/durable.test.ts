@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   createReminderService,
   createReminderScheduler,
-  createSupabaseReminderRepository,
   type ReminderDeliveryRecord,
   type ReminderRepository,
 } from '@/lib/reminders/durable'
