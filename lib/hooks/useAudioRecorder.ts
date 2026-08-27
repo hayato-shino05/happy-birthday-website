@@ -88,7 +88,7 @@ export function useAudioRecorder() {
       }, 1000)
 
       setState(prev => ({ ...prev, isRecording: true, isPaused: false }))
-    } catch (err) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: tRef.current('microphonePermissionError'),

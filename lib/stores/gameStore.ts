@@ -76,7 +76,8 @@ export const useGameStore = create<GameState>()(
       clearScores: (game) => {
         if (game) {
           const { highScores } = get()
-          const { [game]: _, ...rest } = highScores
+          const { [game]: removedScore, ...rest } = highScores
+          void removedScore
           set({ highScores: rest })
         } else {
           set({ highScores: {} })

@@ -9,7 +9,7 @@ interface CandleProps {
 }
 
 // ろうそくコンポーネント
-export function Candle({ isBlown, delay = 0, onBlown }: CandleProps) {
+export function Candle({ isBlown, delay = 0 }: CandleProps) {
   return (
     <div className="relative w-2 h-8">
       {/* ろうそく本体 */}

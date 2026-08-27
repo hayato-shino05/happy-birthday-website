@@ -9,7 +9,7 @@ interface PuzzleGameProps {
   onClose: () => void
 }
 
-export function PuzzleGame({ onClose }: PuzzleGameProps) {
+export function PuzzleGame({}: PuzzleGameProps) {
   const { pieces, moves, isComplete, isPlaying, timeElapsed, movePiece, startGame } =
     usePuzzleGame()
   const { t } = useLanguage()
