@@ -271,6 +271,33 @@ describe('TimeCapsule', () => {
     expect(accessPanel).not.toHaveTextContent('invite-token-for-test')
   })
 
+  it('copies the displayed access code with an accessible action name', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    createMock.mockResolvedValue({ data: row(), accessCode: '482913' })
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+    const { container } = render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '投稿者' } })
+    fireEvent.change(screen.getByPlaceholderText('capsuleMessagePlaceholder'), { target: { value: '本文' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement)
+      await Promise.resolve()
+    })
+
+    const copyButton = screen.getByRole('button', { name: 'copyLink timeCapsuleAccessCodeLabel' })
+    expect(copyButton).toHaveTextContent('copyLink')
+    await act(async () => {
+      fireEvent.click(copyButton)
+      await Promise.resolve()
+    })
+
+    expect(writeText).toHaveBeenCalledWith('482913')
+    expect(copyButton).toHaveTextContent('copied')
+  })
+
   it('keeps the first access code and does not create a second capsule after repeated submits', async () => {
     let resolveCreate: ((value: CreateResult | PromiseLike<CreateResult>) => void) | undefined
     listMock.mockResolvedValue({ data: [] })

@@ -147,6 +147,7 @@ export function TimeCapsule() {
   const [pendingRetryKey, setPendingRetryKey] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [inviteAccesses, setInviteAccesses] = useState<InviteAccess[]>([])
+  const [copiedAccessCode, setCopiedAccessCode] = useState<string | null>(null)
   const [accessCodeInput, setAccessCodeInput] = useState('')
   const [accessError, setAccessError] = useState<string | null>(null)
   const [accessedCapsule, setAccessedCapsule] = useState<CapsuleItem | null>(null)
@@ -368,6 +369,15 @@ export function TimeCapsule() {
     }
   }
 
+  const handleCopyAccessCode = async (accessCode: string) => {
+    try {
+      await navigator.clipboard.writeText(accessCode)
+      setCopiedAccessCode(accessCode)
+    } catch (error) {
+      console.error('Failed to copy time capsule access code:', error)
+    }
+  }
+
   const handleRedeem = async (event: React.FormEvent) => {
     event.preventDefault()
     const normalizedCode = normalizeAccessCode(accessCodeInput.trim())
@@ -395,7 +405,7 @@ export function TimeCapsule() {
       <div className="flex rounded-xl bg-[#854D27]/10 p-1 mb-5 border border-[#D4B08C]">
         <button
           onClick={() => setActiveTab('view')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+          className={`flex-1 min-h-[44px] py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
             activeTab === 'view'
               ? 'bg-[#854D27] text-[#FFF9F3] shadow-md'
               : 'text-[#854D27] hover:bg-[#854D27]/5'
@@ -405,7 +415,7 @@ export function TimeCapsule() {
         </button>
         <button
           onClick={() => setActiveTab('create')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+          className={`flex-1 min-h-[44px] py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
             activeTab === 'create'
               ? 'bg-[#854D27] text-[#FFF9F3] shadow-md'
               : 'text-[#854D27] hover:bg-[#854D27]/5'
@@ -431,12 +441,12 @@ export function TimeCapsule() {
                 value={accessCodeInput}
                 onChange={(event) => setAccessCodeInput(event.target.value)}
                 placeholder="123 456"
-                className="mt-1 w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 font-mono text-xs text-[#854D27]"
+                className="mt-1 min-h-[44px] w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 font-mono text-xs text-[#854D27]"
               />
             </label>
             <p className="text-[10px] text-[#854D27]/70">{t('timeCapsuleAccessCodeHint')}</p>
             {accessError && <p className="text-xs text-red-600">{accessError}</p>}
-            <button type="submit" disabled={isAccessing} className="w-full rounded-xl bg-[#854D27] py-2 text-xs font-bold text-[#FFF9F3] disabled:opacity-50">
+            <button type="submit" disabled={isAccessing} className="w-full min-h-[44px] rounded-xl bg-[#854D27] py-2 text-xs font-bold text-[#FFF9F3] disabled:opacity-50">
               {t('timeCapsuleRedeemAction')}
             </button>
             {accessedCapsule && (
@@ -565,9 +575,19 @@ export function TimeCapsule() {
             <div key={inviteAccess.accessCode} className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
               <p className="font-bold">{t('timeCapsuleInviteTitle')}</p>
               <p>{t('timeCapsuleInviteDescription')}</p>
-              <code className="block rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
-                {inviteAccess.accessCode}
-              </code>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
+                  {inviteAccess.accessCode}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => void handleCopyAccessCode(inviteAccess.accessCode)}
+                  className="min-h-[44px] min-w-[44px] rounded-lg border border-[#D4B08C] px-2 text-[10px] font-bold text-[#854D27] hover:bg-[#854D27]/5 cursor-pointer"
+                  aria-label={`${t('copyLink')} ${t('timeCapsuleAccessCodeLabel')}`}
+                >
+                  {copiedAccessCode === inviteAccess.accessCode ? t('copied') : t('copyLink')}
+                </button>
+              </div>
             </div>
           ))}
 
@@ -583,7 +603,7 @@ export function TimeCapsule() {
               value={sender}
               onChange={(e) => setSender(e.target.value)}
               placeholder={t('yourName')}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
@@ -598,7 +618,7 @@ export function TimeCapsule() {
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder={t('recipientExamplePlaceholder')}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
@@ -614,7 +634,7 @@ export function TimeCapsule() {
               value={unlockDate}
               min={formatLocalDate(new Date())}
               onChange={(e) => setUnlockDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
@@ -630,7 +650,7 @@ export function TimeCapsule() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={t('capsuleMessagePlaceholder')}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
@@ -650,7 +670,7 @@ export function TimeCapsule() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#854D27] text-[#854D27] text-xs font-medium hover:bg-[#854D27]/5 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full min-h-[44px] py-2 px-3 rounded-xl border border-dashed border-[#854D27] text-[#854D27] text-xs font-medium hover:bg-[#854D27]/5 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Icon name="Camera" size={16} />
               {photoFile ? photoFile.name : t('selectPhoto')}
@@ -660,7 +680,7 @@ export function TimeCapsule() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-xl bg-[#854D27] text-[#FFF9F3] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer"
+            className="w-full min-h-[44px] py-3 rounded-xl bg-[#854D27] text-[#FFF9F3] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer"
           >
             {isSubmitting ? t('uploading') : submitSuccess ? t('sealedSuccess') : t('timeCapsuleSeal')}
           </button>

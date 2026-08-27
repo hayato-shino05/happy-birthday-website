@@ -242,6 +242,8 @@ export default function Modal({
                     cursor: 'pointer',
                     color: '#854D27',
                     padding: '5px',
+                    minWidth: '44px',
+                    minHeight: '44px',
                     lineHeight: 1,
                   }}
                   aria-label={t('close')}
