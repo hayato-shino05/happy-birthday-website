@@ -655,7 +655,7 @@ export function TimeCapsule() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#854D27] mb-1">
+            <label htmlFor="time-capsule-photo" className="block text-xs font-bold text-[#854D27] mb-1">
               {t('attachPhotoOptional')}
             </label>
             <input
@@ -669,6 +669,7 @@ export function TimeCapsule() {
             />
             <button
               type="button"
+              aria-label={photoFile ? `${t('selectPhoto')}: ${photoFile.name}` : t('selectPhoto')}
               onClick={() => fileInputRef.current?.click()}
               className="w-full min-h-[44px] py-2 px-3 rounded-xl border border-dashed border-[#854D27] text-[#854D27] text-xs font-medium hover:bg-[#854D27]/5 flex items-center justify-center gap-2 cursor-pointer"
             >

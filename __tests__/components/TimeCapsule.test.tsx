@@ -117,6 +117,17 @@ describe('TimeCapsule', () => {
     expect(screen.getByLabelText(/timeCapsuleUnlockDate/)).toHaveAttribute('id', 'time-capsule-unlock-date')
   })
 
+  it('names and associates the photo selector controls', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+
+    expect(screen.getByLabelText('attachPhotoOptional')).toHaveAttribute('id', 'time-capsule-photo')
+    expect(screen.getByRole('button', { name: 'selectPhoto' })).toBeTruthy()
+  })
+
   it('shows opened remote content', async () => {
     listMock.mockResolvedValue({ data: [row({ unlock_date: pastDate })] })
     render(<TimeCapsule />)
