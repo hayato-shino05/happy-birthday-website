@@ -107,6 +107,16 @@ describe('TimeCapsule', () => {
     expect(screen.queryByRole('img')).toBeNull()
   })
 
+  it('associates the unlock date label with its input', async () => {
+    listMock.mockResolvedValue({ data: [] })
+    render(<TimeCapsule />)
+
+    await screen.findByText('timeCapsuleEmptyDesc')
+    fireEvent.click(screen.getByRole('button', { name: 'sealNewCapsule' }))
+
+    expect(screen.getByLabelText(/timeCapsuleUnlockDate/)).toHaveAttribute('id', 'time-capsule-unlock-date')
+  })
+
   it('shows opened remote content', async () => {
     listMock.mockResolvedValue({ data: [row({ unlock_date: pastDate })] })
     render(<TimeCapsule />)

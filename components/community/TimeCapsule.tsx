@@ -603,7 +603,7 @@ export function TimeCapsule() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#854D27] mb-1">
+            <label htmlFor="time-capsule-unlock-date" className="block text-xs font-bold text-[#854D27] mb-1">
               {t('timeCapsuleUnlockDate')} <span className="text-red-500">*</span>
             </label>
             <input
