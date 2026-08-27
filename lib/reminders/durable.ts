@@ -24,11 +24,11 @@ export interface ReminderDeliveryRecord {
 
 export interface ReminderRepository {
   claimDue(workerId: string, now: Date, limit?: number): Promise<ReminderDeliveryRecord[]>
-  markSent(id: string, sentAt: Date): Promise<void>
-  markRetryable(id: string, attemptCount: number, errorCode: string, nextAttemptAt: Date): Promise<void>
-  markFailed(id: string, attemptCount: number, errorCode: string, failedAt: Date): Promise<void>
-  markCancelled(id: string, cancelledAt: Date): Promise<void>
-  markExpired(id: string, expiredAt: Date): Promise<void>
+  markSent(id: string, workerId: string, sentAt: Date): Promise<boolean>
+  markRetryable(id: string, workerId: string, attemptCount: number, errorCode: string, nextAttemptAt: Date): Promise<boolean>
+  markFailed(id: string, workerId: string, attemptCount: number, errorCode: string, failedAt: Date): Promise<boolean>
+  markCancelled(id: string, workerId: string, cancelledAt: Date): Promise<boolean>
+  markExpired(id: string, workerId: string, expiredAt: Date): Promise<boolean>
 }
 
 export interface ReminderDeliverySummary {
@@ -72,13 +72,11 @@ export function createReminderService(options: ReminderServiceOptions) {
 
     for (const record of records) {
       if (!record.optedIn) {
-        await options.repository.markCancelled(record.id, now)
-        summary.skipped += 1
+        if (await options.repository.markCancelled(record.id, workerId, now)) summary.skipped += 1
         continue
       }
       if (isExpired(record, now)) {
-        await options.repository.markExpired(record.id, now)
-        summary.skipped += 1
+        if (await options.repository.markExpired(record.id, workerId, now)) summary.skipped += 1
         continue
       }
 
@@ -86,20 +84,17 @@ export function createReminderService(options: ReminderServiceOptions) {
         const job = { ...record, expiresAt: record.expiresAt ?? undefined }
         engine.validate(job)
         await options.provider.send(job)
-        await options.repository.markSent(record.id, now)
-        summary.sent += 1
       } catch (error) {
         const failure = parseFailure(error)
         const attemptCount = record.attemptCount + 1
         if (failure.transient && attemptCount < maxAttempts) {
           const nextAttemptAt = new Date(now.getTime() + 2 ** (attemptCount - 1) * 1000)
-          await options.repository.markRetryable(record.id, attemptCount, failure.code, nextAttemptAt)
-          summary.retryable += 1
-        } else {
-          await options.repository.markFailed(record.id, attemptCount, failure.code, now)
-          summary.failed += 1
-        }
+          if (await options.repository.markRetryable(record.id, workerId, attemptCount, failure.code, nextAttemptAt)) summary.retryable += 1
+        } else if (await options.repository.markFailed(record.id, workerId, attemptCount, failure.code, now)) summary.failed += 1
+        continue
       }
+
+      if (await options.repository.markSent(record.id, workerId, now)) summary.sent += 1
     }
 
     return summary
@@ -125,9 +120,10 @@ export function createReminderScheduler(options: ReminderSchedulerOptions) {
 }
 
 export function createSupabaseReminderRepository(client: SupabaseClient): ReminderRepository {
-  const update = async (id: string, values: Record<string, unknown>): Promise<void> => {
-    const { error } = await client.from('notification_logs').update(values).eq('id', id)
+  const update = async (id: string, workerId: string, values: Record<string, unknown>): Promise<boolean> => {
+    const { data, error } = await client.from('notification_logs').update(values).eq('id', id).eq('status', 'processing').eq('leased_by', workerId).select('id')
     if (error) throw error
+    return Array.isArray(data) && data.length === 1
   }
 
   return {
@@ -141,14 +137,14 @@ export function createSupabaseReminderRepository(client: SupabaseClient): Remind
       if (!Array.isArray(data)) return []
       return data as ReminderDeliveryRecord[]
     },
-    markSent: (id, sentAt) => update(id, { status: 'sent', sent_at: sentAt.toISOString(), updated_at: sentAt.toISOString(), lease_until: null, leased_by: null }),
-    markRetryable: (id, attemptCount, errorCode, nextAttemptAt) => update(id, {
+    markSent: (id, workerId, sentAt) => update(id, workerId, { status: 'sent', sent_at: sentAt.toISOString(), updated_at: sentAt.toISOString(), lease_until: null, leased_by: null }),
+    markRetryable: (id, workerId, attemptCount, errorCode, nextAttemptAt) => update(id, workerId, {
       status: 'retryable', attempt_count: attemptCount, last_error_code: errorCode, next_attempt_at: nextAttemptAt.toISOString(), updated_at: new Date().toISOString(), lease_until: null, leased_by: null,
     }),
-    markFailed: (id, attemptCount, errorCode, failedAt) => update(id, {
+    markFailed: (id, workerId, attemptCount, errorCode, failedAt) => update(id, workerId, {
       status: 'failed', attempt_count: attemptCount, last_error_code: errorCode, updated_at: failedAt.toISOString(), lease_until: null, leased_by: null,
     }),
-    markCancelled: (id, cancelledAt) => update(id, { status: 'cancelled', updated_at: cancelledAt.toISOString(), lease_until: null, leased_by: null }),
-    markExpired: (id, expiredAt) => update(id, { status: 'expired', updated_at: expiredAt.toISOString(), lease_until: null, leased_by: null }),
+    markCancelled: (id, workerId, cancelledAt) => update(id, workerId, { status: 'cancelled', updated_at: cancelledAt.toISOString(), lease_until: null, leased_by: null }),
+    markExpired: (id, workerId, expiredAt) => update(id, workerId, { status: 'expired', updated_at: expiredAt.toISOString(), lease_until: null, leased_by: null }),
   }
 }
