@@ -2,7 +2,7 @@ import { createHash, createHmac, randomInt } from 'node:crypto'
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js'
 
 export const TIME_CAPSULE_SELECT =
-  'id,owner_id,sender,recipient,message,photo_url,photo_object_path,unlock_date,created_at,invite_token_hash,invite_token_expires_at,invite_revoked_at,opened_at'
+  'id,owner_id,sender,recipient,message,photo_url,photo_object_path,unlock_date,created_at,invite_token_hash,invite_token_expires_at,invite_revoked_at'
 
 export type CapsuleRow = {
   id: number

@@ -29,6 +29,7 @@ export function OmikujiCylinder3D({
   const isShakingRef = useRef(isShaking)
   const isRevealedRef = useRef(isRevealed)
   const onDrawRef = useRef(onDraw)
+  const fortuneNumberRef = useRef(fortuneNumber)
 
   useEffect(() => {
     isShakingRef.current = isShaking
@@ -41,6 +42,10 @@ export function OmikujiCylinder3D({
   useEffect(() => {
     onDrawRef.current = onDraw
   }, [onDraw])
+
+  useEffect(() => {
+    fortuneNumberRef.current = fortuneNumber
+  }, [fortuneNumber])
 
   useEffect(() => {
     const container = containerRef.current
@@ -368,7 +373,7 @@ export function OmikujiCylinder3D({
       stickCtx.font = '900 290px "Yu Mincho", "Hiragino Mincho ProN", serif'
       stickCtx.textAlign = 'center'
       stickCtx.textBaseline = 'middle'
-      const label = KANJI_NUMBERS[(fortuneNumber - 1) % KANJI_NUMBERS.length] || '第一番'
+      const label = KANJI_NUMBERS[(fortuneNumberRef.current - 1) % KANJI_NUMBERS.length] || '第一番'
       const chars = label.split('')
       chars.forEach((c, idx) => {
         stickCtx.strokeText(c, 256, 420 + idx * 360)

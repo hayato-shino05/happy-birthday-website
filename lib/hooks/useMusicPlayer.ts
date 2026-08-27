@@ -43,14 +43,34 @@ export function useMusicPlayer(customTracks?: Track[]): UseMusicPlayerReturn {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const volumeRef = useRef(volume)
+  const trackCountRef = useRef(tracks.length)
+  const currentTrackRef = useRef<Track | null>(null)
+  const isPlayingRef = useRef(isPlaying)
 
   const currentTrack = tracks[currentTrackIndex] || null
+
+  useEffect(() => {
+    volumeRef.current = volume
+  }, [volume])
+
+  useEffect(() => {
+    trackCountRef.current = tracks.length
+  }, [tracks.length])
+
+  useEffect(() => {
+    currentTrackRef.current = currentTrack
+  }, [currentTrack])
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+  }, [isPlaying])
 
   // オーディオ要素を初期化
   useEffect(() => {
     if (typeof window !== 'undefined' && !audioRef.current) {
       audioRef.current = new Audio()
-      audioRef.current.volume = volume
+      audioRef.current.volume = volumeRef.current
 
       audioRef.current.addEventListener('timeupdate', () => {
         setCurrentTime(audioRef.current?.currentTime || 0)
@@ -62,7 +82,7 @@ export function useMusicPlayer(customTracks?: Track[]): UseMusicPlayerReturn {
 
       audioRef.current.addEventListener('ended', () => {
         // 次のトラックを自動再生
-        setCurrentTrackIndex(prev => (prev + 1) % tracks.length)
+        setCurrentTrackIndex(prev => (prev + 1) % trackCountRef.current)
       })
 
       // オーディオ読み込みエラーを静かに処理
@@ -82,9 +102,11 @@ export function useMusicPlayer(customTracks?: Track[]): UseMusicPlayerReturn {
 
   // トラックが変更されたらオーディオソースを更新
   useEffect(() => {
-    if (audioRef.current && currentTrack) {
-      const wasPlaying = isPlaying
-      audioRef.current.src = currentTrack.url
+    if (audioRef.current && currentTrackRef.current) {
+      const nextTrack = currentTrackRef.current
+      const wasPlaying = isPlayingRef.current
+      if (!nextTrack) return
+      audioRef.current.src = nextTrack.url
       audioRef.current.load()
 
       if (wasPlaying) {

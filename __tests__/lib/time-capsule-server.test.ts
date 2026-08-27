@@ -28,6 +28,7 @@ vi.mock('@supabase/supabase-js', () => ({ createClient }))
 import {
   createAccessCode,
   findByAccessCode,
+  TIME_CAPSULE_SELECT,
   getAccessAttemptBucketFingerprint,
   createInviteToken,
   findByInviteToken,
@@ -49,8 +50,18 @@ describe('Time Capsule server boundary', () => {
   })
 
   it('rejects malformed invite tokens before lookup', () => {
-    expect(() => parseInviteToken('short')).toThrowError(TimeCapsuleError)
+    expect(() => parseInviteToken('short')).toThrow(TimeCapsuleError)
     expect(createClient).not.toHaveBeenCalled()
+  })
+
+  it('keeps reads compatible before the open-tracking migration', async () => {
+    maybeSingle.mockResolvedValue({ data: { id: 1, message: 'secret' }, error: null })
+
+    const result = await findByInviteToken('a'.repeat(43))
+
+    expect(result.row).toEqual({ id: 1, message: 'secret' })
+    expect(query.select).toHaveBeenCalledWith(TIME_CAPSULE_SELECT)
+    expect(TIME_CAPSULE_SELECT).not.toContain('opened_at')
   })
 
   it('rejects expired or revoked invite lookup results', async () => {
@@ -104,9 +115,9 @@ describe('Time Capsule server boundary', () => {
   })
 
   it('rejects malformed access codes', () => {
-    expect(() => parseAccessCode('12345')).toThrowError(TimeCapsuleError)
-    expect(() => parseAccessCode('1234567')).toThrowError(TimeCapsuleError)
-    expect(() => parseAccessCode('abcdef')).toThrowError(TimeCapsuleError)
+    expect(() => parseAccessCode('12345')).toThrow(TimeCapsuleError)
+    expect(() => parseAccessCode('1234567')).toThrow(TimeCapsuleError)
+    expect(() => parseAccessCode('abcdef')).toThrow(TimeCapsuleError)
   })
 
   it('does not use spoofable proxy headers for the attempt bucket', () => {

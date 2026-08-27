@@ -192,6 +192,8 @@ export function CardImage({ src, alt, aspectRatio = 'video', overlay = false }: 
 
   return (
     <div className={`relative ${aspectClasses[aspectRatio]} -mx-5 -mt-5 mb-4 overflow-hidden rounded-t-2xl`}>
+      {/* src is caller-provided and may be private or signed; no remote allowlist is available. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} className="w-full h-full object-cover" />
       {overlay && <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />}
     </div>

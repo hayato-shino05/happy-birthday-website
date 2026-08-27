@@ -443,6 +443,8 @@ export function MediaViewer({
               onPlay={() => setIsPlaying(false)}
             />
           ) : (
+            // Media paths may be private or signed URLs and are not statically allowlisted.
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={media.file_path}
               alt={media.file_name}

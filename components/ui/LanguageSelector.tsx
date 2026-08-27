@@ -14,6 +14,8 @@ export function LanguageSelector() {
   return (
     <div className="language-selector">
       <select
+        id="language-selector"
+        name="language"
         value={language}
         onChange={(e) => setLanguage(e.target.value as Language)}
         className="lang-select"

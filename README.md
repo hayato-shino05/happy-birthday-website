@@ -1,6 +1,6 @@
 # Omoide
 
-> **Omoide Bako（想い出箱）**  
+> **Omoide Bako（想い出箱）**
 > 大切な人の誕生日と、みんなの思い出をひとつの場所に。
 
 <p align="center">

@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { getSupabase } from '@/lib/supabase/client'
 
 export interface TimeCapsuleRow {
   id: string | number
@@ -41,30 +41,30 @@ export interface CreateTimeCapsuleResponse {
   idempotent?: boolean
 }
 
-let browserClient: SupabaseClient | null = null
-
-function getBrowserClient(): SupabaseClient {
-  if (browserClient) return browserClient
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) throw new Error('Supabase anonymous authentication is unavailable')
-  browserClient = createClient(url, key, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
-  })
-  return browserClient
-}
+let accessTokenPromise: Promise<string> | null = null
 
 async function ensureAccessToken(): Promise<string> {
-  const client = getBrowserClient()
-  const current = await client.auth.getSession()
-  if (current.error) throw new Error('Supabase session could not be read')
-  if (current.data.session?.access_token) return current.data.session.access_token
+  if (accessTokenPromise) return accessTokenPromise
 
-  const anonymous = await client.auth.signInAnonymously()
-  if (anonymous.error || !anonymous.data.session?.access_token) {
-    throw new Error('Anonymous authentication is disabled')
+  accessTokenPromise = (async () => {
+    const client = getSupabase()
+    const current = await client.auth.getSession()
+    if (current.error) throw new Error('Supabase session could not be read')
+    if (current.data.session?.access_token) return current.data.session.access_token
+
+    const anonymous = await client.auth.signInAnonymously()
+    if (anonymous.error || !anonymous.data.session?.access_token) {
+      throw new Error('Anonymous authentication is disabled')
+    }
+    return anonymous.data.session.access_token
+  })()
+
+  const pendingAccessToken = accessTokenPromise
+  try {
+    return await pendingAccessToken
+  } finally {
+    if (accessTokenPromise === pendingAccessToken) accessTokenPromise = null
   }
-  return anonymous.data.session.access_token
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -137,7 +137,7 @@ export async function uploadTimeCapsulePhoto(file: File): Promise<string> {
   if (!response.ok || !isRecord(body) || typeof body.path !== 'string' || typeof body.token !== 'string') {
     throw new Error('写真をアップロードできません')
   }
-  const { error } = await getBrowserClient().storage.from('time-capsules-private').uploadToSignedUrl(body.path, body.token, file)
+  const { error } = await getSupabase().storage.from('time-capsules-private').uploadToSignedUrl(body.path, body.token, file)
   if (error) throw new Error('写真をアップロードできません')
   return body.path
 }

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const createClientMock = vi.hoisted(() => vi.fn())
+const getSupabaseMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@supabase/supabase-js', () => ({ createClient: createClientMock }))
+vi.mock('@/lib/supabase/client', () => ({ getSupabase: getSupabaseMock }))
 
 import { createTimeCapsule, listTimeCapsules, redeemTimeCapsule, redeemTimeCapsuleByCode } from '@/lib/time-capsule-client'
 
@@ -18,7 +18,7 @@ const capsule = {
 describe('time-capsule auth bootstrap', () => {
   beforeEach(() => {
     vi.resetModules()
-    createClientMock.mockReset()
+    getSupabaseMock.mockReset()
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co')
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key')
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
@@ -32,10 +32,11 @@ describe('time-capsule auth bootstrap', () => {
       data: { session: { access_token: 'anonymous-token' } },
       error: null,
     })
-    createClientMock.mockReturnValue({ auth: { getSession, signInAnonymously } })
+    getSupabaseMock.mockReturnValue({ auth: { getSession, signInAnonymously } })
 
     await listTimeCapsules()
 
+    expect(getSupabaseMock).toHaveBeenCalledTimes(1)
     expect(signInAnonymously).toHaveBeenCalledTimes(1)
     const [, request] = vi.mocked(fetch).mock.calls[0]
     expect(new Headers(request?.headers).get('Authorization')).toBe('Bearer anonymous-token')
@@ -51,8 +52,28 @@ describe('time-capsule auth bootstrap', () => {
       .resolves.toMatchObject({ accessCode: 'ABCD-EFGH', inviteToken: 'invite-token', inviteTokenExpiresAt: '2026-09-23T00:00:00.000Z' })
   })
 
+  it('shares an in-flight anonymous sign-in across concurrent requests', async () => {
+    let resolveSignIn: ((value: { data: { session: { access_token: string } }; error: null }) => void) | undefined
+    const getSession = vi.fn().mockReturnValue({ data: { session: null }, error: null })
+    const signInAnonymously = vi.fn().mockImplementation(() => new Promise((resolve) => {
+      resolveSignIn = resolve
+    }))
+    getSupabaseMock.mockReturnValue({ auth: { getSession, signInAnonymously } })
+    vi.mocked(fetch).mockImplementation(() => Promise.resolve(
+      new Response(JSON.stringify({ data: [capsule], count: 1 }), { status: 200 })
+    ))
+
+    const firstRequest = listTimeCapsules()
+    const secondRequest = listTimeCapsules()
+    await Promise.resolve()
+    expect(signInAnonymously).toHaveBeenCalledTimes(1)
+
+    resolveSignIn?.({ data: { session: { access_token: 'shared-token' } }, error: null })
+    await expect(Promise.all([firstRequest, secondRequest])).resolves.toHaveLength(2)
+  })
+
   it('redeems a capsule with its invite token without anonymous auth', async () => {
-    createClientMock.mockReturnValue({ auth: { getSession: vi.fn(), signInAnonymously: vi.fn() } })
+    getSupabaseMock.mockReturnValue({ auth: { getSession: vi.fn(), signInAnonymously: vi.fn() } })
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ data: capsule }), { status: 200 }))
 
     await expect(redeemTimeCapsule('123', 'invite-token')).resolves.toMatchObject({ data: { id: 1 } })

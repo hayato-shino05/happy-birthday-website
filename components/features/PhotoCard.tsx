@@ -63,6 +63,8 @@ export function PhotoCard({ media, onClick }: PhotoCardProps) {
           muted
         />
       ) : (
+        // Media paths are dynamic and may be private; next/image cannot safely resolve them here.
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imageError ? '/placeholder-image.png' : media.file_path}
           alt={media.file_name}

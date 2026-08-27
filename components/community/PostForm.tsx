@@ -222,6 +222,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
               {isVideo ? (
                 <video src={previewUrl || ''} style={{ width: '100%', maxHeight: '150px', objectFit: 'contain' }} controls />
               ) : (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={previewUrl || ''} alt={t('preview')} style={{ width: '100%', maxHeight: '150px', objectFit: 'contain' }} />
               )}
               <button type="button" onClick={removeFile}
