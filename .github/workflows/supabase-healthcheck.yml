@@ -2,7 +2,8 @@ name: Supabase healthcheck
 
 on:
   schedule:
-    - cron: '17 3 * * *'
+    - cron: '0 0 * * *'
+      timezone: 'Asia/Tokyo'
   workflow_dispatch:
 
 permissions:
@@ -21,10 +22,12 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_READONLY_DATABASE_URL: ${{ secrets.SUPABASE_READONLY_DATABASE_URL }}
         run: |
           set -euo pipefail
           test -n "$SUPABASE_URL" || { echo "NEXT_PUBLIC_SUPABASE_URL secret is not configured" >&2; exit 1; }
           test -n "$SUPABASE_ANON_KEY" || { echo "NEXT_PUBLIC_SUPABASE_ANON_KEY secret is not configured" >&2; exit 1; }
+          test -n "$SUPABASE_READONLY_DATABASE_URL" || { echo "SUPABASE_READONLY_DATABASE_URL secret is not configured" >&2; exit 1; }
           case "$SUPABASE_URL" in
             https://*.supabase.co) ;;
             *) echo "NEXT_PUBLIC_SUPABASE_URL must use an https://*.supabase.co URL" >&2; exit 1 ;;
@@ -36,8 +39,26 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
-          curl --silent --show-error --fail --max-time 10 \
+          curl --silent --show-error --fail --connect-timeout 5 --max-time 15 \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             "$SUPABASE_URL/rest/v1/" \
             >/dev/null
+
+      - name: Attest read-only PostgreSQL access
+        env:
+          SUPABASE_READONLY_DATABASE_URL: ${{ secrets.SUPABASE_READONLY_DATABASE_URL }}
+          PGCONNECT_TIMEOUT: '10'
+          PGOPTIONS: '-c default_transaction_read_only=on -c statement_timeout=10000'
+        run: |
+          set -euo pipefail
+          result="$(timeout --signal=TERM 20s psql \
+            --no-psqlrc \
+            --set=ON_ERROR_STOP=1 \
+            --tuples-only \
+            --command="SELECT current_setting('transaction_read_only') = 'on';" \
+            "$SUPABASE_READONLY_DATABASE_URL")"
+          test "$(printf '%s' "$result" | tr -d '[:space:]')" = 't' || {
+            echo "PostgreSQL read-only attestation failed" >&2
+            exit 1
+          }
