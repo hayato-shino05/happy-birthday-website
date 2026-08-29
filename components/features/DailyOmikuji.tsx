@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
@@ -55,19 +55,28 @@ export function DailyOmikuji({}: { onClose?: () => void }) {
     const saved = window.localStorage.getItem(OMIKUJI_HISTORY_STORAGE_KEY)
     const parsed = parseOmikujiHistory(saved, fortuneIds)
     if (saved && parsed.length === 0) window.localStorage.removeItem(OMIKUJI_HISTORY_STORAGE_KEY)
-    if (parsed.some((entry) => entry.date === todayDateKey)) return parsed
+    return parsed
+  })
+  const [migrationError, setMigrationError] = useState(false)
+  const [migrationAttempt, setMigrationAttempt] = useState(0)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || history.some((entry) => entry.date === todayDateKey)) return
 
     try {
       const legacy = JSON.parse(window.localStorage.getItem(todayKey) || 'null') as { id?: number; rank?: string } | null
       const legacyFortune = OMIKUJI_DATA.find((fortune) => fortune.id === legacy?.id) || OMIKUJI_DATA.find((fortune) => fortune.rank === legacy?.rank)
-      if (!legacyFortune) return parsed
-      const migrated = appendOmikujiHistory(parsed, { date: todayDateKey, fortuneId: legacyFortune.id })
+      if (!legacyFortune) return
+      const migrated = appendOmikujiHistory(history, { date: todayDateKey, fortuneId: legacyFortune.id })
       window.localStorage.setItem(OMIKUJI_HISTORY_STORAGE_KEY, JSON.stringify(migrated))
-      return migrated
+      queueMicrotask(() => {
+        setHistory(migrated)
+        setMigrationError(false)
+      })
     } catch {
-      return parsed
+      queueMicrotask(() => setMigrationError(true))
     }
-  })
+  }, [history, todayDateKey, todayKey, migrationAttempt])
   const [result, setResult] = useState<OmikujiFortune | null>(() => {
     const savedFortune = history.find((entry) => entry.date === todayDateKey)
     if (savedFortune) return OMIKUJI_DATA.find((fortune) => fortune.id === savedFortune.fortuneId) || null
@@ -147,6 +156,19 @@ export function DailyOmikuji({}: { onClose?: () => void }) {
           </div>
         )}
       </div>
+
+      {migrationError && (
+        <div className="w-full mb-4 rounded-xl border border-[#B42318]/40 bg-[#FFF4F2] px-4 py-3 text-left text-xs text-[#8A1C13]" role="alert">
+          <p>{t('omikujiMigrationError')}</p>
+          <button
+            type="button"
+            onClick={() => setMigrationAttempt((attempt) => attempt + 1)}
+            className="mt-2 min-h-11 rounded-lg border border-[#8A1C13]/40 px-3 font-bold underline underline-offset-2"
+          >
+            {t('omikujiMigrationRetry')}
+          </button>
+        </div>
+      )}
 
       {history.length > 0 && (
         <section className="w-full rounded-xl border border-[#D4B08C]/60 bg-[#FFF9F3] px-4 py-3 mb-4 text-left" aria-label={t('omikujiHistory')}>

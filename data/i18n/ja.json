@@ -196,6 +196,8 @@
     "omikujiLuckyColor": "ラッキーカラー",
     "omikujiLuckyItem": "ラッキーアイテム",
     "omikujiLuckyNumber": "幸運数",
+    "omikujiMigrationError": "今日のおみくじ履歴を保存できませんでした。",
+    "omikujiMigrationRetry": "履歴の保存を再試行",
     "omikujiNumber": "第{id}番",
     "omikujiPoemLabel": "祝詠（しゅくえい）",
     "omikujiStreak": "{count}日連続",

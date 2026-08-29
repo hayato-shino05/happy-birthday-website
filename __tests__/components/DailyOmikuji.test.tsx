@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/i18n/LanguageContext', () => ({
@@ -55,5 +55,36 @@ describe('DailyOmikuji legacy migration', () => {
     render(<DailyOmikuji />)
 
     expect(JSON.parse(window.localStorage.getItem('omikuji_history_v1') || 'null')).toEqual(history)
+  })
+
+  it('keeps a legacy result visible and retries a failed history migration', async () => {
+    window.localStorage.setItem('omikuji_2026_08_29', JSON.stringify({ id: 2 }))
+    const originalSetItem = Storage.prototype.setItem
+    let shouldFail = true
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key, value) {
+      if (key === 'omikuji_history_v1' && shouldFail) {
+        shouldFail = false
+        throw new Error('storage unavailable')
+      }
+      return originalSetItem.call(this, key, value)
+    })
+
+    const { default: DailyOmikuji } = await import('@/components/features/DailyOmikuji')
+    render(<DailyOmikuji />)
+
+    await act(async () => {})
+    expect(screen.getByText('omikujiMigrationError')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'omikujiMigrationRetry' })).toBeInTheDocument()
+    expect(screen.getByText('大吉')).toBeInTheDocument()
+    expect(window.localStorage.getItem('omikuji_history_v1')).toBeNull()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'omikujiMigrationRetry' }))
+    })
+
+    expect(JSON.parse(window.localStorage.getItem('omikuji_history_v1') || 'null')).toEqual([
+      { date: '2026-08-29', fortuneId: 2 },
+    ])
+    expect(screen.queryByText('omikujiMigrationError')).not.toBeInTheDocument()
   })
 })

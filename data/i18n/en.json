@@ -196,6 +196,8 @@
     "omikujiLuckyColor": "Lucky Color",
     "omikujiLuckyItem": "Lucky Item",
     "omikujiLuckyNumber": "Lucky No.",
+    "omikujiMigrationError": "Today's fortune history could not be saved.",
+    "omikujiMigrationRetry": "Retry saving history",
     "omikujiNumber": "No. {id}",
     "omikujiPoemLabel": "Celebration Poem",
     "omikujiStreak": "{count}-day streak",
