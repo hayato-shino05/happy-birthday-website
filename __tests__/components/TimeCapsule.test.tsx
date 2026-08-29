@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import TimeCapsule, { parseLocalCapsules, parseRemoteCapsule } from '@/components/community/TimeCapsule'
+import TimeCapsule, { parseLocalCapsules, parseRemoteCapsule, populateKeepsakePrintDocument } from '@/components/community/TimeCapsule'
 import { createTimeCapsule, listTimeCapsules } from '@/lib/time-capsule-client'
 
 const languageMock = vi.hoisted(() => ({ value: 'ja' as 'ja' | 'en' }))
@@ -94,6 +94,25 @@ describe('Time Capsule parsers', () => {
     expect(parseRemoteCapsule({ ...row(), unlock_date: '2026-02-30' }, now)).toBeNull()
     expect(parseLocalCapsules({ invalid: true }, now)).toEqual([])
   })
+
+  it('writes only approved keepsake fields into the print document', () => {
+    const document = window.document.implementation.createHTMLDocument()
+    populateKeepsakePrintDocument(document, {
+      id: 1,
+      sender: '投稿者',
+      recipient: '受取人',
+      message: '<private>',
+      photoUrl: 'https://example.test/photo.jpg',
+      unlockDate: pastDate,
+      createdAt: '2026-08-23T00:00:00.000Z',
+      isUnlocked: true,
+    }, '記念カード', '2000/1/1')
+
+    expect(document.body.textContent).toContain('投稿者')
+    expect(document.body.textContent).toContain('<private>')
+    expect(document.body.textContent).not.toContain('受取人')
+    expect(document.body.querySelector('img')?.getAttribute('src')).toBe('https://example.test/photo.jpg')
+  })
 })
 
 describe('TimeCapsule', () => {
@@ -144,6 +163,29 @@ describe('TimeCapsule', () => {
     render(<TimeCapsule />)
 
     expect(await screen.findByText(/private capsule message/)).toBeTruthy()
+  })
+
+  it('opens a keepsake print view only for opened capsules', async () => {
+    listMock.mockResolvedValue({ data: [row({ unlock_date: pastDate })] })
+    const print = vi.fn()
+    const printWindow = { document: window.document.implementation.createHTMLDocument(), focus: vi.fn(), print }
+    vi.spyOn(window, 'open').mockReturnValue(printWindow as unknown as Window)
+    render(<TimeCapsule />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'timeCapsuleExportAction' }))
+
+    expect(printWindow.document.body.textContent).toContain('private capsule message')
+    expect(print).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows feedback when opening the print view fails', async () => {
+    listMock.mockResolvedValue({ data: [row({ unlock_date: pastDate })] })
+    vi.spyOn(window, 'open').mockReturnValue(null)
+    render(<TimeCapsule />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'timeCapsuleExportAction' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('timeCapsuleExportError')
   })
 
   it('keeps valid local fallback data when API fetch fails', async () => {

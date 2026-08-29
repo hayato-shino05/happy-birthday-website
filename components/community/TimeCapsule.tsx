@@ -121,7 +121,35 @@ export function parseLocalCapsules(value: unknown, now = new Date()): CapsuleIte
     .filter((item): item is CapsuleItem => item !== null)
 }
 
-// 未来の記念日に届くタイムカプセルコンポーネント
+export function populateKeepsakePrintDocument(document: Document, capsule: CapsuleItem, title: string, eventDate: string): void {
+  document.title = title
+  const style = document.createElement('style')
+  style.textContent = 'body{margin:0;padding:24px;background:#fff9f3;color:#542f17;font-family:Georgia,serif}.card{max-width:640px;margin:0 auto;border:2px solid #d4b08c;border-radius:24px;padding:32px}.brand{font:700 12px system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#854d27}.date{font:600 14px system-ui,sans-serif;color:#854d27}.sender{font-size:24px;margin:24px 0 8px}.message{font-size:18px;line-height:1.7;white-space:pre-wrap}.photo{width:100%;max-height:360px;object-fit:cover;border-radius:16px;margin:24px 0 0}@media print{body{padding:0}.card{border:0}}'
+  document.head.append(style)
+
+  const card = document.createElement('main')
+  card.className = 'card'
+  const appendText = (tag: string, className: string, value: string) => {
+    const element = document.createElement(tag)
+    element.className = className
+    element.textContent = value
+    card.append(element)
+  }
+
+  appendText('p', 'brand', title)
+  appendText('p', 'date', eventDate)
+  appendText('h1', 'sender', capsule.sender)
+  appendText('p', 'message', capsule.message)
+  if (capsule.photoUrl) {
+    const photo = document.createElement('img')
+    photo.className = 'photo'
+    photo.src = capsule.photoUrl
+    photo.alt = ''
+    card.append(photo)
+  }
+  document.body.replaceChildren(card)
+}
+
 export function TimeCapsule() {
   const { t, language } = useLanguage()
   const [capsules, setCapsules] = useState<CapsuleItem[]>([])
@@ -151,6 +179,7 @@ export function TimeCapsule() {
   const [accessCodeInput, setAccessCodeInput] = useState('')
   const [accessError, setAccessError] = useState<string | null>(null)
   const [accessedCapsule, setAccessedCapsule] = useState<CapsuleItem | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
   const [isAccessing, setIsAccessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isMountedRef = useRef(true)
@@ -399,6 +428,20 @@ export function TimeCapsule() {
     }
   }
 
+  const handleExport = (capsule: CapsuleItem) => {
+    setExportError(null)
+    try {
+      const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+      if (!printWindow) throw new Error('print window blocked')
+      const eventDate = parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')
+      populateKeepsakePrintDocument(printWindow.document, capsule, t('timeCapsuleExportTitle'), eventDate)
+      printWindow.focus()
+      printWindow.print()
+    } catch {
+      setExportError(t('timeCapsuleExportError'))
+    }
+  }
+
   return (
     <div className="flex flex-col p-2 max-w-lg mx-auto">
       {/* タブ切り替え */}
@@ -476,12 +519,11 @@ export function TimeCapsule() {
             </div>
           ) : capsules.length > 0 ? (
             <div>
-              {loadError && (
-                <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                  <span>{t('genericError')}</span>{' '}
-                  <button type="button" onClick={fetchCapsules} className="font-bold underline cursor-pointer">
-                    {t('retry')}
-                  </button>
+              {(loadError || exportError) && (
+                <div role="alert" className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {loadError && <><span>{t('genericError')}</span>{' '}<button type="button" onClick={fetchCapsules} className="font-bold underline cursor-pointer">{t('retry')}</button></>}
+                  {loadError && exportError && ' '}
+                  {exportError && <span>{exportError}</span>}
                 </div>
               )}
               <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
@@ -521,6 +563,13 @@ export function TimeCapsule() {
                       <p className="text-xs text-[#854D27] font-serif leading-relaxed italic px-1">
                         &ldquo;{capsule.message}&rdquo;
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => handleExport(capsule)}
+                        className="mt-3 min-h-[44px] rounded-xl border border-[#D4B08C] px-3 text-xs font-bold text-[#854D27] hover:bg-[#854D27]/5 focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+                      >
+                        {t('timeCapsuleExportAction')}
+                      </button>
                     </div>
                   ) : (
                     <p className="text-xs text-[#854D27]/70 italic mt-2">
