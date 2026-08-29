@@ -150,6 +150,41 @@ export function populateKeepsakePrintDocument(document: Document, capsule: Capsu
   document.body.replaceChildren(card)
 }
 
+export async function waitForKeepsakePhoto(document: Document, timeoutMs = 1500): Promise<void> {
+  const photo = document.querySelector('img')
+  if (!photo) return
+
+  const decode = async () => {
+    if (typeof photo.decode !== 'function') return
+    try {
+      await photo.decode()
+    } catch {
+      return
+    }
+  }
+
+  if (photo.complete) {
+    await Promise.race([decode(), new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))])
+    return
+  }
+
+  await new Promise<void>((resolve) => {
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      photo.removeEventListener('load', finish)
+      photo.removeEventListener('error', finish)
+      resolve()
+    }
+    const timeout = setTimeout(finish, timeoutMs)
+    photo.addEventListener('load', finish, { once: true })
+    photo.addEventListener('error', finish, { once: true })
+  })
+  await Promise.race([decode(), new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))])
+}
+
 export function TimeCapsule() {
   const { t, language } = useLanguage()
   const [capsules, setCapsules] = useState<CapsuleItem[]>([])
@@ -428,13 +463,15 @@ export function TimeCapsule() {
     }
   }
 
-  const handleExport = (capsule: CapsuleItem) => {
+  const handleExport = async (capsule: CapsuleItem) => {
     setExportError(null)
     try {
-      const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+      const printWindow = window.open('', '_blank')
       if (!printWindow) throw new Error('print window blocked')
+      printWindow.opener = null
       const eventDate = parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')
       populateKeepsakePrintDocument(printWindow.document, capsule, t('timeCapsuleExportTitle'), eventDate)
+      await waitForKeepsakePhoto(printWindow.document)
       printWindow.focus()
       printWindow.print()
     } catch {
