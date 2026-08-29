@@ -49,16 +49,26 @@ jobs:
         env:
           SUPABASE_READONLY_DATABASE_URL: ${{ secrets.SUPABASE_READONLY_DATABASE_URL }}
           PGCONNECT_TIMEOUT: '10'
-          PGOPTIONS: '-c default_transaction_read_only=on -c statement_timeout=10000'
+          PGOPTIONS: '-c statement_timeout=10000'
         run: |
           set -euo pipefail
           result="$(timeout --signal=TERM 20s psql \
             --no-psqlrc \
             --set=ON_ERROR_STOP=1 \
             --tuples-only \
-            --command="SELECT current_setting('transaction_read_only') = 'on';" \
+            --command="SELECT current_user = session_user
+              AND r.rolname = current_user
+              AND NOT r.rolsuper
+              AND NOT r.rolbypassrls
+              AND NOT r.rolcreatedb
+              AND NOT r.rolcreaterole
+              AND NOT r.rolreplication
+              AND r.rolinherit
+              AND r.rolcanlogin
+            FROM pg_roles AS r
+            WHERE r.rolname = current_user;" \
             "$SUPABASE_READONLY_DATABASE_URL")"
           test "$(printf '%s' "$result" | tr -d '[:space:]')" = 't' || {
-            echo "PostgreSQL read-only attestation failed" >&2
+            echo "PostgreSQL read-only identity attestation failed" >&2
             exit 1
           }
