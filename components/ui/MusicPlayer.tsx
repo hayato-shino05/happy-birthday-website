@@ -158,7 +158,7 @@ export function MusicPlayer() {
 
       <button
         onClick={() => setShowSelector(!showSelector)}
-        aria-label={t('chooseSong')}
+        aria-label={t('selectMusic')}
         style={{
           padding: '8px 15px',
           background: showSelector ? 'rgba(212, 176, 140, 0.3)' : 'transparent',

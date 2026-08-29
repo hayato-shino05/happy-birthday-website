@@ -53,7 +53,7 @@ export default function AudioRecorder({ birthdayPerson, onRecorded }: AudioRecor
         setSender('')
         setUploadSuccess(false)
       }, 2000)
-    } catch (err) {
+    } catch {
       setUploadError(t('audioUploadFailed'))
     } finally {
       setUploading(false)

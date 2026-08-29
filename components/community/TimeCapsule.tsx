@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useState, useEffect, useRef } from 'react'
-import { createTimeCapsule, deleteTimeCapsulePhoto, listTimeCapsules, redeemTimeCapsuleByCode, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
+import { createTimeCapsule, listTimeCapsules, redeemTimeCapsuleByCode, uploadTimeCapsulePhoto } from '@/lib/time-capsule-client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 
@@ -16,7 +16,7 @@ export interface CapsuleItem {
   isUnlocked: boolean
 }
 
-type PendingCapsule = CapsuleItem & { pendingKey?: string }
+type PendingCapsule = CapsuleItem & { pendingKey?: string; photoObjectPath?: string }
 type InviteAccess = { accessCode: string }
 
 const LOCAL_CAPSULES_KEY = 'local_time_capsules'
@@ -144,8 +144,10 @@ export function TimeCapsule() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [pendingRetryKey, setPendingRetryKey] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [inviteAccesses, setInviteAccesses] = useState<InviteAccess[]>([])
+  const [copiedAccessCode, setCopiedAccessCode] = useState<string | null>(null)
   const [accessCodeInput, setAccessCodeInput] = useState('')
   const [accessError, setAccessError] = useState<string | null>(null)
   const [accessedCapsule, setAccessedCapsule] = useState<CapsuleItem | null>(null)
@@ -197,6 +199,7 @@ export function TimeCapsule() {
             recipient: pending.recipient,
             message: pending.message,
             unlockDate: pending.unlockDate,
+            ...(typeof pending.photoObjectPath === 'string' ? { photoObjectPath: pending.photoObjectPath } : {}),
           }, pending.pendingKey as string)
           syncedIds.add(String(pending.id))
           if (created.accessCode) {
@@ -206,6 +209,9 @@ export function TimeCapsule() {
           // Keep pending entries for the next refresh.
         }
       }))
+      if (pendingRaw.length > 0) {
+        setPendingRetryKey(pendingRaw[0].pendingKey ?? null)
+      }
       const result = await listTimeCapsules()
       if (syncedIds.size > 0) {
         try {
@@ -214,6 +220,12 @@ export function TimeCapsule() {
           const latestRaw = Array.isArray(latestParsed) ? latestParsed : localRaw
           localRaw = latestRaw.filter((item) => !isRecord(item) || !syncedIds.has(String(item.id)))
           localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify(localRaw))
+          const remainingPending = localRaw.find((item): item is PendingCapsule => (
+            isRecord(item) && typeof item.pendingKey === 'string'
+          ))
+          const remainingPendingKey = remainingPending?.pendingKey ?? null
+          setPendingRetryKey(remainingPendingKey)
+          if (!remainingPendingKey) setSubmitError(null)
         } catch {
           // ストレージを再読込できない場合は、取得開始時のデータを維持する。
         }
@@ -323,10 +335,11 @@ export function TimeCapsule() {
         fetchCapsules()
       }, 1200)
     } catch (err) {
-      if (photoObjectPath) {
-        void deleteTimeCapsulePhoto(photoObjectPath)
-      }
       console.error('Failed to seal time capsule:', err)
+      if (photoFile && !photoObjectPath) {
+        setSubmitError(t('genericError'))
+        return
+      }
       const pendingCapsule: PendingCapsule = {
         id: `capsule-${Date.now()}`,
         sender: sender.trim(),
@@ -336,19 +349,32 @@ export function TimeCapsule() {
         createdAt: new Date().toISOString(),
         isUnlocked: parseLocalDate(unlockDate) <= new Date(),
         pendingKey: idempotencyKey,
+        photoObjectPath,
       }
+      let pendingSaved = false
       try {
         const saved = localStorage.getItem(LOCAL_CAPSULES_KEY)
         const currentList = saved ? JSON.parse(saved) : []
         const nextList = Array.isArray(currentList) ? currentList : []
         localStorage.setItem(LOCAL_CAPSULES_KEY, JSON.stringify([pendingCapsule, ...nextList]))
+        pendingSaved = true
       } catch {
-        // Local fallback is best effort when storage is unavailable.
+        pendingSaved = false
       }
+      if (pendingSaved) setPendingRetryKey(idempotencyKey)
       setSubmitError(t('genericError'))
     } finally {
       isSealingRef.current = false
       setIsSubmitting(false)
+    }
+  }
+
+  const handleCopyAccessCode = async (accessCode: string) => {
+    try {
+      await navigator.clipboard.writeText(accessCode)
+      setCopiedAccessCode(accessCode)
+    } catch (error) {
+      console.error('Failed to copy time capsule access code:', error)
     }
   }
 
@@ -379,7 +405,7 @@ export function TimeCapsule() {
       <div className="flex rounded-xl bg-[#854D27]/10 p-1 mb-5 border border-[#D4B08C]">
         <button
           onClick={() => setActiveTab('view')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+          className={`flex-1 min-h-[44px] py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
             activeTab === 'view'
               ? 'bg-[#854D27] text-[#FFF9F3] shadow-md'
               : 'text-[#854D27] hover:bg-[#854D27]/5'
@@ -389,7 +415,7 @@ export function TimeCapsule() {
         </button>
         <button
           onClick={() => setActiveTab('create')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+          className={`flex-1 min-h-[44px] py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
             activeTab === 'create'
               ? 'bg-[#854D27] text-[#FFF9F3] shadow-md'
               : 'text-[#854D27] hover:bg-[#854D27]/5'
@@ -415,12 +441,12 @@ export function TimeCapsule() {
                 value={accessCodeInput}
                 onChange={(event) => setAccessCodeInput(event.target.value)}
                 placeholder="123 456"
-                className="mt-1 w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 font-mono text-xs text-[#854D27]"
+                className="mt-1 min-h-[44px] w-full rounded-xl border border-[#D4B08C] bg-white px-3 py-2 font-mono text-xs text-[#854D27]"
               />
             </label>
             <p className="text-[10px] text-[#854D27]/70">{t('timeCapsuleAccessCodeHint')}</p>
             {accessError && <p className="text-xs text-red-600">{accessError}</p>}
-            <button type="submit" disabled={isAccessing} className="w-full rounded-xl bg-[#854D27] py-2 text-xs font-bold text-[#FFF9F3] disabled:opacity-50">
+            <button type="submit" disabled={isAccessing} className="w-full min-h-[44px] rounded-xl bg-[#854D27] py-2 text-xs font-bold text-[#FFF9F3] disabled:opacity-50">
               {t('timeCapsuleRedeemAction')}
             </button>
             {accessedCapsule && (
@@ -519,8 +545,9 @@ export function TimeCapsule() {
                 {t('timeCapsuleEmptyDesc')}
               </p>
               <button
+                type="button"
                 onClick={() => setActiveTab('create')}
-                className="px-4 py-2 rounded-xl bg-[#854D27] text-[#FFF9F3] text-xs font-bold hover:brightness-110 transition-all cursor-pointer"
+                className="min-h-[44px] px-4 py-2 rounded-xl bg-[#854D27] text-[#FFF9F3] text-xs font-bold hover:brightness-110 transition-all cursor-pointer"
               >
                 {t('timeCapsuleSeal')}
               </button>
@@ -530,9 +557,18 @@ export function TimeCapsule() {
       ) : (
         /* 新規封印フォーム */
         <form onSubmit={handleSeal} className="bg-[#FFF9F3] border-2 border-[#D4B08C] rounded-2xl p-5 shadow-lg space-y-4">
-          {submitError && (
-            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
-              {submitError}
+          {(submitError || pendingRetryKey) && (
+            <div aria-live="polite" className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
+              <p>{submitError ?? t('genericError')}</p>
+              {pendingRetryKey && (
+                <button
+                  type="button"
+                  onClick={() => void fetchCapsules()}
+                  className="mt-2 font-bold underline cursor-pointer"
+                >
+                  {t('retry')}
+                </button>
+              )}
             </div>
           )}
 
@@ -540,9 +576,19 @@ export function TimeCapsule() {
             <div key={inviteAccess.accessCode} className="p-3 rounded-xl bg-[#854D27]/10 border border-[#D4B08C] text-[#854D27] text-xs space-y-2">
               <p className="font-bold">{t('timeCapsuleInviteTitle')}</p>
               <p>{t('timeCapsuleInviteDescription')}</p>
-              <code className="block rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
-                {inviteAccess.accessCode}
-              </code>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 rounded-lg bg-white px-2 py-1 font-mono text-[11px] select-all">
+                  {inviteAccess.accessCode}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => void handleCopyAccessCode(inviteAccess.accessCode)}
+                  className="min-h-[44px] min-w-[44px] rounded-lg border border-[#D4B08C] px-2 text-[10px] font-bold text-[#854D27] hover:bg-[#854D27]/5 cursor-pointer"
+                  aria-label={`${t('copyLink')} ${t('timeCapsuleAccessCodeLabel')}`}
+                >
+                  {copiedAccessCode === inviteAccess.accessCode ? t('copied') : t('copyLink')}
+                </button>
+              </div>
             </div>
           ))}
 
@@ -558,7 +604,7 @@ export function TimeCapsule() {
               value={sender}
               onChange={(e) => setSender(e.target.value)}
               placeholder={t('yourName')}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
@@ -573,12 +619,12 @@ export function TimeCapsule() {
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder={t('recipientExamplePlaceholder')}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#854D27] mb-1">
+            <label htmlFor="time-capsule-unlock-date" className="block text-xs font-bold text-[#854D27] mb-1">
               {t('timeCapsuleUnlockDate')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -589,7 +635,7 @@ export function TimeCapsule() {
               value={unlockDate}
               min={formatLocalDate(new Date())}
               onChange={(e) => setUnlockDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
@@ -605,12 +651,12 @@ export function TimeCapsule() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={t('capsuleMessagePlaceholder')}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
+              className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-white border border-[#D4B08C] text-xs text-[#854D27] focus:outline-none focus:ring-2 focus:ring-[#854D27]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#854D27] mb-1">
+            <label htmlFor="time-capsule-photo" className="block text-xs font-bold text-[#854D27] mb-1">
               {t('attachPhotoOptional')}
             </label>
             <input
@@ -624,8 +670,9 @@ export function TimeCapsule() {
             />
             <button
               type="button"
+              aria-label={photoFile ? `${t('selectPhoto')}: ${photoFile.name}` : t('selectPhoto')}
               onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2 px-3 rounded-xl border border-dashed border-[#854D27] text-[#854D27] text-xs font-medium hover:bg-[#854D27]/5 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full min-h-[44px] py-2 px-3 rounded-xl border border-dashed border-[#854D27] text-[#854D27] text-xs font-medium hover:bg-[#854D27]/5 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Icon name="Camera" size={16} />
               {photoFile ? photoFile.name : t('selectPhoto')}
@@ -635,7 +682,7 @@ export function TimeCapsule() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-xl bg-[#854D27] text-[#FFF9F3] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer"
+            className="w-full min-h-[44px] py-3 rounded-xl bg-[#854D27] text-[#FFF9F3] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer"
           >
             {isSubmitting ? t('uploading') : submitSuccess ? t('sealedSuccess') : t('timeCapsuleSeal')}
           </button>

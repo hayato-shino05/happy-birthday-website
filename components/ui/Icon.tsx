@@ -85,7 +85,6 @@ import menuIcon from '@/src/assets/icons/menu.png'
 import microphoneIcon from '@/src/assets/icons/microphone.png'
 import windIcon from '@/src/assets/icons/wind.png'
 import mailIcon from '@/src/assets/icons/mail.png'
-import speechBubbleIcon from '@/src/assets/icons/speech-bubble.png'
 import trophyIcon from '@/src/assets/icons/trophy.png'
 import downloadIcon from '@/src/assets/icons/download.png'
 import editIcon from '@/src/assets/icons/edit.png'
@@ -105,10 +104,8 @@ import eyeIcon from '@/src/assets/icons/eye.png'
 import eyeOffIcon from '@/src/assets/icons/eye-off.png'
 import gameControllerIcon from '@/src/assets/icons/game-controller.png'
 import groupChatIcon from '@/src/assets/icons/group-chat.png'
-import sparklesIcon from '@/src/assets/icons/sparkles.png'
 import toriiIcon from '@/src/assets/icons/torii.png'
 import archiveIcon from '@/src/assets/icons/archive.png'
-import scrollIcon from '@/src/assets/icons/scroll.png'
 
 export const Icons = {
   AlertTriangle,

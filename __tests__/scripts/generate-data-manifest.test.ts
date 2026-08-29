@@ -275,6 +275,24 @@ describe('generate-data-manifest', () => {
     expect(runGenerator(root, '--check')).toBe('')
   })
 
+  it('accepts equivalent CRLF line endings in generated manifests', () => {
+    const root = createFixture()
+    writePack(root, 'ja.json', 'line-ending-event', 'hanami', 'ja')
+    writePack(root, 'en.json', 'line-ending-event', 'hanami', 'en')
+
+    runGenerator(root, '--write')
+    for (const relativePath of [
+      'data/generated/festival-packs.ts',
+      'data/generated/locales.ts',
+      'data/generated/themes.ts',
+    ]) {
+      const path = join(root, relativePath)
+      writeFileSync(path, readFileSync(path, 'utf8').replaceAll('\\n', '\\r\\n'))
+    }
+
+    expect(runGenerator(root, '--check')).toBe('')
+  })
+
   it('fails --check when the ja festival pack is deleted', () => {
     const root = createFixture()
     writePack(root, 'ja.json', 'locale-gap-event', 'hanami', 'ja')
