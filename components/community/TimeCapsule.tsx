@@ -150,37 +150,38 @@ export function populateKeepsakePrintDocument(document: Document, capsule: Capsu
   document.body.replaceChildren(card)
 }
 
-export async function waitForKeepsakePhoto(document: Document, timeoutMs = 1500): Promise<void> {
+export async function waitForKeepsakePhoto(document: Document, timeoutMs = 1500): Promise<boolean> {
   const photo = document.querySelector('img')
-  if (!photo) return
+  if (!photo) return true
   if (typeof photo.decode !== 'function') throw new Error('photo decode is unavailable')
 
   if (!photo.complete) {
-    await new Promise<void>((resolve, reject) => {
+    const loaded = await new Promise<boolean>((resolve, reject) => {
       let settled = false
-      const onLoad = () => finish()
-      const onError = () => finish(new Error('photo load failed'))
-      const finish = (error?: Error) => {
+      const onLoad = () => finish(true)
+      const onError = () => finish(false, new Error('photo load failed'))
+      const finish = (success: boolean, error?: Error) => {
         if (settled) return
         settled = true
         clearTimeout(timeout)
         photo.removeEventListener('load', onLoad)
         photo.removeEventListener('error', onError)
         if (error) reject(error)
-        else resolve()
+        else resolve(success)
       }
-      const timeout = setTimeout(() => finish(new Error('photo load timed out')), timeoutMs)
+      const timeout = setTimeout(() => finish(false), timeoutMs)
       photo.addEventListener('load', onLoad, { once: true })
       photo.addEventListener('error', onError, { once: true })
     })
+    if (!loaded) return false
   }
 
   let timeoutId: ReturnType<typeof setTimeout> | undefined
   try {
-    await Promise.race([
-      photo.decode(),
-      new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('photo decode timed out')), timeoutMs)
+    return await Promise.race([
+      photo.decode().then(() => true),
+      new Promise<boolean>((resolve) => {
+        timeoutId = setTimeout(() => resolve(false), timeoutMs)
       }),
     ])
   } finally {

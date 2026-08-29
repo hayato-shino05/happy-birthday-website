@@ -184,6 +184,33 @@ describe('TimeCapsule', () => {
     expect(print).toHaveBeenCalledTimes(1)
   })
 
+  it('prints the text export when a photo remains slow', async () => {
+    listMock.mockResolvedValue({ data: [row({ unlock_date: pastDate })] })
+    const print = vi.fn()
+    const printWindow = { document: window.document.implementation.createHTMLDocument(), focus: vi.fn(), print, close: vi.fn(), opener: window }
+    vi.spyOn(window, 'open').mockReturnValue(printWindow as unknown as Window)
+    render(<TimeCapsule />)
+
+    const exportButton = await screen.findByRole('button', { name: 'timeCapsuleExportAction' })
+    vi.useFakeTimers()
+    try {
+      Object.defineProperty(HTMLImageElement.prototype, 'decode', { configurable: true, writable: true, value: vi.fn().mockResolvedValue(undefined) })
+      await act(async () => {
+        fireEvent.click(exportButton)
+        await Promise.resolve()
+      })
+      const photo = printWindow.document.querySelector('img') as HTMLImageElement
+      Object.defineProperty(photo, 'complete', { configurable: true, value: false })
+      await vi.advanceTimersByTimeAsync(1_500)
+      await act(async () => {})
+
+      expect(print).toHaveBeenCalledTimes(1)
+      expect(screen.queryByRole('alert')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('waits for a keepsake photo to decode before printing', async () => {
     const document = window.document.implementation.createHTMLDocument()
     populateKeepsakePrintDocument(document, {
@@ -226,6 +253,32 @@ describe('TimeCapsule', () => {
     expect(photo.decode).toHaveBeenCalledTimes(1)
   })
 
+  it('reports a slow keepsake photo timeout without rejecting', async () => {
+    vi.useFakeTimers()
+    try {
+      const document = window.document.implementation.createHTMLDocument()
+      populateKeepsakePrintDocument(document, {
+        id: 1,
+        sender: '投稿者',
+        message: '本文',
+        photoUrl: 'https://example.test/photo.jpg',
+        unlockDate: pastDate,
+        createdAt: '2026-08-23T00:00:00.000Z',
+        isUnlocked: true,
+      }, '記念カード', '2000/1/1')
+      const photo = document.querySelector('img') as HTMLImageElement
+      Object.defineProperty(photo, 'complete', { configurable: true, value: false })
+      photo.decode = vi.fn().mockResolvedValue(undefined)
+      const pending = waitForKeepsakePhoto(document, 1_500)
+
+      await vi.advanceTimersByTimeAsync(1_500)
+
+      await expect(pending).resolves.toBe(false)
+      expect(photo.decode).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
   it('rejects when the keepsake photo fails to decode', async () => {
     const document = window.document.implementation.createHTMLDocument()
     populateKeepsakePrintDocument(document, {
@@ -244,7 +297,28 @@ describe('TimeCapsule', () => {
     await expect(waitForKeepsakePhoto(document)).rejects.toThrow('decode failed')
   })
 
-  it('rejects when the keepsake photo does not load before the timeout', async () => {
+  it('rejects when the keepsake photo fails to load', async () => {
+    const document = window.document.implementation.createHTMLDocument()
+    populateKeepsakePrintDocument(document, {
+      id: 1,
+      sender: '投稿者',
+      message: '本文',
+      photoUrl: 'https://example.test/photo.jpg',
+      unlockDate: pastDate,
+      createdAt: '2026-08-23T00:00:00.000Z',
+      isUnlocked: true,
+    }, '記念カード', '2000/1/1')
+    const photo = document.querySelector('img') as HTMLImageElement
+    Object.defineProperty(photo, 'complete', { configurable: true, value: false })
+    photo.decode = vi.fn().mockResolvedValue(undefined)
+    const pending = waitForKeepsakePhoto(document)
+
+    photo.dispatchEvent(new Event('error'))
+
+    await expect(pending).rejects.toThrow('photo load failed')
+  })
+
+  it('reports a keepsake photo timeout without rejecting', async () => {
     vi.useFakeTimers()
     try {
       const document = window.document.implementation.createHTMLDocument()
@@ -261,10 +335,9 @@ describe('TimeCapsule', () => {
       Object.defineProperty(photo, 'complete', { configurable: true, value: false })
       photo.decode = vi.fn().mockResolvedValue(undefined)
       const pending = waitForKeepsakePhoto(document, 100)
-      const rejection = expect(pending).rejects.toThrow('photo load timed out')
       await vi.advanceTimersByTimeAsync(100)
 
-      await rejection
+      await expect(pending).resolves.toBe(false)
       expect(photo.decode).not.toHaveBeenCalled()
     } finally {
       vi.useRealTimers()
