@@ -201,6 +201,7 @@ function PolaroidUnit({ value, label, tapeStyle, hoverRotate, isSeconds = false 
 }
 
 function PolaroidPlaceholder({ label, tapeStyle }: { label: string; tapeStyle: 'tape-1' | 'tape-2' | 'tape-3' | 'tape-4' }) {
+  void tapeStyle
   return (
     <div className="relative w-full max-w-[76px] sm:max-w-[110px] md:max-w-[130px] flex flex-col items-center">
       <div

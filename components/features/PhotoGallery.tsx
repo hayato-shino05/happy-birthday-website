@@ -16,7 +16,7 @@ interface PhotoGalleryProps {
 
 export function PhotoGallery({ filterTag }: PhotoGalleryProps) {
   const { files, isLoading, error, refetch } = useMediaFiles()
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const [selectedMedia, setSelectedMedia] = useState<MediaFile | null>(null)
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all')
   const [slideshowMode, setSlideshowMode] = useState(false)

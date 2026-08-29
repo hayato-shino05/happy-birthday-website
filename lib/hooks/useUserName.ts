@@ -38,7 +38,7 @@ function getSnapshot() {
       inMemoryFallback = null
       return item
     }
-  } catch (_error: unknown) {
+  } catch {
     if (inMemoryFallback !== null) return inMemoryFallback
     return ''
   }
@@ -64,7 +64,7 @@ export function useUserName() {
       try {
         localStorage.setItem(STORAGE_KEY, trimmed)
         inMemoryFallback = null
-      } catch (_error: unknown) {
+      } catch {
         inMemoryFallback = trimmed
       }
       emitChange()
@@ -76,7 +76,7 @@ export function useUserName() {
     try {
       localStorage.removeItem(STORAGE_KEY)
       inMemoryFallback = null
-    } catch (_error: unknown) {
+    } catch {
       inMemoryFallback = ''
     }
     emitChange()

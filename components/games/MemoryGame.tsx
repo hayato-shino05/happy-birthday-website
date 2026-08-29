@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useMemoryGame } from '@/lib/hooks/useMemoryGame'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
@@ -10,7 +9,7 @@ interface MemoryGameProps {
   onClose: () => void
 }
 
-export function MemoryGame({ onClose }: MemoryGameProps) {
+export function MemoryGame({}: MemoryGameProps) {
   const { cards, score, moves, isComplete, isPlaying, timeElapsed, flipCard, startGame } =
     useMemoryGame()
   const { t } = useLanguage()
