@@ -153,36 +153,39 @@ export function populateKeepsakePrintDocument(document: Document, capsule: Capsu
 export async function waitForKeepsakePhoto(document: Document, timeoutMs = 1500): Promise<void> {
   const photo = document.querySelector('img')
   if (!photo) return
+  if (typeof photo.decode !== 'function') throw new Error('photo decode is unavailable')
 
-  const decode = async () => {
-    if (typeof photo.decode !== 'function') return
-    try {
-      await photo.decode()
-    } catch {
-      return
-    }
+  if (!photo.complete) {
+    await new Promise<void>((resolve, reject) => {
+      let settled = false
+      const onLoad = () => finish()
+      const onError = () => finish(new Error('photo load failed'))
+      const finish = (error?: Error) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
+        photo.removeEventListener('load', onLoad)
+        photo.removeEventListener('error', onError)
+        if (error) reject(error)
+        else resolve()
+      }
+      const timeout = setTimeout(() => finish(new Error('photo load timed out')), timeoutMs)
+      photo.addEventListener('load', onLoad, { once: true })
+      photo.addEventListener('error', onError, { once: true })
+    })
   }
 
-  if (photo.complete) {
-    await Promise.race([decode(), new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))])
-    return
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  try {
+    await Promise.race([
+      photo.decode(),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('photo decode timed out')), timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId)
   }
-
-  await new Promise<void>((resolve) => {
-    let settled = false
-    const finish = () => {
-      if (settled) return
-      settled = true
-      clearTimeout(timeout)
-      photo.removeEventListener('load', finish)
-      photo.removeEventListener('error', finish)
-      resolve()
-    }
-    const timeout = setTimeout(finish, timeoutMs)
-    photo.addEventListener('load', finish, { once: true })
-    photo.addEventListener('error', finish, { once: true })
-  })
-  await Promise.race([decode(), new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))])
 }
 
 export function TimeCapsule() {
@@ -465,8 +468,9 @@ export function TimeCapsule() {
 
   const handleExport = async (capsule: CapsuleItem) => {
     setExportError(null)
+    let printWindow: Window | null = null
     try {
-      const printWindow = window.open('', '_blank')
+      printWindow = window.open('', '_blank')
       if (!printWindow) throw new Error('print window blocked')
       printWindow.opener = null
       const eventDate = parseLocalDate(capsule.unlockDate).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')
@@ -475,6 +479,7 @@ export function TimeCapsule() {
       printWindow.focus()
       printWindow.print()
     } catch {
+      if (printWindow && !printWindow.closed) printWindow.close()
       setExportError(t('timeCapsuleExportError'))
     }
   }
