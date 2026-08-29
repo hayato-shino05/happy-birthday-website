@@ -55,7 +55,18 @@ export function DailyOmikuji({}: { onClose?: () => void }) {
     const saved = window.localStorage.getItem(OMIKUJI_HISTORY_STORAGE_KEY)
     const parsed = parseOmikujiHistory(saved, fortuneIds)
     if (saved && parsed.length === 0) window.localStorage.removeItem(OMIKUJI_HISTORY_STORAGE_KEY)
-    return parsed
+    if (parsed.some((entry) => entry.date === todayDateKey)) return parsed
+
+    try {
+      const legacy = JSON.parse(window.localStorage.getItem(todayKey) || 'null') as { id?: number; rank?: string } | null
+      const legacyFortune = OMIKUJI_DATA.find((fortune) => fortune.id === legacy?.id) || OMIKUJI_DATA.find((fortune) => fortune.rank === legacy?.rank)
+      if (!legacyFortune) return parsed
+      const migrated = appendOmikujiHistory(parsed, { date: todayDateKey, fortuneId: legacyFortune.id })
+      window.localStorage.setItem(OMIKUJI_HISTORY_STORAGE_KEY, JSON.stringify(migrated))
+      return migrated
+    } catch {
+      return parsed
+    }
   })
   const [result, setResult] = useState<OmikujiFortune | null>(() => {
     const savedFortune = history.find((entry) => entry.date === todayDateKey)
