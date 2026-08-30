@@ -23,7 +23,7 @@
 omoide/
 ├── app/                     # Next.js App Router エントリ & API ルート
 ├── components/              # 再利用可能な React コンポーネント
-├── data/                    # i18n および祭りデータパック
+├── data/                    # i18n および祝祭日テーマ（13 種）のデータ
 ├── lib/                     # コアロジック（hooks, stores, i18n など）
 ├── config/                  # テーマ・音楽などの設定
 ├── types/                   # TypeScript 型定義
@@ -403,13 +403,13 @@ React コンテキストや外部ライブラリのプロバイダをまとめ�
 | `i18n/en.json` | 英語 UI 辞書データ |
 | `i18n/ja.json` | 日本語 UI 辞書データ |
 | `i18n/keys.json` | i18n キー一覧（整合性チェック用） |
-| `festivals/jp/en.json` | 日本の祝祭日パック（英語、クリスマス・ハロウィン・お花見・お盆・月見・七夕・正月・こどもの日・文化祭など） |
-| `festivals/jp/ja.json` | 日本の祝祭日パック（日本語版、上記と同内容） |
+| `festivals/jp/en.json` | 日本の祝祭日データ辞書（英語）。`generated/themes.ts` の 13 テーマのうち和風イベント系 9 件（クリスマス・ハロウィン・お花見・お盆・月見・七夕・正月・こどもの日・文化祭）の表示用テキストを定義 |
+| `festivals/jp/ja.json` | 日本の祝祭日データ辞書（日本語版、上記と同内容） |
 | `schemas/festival-pack.schema.json` | 祝祭日パックの JSON Schema |
 | `schemas/i18n.schema.json` | i18n 辞書の JSON Schema |
 | `generated/festival-packs.ts` | 自動生成された祝祭日パックマニフェスト |
 | `generated/locales.ts` | 自動生成されたロケールマニフェスト |
-| `generated/themes.ts` | 自動生成されたテーママニフェスト |
+| `generated/themes.ts` | 自動生成されたテーママニフェスト（13 の祝祭日テーマ：季節 4 + 和風イベント 9） |
 
 ---
 
