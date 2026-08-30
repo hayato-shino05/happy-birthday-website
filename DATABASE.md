@@ -85,7 +85,7 @@ migration の適用後に `supabase/seed.sql` を実行すると、誕生日、�
 ### タイムカプセル RPC
 
 - `public.create_time_capsule_with_access_code(uuid, text, text, ...)` — `service_role` 専用。`time_capsules` と `time_capsule_access_codes` を 1 つのトランザクションで作成し、`owner_id` + `idempotency_key` の組み合わせで重複作成を防ぎます。
-- `public.consume_time_capsule_access_code(text, text)` — `service_role` 専用。招待コードの照合、ロック判定、`time_capsule_access_attempt_buckets` の更新、`time_capsules.unlock_date` 到達確認を 1 トランザクションで実行し、`capsule_id bigint` を返却します。
+- `public.consume_time_capsule_access_code(text, text)` — `service_role` 専用。招待コードの照合、ロック判定、招待コードの revocation 状態 (`revoked_at is null`) と rate limit lockout (`locked_until <= now()`) を確認し、失敗カウンタをリセットしたうえで `capsule_id bigint` を返却します。
 - `public.claim_notification_logs(text, timestamptz, integer)` — `service_role` 専用。`status` が `pending` / `retryable` の行を `processing` にリース (5 分間) して返却します。`search_path = public` に固定しています。
 
 回帰確認は `__tests__/integration/production-snapshot-regression.test.ts` に固定しています。`birthdays`、`messages`、`media_submissions`、`virtual_gifts`、`chat_messages`、`bulletin_posts` の匿名 read/create-only 境界と `ThemeProvider` の render smoke を、Production の allowlist 統合とは独立に検証します。
