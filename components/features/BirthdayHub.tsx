@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Calendar, RefreshCw } from 'lucide-react'
 import { useBirthdays } from '@/lib/hooks/useBirthdays'
 import { CountdownDisplay } from './CountdownDisplay'
@@ -11,27 +11,55 @@ function calendarDate(birthday: Birthday, year: number) {
   return new Date(year, birthday.month - 1, birthday.day)
 }
 
+export type BirthdayEventStatus = 'today' | 'upcoming' | 'past'
+
+export interface BirthdayEvent {
+  person: Birthday
+  status: BirthdayEventStatus
+  sortDate: Date
+}
+
+// 純粋関数として切り出すことで、midnight 跨ぎのロジックを直接テストできるようにする。
+export function buildBirthdayEvents(birthdays: readonly Birthday[], now: Date): BirthdayEvent[] {
+  return birthdays
+    .map((person) => {
+      const thisYear = calendarDate(person, now.getFullYear())
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const dayDiff = Math.round((thisYear.getTime() - today.getTime()) / 86400000)
+      const status: BirthdayEventStatus = dayDiff === 0 ? 'today' : dayDiff > 0 ? 'upcoming' : 'past'
+      const sortDate = dayDiff < 0 ? calendarDate(person, now.getFullYear() + 1) : thisYear
+      return { person, status, sortDate }
+    })
+    .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime())
+}
+
+// 60秒間隔で now を更新し、加えてタブ復帰時にも再評価することで、
+// マウント中に日付がロールオーバーしても events がステイルにならないようにする。
+const MIDNIGHT_REFRESH_INTERVAL_MS = 60_000
+
 export function BirthdayHub() {
   const { data: birthdays, isLoading, isError, refetch } = useBirthdays()
   const { language, t } = useLanguage()
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const refresh = () => setNow(new Date())
+    const id = window.setInterval(refresh, MIDNIGHT_REFRESH_INTERVAL_MS)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [])
 
   const events = useMemo(() => {
     if (!birthdays) return []
-    // now は useMemo 内でのみ生成するため、毎レンダでの参照変化を避けつつ
-    // birthdays の更新時のみ現在時刻で再計算する
-    const now = new Date()
-    return birthdays
-      .map((person) => {
-        const thisYear = calendarDate(person, now.getFullYear())
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const dayDiff = Math.round((thisYear.getTime() - today.getTime()) / 86400000)
-        const status = dayDiff === 0 ? 'today' : dayDiff > 0 ? 'upcoming' : 'past'
-        const sortDate = dayDiff < 0 ? calendarDate(person, now.getFullYear() + 1) : thisYear
-        return { person, status, sortDate }
-      })
-      .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime())
-  }, [birthdays])
+    return buildBirthdayEvents(birthdays, now)
+  }, [birthdays, now])
 
   const selected = events.find(({ person }) => person.id === selectedId)?.person ?? events[0]?.person
 
