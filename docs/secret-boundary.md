@@ -23,7 +23,7 @@ Next.js の規約に従い、`NEXT_PUBLIC_*` で始まる環境変数は静的�
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `lib/supabase/client.ts`, `lib/healthcheck.ts`, `lib/time-capsule/server.ts` | Supabase anon (公開) キー |
 | `NEXT_PUBLIC_BASE_URL` | `app/sitemap.ts` | sitemap 生成時の canonical base URL |
 
-> 上記 3 変数は anon キーおよび公開 URL であり、Supabase 上の RLS によりアクセス範囲が制御されることを前提とする。RLS ポリシーの詳細は `docs/database.md` を参照。
+> 上記 3 変数は anon キーおよび公開 URL であり、Supabase 上の RLS によりアクセス範囲が制御されることを前提とする。RLS ポリシーの詳細は `DATABASE.md` を参照。
 
 ## 3. Server-side only env 一覧 (秘密値を含む)
 
@@ -39,7 +39,7 @@ Next.js の規約に従い、`NEXT_PUBLIC_*` で始まる環境変数は静的�
 
 ## 4. `.env.example` / `.env.local.example`
 
-`/files/.env.example` はリポジトリに含まれており、以下のテンプレートを公開している (`.gitignore` で `.env` 自体は ignore されている)。
+`/.env.example` はリポジトリに含まれており、以下のテンプレートを公開している (`.gitignore` で `.env` 自体は ignore されている)。
 
 ```text
 # Supabase
@@ -77,10 +77,11 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 | Workflow | 参照箇所 | 参照 secret |
 | --- | --- | --- |
-| `.github/workflows/supabase-healthcheck.yml` (job `readonly-healthcheck`, step `Validate Supabase configuration`) | `env:` ブロック | `secrets.NEXT_PUBLIC_SUPABASE_URL`, `secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| `.github/workflows/supabase-healthcheck.yml` (job `readonly-healthcheck`, step `Validate Supabase configuration`) | `env:` ブロック | `secrets.NEXT_PUBLIC_SUPABASE_URL`, `secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY`, `secrets.SUPABASE_READONLY_DATABASE_URL` |
 | `.github/workflows/supabase-healthcheck.yml` (job `readonly-healthcheck`, step `Run read-only REST healthcheck`) | `env:` ブロック | `secrets.NEXT_PUBLIC_SUPABASE_URL`, `secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| `.github/workflows/supabase-healthcheck.yml` (job `readonly-healthcheck`, step `Attest read-only PostgreSQL access`) | `env:` ブロック | `secrets.SUPABASE_READONLY_DATABASE_URL` |
 
-`.github/workflows/ci.yml` は secrets を参照しない (lint / typecheck / test / build のみ)。Workflow 内で参照している secret は **Supabase URL と anon キーの 2 種** であり、service role key は workflow から **一切参照していない**。healthcheck は読み取り専用 (`GET /rest/v1/`) であり、書き込みは行わない。
+`.github/workflows/ci.yml` は secrets を参照しない (lint / typecheck / test / build のみ)。Workflow 内で参照している secret は **Supabase URL、anon キー、read-only PostgreSQL 接続 URL の 3 種** であり、service role key は workflow から **一切参照していない**。REST healthcheck は読み取り専用 (`GET /rest/v1/`) であり、PostgreSQL attestation も read-only query のみを実行する。
 
 ## 7. 失敗時の通知経路
 
