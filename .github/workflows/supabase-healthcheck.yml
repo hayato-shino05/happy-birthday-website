@@ -56,17 +56,52 @@ jobs:
             --no-psqlrc \
             --set=ON_ERROR_STOP=1 \
             --tuples-only \
-            --command="SELECT current_user = session_user
-              AND r.rolname = current_user
-              AND NOT r.rolsuper
-              AND NOT r.rolbypassrls
-              AND NOT r.rolcreatedb
-              AND NOT r.rolcreaterole
-              AND NOT r.rolreplication
-              AND r.rolinherit
-              AND r.rolcanlogin
-            FROM pg_roles AS r
-            WHERE r.rolname = current_user;" \
+            --command="WITH role_attrs AS ( \
+              SELECT r.rolname = current_user AS role_name_matches, \
+                     current_user = session_user AS identity_matches, \
+                     r.rolcanlogin, NOT r.rolsuper AS no_superuser, \
+                     NOT r.rolcreaterole AS no_createrole, NOT r.rolcreatedb AS no_createdb, \
+                     NOT r.rolreplication AS no_replication, NOT r.rolbypassrls AS no_bypassrls \
+              FROM pg_roles AS r \
+              WHERE r.rolname = current_user \
+            ), schemas AS ( \
+              SELECT n.oid \
+              FROM pg_namespace AS n \
+              WHERE n.nspname IN ('public', 'storage') \
+            ), objects AS ( \
+              SELECT c.oid \
+              FROM pg_class AS c \
+              JOIN pg_namespace AS n ON n.oid = c.relnamespace \
+              WHERE n.nspname IN ('public', 'storage') \
+                AND c.relkind IN ('r', 'p', 'v', 'f', 'm') \
+            ), effective_privileges AS ( \
+              SELECT NOT EXISTS ( \
+                       SELECT 1 FROM objects AS o \
+                       WHERE has_table_privilege(current_user, o.oid, 'INSERT') \
+                          OR has_table_privilege(current_user, o.oid, 'UPDATE') \
+                          OR has_table_privilege(current_user, o.oid, 'DELETE') \
+                          OR has_table_privilege(current_user, o.oid, 'TRUNCATE') \
+                     ) AS no_write_privileges, \
+                     NOT EXISTS ( \
+                       SELECT 1 FROM schemas AS s \
+                       WHERE has_schema_privilege(current_user, s.oid, 'CREATE') \
+                     ) AS no_create_privileges, \
+                     NOT EXISTS ( \
+                       SELECT 1 \
+                       FROM pg_proc AS p \
+                       JOIN pg_namespace AS n ON n.oid = p.pronamespace \
+                       WHERE n.nspname IN ('public', 'storage') \
+                         AND p.prosecdef \
+                         AND has_function_privilege(current_user, p.oid, 'EXECUTE') \
+                     ) AS no_security_definer_execute \
+            ) \
+            SELECT bool_and( \
+              role_name_matches AND identity_matches AND rolcanlogin \
+              AND no_superuser AND no_createrole AND no_createdb AND no_replication \
+              AND no_bypassrls AND no_write_privileges AND no_create_privileges \
+              AND no_security_definer_execute \
+            ) \
+            FROM role_attrs CROSS JOIN effective_privileges;" \
             "$SUPABASE_READONLY_DATABASE_URL")"
           test "$(printf '%s' "$result" | tr -d '[:space:]')" = 't' || {
             echo "PostgreSQL read-only identity attestation failed" >&2
