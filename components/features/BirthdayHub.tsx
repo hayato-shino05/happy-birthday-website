@@ -15,10 +15,12 @@ export function BirthdayHub() {
   const { data: birthdays, isLoading, isError, refetch } = useBirthdays()
   const { language, t } = useLanguage()
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const now = new Date()
 
   const events = useMemo(() => {
     if (!birthdays) return []
+    // now は useMemo 内でのみ生成するため、毎レンダでの参照変化を避けつつ
+    // birthdays の更新時のみ現在時刻で再計算する
+    const now = new Date()
     return birthdays
       .map((person) => {
         const thisYear = calendarDate(person, now.getFullYear())
@@ -29,7 +31,7 @@ export function BirthdayHub() {
         return { person, status, sortDate }
       })
       .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime())
-  }, [birthdays, now])
+  }, [birthdays])
 
   const selected = events.find(({ person }) => person.id === selectedId)?.person ?? events[0]?.person
 
