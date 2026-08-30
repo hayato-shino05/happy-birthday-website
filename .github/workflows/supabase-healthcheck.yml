@@ -64,6 +64,11 @@ jobs:
                      NOT r.rolreplication AS no_replication, NOT r.rolbypassrls AS no_bypassrls \
               FROM pg_roles AS r \
               WHERE r.rolname = current_user \
+            ), assumable_roles AS ( \
+              SELECT r.rolname, r.rolsuper, r.rolcreaterole, r.rolcreatedb, \
+                     r.rolreplication, r.rolbypassrls \
+              FROM pg_roles AS r \
+              WHERE pg_has_role(current_user, r.oid, 'SET') \
             ), schemas AS ( \
               SELECT n.oid \
               FROM pg_namespace AS n \
@@ -74,6 +79,12 @@ jobs:
               JOIN pg_namespace AS n ON n.oid = c.relnamespace \
               WHERE n.nspname IN ('public', 'storage') \
                 AND c.relkind IN ('r', 'p', 'v', 'f', 'm') \
+            ), sequences AS ( \
+              SELECT c.oid \
+              FROM pg_class AS c \
+              JOIN pg_namespace AS n ON n.oid = c.relnamespace \
+              WHERE n.nspname IN ('public', 'storage') \
+                AND c.relkind = 'S' \
             ), effective_privileges AS ( \
               SELECT NOT EXISTS ( \
                        SELECT 1 FROM objects AS o \
@@ -82,6 +93,11 @@ jobs:
                           OR has_table_privilege(current_user, o.oid, 'DELETE') \
                           OR has_table_privilege(current_user, o.oid, 'TRUNCATE') \
                      ) AS no_write_privileges, \
+                     NOT EXISTS ( \
+                       SELECT 1 FROM sequences AS s \
+                       WHERE has_sequence_privilege(current_user, s.oid, 'USAGE') \
+                          OR has_sequence_privilege(current_user, s.oid, 'UPDATE') \
+                     ) AS no_sequence_write_privileges, \
                      NOT EXISTS ( \
                        SELECT 1 FROM schemas AS s \
                        WHERE has_schema_privilege(current_user, s.oid, 'CREATE') \
@@ -93,13 +109,47 @@ jobs:
                        WHERE n.nspname IN ('public', 'storage') \
                          AND p.prosecdef \
                          AND has_function_privilege(current_user, p.oid, 'EXECUTE') \
-                     ) AS no_security_definer_execute \
+                     ) AS no_security_definer_execute, \
+                     NOT EXISTS ( \
+                       SELECT 1 \
+                       FROM assumable_roles AS ar \
+                       WHERE ar.rolsuper \
+                          OR ar.rolcreaterole \
+                          OR ar.rolcreatedb \
+                          OR ar.rolreplication \
+                          OR ar.rolbypassrls \
+                          OR EXISTS ( \
+                               SELECT 1 FROM objects AS o \
+                               WHERE has_table_privilege(ar.rolname, o.oid, 'INSERT') \
+                                  OR has_table_privilege(ar.rolname, o.oid, 'UPDATE') \
+                                  OR has_table_privilege(ar.rolname, o.oid, 'DELETE') \
+                                  OR has_table_privilege(ar.rolname, o.oid, 'TRUNCATE') \
+                             ) \
+                          OR EXISTS ( \
+                               SELECT 1 FROM sequences AS s \
+                               WHERE has_sequence_privilege(ar.rolname, s.oid, 'USAGE') \
+                                  OR has_sequence_privilege(ar.rolname, s.oid, 'UPDATE') \
+                             ) \
+                          OR EXISTS ( \
+                               SELECT 1 FROM schemas AS s \
+                               WHERE has_schema_privilege(ar.rolname, s.oid, 'CREATE') \
+                             ) \
+                          OR EXISTS ( \
+                               SELECT 1 \
+                               FROM pg_proc AS p \
+                               JOIN pg_namespace AS n ON n.oid = p.pronamespace \
+                               WHERE n.nspname IN ('public', 'storage') \
+                                 AND p.prosecdef \
+                                 AND has_function_privilege(ar.rolname, p.oid, 'EXECUTE') \
+                             ) \
+                     ) AS no_assumable_write_privileges \
             ) \
             SELECT bool_and( \
               role_name_matches AND identity_matches AND rolcanlogin \
               AND no_superuser AND no_createrole AND no_createdb AND no_replication \
-              AND no_bypassrls AND no_write_privileges AND no_create_privileges \
-              AND no_security_definer_execute \
+              AND no_bypassrls AND no_write_privileges AND no_sequence_write_privileges \
+              AND no_create_privileges AND no_security_definer_execute \
+              AND no_assumable_write_privileges \
             ) \
             FROM role_attrs CROSS JOIN effective_privileges;" \
             "$SUPABASE_READONLY_DATABASE_URL")"
