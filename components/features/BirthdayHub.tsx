@@ -33,9 +33,10 @@ export function buildBirthdayEvents(birthdays: readonly Birthday[], now: Date): 
     .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime())
 }
 
-// 60秒間隔で now を更新し、加えてタブ復帰時にも再評価することで、
-// マウント中に日付がロールオーバーしても events がステイルにならないようにする。
-const MIDNIGHT_REFRESH_INTERVAL_MS = 60_000
+export function millisecondsUntilNextMidnight(now: Date): number {
+  const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+  return nextMidnight.getTime() - now.getTime()
+}
 
 export function BirthdayHub() {
   const { data: birthdays, isLoading, isError, refetch } = useBirthdays()
@@ -45,13 +46,20 @@ export function BirthdayHub() {
 
   useEffect(() => {
     const refresh = () => setNow(new Date())
-    const id = window.setInterval(refresh, MIDNIGHT_REFRESH_INTERVAL_MS)
+    let midnightTimer: number
+    const scheduleNextMidnight = () => {
+      midnightTimer = window.setTimeout(() => {
+        refresh()
+        scheduleNextMidnight()
+      }, millisecondsUntilNextMidnight(new Date()))
+    }
     const onVisibility = () => {
       if (document.visibilityState === 'visible') refresh()
     }
+    scheduleNextMidnight()
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      window.clearInterval(id)
+      window.clearTimeout(midnightTimer)
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [])

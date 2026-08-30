@@ -1,10 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { buildBirthdayEvents } from '@/components/features/BirthdayHub'
+import { buildBirthdayEvents, millisecondsUntilNextMidnight } from '@/components/features/BirthdayHub'
 import type { Birthday } from '@/types'
 
 const birthdayToday: Birthday = { id: 1, name: '今日さん', month: 6, day: 15 }
 const birthdayFuture: Birthday = { id: 2, name: '明日さん', month: 6, day: 16 }
 const birthdayPast: Birthday = { id: 3, name: '過去さん', month: 6, day: 10 }
+
+describe('millisecondsUntilNextMidnight', () => {
+  it('日付境界までの残り時間を返す', () => {
+    const now = new Date(2026, 5, 15, 23, 59, 59, 500)
+    expect(millisecondsUntilNextMidnight(now)).toBe(500)
+  })
+})
 
 describe('buildBirthdayEvents', () => {
   it('今日の誕生日は today ステータスで先頭に並ぶ', () => {
