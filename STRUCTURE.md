@@ -403,7 +403,7 @@ React コンテキストや外部ライブラリのプロバイダをまとめ�
 | `i18n/en.json` | 英語 UI 辞書データ |
 | `i18n/ja.json` | 日本語 UI 辞書データ |
 | `i18n/keys.json` | i18n キー一覧（整合性チェック用） |
-| `festivals/jp/en.json` | 日本の祝祭日データ辞書（英語）。`generated/themes.ts` の 13 テーマのうち和風イベント系 9 件（クリスマス・ハロウィン・お花見・お盆・月見・七夕・正月・こどもの日・文化祭）の表示用テキストを定義 |
+| `festivals/jp/en.json` | 日本の祝祭日データ辞書（英語）。`generated/themes.ts` の 13 テーマのうち和風イベント系 9 件（クリスマス・ハロウィン・お花見・お盆・月見・七夕・正月・こどもの日・文化の日）の表示用テキストを定義 |
 | `festivals/jp/ja.json` | 日本の祝祭日データ辞書（日本語版、上記と同内容） |
 | `schemas/festival-pack.schema.json` | 祝祭日パックの JSON Schema |
 | `schemas/i18n.schema.json` | i18n 辞書の JSON Schema |
