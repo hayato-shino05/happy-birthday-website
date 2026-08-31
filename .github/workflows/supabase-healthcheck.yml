@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Validate Supabase configuration
+        id: validate_config
+        continue-on-error: true
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -34,6 +36,9 @@ jobs:
           esac
 
       - name: Run read-only REST healthcheck
+        id: rest_healthcheck
+        if: ${{ steps.validate_config.outcome == 'success' }}
+        continue-on-error: true
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -46,6 +51,9 @@ jobs:
             >/dev/null
 
       - name: Attest read-only PostgreSQL access
+        id: readonly_postgres
+        if: ${{ steps.validate_config.outcome == 'success' }}
+        continue-on-error: true
         env:
           SUPABASE_READONLY_DATABASE_URL: ${{ secrets.SUPABASE_READONLY_DATABASE_URL }}
           PGCONNECT_TIMEOUT: '10'
@@ -157,3 +165,22 @@ jobs:
             echo "PostgreSQL read-only identity attestation failed" >&2
             exit 1
           }
+
+      - name: Enforce healthcheck result
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          failed=0
+          if [[ "${{ steps.validate_config.outcome }}" != "success" ]]; then
+            echo "Supabase configuration validation failed" >&2
+            failed=1
+          fi
+          if [[ "${{ steps.rest_healthcheck.outcome }}" != "success" ]]; then
+            echo "REST healthcheck failed" >&2
+            failed=1
+          fi
+          if [[ "${{ steps.readonly_postgres.outcome }}" != "success" ]]; then
+            echo "PostgreSQL read-only identity attestation failed" >&2
+            failed=1
+          fi
+          exit "$failed"
