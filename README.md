@@ -184,6 +184,8 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 必須 | Supabase anonymous key |
 | `NEXT_PUBLIC_BASE_URL` | 任意 | サイトの base URL。未設定時は sitemap で既定値を使います。 |
 
+> 多言語（i18n）切替のユーザー設定は `birthday-locale` という名前の cookie に保存されます（`lib/i18n/cookie.ts` の `LANGUAGE_COOKIE_NAME`）。SSR 時の言語判定と UI 切替はこの cookie を介して行います。
+
 ## 使い方
 
 ### 1. リポジトリを取得する
@@ -263,7 +265,9 @@ omoide/
 ├── lib/                      # hooks, stores, Supabase, i18n, providers
 ├── public/                   # 静的アセット
 ├── types/                    # TypeScript 型定義
-├── __tests__/                # テストコード
+├── __tests__/                # Vitest テストコード
+├── e2e/                      # Playwright E2E テスト
+├── scripts/                  # データ生成や運用補助スクリプト
 ├── DATABASE.md               # Supabase スキーマ
 ├── STRUCTURE.md              # アーキテクチャ概要
 └── package.json              # scripts と dependencies
@@ -281,6 +285,7 @@ omoide/
 | `npm run test` | Vitest を 1 回実行します。 |
 | `npm run test:watch` | Vitest を watch mode で実行します。 |
 | `npm run test:coverage` | coverage 付きでテストを実行します。 |
+| `npm run test:e2e` | Playwright で E2E テストを実行します。 |
 | `npm run generate:data` | `data/generated/` 配下のマニフェストを再生成します。 |
 
 ## 関連ドキュメント

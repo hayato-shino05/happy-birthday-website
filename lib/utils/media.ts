@@ -101,48 +101,6 @@ export async function compressImage(file: File, maxWidth: number = 1920): Promis
   })
 }
 
-
-export async function generateVideoThumbnail(videoFile: File): Promise<Blob | null> {
-  return new Promise((resolve) => {
-    const video = document.createElement('video')
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    const objectUrl = URL.createObjectURL(videoFile)
-
-    video.onloadedmetadata = () => {
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      video.currentTime = 1 // 1秒時点でキャプチャ
-    }
-
-    video.onseeked = () => {
-      if (!ctx) {
-        URL.revokeObjectURL(objectUrl)
-        resolve(null)
-        return
-      }
-
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob(
-        (blob) => {
-          URL.revokeObjectURL(objectUrl)
-          resolve(blob)
-        },
-        'image/jpeg',
-        0.8
-      )
-    }
-
-    video.onerror = () => {
-      URL.revokeObjectURL(objectUrl)
-      resolve(null)
-    }
-
-    video.src = objectUrl
-    video.load()
-  })
-}
-
 export async function getVideoDuration(videoFile: File): Promise<number> {
   return new Promise((resolve) => {
     const video = document.createElement('video')

@@ -23,7 +23,7 @@
 omoide/
 ├── app/                     # Next.js App Router エントリ & API ルート
 ├── components/              # 再利用可能な React コンポーネント
-├── data/                    # i18n および祭りデータパック
+├── data/                    # i18n および祝祭日テーマ（13 種）のデータ
 ├── lib/                     # コアロジック（hooks, stores, i18n など）
 ├── config/                  # テーマ・音楽などの設定
 ├── types/                   # TypeScript 型定義
@@ -304,9 +304,10 @@ Zustand を使ったグローバル状態管理レイヤーです。必要に応
 | `themeStore.ts` | テーマ選択（季節・日本 / 国際イベントから自動判定） |
 | `musicStore.ts` | 音楽プレーヤーの状態（プレイリスト / ボリューム / リピート / シャッフル） |
 | `gameStore.ts` | ゲームスコアやハイスコア管理 |
-| `languageStore.ts` | UI 言語（英語 / 日本語）の管理 |
 | `uiStore.ts` | モーダル / トーストなど UI 状態 |
 | `index.ts` | 各ストアのエクスポート集約 |
+
+> 言語状態は Zustand ストアではなく `/lib/i18n/LanguageContext.tsx` の React Context で管理しています。
 
 ---
 
@@ -318,7 +319,57 @@ React コンテキストや外部ライブラリのプロバイダをまとめ�
 |----------|------|
 | `ThemeProvider.tsx` | テーマコンテキスト（季節・イベントに応じた自動検出） |
 | `QueryProvider.tsx` | TanStack Query クライアントのプロバイダ |
+
+> 言語コンテキストは `/lib/i18n/LanguageContext.tsx` に配置しています。
+
+---
+
+### i18n（`/lib/i18n/`）
+
+クライアント側の言語コンテキストと翻訳データです。
+
+| File | 説明 |
+|------|------|
 | `LanguageContext.tsx` | 言語コンテキスト（英語 / 日本語） |
+| `translations.ts` | 翻訳テーブル（型付き） |
+| `types.ts` | 翻訳キーの型定義 |
+| `resolveLocale.ts` | Cookie / 環境からロケールを解決 |
+| `cookie.ts` | 言語 Cookie の読み書き |
+
+---
+
+### Festivals（`/lib/festivals/`）
+
+祝祭日パックの評価・検証レイヤーです。
+
+| File | 説明 |
+|------|------|
+| `types.ts` | 祝祭日パック・ルール関連の型定義 |
+| `validation.ts` | 祝祭日パック JSON スキーマ検証 |
+| `evaluator.ts` | 祝祭日の発生判定ロジック |
+| `parity.ts` | ロケール間のパリティ（有効性 / 内容）チェック |
+| `legacyAdapter.ts` | 旧フォーマットの祝祭日データを変換するアダプタ |
+
+---
+
+### Reminders（`/lib/reminders/`）
+
+リマインダー配信ロジックです。
+
+| File | 説明 |
+|------|------|
+| `engine.ts` | リマインダー判定エンジン |
+| `durable.ts` | 永続化対応のリマインダースケジューラ |
+
+---
+
+### Time Capsule（`/lib/time-capsule/`）
+
+サーバーサイドのタイムカプセル処理です。
+
+| File | 説明 |
+|------|------|
+| `server.ts` | タイムカプセル API のサーバー側ヘルパー |
 
 ---
 
@@ -327,10 +378,22 @@ React コンテキストや外部ライブラリのプロバイダをまとめ�
 | ディレクトリ | 説明 |
 |-------------|------|
 | `/lib/supabase/` | Supabase クライアントとクエリ関連ユーティリティ |
-| `/lib/i18n/` | 翻訳データと言語コンテキスト（英語 / 日本語） |
-| `/lib/animations/` | Framer Motion 用アニメーション定義 |
-| `/lib/utils/` | 汎用ユーティリティ関数 |
+| `/lib/animations/` | `variants.ts` による Framer Motion 用バリアント定義 |
+| `/lib/utils/` | 汎用ユーティリティ関数（`birthday.ts`, `media.ts`, `theme.ts`, `videoThumbnail.ts`） |
 | `/lib/validations/` | Zod を使ったバリデーションスキーマ |
+
+---
+
+### `/lib` ルート直下のユーティリティ
+
+| File | 説明 |
+|------|------|
+| `healthcheck.ts` | 稼働確認用エンドポイントのヘルパー |
+| `share.ts` | Web Share API フォールバックを含むシェアヘルパー |
+| `time-capsule-client.ts` | クライアントからタイムカプセル API を呼び出すヘルパー |
+| `omikujiHistory.ts` | おみくじ履歴の永続化ヘルパー |
+
+---
 
 ## `/data` – 静的データとマニフェスト
 
@@ -339,8 +402,14 @@ React コンテキストや外部ライブラリのプロバイダをまとめ�
 | `omikujiData.ts` | 12 種類の本格和風おみくじデータ（大吉〜半吉、和歌・俳句、4大運勢、ラッキー色・品・数） |
 | `i18n/en.json` | 英語 UI 辞書データ |
 | `i18n/ja.json` | 日本語 UI 辞書データ |
-| `festivals/` | 9 の祝祭日データパック（`jp/` 配下に `en.json` / `ja.json` を配置） |
-| `generated/` | 自動生成されたデータマニフェスト（`festival-packs.ts`, `locales.ts`, `themes.ts`） |
+| `i18n/keys.json` | i18n キー一覧（整合性チェック用） |
+| `festivals/jp/en.json` | 日本の祝祭日データ辞書（英語）。`generated/themes.ts` の 13 テーマのうち和風イベント系 9 件（クリスマス・ハロウィン・お花見・お盆・月見・七夕・正月・こどもの日・文化の日）の表示用テキストを定義 |
+| `festivals/jp/ja.json` | 日本の祝祭日データ辞書（日本語版、上記と同内容） |
+| `schemas/festival-pack.schema.json` | 祝祭日パックの JSON Schema |
+| `schemas/i18n.schema.json` | i18n 辞書の JSON Schema |
+| `generated/festival-packs.ts` | 自動生成された祝祭日パックマニフェスト |
+| `generated/locales.ts` | 自動生成されたロケールマニフェスト |
+| `generated/themes.ts` | 自動生成されたテーママニフェスト（13 の祝祭日テーマ：季節 4 + 和風イベント 9） |
 
 ---
 
@@ -384,6 +453,110 @@ type Language = 'en' | 'ja'
 | `.prettierrc` | Prettier フォーマット設定 |
 | `eslint.config.mjs` | ESLint ルール定義 |
 | `postcss.config.mjs` | PostCSS / Tailwind 設定 |
+
+---
+
+## `/__tests__` – テストコード
+
+Vitest ベースの単体・統合テストと、E2E（Playwright）以外の検証用テストを格納します。
+
+### API ルート（`/__tests__/api/`）
+
+| File | 対象 |
+|------|------|
+| `birthdays-route.test.ts` | `/api/birthdays` 一覧 / 作成ルート |
+| `route-limit-validation.test.ts` | ルート共通のレートリミット・バリデーション |
+| `time-capsules-route.test.ts` | `/api/time-capsules` ルート |
+| `time-capsules-access-route.test.ts` | `/api/time-capsules/access` ルート |
+| `time-capsules-invite-access-route.test.ts` | 招待経由のアクセスルート |
+
+### コンポーネント（`/__tests__/components/`）
+
+| File | 対象 |
+|------|------|
+| `Button.test.tsx` | `Button` UI コンポーネント |
+| `Input.test.tsx` | `Input` UI コンポーネント |
+| `Confetti.test.tsx` | `Confetti` エフェクト |
+| `DailyOmikuji.test.tsx` | `DailyOmikuji` 機能 |
+| `PhotoCard.keyboard.test.tsx` | `PhotoCard` のキーボード操作 |
+| `ContributorPromptButtons.test.tsx` | 投稿プロンプトボタン群 |
+| `ChatRoom.test.ts` | `ChatRoom` コミュニティ |
+| `TimeCapsule.test.tsx` | `TimeCapsule` コミュニティ |
+| `mobile-touch-targets.test.ts` | モバイルのタッチターゲット検証 |
+
+### 統合テスト（`/__tests__/integration/`）
+
+| File | 対象 |
+|------|------|
+| `anonymous-community-contract.test.ts` | 匿名コミュニティの API 契約 |
+| `anonymous-flow.local.test.ts` | 匿名フローのローカル実行 |
+| `production-snapshot-regression.test.ts` | 本番スナップショットに対する回帰検証 |
+| `theme-provider-smoke.test.tsx` | `ThemeProvider` のスモークテスト |
+
+### ライブラリ（`/__tests__/lib/`）
+
+| File | 対象 |
+|------|------|
+| `community-media.test.ts` | `lib/supabase/communityMedia.ts` |
+| `healthcheck.test.ts` | `lib/healthcheck.ts` |
+| `media-objecturl.test.ts` | `lib/utils/media.ts` の ObjectURL 処理 |
+| `omikujiData.test.ts` | おみくじデータ整合性 |
+| `omikujiHistory.test.ts` | `lib/omikujiHistory.ts` |
+| `share.test.ts` | `lib/share.ts` |
+| `upload-validation.test.ts` | `lib/validations/upload.ts` |
+| `validations.test.ts` | `lib/validations/schemas.ts` |
+| `time-capsule-client.test.ts` | `lib/time-capsule-client.ts` |
+| `time-capsule-server.test.ts` | `lib/time-capsule/server.ts` |
+| `hooks/useMediaQuery.test.ts` | `useMediaQuery` フック |
+| `hooks/useUserName.test.ts` | `useUserName` フック |
+| `i18n/locale.test.ts` | ロケール解決ロジック |
+| `i18n/translation-parity.test.ts` | 翻訳キーのロケール間パリティ |
+| `festivals/evaluator.test.ts` | `lib/festivals/evaluator.ts` |
+| `festivals/legacy-adapter.test.ts` | `lib/festivals/legacyAdapter.ts` |
+| `festivals/parity.test.ts` | `lib/festivals/parity.ts` |
+| `festivals/validation.test.ts` | `lib/festivals/validation.ts` |
+| `festivals/fixtures/*.json` | テスト用フィクスチャ（重複 ID / 不正日付 / 未対応暦） |
+| `reminders/durable.test.ts` | `lib/reminders/durable.ts` |
+| `reminders/engine.test.ts` | `lib/reminders/engine.ts` |
+| `stores/uiStore-focus.test.ts` | `uiStore` のフォーカス管理 |
+
+### スクリプト（`/__tests__/scripts/`）
+
+| File | 対象 |
+|------|------|
+| `collect-festival-snapshot.test.ts` | `scripts/collect-festival-snapshot.mjs` |
+| `compare-festival-catalogs.test.ts` | `scripts/compare-festival-catalogs.mjs` |
+| `generate-data-manifest.test.ts` | `scripts/generate-data-manifest.mjs` |
+
+### Supabase マイグレーション整合性
+
+| File | 対象 |
+|------|------|
+| `supabase-time-capsule-access-migration.test.ts` | タイムカプセルアクセスマイグレーション |
+| `supabase-time-capsule-open-tracking-migration.test.ts` | 開封トラッキングマイグレーション |
+
+---
+
+## `/e2e` – End-to-End テスト
+
+Playwright による E2E スモークテストです。
+
+| File | 説明 |
+|------|------|
+| `smoke.spec.ts` | 起動・主要画面のスモーク確認 |
+
+---
+
+## `/scripts` – 運用・データ生成スクリプト
+
+CLI から実行する Node スクリプト群です。対応するテストは `__tests__/scripts/` 配下にあります。
+
+| File | 説明 |
+|------|------|
+| `apply-production-allowlist.mjs` | 本番環境向け許可リスト適用 |
+| `collect-festival-snapshot.mjs` | 祝祭日カタログのスナップショット収集 |
+| `compare-festival-catalogs.mjs` | 祝祭日カタログの差分比較 |
+| `generate-data-manifest.mjs` | `data/generated/` のマニフェスト再生成 |
 
 ---
 

@@ -6,11 +6,14 @@ import { useNextBirthday } from '@/lib/hooks/useNextBirthday'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useThemeContext } from '@/lib/providers/ThemeProvider'
 import { CountdownTimer } from './CountdownTimer'
+import type { Birthday } from '@/types'
+import { calculateNextBirthday } from '@/lib/utils/birthday'
 import { Calendar, Eye, EyeOff } from 'lucide-react'
 
 // ヴィンテージ・スクラップブック風のカウントダウンカードコンポーネント（タップ/クリックで表示・非表示切り替え対応）
-export function CountdownDisplay() {
-  const { nextBirthday, isLoading } = useNextBirthday()
+export function CountdownDisplay({ selectedBirthday }: { selectedBirthday?: Birthday }) {
+  const { nextBirthday: defaultNextBirthday, isLoading } = useNextBirthday()
+  const nextBirthday = selectedBirthday ? calculateNextBirthday(new Date(), [selectedBirthday]) : defaultNextBirthday
   const { language, t } = useLanguage()
   const { currentTheme } = useThemeContext()
   const [isHidden, setIsHidden] = useState(false)
