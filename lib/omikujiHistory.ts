@@ -1,6 +1,19 @@
 export const OMIKUJI_HISTORY_STORAGE_KEY = 'omikuji_history_v1'
 const HISTORY_LIMIT = 7
 
+
+export const OMIKUJI_HISTORY_CONTRACT = {
+  storage: 'localStorage',
+  storageKey: OMIKUJI_HISTORY_STORAGE_KEY,
+  timezone: 'browser-local',
+  drawsPerDay: 1,
+  allowsRedraw: false,
+  historyLimit: HISTORY_LIMIT,
+  invalidData: 'discard',
+  identity: 'none',
+  sync: 'none',
+} as const
+
 export type OmikujiHistoryEntry = {
   date: string
   fortuneId: number
