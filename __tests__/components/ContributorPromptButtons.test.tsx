@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MessageForm } from '@/components/community/MessageForm'
 import PostForm from '@/components/community/PostForm'
 
 const sendMessage = vi.fn()
+const uploadCommunityMedia = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/i18n/LanguageContext', () => ({
   useLanguage: () => ({
@@ -24,7 +25,7 @@ vi.mock('@/components/ui/Icon', () => ({
 }))
 
 vi.mock('@/lib/supabase/communityMedia', () => ({
-  uploadCommunityMedia: vi.fn(),
+  uploadCommunityMedia,
 }))
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -33,6 +34,7 @@ vi.mock('@/lib/supabase/client', () => ({
 
 beforeEach(() => {
   sendMessage.mockReset()
+  uploadCommunityMedia.mockReset()
   localStorage.clear()
 })
 
@@ -72,5 +74,20 @@ describe('Contributor prompts', () => {
     fireEvent.click(prompt)
     expect(textarea).toHaveValue('既存の投稿')
     expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('uploads post media through the canonical community media helper', async () => {
+    uploadCommunityMedia.mockResolvedValue({ object_path: 'images/post.png' })
+    const onSubmit = vi.fn().mockResolvedValue(true)
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: 'おめでとう！' } })
+    const file = new File(['image'], 'post.png', { type: 'image/png' })
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalledWith({ file, sender: '花子' }))
+    expect(onSubmit).toHaveBeenCalledWith('花子', 'おめでとう！', undefined, 'images/post.png')
   })
 })

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { getSupabase } from '@/lib/supabase/client'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { Icon } from '@/components/ui/Icon'
@@ -69,20 +69,10 @@ export default function PostForm({ onSubmit }: PostFormProps) {
 
   const uploadFile = async (file: File): Promise<string | null> => {
     try {
-      const supabase = getSupabase()
-      const isVideo = file.type.startsWith('video/')
-      const bucket = isVideo ? 'video' : 'media'
-      const ext = file.name.split('.').pop()
-      const fileName = `${isVideo ? 'video' : 'image'}_${Date.now()}.${ext}`
-
       setUploadProgress(10)
-      const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file)
-      if (uploadError) throw uploadError
-
-      setUploadProgress(80)
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName)
+      const data = await uploadCommunityMedia({ file, sender: author })
       setUploadProgress(100)
-      return urlData.publicUrl
+      return data.object_path
     } catch (err) {
       console.error('Upload error:', err)
       return null
