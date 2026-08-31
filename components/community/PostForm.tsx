@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { getSupabase } from '@/lib/supabase/client'
+import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
+import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { Icon } from '@/components/ui/Icon'
@@ -34,28 +35,32 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const normalizeMediaFile = (file: File): File => {
+    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
+    if (baseMimeType === file.type) return file
+    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
+  }
 
-    const isImage = file.type.startsWith('image/')
-    const isVideo = file.type.startsWith('video/')
-    
-    if (!isImage && !isVideo) {
-      setError(t('fileTypeError'))
-      return
+  const handleSelectedFile = (file: File): boolean => {
+    const normalizedFile = normalizeMediaFile(file)
+    const validation = validateCommunityMediaFile(normalizedFile)
+    if (!validation.valid || getMediaKind(normalizedFile.type) === 'audio') {
+      setError(!validation.valid && file.size > 50 * 1024 * 1024
+        ? t('fileTooLargeWithLimit', { size: 50 })
+        : t('fileTypeError'))
+      return false
     }
 
-    const maxSize = isVideo ? 100 * 1024 * 1024 : 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      setError(t('fileTooLargeWithLimit', { size: isVideo ? 100 : 50 }))
-      return
-    }
-
-    setSelectedFile(file)
+    setSelectedFile(normalizedFile)
     setError(null)
     if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(URL.createObjectURL(file))
+    setPreviewUrl(URL.createObjectURL(normalizedFile))
+    return true
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleSelectedFile(file)
   }
 
   const removeFile = () => {
@@ -69,20 +74,10 @@ export default function PostForm({ onSubmit }: PostFormProps) {
 
   const uploadFile = async (file: File): Promise<string | null> => {
     try {
-      const supabase = getSupabase()
-      const isVideo = file.type.startsWith('video/')
-      const bucket = isVideo ? 'video' : 'media'
-      const ext = file.name.split('.').pop()
-      const fileName = `${isVideo ? 'video' : 'image'}_${Date.now()}.${ext}`
-
       setUploadProgress(10)
-      const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file)
-      if (uploadError) throw uploadError
-
-      setUploadProgress(80)
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName)
+      const data = await uploadCommunityMedia({ file: normalizeMediaFile(file), sender: author })
       setUploadProgress(100)
-      return urlData.publicUrl
+      return data.object_path
     } catch (err) {
       console.error('Upload error:', err)
       return null
@@ -200,7 +195,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
           <ContributorPromptButtons hasContent={content.trim().length > 0} onSelect={setContent} />
 
           {/* メディアアップロード */}
-          <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={handleFileSelect} style={{ display: 'none' }} />
           
           {!selectedFile ? (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -270,9 +265,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            setSelectedFile(file)
-            if (previewUrl) URL.revokeObjectURL(previewUrl)
-            setPreviewUrl(URL.createObjectURL(file))
+            handleSelectedFile(file)
             setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}

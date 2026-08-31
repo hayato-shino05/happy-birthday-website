@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MessageForm } from '@/components/community/MessageForm'
 import PostForm from '@/components/community/PostForm'
 
 const sendMessage = vi.fn()
+const uploadCommunityMedia = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/i18n/LanguageContext', () => ({
   useLanguage: () => ({
@@ -24,7 +25,7 @@ vi.mock('@/components/ui/Icon', () => ({
 }))
 
 vi.mock('@/lib/supabase/communityMedia', () => ({
-  uploadCommunityMedia: vi.fn(),
+  uploadCommunityMedia,
 }))
 
 vi.mock('@/lib/supabase/client', () => ({
@@ -33,6 +34,7 @@ vi.mock('@/lib/supabase/client', () => ({
 
 beforeEach(() => {
   sendMessage.mockReset()
+  uploadCommunityMedia.mockReset()
   localStorage.clear()
 })
 
@@ -72,5 +74,57 @@ describe('Contributor prompts', () => {
     fireEvent.click(prompt)
     expect(textarea).toHaveValue('既存の投稿')
     expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('uploads post media through the canonical community media helper', async () => {
+    uploadCommunityMedia.mockResolvedValue({ object_path: 'images/post.png' })
+    const onSubmit = vi.fn().mockResolvedValue(true)
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: 'おめでとう！' } })
+    const file = new File(['image'], 'post.png', { type: 'image/png' })
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalledWith({ file, sender: '花子' }))
+    expect(onSubmit).toHaveBeenCalledWith('花子', 'おめでとう！', undefined, 'images/post.png')
+  })
+
+  it('accepts codec-qualified camera video MIME after normalization', async () => {
+    uploadCommunityMedia.mockResolvedValue({ object_path: 'videos/post.webm' })
+    const onSubmit = vi.fn().mockResolvedValue(true)
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: '動画です' } })
+    const file = new File(['video'], 'post.webm', { type: 'video/webm;codecs=vp9' })
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalled())
+    expect(uploadCommunityMedia.mock.calls[0][0].file.type).toBe('video/webm')
+    expect(onSubmit).toHaveBeenCalledWith('花子', '動画です', undefined, 'videos/post.webm')
+  })
+
+  it('rejects unsupported post media before upload', () => {
+    render(<PostForm onSubmit={vi.fn()} />)
+    const file = new File(['audio'], 'post.mp3', { type: 'audio/mpeg' })
+
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+
+    expect(screen.getByText('fileTypeError')).toBeInTheDocument()
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
+  })
+
+  it('rejects post media larger than the canonical 50MB limit', () => {
+    render(<PostForm onSubmit={vi.fn()} />)
+    const file = new File(['image'], 'post.png', { type: 'image/png' })
+    Object.defineProperty(file, 'size', { value: 50 * 1024 * 1024 + 1 })
+
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+
+    expect(screen.getByText('fileTooLargeWithLimit')).toBeInTheDocument()
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
   })
 })
