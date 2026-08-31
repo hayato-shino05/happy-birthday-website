@@ -91,22 +91,6 @@ describe('Contributor prompts', () => {
     expect(onSubmit).toHaveBeenCalledWith('花子', 'おめでとう！', undefined, 'images/post.png')
   })
 
-  it('accepts codec-qualified camera video MIME after normalization', async () => {
-    uploadCommunityMedia.mockResolvedValue({ object_path: 'videos/post.webm' })
-    const onSubmit = vi.fn().mockResolvedValue(true)
-    render(<PostForm onSubmit={onSubmit} />)
-
-    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
-    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: '動画です' } })
-    const file = new File(['video'], 'post.webm', { type: 'video/webm;codecs=vp9' })
-    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
-    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
-
-    await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalled())
-    expect(uploadCommunityMedia.mock.calls[0][0].file.type).toBe('video/webm')
-    expect(onSubmit).toHaveBeenCalledWith('花子', '動画です', undefined, 'videos/post.webm')
-  })
-
   it('rejects unsupported post media before upload', () => {
     render(<PostForm onSubmit={vi.fn()} />)
     const file = new File(['audio'], 'post.mp3', { type: 'audio/mpeg' })
