@@ -53,17 +53,18 @@ migration の適用後に `supabase/seed.sql` を実行すると、誕生日、�
 
 ## Storage
 
-次の 5 つの公開バケットを使用します。
+次の Storage バケットを使用します。公開範囲とアクセス権はバケットごとに異なります。
 
-| バケット名 | 用途 | 1 ファイル上限 | 許可する MIME type |
-|---|---|---|---|
-| `photo-album` | フォトアルバム・思い出ギャラリー写真/動画 | 50 MiB | 画像全般 (HEIC/HEIF含む), MP4, WebM, QuickTime |
-| `community-media` | 掲示板・チャットの写真・動画・音声メッセージ | 50 MiB | 画像, MP4, WebM, 音声各種 |
-| `music` | カスタム BGM 音楽トラック | 15 MiB | MP3, WAV, OGG, WebM, FLAC, AAC |
-| `avatars` | アバター・スタンプ画像 | 5 MiB | JPEG, PNG, WebP, GIF |
-| `time-capsules` | タイムカプセル添付メディア | 50 MiB | 画像, MP4, WebM, 音声各種 |
+| バケット名 | 用途 | 公開範囲 | 1 ファイル上限 | 許可する MIME type |
+|---|---|---|---|---|
+| `photo-album` | フォトアルバム・思い出ギャラリー写真/動画 | public | 50 MiB | 画像全般 (HEIC/HEIF含む), MP4, WebM, QuickTime |
+| `community-media` | 掲示板・チャットの写真・動画・音声メッセージ | public | 50 MiB | 画像, MP4, WebM, 音声各種 |
+| `music` | カスタム BGM 音楽トラック | public | 15 MiB | MP3, WAV, OGG, WebM, FLAC, AAC |
+| `avatars` | アバター・スタンプ画像 | public | 5 MiB | JPEG, PNG, WebP, GIF |
+| `time-capsules` | タイムカプセル添付メディア | private | 50 MiB | 画像, MP4, WebM, 音声各種 |
+| `time-capsules-private` | タイムカプセルの非公開添付メディア | private | `time-capsules` と同じ | `time-capsules` と同じ |
 
-匿名ユーザーは各バケットのオブジェクトを閲覧・作成できます。更新・削除は許可していません。
+`photo-album`、`community-media`、`music`、`avatars` では、匿名ユーザーによるオブジェクトの閲覧・作成を許可します。`time-capsules` と `time-capsules-private` では、匿名ユーザーおよび認証済みユーザーへの Storage 直接アクセスを許可しません。更新・削除は公開バケットでも許可していません。Time Capsule の作成・取得は、production 側で承認された server-side boundary と RPC を経由します。
 
 アプリケーションは URL ではなく Storage の object path を `media_object_path` または `object_path` に保存します。
 
