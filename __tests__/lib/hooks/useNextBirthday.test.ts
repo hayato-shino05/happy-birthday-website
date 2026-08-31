@@ -47,4 +47,22 @@ describe('useNextBirthday', () => {
     unmount()
     expect(vi.getTimerCount()).toBe(0)
   })
+
+  it('system clock の変更後も次の誕生日を再計算する', async () => {
+    vi.setSystemTime(new Date(2026, 5, 14, 12, 0, 0))
+    const { unmount } = renderHook(() => useNextBirthday())
+    const calculateNextBirthdaySpy = vi.spyOn(birthdayUtils, 'calculateNextBirthday')
+
+    vi.setSystemTime(new Date(2026, 5, 15, 12, 0, 0))
+    await act(async () => {
+      vi.advanceTimersByTime(60_000)
+      await Promise.resolve()
+    })
+
+    const latestDate = calculateNextBirthdaySpy.mock.lastCall?.[0]
+    expect(latestDate?.getDate()).toBe(15)
+
+    unmount()
+    expect(vi.getTimerCount()).toBe(0)
+  })
 })

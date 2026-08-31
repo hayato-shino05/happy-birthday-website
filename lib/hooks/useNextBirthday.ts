@@ -16,6 +16,12 @@ export function useNextBirthday() {
     return () => window.clearTimeout(timeout)
   }, [now])
 
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(new Date()), 60_000)
+
+    return () => window.clearInterval(interval)
+  }, [])
+
   const nextBirthday = useMemo(() => {
     if (!birthdays || birthdays.length === 0) return null
     return calculateNextBirthday(now, birthdays)
