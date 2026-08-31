@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Calendar, RefreshCw } from 'lucide-react'
-import { useBirthdays } from '@/lib/hooks/useBirthdays'
+import { RefreshCw } from 'lucide-react'
 import { CountdownDisplay } from './CountdownDisplay'
 import type { Birthday } from '@/types'
+import { useBirthdays } from '@/lib/hooks/useBirthdays'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 function calendarDate(birthday: Birthday, year: number) {
@@ -39,37 +38,8 @@ export function millisecondsUntilNextMidnight(now: Date): number {
 }
 
 export function BirthdayHub() {
-  const { data: birthdays, isLoading, isError, refetch } = useBirthdays()
-  const { language, t } = useLanguage()
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [now, setNow] = useState(() => new Date())
-
-  useEffect(() => {
-    const refresh = () => setNow(new Date())
-    let midnightTimer: number
-    const scheduleNextMidnight = () => {
-      midnightTimer = window.setTimeout(() => {
-        refresh()
-        scheduleNextMidnight()
-      }, millisecondsUntilNextMidnight(new Date()))
-    }
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') refresh()
-    }
-    scheduleNextMidnight()
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => {
-      window.clearTimeout(midnightTimer)
-      document.removeEventListener('visibilitychange', onVisibility)
-    }
-  }, [])
-
-  const events = useMemo(() => {
-    if (!birthdays) return []
-    return buildBirthdayEvents(birthdays, now)
-  }, [birthdays, now])
-
-  const selected = events.find(({ person }) => person.id === selectedId)?.person ?? events[0]?.person
+  const { isLoading, isError, refetch } = useBirthdays()
+  const { t } = useLanguage()
 
   if (isLoading) {
     return <div className="flex min-h-[40vh] items-center justify-center text-sm" role="status">{t('loading')}</div>
@@ -87,39 +57,5 @@ export function BirthdayHub() {
     )
   }
 
-  if (events.length === 0) {
-    return <div className="flex min-h-[40vh] items-center justify-center px-4 text-center" role="status">{t('noBirthdayData')}</div>
-  }
-
-  return (
-    <section className="mx-auto grid w-full max-w-5xl gap-6 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]" aria-labelledby="birthday-hub-title">
-      <div>
-        <div className="mb-4 flex items-center gap-2">
-          <Calendar className="h-5 w-5" aria-hidden="true" />
-          <h1 id="birthday-hub-title" className="text-xl font-black sm:text-2xl">{t('birthdayCalendar')}</h1>
-        </div>
-        <ul className="grid gap-2" aria-label={t('birthdayCalendar')}>
-          {events.map(({ person, status }) => (
-            <li key={person.id}>
-              <button
-                type="button"
-                onClick={() => setSelectedId(person.id)}
-                aria-pressed={selected?.id === person.id}
-                className="flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-white/60 bg-white/70 px-4 py-3 text-left shadow-sm transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                <span className="min-w-0 truncate font-semibold">{person.name}</span>
-                <span className="shrink-0 text-xs font-bold uppercase opacity-75">
-                  {status === 'today' ? (language === 'ja' ? '今日' : 'Today') : status === 'upcoming' ? (language === 'ja' ? 'これから' : 'Upcoming') : (language === 'ja' ? '過ぎた' : 'Past')}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="min-w-0">
-        <CountdownDisplay selectedBirthday={selected} />
-      </div>
-    </section>
-  )
+  return <CountdownDisplay />
 }
