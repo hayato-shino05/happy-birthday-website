@@ -35,26 +35,19 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const normalizeMediaFile = (file: File): File => {
-    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
-    if (baseMimeType === file.type) return file
-    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
-  }
-
   const handleSelectedFile = (file: File): boolean => {
-    const normalizedFile = normalizeMediaFile(file)
-    const validation = validateCommunityMediaFile(normalizedFile)
-    if (!validation.valid || getMediaKind(normalizedFile.type) === 'audio') {
+    const validation = validateCommunityMediaFile(file)
+    if (!validation.valid || getMediaKind(file.type) === 'audio') {
       setError(!validation.valid && file.size > 50 * 1024 * 1024
         ? t('fileTooLargeWithLimit', { size: 50 })
         : t('fileTypeError'))
       return false
     }
 
-    setSelectedFile(normalizedFile)
+    setSelectedFile(file)
     setError(null)
     if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(URL.createObjectURL(normalizedFile))
+    setPreviewUrl(URL.createObjectURL(file))
     return true
   }
 
@@ -75,7 +68,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const uploadFile = async (file: File): Promise<string | null> => {
     try {
       setUploadProgress(10)
-      const data = await uploadCommunityMedia({ file: normalizeMediaFile(file), sender: author })
+      const data = await uploadCommunityMedia({ file, sender: author })
       setUploadProgress(100)
       return data.object_path
     } catch (err) {
