@@ -7,13 +7,48 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import BulletinPost from './BulletinPost'
 import PostDetail from './PostDetail'
 
+const VIDEO_URL_PATTERN = /\.(?:mp4|webm|ogg|mov|avi|mkv)(?:$|[?#])/i
+const IMAGE_LOAD_TIMEOUT_MS = 5000
+
+function isVideoUrl(url: string): boolean {
+  return VIDEO_URL_PATTERN.test(url)
+}
+
+function waitForImage(image: HTMLImageElement): Promise<boolean> {
+  if (image.complete && image.naturalWidth > 0) return Promise.resolve(true)
+
+  return new Promise((resolve) => {
+    let settled = false
+    const settle = (loaded: boolean) => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeoutId)
+      image.removeEventListener('load', onLoad)
+      image.removeEventListener('error', onError)
+      resolve(loaded)
+    }
+    const onLoad = () => {
+      if (typeof image.decode === 'function') {
+        void image.decode().then(() => settle(true)).catch(() => settle(false))
+        return
+      }
+      settle(true)
+    }
+    const onError = () => settle(false)
+    const timeoutId = window.setTimeout(() => settle(false), IMAGE_LOAD_TIMEOUT_MS)
+
+    image.addEventListener('load', onLoad, { once: true })
+    image.addEventListener('error', onError, { once: true })
+  })
+}
+
 export default function BulletinBoard() {
   const { locale, t } = useLanguage()
   const { posts, loading, error, refetch, likePost } = usePosts()
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [exportError, setExportError] = useState(false)
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (posts.length === 0) {
       setExportError(true)
       return
@@ -71,17 +106,28 @@ export default function BulletinBoard() {
         article.append(message)
 
         if (post.media_url) {
-          const media = document.createElement('img')
-          media.className = 'keepsake-media'
-          media.src = post.media_url
-          media.alt = t('mediaAlt')
-          article.append(media)
+          if (isVideoUrl(post.media_url)) {
+            const media = document.createElement('p')
+            media.className = 'keepsake-media keepsake-video'
+            media.textContent = t('videoMediaLabel')
+            article.append(media)
+          } else {
+            const media = document.createElement('img')
+            media.className = 'keepsake-media'
+            media.src = post.media_url
+            media.alt = t('mediaAlt')
+            article.append(media)
+          }
         }
 
         grid.append(article)
       })
       root.append(grid)
       document.body.replaceChildren(root)
+      const imagesLoaded = await Promise.all(
+        Array.from(document.querySelectorAll('img')).map(waitForImage)
+      )
+      if (!imagesLoaded.every(Boolean)) throw new Error('Keepsake media failed to load')
       printWindow.focus()
       printWindow.print()
     } catch {

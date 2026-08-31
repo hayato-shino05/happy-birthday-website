@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import BulletinBoard from '@/components/community/BulletinBoard'
 import { usePosts } from '@/lib/hooks/usePosts'
@@ -16,6 +16,7 @@ vi.mock('@/lib/i18n/LanguageContext', () => ({
       bulletinKeepsakeExportError: 'We could not open the keepsake view. Allow pop-ups and try again.',
       bulletinKeepsakeTitle: 'Bulletin board keepsake',
       mediaAlt: 'Shared media',
+      videoMediaLabel: 'Video attachment',
       noBulletinMessages: 'No messages yet.',
       loading: 'Loading',
       retry: 'Retry',
@@ -53,7 +54,7 @@ describe('BulletinBoard', () => {
     vi.restoreAllMocks()
   })
 
-  it('prints only the displayed post fields', () => {
+  it('prints only the displayed post fields after images load', async () => {
     mockedUsePosts.mockReturnValue({
       posts: [post],
       loading: false,
@@ -74,11 +75,40 @@ describe('BulletinBoard', () => {
 
     render(<BulletinBoard />)
     fireEvent.click(screen.getByRole('button', { name: 'Print bulletin keepsake' }))
+    printDocument.querySelector('img')?.dispatchEvent(new Event('load'))
 
+    await waitFor(() => expect(print).toHaveBeenCalledOnce())
     expect(printDocument.body.textContent).toContain('Happy birthday')
     expect(printDocument.body.textContent).toContain('Alice')
     expect(printDocument.querySelector('img')?.src).toBe('https://example.com/photo.jpg')
     expect(print).toHaveBeenCalledOnce()
+  })
+
+  it('represents video attachments without using an image element', async () => {
+    mockedUsePosts.mockReturnValue({
+      posts: [{ ...post, media_url: 'https://example.com/video.mp4' }],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+      createPost: vi.fn(),
+      likePost: vi.fn(),
+    })
+    const print = vi.fn()
+    const printDocument = window.document.implementation.createHTMLDocument()
+    vi.spyOn(window, 'open').mockReturnValue({
+      document: printDocument,
+      focus: vi.fn(),
+      print,
+      opener: window,
+      closed: false,
+    } as unknown as Window)
+
+    render(<BulletinBoard />)
+    fireEvent.click(screen.getByRole('button', { name: 'Print bulletin keepsake' }))
+
+    await waitFor(() => expect(print).toHaveBeenCalledOnce())
+    expect(printDocument.querySelector('img')).toBeNull()
+    expect(printDocument.body.textContent).toContain('Video attachment')
   })
 
   it('shows feedback when the print window is blocked', () => {
