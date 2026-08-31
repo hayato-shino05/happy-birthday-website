@@ -8,9 +8,87 @@ import BulletinPost from './BulletinPost'
 import PostDetail from './PostDetail'
 
 export default function BulletinBoard() {
-  const { t } = useLanguage()
+  const { locale, t } = useLanguage()
   const { posts, loading, error, refetch, likePost } = usePosts()
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [exportError, setExportError] = useState(false)
+
+  const handleExport = () => {
+    if (posts.length === 0) {
+      setExportError(true)
+      return
+    }
+
+    setExportError(false)
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      setExportError(true)
+      return
+    }
+
+    printWindow.opener = null
+    const document = printWindow.document
+    document.title = t('bulletinKeepsakeTitle')
+    document.head.innerHTML = `<meta charset="utf-8"><style>
+      @page { size: A4; margin: 16mm; }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: #854D27; font-family: sans-serif; }
+      h1 { margin: 0 0 20px; font-size: 24px; }
+      .keepsake-grid { display: grid; gap: 16px; }
+      .keepsake-post { break-inside: avoid; border: 2px solid #D4B08C; border-radius: 8px; padding: 16px; }
+      .keepsake-sender { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+      .keepsake-date { margin: 0 0 12px; color: #854D27; font-size: 12px; opacity: .7; }
+      .keepsake-message { margin: 0; white-space: pre-wrap; }
+      .keepsake-media { display: block; width: 100%; max-height: 260px; margin-top: 12px; object-fit: contain; }
+      @media print { .keepsake-post { border-color: #999; } }
+    </style>`
+
+    try {
+      const root = document.createElement('main')
+      const title = document.createElement('h1')
+      title.textContent = t('bulletinKeepsakeTitle')
+      root.append(title)
+
+      const grid = document.createElement('div')
+      grid.className = 'keepsake-grid'
+      posts.forEach((post) => {
+        const article = document.createElement('article')
+        article.className = 'keepsake-post'
+
+        const sender = document.createElement('h2')
+        sender.className = 'keepsake-sender'
+        sender.textContent = post.sender
+        article.append(sender)
+
+        const date = document.createElement('p')
+        date.className = 'keepsake-date'
+        date.textContent = new Date(post.created_at).toLocaleString(locale)
+        article.append(date)
+
+        const message = document.createElement('p')
+        message.className = 'keepsake-message'
+        message.textContent = post.message
+        article.append(message)
+
+        if (post.media_url) {
+          const media = document.createElement('img')
+          media.className = 'keepsake-media'
+          media.src = post.media_url
+          media.alt = t('mediaAlt')
+          article.append(media)
+        }
+
+        grid.append(article)
+      })
+      root.append(grid)
+      document.body.replaceChildren(root)
+      printWindow.focus()
+      printWindow.print()
+    } catch {
+      setExportError(true)
+      if (!printWindow.closed) printWindow.close()
+    }
+  }
 
   if (loading) {
     return (
@@ -66,7 +144,6 @@ export default function BulletinBoard() {
 
   return (
     <div>
-      {/* ヘッダー */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Icon name="ClipboardList" size={24} style={{ color: '#2D8CFF' }} />
@@ -74,13 +151,34 @@ export default function BulletinBoard() {
             {t('bulletinMessagesCount', { count: posts.length })}
           </h3>
         </div>
+        <button
+          type="button"
+          onClick={handleExport}
+          aria-label={t('bulletinKeepsakeExportAction')}
+          style={{
+            padding: '8px 14px',
+            background: '#FFF9F3',
+            color: '#854D27',
+            border: '2px solid #D4B08C',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-body)',
+            fontWeight: 600,
+          }}
+        >
+          {t('bulletinKeepsakeExportAction')}
+        </button>
       </div>
+      {exportError && (
+        <p role="alert" style={{ color: '#dc3545', marginBottom: '16px' }}>
+          {t('bulletinKeepsakeExportError')}
+        </p>
+      )}
 
-      {/* 投稿グリッド */}
       {posts.length === 0 ? (
-        <div 
-          style={{ 
-            textAlign: 'center', 
+        <div
+          style={{
+            textAlign: 'center',
             padding: '60px 20px',
             background: 'rgba(212, 176, 140, 0.1)',
             borderRadius: '8px',
@@ -92,9 +190,9 @@ export default function BulletinBoard() {
           </p>
         </div>
       ) : (
-        <div 
-          style={{ 
-            display: 'grid', 
+        <div
+          style={{
+            display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
             gap: '16px',
             maxHeight: '60vh',
