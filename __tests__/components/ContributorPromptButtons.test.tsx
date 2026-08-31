@@ -90,4 +90,25 @@ describe('Contributor prompts', () => {
     await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalledWith({ file, sender: '花子' }))
     expect(onSubmit).toHaveBeenCalledWith('花子', 'おめでとう！', undefined, 'images/post.png')
   })
+
+  it('rejects unsupported post media before upload', () => {
+    render(<PostForm onSubmit={vi.fn()} />)
+    const file = new File(['audio'], 'post.mp3', { type: 'audio/mpeg' })
+
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+
+    expect(screen.getByText('fileTypeError')).toBeInTheDocument()
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
+  })
+
+  it('rejects post media larger than the canonical 50MB limit', () => {
+    render(<PostForm onSubmit={vi.fn()} />)
+    const file = new File(['image'], 'post.png', { type: 'image/png' })
+    Object.defineProperty(file, 'size', { value: 50 * 1024 * 1024 + 1 })
+
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+
+    expect(screen.getByText('fileTooLargeWithLimit')).toBeInTheDocument()
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
+  })
 })

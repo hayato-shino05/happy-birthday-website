@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
+import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { Icon } from '@/components/ui/Icon'
@@ -38,17 +39,11 @@ export default function PostForm({ onSubmit }: PostFormProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const isImage = file.type.startsWith('image/')
-    const isVideo = file.type.startsWith('video/')
-    
-    if (!isImage && !isVideo) {
-      setError(t('fileTypeError'))
-      return
-    }
-
-    const maxSize = isVideo ? 100 * 1024 * 1024 : 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      setError(t('fileTooLargeWithLimit', { size: isVideo ? 100 : 50 }))
+    const validation = validateCommunityMediaFile(file)
+    if (!validation.valid || getMediaKind(file.type) === 'audio') {
+      setError(!validation.valid && file.size > 50 * 1024 * 1024
+        ? t('fileTooLargeWithLimit', { size: 50 })
+        : t('fileTypeError'))
       return
     }
 
