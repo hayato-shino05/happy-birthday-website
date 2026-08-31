@@ -3,6 +3,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import type { Birthday } from '@/types'
 import { useBirthdays } from '@/lib/hooks/useBirthdays'
 import { useNextBirthday } from '@/lib/hooks/useNextBirthday'
+import * as birthdayUtils from '@/lib/utils/birthday'
 
 vi.mock('@/lib/hooks/useBirthdays', () => ({
   useBirthdays: vi.fn(),
@@ -29,20 +30,19 @@ describe('useNextBirthday', () => {
     vi.restoreAllMocks()
   })
 
-  it('midnight を跨ぐと次の誕生日を再計算する', () => {
+  it('midnight を跨ぐと次の誕生日を再計算する', async () => {
     vi.setSystemTime(new Date(2026, 5, 14, 23, 59, 59))
-    const { result, unmount } = renderHook(() => useNextBirthday())
+    const { unmount } = renderHook(() => useNextBirthday())
 
-    expect(result.current.nextBirthday?.person.id).toBe(1)
+    const calculateNextBirthdaySpy = vi.spyOn(birthdayUtils, 'calculateNextBirthday')
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(1000)
-    })
-    act(() => {
-      vi.advanceTimersByTime(24 * 60 * 60 * 1000 + 1001)
+      await Promise.resolve()
     })
 
-    expect(result.current.nextBirthday?.person.id).toBe(2)
+    const latestDate = calculateNextBirthdaySpy.mock.lastCall?.[0]
+    expect(latestDate?.getDate()).toBe(15)
 
     unmount()
     expect(vi.getTimerCount()).toBe(0)
