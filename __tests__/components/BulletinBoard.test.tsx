@@ -52,6 +52,7 @@ const post = {
 describe('BulletinBoard', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    Reflect.deleteProperty(HTMLImageElement.prototype, 'decode')
   })
 
   it('prints only the displayed post fields after images load', async () => {
@@ -84,6 +85,36 @@ describe('BulletinBoard', () => {
     expect(print).toHaveBeenCalledOnce()
   })
 
+  it('waits for decoding when an image is already complete', async () => {
+    mockedUsePosts.mockReturnValue({
+      posts: [post],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+      createPost: vi.fn(),
+      likePost: vi.fn(),
+    })
+    const print = vi.fn()
+    const decode = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(HTMLImageElement.prototype, 'decode', { configurable: true, value: decode })
+    vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true)
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(1)
+    const printDocument = window.document.implementation.createHTMLDocument()
+    vi.spyOn(window, 'open').mockReturnValue({
+      document: printDocument,
+      focus: vi.fn(),
+      print,
+      opener: window,
+      closed: false,
+    } as unknown as Window)
+
+    render(<BulletinBoard />)
+    fireEvent.click(screen.getByRole('button', { name: 'Print bulletin keepsake' }))
+
+    await waitFor(() => expect(print).toHaveBeenCalledOnce())
+    expect(decode).toHaveBeenCalledOnce()
+  })
+
   it('represents video attachments without using an image element', async () => {
     mockedUsePosts.mockReturnValue({
       posts: [{ ...post, media_url: 'https://example.com/video.mp4' }],
@@ -109,6 +140,33 @@ describe('BulletinBoard', () => {
     await waitFor(() => expect(print).toHaveBeenCalledOnce())
     expect(printDocument.querySelector('img')).toBeNull()
     expect(printDocument.body.textContent).toContain('Video attachment')
+  })
+
+  it('prints a generic media label for extensionless media URLs', async () => {
+    mockedUsePosts.mockReturnValue({
+      posts: [{ ...post, media_url: 'https://example.com/media.bin' }],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+      createPost: vi.fn(),
+      likePost: vi.fn(),
+    })
+    const print = vi.fn()
+    const printDocument = window.document.implementation.createHTMLDocument()
+    vi.spyOn(window, 'open').mockReturnValue({
+      document: printDocument,
+      focus: vi.fn(),
+      print,
+      opener: window,
+      closed: false,
+    } as unknown as Window)
+
+    render(<BulletinBoard />)
+    fireEvent.click(screen.getByRole('button', { name: 'Print bulletin keepsake' }))
+
+    await waitFor(() => expect(print).toHaveBeenCalledOnce())
+    expect(printDocument.querySelector('img')).toBeNull()
+    expect(printDocument.body.textContent).toContain('Shared media')
   })
 
   it('shows feedback when the print window is blocked', () => {

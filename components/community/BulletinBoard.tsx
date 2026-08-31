@@ -8,14 +8,22 @@ import BulletinPost from './BulletinPost'
 import PostDetail from './PostDetail'
 
 const VIDEO_URL_PATTERN = /\.(?:mp4|webm|ogg|mov|avi|mkv)(?:$|[?#])/i
+const IMAGE_URL_PATTERN = /\.(?:jpg|jpeg|png|gif|webp|svg|bmp)(?:$|[?#])/i
 const IMAGE_LOAD_TIMEOUT_MS = 5000
 
 function isVideoUrl(url: string): boolean {
   return VIDEO_URL_PATTERN.test(url)
 }
 
+function isImageUrl(url: string): boolean {
+  return IMAGE_URL_PATTERN.test(url)
+}
+
 function waitForImage(image: HTMLImageElement): Promise<boolean> {
-  if (image.complete && image.naturalWidth > 0) return Promise.resolve(true)
+  if (image.complete && image.naturalWidth > 0) {
+    if (typeof image.decode !== 'function') return Promise.resolve(true)
+    return image.decode().then(() => true).catch(() => false)
+  }
 
   return new Promise((resolve) => {
     let settled = false
@@ -111,11 +119,16 @@ export default function BulletinBoard() {
             media.className = 'keepsake-media keepsake-video'
             media.textContent = t('videoMediaLabel')
             article.append(media)
-          } else {
+          } else if (isImageUrl(post.media_url)) {
             const media = document.createElement('img')
             media.className = 'keepsake-media'
             media.src = post.media_url
             media.alt = t('mediaAlt')
+            article.append(media)
+          } else {
+            const media = document.createElement('p')
+            media.className = 'keepsake-media'
+            media.textContent = t('mediaAlt')
             article.append(media)
           }
         }
