@@ -31,30 +31,34 @@ export async function createCommunitySubmission(input: CommunitySubmissionInput)
     if (error) throw error
   }
 
-  const { data, error } = await serviceClient.rpc('create_community_submission', {
-    p_kind: input.kind,
-    p_sender: input.sender,
-    p_content: input.content,
-    p_birthday_person: input.birthdayPerson,
-    p_description: input.description,
-    p_object_path: objectPath,
-    p_media_kind: mediaKind,
-    p_mime_type: file?.type ?? null,
-    p_original_name: file?.name ?? null,
-    p_size_bytes: file?.size ?? null,
-  })
-
-  if (error) {
-    if (objectPath) {
-      try {
-        const { error: cleanupError } = await serviceClient.storage.from(COMMUNITY_MEDIA_BUCKET).remove([objectPath])
-        if (cleanupError) console.error('Community media cleanup failed')
-      } catch {
-        console.error('Community media cleanup failed')
-      }
+  const cleanupUploadedMedia = async () => {
+    if (!objectPath) return
+    try {
+      const { error: cleanupError } = await serviceClient.storage.from(COMMUNITY_MEDIA_BUCKET).remove([objectPath])
+      if (cleanupError) console.error('Community media cleanup failed')
+    } catch {
+      console.error('Community media cleanup failed')
     }
-    throw error
   }
 
-  return data
+  try {
+    const { data, error } = await serviceClient.rpc('create_community_submission', {
+      p_kind: input.kind,
+      p_sender: input.sender,
+      p_content: input.content,
+      p_birthday_person: input.birthdayPerson,
+      p_description: input.description,
+      p_object_path: objectPath,
+      p_media_kind: mediaKind,
+      p_mime_type: file?.type ?? null,
+      p_original_name: file?.name ?? null,
+      p_size_bytes: file?.size ?? null,
+    })
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    await cleanupUploadedMedia()
+    throw error
+  }
 }
