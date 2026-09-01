@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 
 const upload = vi.fn().mockResolvedValue({ error: null })
+const remove = vi.fn().mockResolvedValue({ error: null })
 const insert = vi.fn().mockReturnValue({
   select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 1 }, error: null }) }),
 })
 
 vi.mock('@/lib/supabase/client', () => ({
   getSupabase: () => ({
-    storage: { from: () => ({ upload, getPublicUrl: () => ({ data: { publicUrl: 'https://example.com/media' } }) }) },
+    storage: { from: () => ({ upload, remove, getPublicUrl: () => ({ data: { publicUrl: 'https://example.com/media' } }) }) },
     from: () => ({ insert }),
   }),
 }))
@@ -29,5 +30,16 @@ describe('uploadCommunityMedia', () => {
       media_kind: 'image',
       original_name: 'cake.png',
     }))
+  })
+
+  it('removes the object when metadata insert fails', async () => {
+    const insertError = new Error('insert failed')
+    insert.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null, error: insertError }) }),
+    })
+
+    await expect(uploadCommunityMedia({ file: new File(['image'], 'cake.png', { type: 'image/png' }), sender: '花子' }))
+      .rejects.toBe(insertError)
+    expect(remove).toHaveBeenCalledWith(expect.arrayContaining([expect.stringMatching(/^images\//)]))
   })
 })

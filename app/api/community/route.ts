@@ -1,0 +1,56 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createCommunitySubmission, type CommunitySubmissionInput } from '@/lib/community/server'
+import { validateCommunityMediaFile } from '@/lib/validations/upload'
+
+const COMMUNITY_MEDIA_MIME_TYPES = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'video/mp4', 'video/webm',
+  'audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg',
+])
+
+function normalizeMimeType(value: string): string {
+  return value.split(';', 1)[0].trim().toLowerCase()
+}
+
+function parseText(formData: FormData, key: string, maxLength: number): string | null {
+  const value = formData.get(key)
+  if (typeof value !== 'string') return null
+  const normalized = value.trim()
+  return normalized && normalized.length <= maxLength ? normalized : null
+}
+
+function parseInput(formData: FormData): CommunitySubmissionInput | null {
+  const kind = formData.get('kind')
+  if (kind !== 'message' && kind !== 'post') return null
+  const sender = parseText(formData, 'sender', 100)
+  const content = parseText(formData, 'content', 1000)
+  if (!sender || !content) return null
+
+  const birthdayPerson = parseText(formData, 'birthdayPerson', 100)
+  const description = parseText(formData, 'description', 1000)
+  const fileValue = formData.get('media')
+  if (fileValue !== null && (typeof fileValue !== 'object' || typeof (fileValue as Blob).size !== 'number' || typeof (fileValue as File).name !== 'string')) return null
+
+  let file = fileValue as File | null
+  if (file && file.size === 0 && !file.name) file = null
+  if (file) {
+    const mimeType = normalizeMimeType(file.type)
+    if (!COMMUNITY_MEDIA_MIME_TYPES.has(mimeType)) return null
+    file = new File([file], file.name, { type: mimeType, lastModified: file.lastModified })
+    if (!validateCommunityMediaFile(file).valid) return null
+  }
+
+  return { kind, sender, content, birthdayPerson, description, file }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const input = parseInput(await request.formData())
+    if (!input) return NextResponse.json({ error: '投稿内容が無効です' }, { status: 400 })
+
+    const data = await createCommunitySubmission(input)
+    return NextResponse.json({ data }, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: '投稿を送信できません' }, { status: 500 })
+  }
+}

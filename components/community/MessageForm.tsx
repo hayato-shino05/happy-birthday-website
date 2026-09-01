@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
+import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { Icon } from '@/components/ui/Icon'
 
 interface MessageFormProps {
@@ -38,31 +39,32 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const normalizeMediaFile = (file: File): File => {
+    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
+    if (baseMimeType === file.type) return file
+    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
+  }
+
+  const handleSelectedFile = (file: File): boolean => {
+    const normalizedFile = normalizeMediaFile(file)
+    const validation = validateCommunityMediaFile(normalizedFile)
+    if (!validation.valid || getMediaKind(normalizedFile.type) === 'audio') {
+      setError(!validation.valid && file.size > 50 * 1024 * 1024
+        ? t('fileTooLargeWithLimit', { size: 50 })
+        : t('fileTypeError'))
+      return false
+    }
+
+    setSelectedFile(normalizedFile)
+    setError(null)
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(URL.createObjectURL(normalizedFile))
+    return true
+  }
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-
-    const isImage = file.type.startsWith('image/')
-    const isVideo = file.type.startsWith('video/')
-    
-    if (!isImage && !isVideo) {
-      setError(t('fileTypeError'))
-      return
-    }
-
-    // ファイルサイズを検証（画像は50MB、動画は100MBまで）
-    const maxSize = isVideo ? 100 * 1024 * 1024 : 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      setError(t('fileTooLargeWithLimit', { size: isVideo ? 100 : 50 }))
-      return
-    }
-
-    setSelectedFile(file)
-    setError(null)
-
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
+    if (file) handleSelectedFile(file)
   }
 
   const removeFile = () => {
@@ -81,7 +83,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
 
     try {
       const media = await uploadCommunityMedia({
-        file,
+        file: normalizeMediaFile(file),
         sender: sender.trim(),
         birthdayPerson,
       })
@@ -427,11 +429,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            setSelectedFile(file)
-            if (previewUrl) URL.revokeObjectURL(previewUrl)
-            const url = URL.createObjectURL(file)
-            setPreviewUrl(url)
-            setShowCamera(false)
+            if (handleSelectedFile(file)) setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
         />

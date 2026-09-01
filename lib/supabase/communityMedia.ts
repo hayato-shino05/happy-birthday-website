@@ -26,7 +26,22 @@ export async function uploadCommunityMedia({
     throw new Error('送信者名が無効です')
   }
 
-  const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
+  const normalizedBirthdayPerson = birthdayPerson?.trim() || null
+  if (normalizedBirthdayPerson && normalizedBirthdayPerson.length > 100) {
+    throw new Error('誕生日の人の名前が無効です')
+  }
+
+  const normalizedDescription = description?.trim() || null
+  if (normalizedDescription && normalizedDescription.length > 1000) {
+    throw new Error('説明が長すぎます')
+  }
+
+  const normalizedOriginalName = file.name.trim()
+  if (!normalizedOriginalName || normalizedOriginalName.length > 255) {
+    throw new Error('ファイル名が無効です')
+  }
+
+  const extension = normalizedOriginalName.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
   const objectPath = `${mediaKind}s/${crypto.randomUUID()}.${extension}`
   const supabase = getSupabase()
   const { error: uploadError } = await supabase.storage
@@ -42,15 +57,23 @@ export async function uploadCommunityMedia({
       object_path: objectPath,
       media_kind: mediaKind,
       mime_type: file.type,
-      original_name: file.name,
+      original_name: normalizedOriginalName,
       size_bytes: file.size,
-      birthday_person: birthdayPerson?.trim() || null,
-      description: description?.trim() || null,
+      birthday_person: normalizedBirthdayPerson,
+      description: normalizedDescription,
     })
     .select()
     .single()
 
-  if (insertError) throw insertError
+  if (insertError) {
+    try {
+      const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
+      if (cleanupError) console.error('Failed to clean up uploaded community media:', cleanupError)
+    } catch (cleanupError) {
+      console.error('Failed to clean up uploaded community media:', cleanupError)
+    }
+    throw insertError
+  }
 
   const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)
   return { ...data, media_url: urlData.publicUrl }
