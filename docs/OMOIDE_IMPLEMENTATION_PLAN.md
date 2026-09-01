@@ -40,7 +40,7 @@
 - `generateVideoThumbnail` と `uploadThumbnail` の実利用を維持しました。
 - caller を確認できない `generateThumbnailFromUrl` のみ削除しました。
 - `countdownHeading` と共有型の `thumbnail_url` は利用中のため維持しました。
-- この項目は リポジトリ 範囲 complete です。本番 readiness や広範囲の cleanup 完了を意味しません。
+- この項目はリポジトリ範囲 complete です。本番対応準備や広範囲の cleanup 完了を意味しません。
 
 ### 3.2 #43: localStorage による Omikuji history/streak
 
@@ -55,15 +55,12 @@
 
 ### 3.3 #40 / F2: native browser print による Keepsake Export
 
-- Issue #40 は クローズ済み です。
-- PR #73 は マージ済み です。
-- Bulletin Board の現在表示中の公開投稿だけを native browser print layout として出力します。
-- 出力対象は sender、created_at、message、許可済み `media_url` に限定します。
-- Time Capsule、未表示データ、非公開データは取得・出力しません。
-- JA/EN、empty state、popup blocked、construction failure の feedback と regression test があります。
-- 元画面の state、animation、本番 data は変更しません。
-
-PR #73 のレビュー記録には、source/comment 上の画像 decode 待機に bounded failure path が不足する旨の timeout wording が残っています。手元で追加の manual 証跡 は確認していないため、Keepsake Export の完了条件にその 証跡 を含めず、実装・test・CI が確認できる範囲だけを完了とします。
+- Issue #40 はクローズ済み、PR #73 はマージ済みです。Issue と PR の記録では Bulletin Board の現在表示中の公開投稿を対象としています。
+- 現在のリポジトリ実装では、`components/community/TimeCapsule.tsx` の `handleExport` が、開封済み Time Capsule の print window に `populateKeepsakePrintDocument` を適用します。
+- print document に出力する値は `title`、`eventDate`、`sender`、`message`、任意の `photoUrl` です。`created_at` や `media_url` はこの実装の出力項目ではありません。
+- `photoUrl` がある場合は画像を追加し、`waitForKeepsakePhoto` で読み込み・decode を待ってから print します。画像がない場合も print できます。
+- JA/EN の title/date 表示、popup blocked、construction failure、画像の読み込み・decode failure に対する feedback と regression test があります。
+- 元画面の state、animation、本番 data は変更しません。Issue #40 / PR #73 の Bulletin Board framing と、現行 source の Time Capsule export 実装は別の evidence として扱います。
 
 ### 3.4 #37 / R0・R1・R2: Reminder 契約
 
@@ -86,7 +83,7 @@ Issue #37 は クローズ済み、PR #50 は マージ済み です。リポジ
 
 ## 4. #44 / F6: Open Tracking
 
-Issue #44 は open のままです。PR #75/#78 の リポジトリ 実装 と privacy 契約は マージ済みですが、本番 readiness は未完了です。PR #75 の古い invite-token GET tracking は、Issue #44 の訂正と契約・PR #78 によって supersede されています。現行契約が追跡するのは POST access route だけで、通常の invite-token GET は対象外です。
+Issue #44 は open のままです。PR #75/#78 のリポジトリ実装と privacy 契約はマージ済みですが、本番対応準備は未完了です。PR #75 の古い invite-token GET tracking は、Issue #44 の訂正と契約・PR #78 によって supersede されています。現行契約が追跡するのは POST access route だけで、通常の invite-token GET は対象外です。
 
 ### 確定した tracking boundary
 
@@ -162,15 +159,16 @@ Issue #2 は open です。PR #81 は `70f68a0` として merge 済みの docs-o
 - R0 は `birthday` / `capsule_unlock`、`recipientRef`、`in_app`、opt-in、IANA/UTC を確定済みです。
 - R1 は notification log schema proposal と privacy/retention 制約を リポジトリ に保持します。
 - R2 は bounded retry、idempotency、opt-out、`failed` state を test で確認します。
-- 本番 scheduler、migration、provider 実送信は別の 本番 readiness 範囲 とします。
+- 本番 scheduler、migration、provider 実送信は別の本番対応準備の範囲とします。
 
 ### Batch 3: Keepsake Export
 
-**ステータス:** F2 リポジトリ 範囲 complete。Issue #40 クローズ済み、PR #73 マージ済み。
+**ステータス:** F2 の Issue #40 はクローズ済み、PR #73 はマージ済みです。現行リポジトリでは、開封済み Time Capsule の export 実装を確認しています。
 
-- native browser print layout を使います。
-- 現在表示中で、ユーザーが閲覧できる公開投稿だけを出力します。
-- source/comment に残る timeout wording については、追加 manual 証跡 がないため未検証として扱います。
+- `handleExport` が `populateKeepsakePrintDocument` を呼び、native browser print layout を構築します。
+- 出力項目は `title`、`eventDate`、`sender`、`message`、任意の `photoUrl` です。`created_at` は使用しません。
+- `waitForKeepsakePhoto` が画像の読み込み・decode を待ち、画像がない場合も export を継続します。
+- Issue #40 / PR #73 に記録された Bulletin Board の公開投稿 export と、現行 source にある Time Capsule export は同一視せず、各 evidence の対象を分けて記録します。
 
 ### Batch 4: Contributor Prompts と Omikuji History
 
