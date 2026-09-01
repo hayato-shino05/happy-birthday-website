@@ -29,6 +29,6 @@ tracking は capsule row の `opened_at` に限定します。独立した event
 
 ## 実装と検証
 
-実装は `recordFirstOpen` と既存の Time Capsule access route（POST）を再利用します。unlocked invite access、unlocked access code、sealed access、owner access、tracking failure、duplicate first open を既存の regression test で確認します。invite-token の通常 GET は `recordFirstOpen` を呼ばないため、tracking 対象外です。
+実装は `recordFirstOpen` と既存の Time Capsule access route（POST）を再利用します。既存の regression test は tracking failure 時の content 配信維持と、`recordFirstOpen` が `opened_at` が null の capsule のみ更新するクエリ形状を確認します。unlocked invite access の成功時に `recordFirstOpen` が呼ばれる点、owner access および sealed access で first open が記録されない点、duplicate first open 時の再アクセス無視は未検証です。invite-token の通常 GET は `recordFirstOpen` を呼ばないため、tracking 対象外です。
 
 Production schema、RLS、API の検証は repository test とは別の production read-only evidence が必要です。
