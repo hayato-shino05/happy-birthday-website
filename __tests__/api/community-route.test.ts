@@ -84,13 +84,16 @@ describe('POST /api/community', () => {
     expect(server.createServiceClient).not.toHaveBeenCalled()
   })
 
-  it('rejects overlong filenames before uploading media', async () => {
+  it('rejects blank or overlong filenames before uploading media', async () => {
     const { upload } = makeClient()
+    const blankName = new File(['image'], '   ', { type: 'image/png' })
     const longName = new File(['image'], `${'a'.repeat(252)}.png`, { type: 'image/png' })
 
-    const response = await POST(request({ kind: 'message', sender: '花子', content: '本文' }, longName))
+    const blankNameResponse = await POST(request({ kind: 'message', sender: '花子', content: '本文' }, blankName))
+    const longNameResponse = await POST(request({ kind: 'message', sender: '花子', content: '本文' }, longName))
 
-    expect(response.status).toBe(400)
+    expect(blankNameResponse.status).toBe(400)
+    expect(longNameResponse.status).toBe(400)
     expect(upload).not.toHaveBeenCalled()
   })
 })
