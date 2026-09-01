@@ -2,7 +2,7 @@
 
 ## 対象
 
-Open tracking は、invite token を使った認可済みの Time Capsule access に限定します。対象は解禁済み capsule の first open です。
+Open tracking は、invite token または access code を使った認可済みの Time Capsule access に限定します。対象は解禁済み capsule の first open です。
 
 - owner access は対象外です。
 - 未解禁 capsule は対象外です。
@@ -11,7 +11,7 @@ Open tracking は、invite token を使った認可済みの Time Capsule access
 
 ## Identity と recipient boundary
 
-invite token は bearer credential です。token の保有者を個人 identity として登録したり、recipient を推定したりしません。tracking の対象境界は、既存の invite token によって認可された capsule 1 件です。
+invite token と access code は bearer credential です。credential の保有者を個人 identity として登録したり、recipient を推定したりしません。tracking の対象境界は、既存の credential によって認可された capsule 1 件です。
 
 別の利用者、別の capsule、recipient の連絡先、IP address、user agent、device fingerprint は tracking record に保存しません。
 
@@ -29,6 +29,6 @@ tracking は capsule row の `opened_at` に限定します。独立した event
 
 ## 実装と検証
 
-実装は `recordFirstOpen` と既存の Time Capsule access route を再利用します。unlocked invite GET、sealed invite GET、owner GET、tracking failure、duplicate first open を regression test で確認します。
+実装は `recordFirstOpen` と既存の Time Capsule access route（POST）を再利用します。unlocked invite access、unlocked access code、sealed access、owner access、tracking failure、duplicate first open を既存の regression test で確認します。invite-token の通常 GET は `recordFirstOpen` を呼ばないため、tracking 対象外です。
 
 Production schema、RLS、API の検証は repository test とは別の production read-only evidence が必要です。
