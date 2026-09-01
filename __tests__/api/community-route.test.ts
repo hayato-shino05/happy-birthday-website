@@ -24,6 +24,13 @@ function request(fields: Record<string, string>, file?: File) {
   return new NextRequest('http://localhost/api/community', { method: 'POST', body })
 }
 
+function requestWithFormData(fields: Record<string, string>, file: File) {
+  const body = new FormData()
+  Object.entries(fields).forEach(([key, value]) => body.set(key, value))
+  body.set('media', file)
+  return { formData: async () => body } as unknown as NextRequest
+}
+
 beforeEach(() => vi.resetAllMocks())
 
 describe('POST /api/community', () => {
@@ -51,5 +58,38 @@ describe('POST /api/community', () => {
 
     expect(response.status).toBe(400)
     expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
+  it('rejects overlong optional fields instead of silently dropping them', async () => {
+    makeClient()
+    const birthdayPersonResponse = await POST(request({
+      kind: 'message',
+      sender: '花子',
+      content: '本文',
+      birthdayPerson: 'あ'.repeat(101),
+    }))
+    const descriptionResponse = await POST(request({
+      kind: 'post',
+      sender: '花子',
+      content: '本文',
+      description: 'あ'.repeat(1001),
+    }))
+
+    expect(birthdayPersonResponse.status).toBe(400)
+    expect(descriptionResponse.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
+  it('rejects invalid filenames before uploading media', async () => {
+    const { upload } = makeClient()
+    const blankName = new File(['image'], '   ', { type: 'image/png' })
+    const longName = new File(['image'], `${'a'.repeat(252)}.png`, { type: 'image/png' })
+
+    const blankNameResponse = await POST(requestWithFormData({ kind: 'message', sender: '花子', content: '本文' }, blankName))
+    const longNameResponse = await POST(requestWithFormData({ kind: 'message', sender: '花子', content: '本文' }, longName))
+
+    expect(blankNameResponse.status).toBe(400)
+    expect(longNameResponse.status).toBe(400)
+    expect(upload).not.toHaveBeenCalled()
   })
 })
