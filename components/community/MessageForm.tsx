@@ -6,7 +6,6 @@ import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
-import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { Icon } from '@/components/ui/Icon'
 
@@ -78,20 +77,30 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     }
   }
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    setUploadProgress(10)
-
-    try {
-      const media = await uploadCommunityMedia({
-        file: normalizeMediaFile(file),
-        sender: sender.trim(),
-        birthdayPerson,
-      })
-      setUploadProgress(100)
-      return media.object_path
-    } catch {
-      return null
+  const submitMessage = async (
+    payload: { sender: string; message: string; birthdayPerson?: string; mediaObjectPath?: string }
+  ): Promise<boolean> => {
+    if (selectedFile) {
+      const formData = new FormData()
+      formData.set('kind', 'message')
+      formData.set('sender', payload.sender)
+      formData.set('content', payload.message)
+      if (payload.birthdayPerson) formData.set('birthdayPerson', payload.birthdayPerson)
+      formData.set('media', selectedFile, selectedFile.name)
+      try {
+        const response = await fetch('/api/community', { method: 'POST', body: formData })
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => null) as { error?: string } | null
+          setError(errorBody?.error ?? t('sendMessageFailed'))
+          return false
+        }
+        return true
+      } catch {
+        setError(t('genericError'))
+        return false
+      }
     }
+    return sendMessage(payload.sender, payload.message, payload.birthdayPerson, payload.mediaObjectPath)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,24 +115,13 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     setUploadProgress(0)
 
     try {
-      let mediaObjectPath: string | null = null
-
-      if (selectedFile) {
-        mediaObjectPath = await uploadFile(selectedFile)
-        if (!mediaObjectPath) {
-          setError(t('uploadFileFailed'))
-          setIsSubmitting(false)
-          return
-        }
-      }
-
-      // メディアURL付きでメッセージを送信
-      const success = await sendMessage(
-        sender.trim(), 
-        message.trim(), 
+      // メディア付き投稿は server-side の transaction 経路 /api/community に統一し、
+      // メディアアップロードと message 挿入の不整合による孤立 object を防ぐ。
+      const success = await submitMessage({
+        sender: sender.trim(),
+        message: message.trim(),
         birthdayPerson,
-        mediaObjectPath || undefined
-      )
+      })
 
       if (success) {
         // 名前を共有ストレージに保存する（他のフォームと共用）
@@ -132,8 +130,6 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         setMessage('')
         removeFile()
         onSuccess?.()
-      } else {
-        setError(t('sendMessageFailed'))
       }
     } catch {
       setError(t('genericError'))
