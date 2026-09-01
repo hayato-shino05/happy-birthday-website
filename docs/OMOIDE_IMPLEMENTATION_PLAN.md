@@ -37,8 +37,8 @@
 
 - Issue #45 は クローズ済み です。
 - PR #71 は マージ済み です。
-- `generateVideoThumbnail` と `uploadThumbnail` の実利用を維持しました。
-- caller を確認できない `generateThumbnailFromUrl` のみ削除しました。
+- `generateVideoThumbnail` と `uploadThumbnail` は caller が確認できないまま維持されています。
+- caller を確認できない export のうち、`generateThumbnailFromUrl` のみ削除されました。
 - `countdownHeading` と共有型の `thumbnail_url` は利用中のため維持しました。
 - この項目はリポジトリ範囲 complete です。本番対応準備や広範囲の cleanup 完了を意味しません。
 
