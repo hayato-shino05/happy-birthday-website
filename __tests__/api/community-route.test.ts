@@ -21,13 +21,6 @@ function request(fields: Record<string, string>, file?: File) {
   const body = new FormData()
   Object.entries(fields).forEach(([key, value]) => body.set(key, value))
   if (file) body.set('media', file)
-  return new NextRequest('http://localhost/api/community', { method: 'POST', body })
-}
-
-function requestWithFormData(fields: Record<string, string>, file: File) {
-  const body = new FormData()
-  Object.entries(fields).forEach(([key, value]) => body.set(key, value))
-  body.set('media', file)
   return { formData: async () => body } as unknown as NextRequest
 }
 
@@ -49,6 +42,17 @@ describe('POST /api/community', () => {
 
     expect(response.status).toBe(500)
     expect(remove).toHaveBeenCalledOnce()
+    await expect(response.json()).resolves.toEqual({ error: '投稿を送信できません' })
+  })
+
+  it('removes uploaded media when the RPC transport rejects', async () => {
+    const { client, remove, upload } = makeClient()
+    client.rpc.mockRejectedValue(new Error('transport failure'))
+    const response = await POST(request({ kind: 'post', sender: '花子', content: '本文' }, new File(['image'], 'cake.png', { type: 'image/png' })))
+    const [[uploadedPath]] = upload.mock.calls
+
+    expect(response.status).toBe(500)
+    expect(remove).toHaveBeenCalledWith([uploadedPath])
     await expect(response.json()).resolves.toEqual({ error: '投稿を送信できません' })
   })
 
@@ -80,16 +84,13 @@ describe('POST /api/community', () => {
     expect(server.createServiceClient).not.toHaveBeenCalled()
   })
 
-  it('rejects invalid filenames before uploading media', async () => {
+  it('rejects overlong filenames before uploading media', async () => {
     const { upload } = makeClient()
-    const blankName = new File(['image'], '   ', { type: 'image/png' })
     const longName = new File(['image'], `${'a'.repeat(252)}.png`, { type: 'image/png' })
 
-    const blankNameResponse = await POST(requestWithFormData({ kind: 'message', sender: '花子', content: '本文' }, blankName))
-    const longNameResponse = await POST(requestWithFormData({ kind: 'message', sender: '花子', content: '本文' }, longName))
+    const response = await POST(request({ kind: 'message', sender: '花子', content: '本文' }, longName))
 
-    expect(blankNameResponse.status).toBe(400)
-    expect(longNameResponse.status).toBe(400)
+    expect(response.status).toBe(400)
     expect(upload).not.toHaveBeenCalled()
   })
 })
