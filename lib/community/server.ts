@@ -41,24 +41,23 @@ export async function createCommunitySubmission(input: CommunitySubmissionInput)
     }
   }
 
-  try {
-    const { data, error } = await serviceClient.rpc('create_community_submission', {
-      p_kind: input.kind,
-      p_sender: input.sender,
-      p_content: input.content,
-      p_birthday_person: input.birthdayPerson,
-      p_description: input.description,
-      p_object_path: objectPath,
-      p_media_kind: mediaKind,
-      p_mime_type: file?.type ?? null,
-      p_original_name: file?.name ?? null,
-      p_size_bytes: file?.size ?? null,
-    })
+  const { data, error } = await serviceClient.rpc('create_community_submission', {
+    p_kind: input.kind,
+    p_sender: input.sender,
+    p_content: input.content,
+    p_birthday_person: input.birthdayPerson,
+    p_description: input.description,
+    p_object_path: objectPath,
+    p_media_kind: mediaKind,
+    p_mime_type: file?.type ?? null,
+    p_original_name: file?.name ?? null,
+    p_size_bytes: file?.size ?? null,
+  })
 
-    if (error) throw error
-    return data
-  } catch (error) {
+  if (error) {
     await cleanupUploadedMedia()
     throw error
   }
+
+  return data
 }

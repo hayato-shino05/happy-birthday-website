@@ -17,7 +17,7 @@
 
 - 1 client fingerprint あたり 10 requests / 10 minutes
 - 1 client fingerprint あたり 50 requests / 24 hours
-- request body 上限は既存の 50 MiB media limit 以下で、platform request limit も同じかそれより厳しくします
+- request body の media 上限は既存の 50 MiB とし、multipart overhead を含む platform request limit は 50 MiB を超える値に設定します
 - quota 超過時は HTTP `429`、安全な error envelope、`Retry-After` を返します
 - `service_role`、request body、media content、raw IP を log に出しません
 - client fingerprint は provider/platform が提供する ephemeral key を優先し、長期的な device fingerprint は作成しません

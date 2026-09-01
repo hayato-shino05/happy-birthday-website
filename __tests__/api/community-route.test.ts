@@ -45,14 +45,13 @@ describe('POST /api/community', () => {
     await expect(response.json()).resolves.toEqual({ error: '投稿を送信できません' })
   })
 
-  it('removes uploaded media when the RPC transport rejects', async () => {
-    const { client, remove, upload } = makeClient()
+  it('does not remove uploaded media when the RPC transport rejects', async () => {
+    const { client, remove } = makeClient()
     client.rpc.mockRejectedValue(new Error('transport failure'))
     const response = await POST(request({ kind: 'post', sender: '花子', content: '本文' }, new File(['image'], 'cake.png', { type: 'image/png' })))
-    const [[uploadedPath]] = upload.mock.calls
 
     expect(response.status).toBe(500)
-    expect(remove).toHaveBeenCalledWith([uploadedPath])
+    expect(remove).not.toHaveBeenCalled()
     await expect(response.json()).resolves.toEqual({ error: '投稿を送信できません' })
   })
 
