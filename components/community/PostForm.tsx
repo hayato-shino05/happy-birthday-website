@@ -35,22 +35,25 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const handleSelectedFile = (file: File): boolean => {
     const validation = validateCommunityMediaFile(file)
     if (!validation.valid || getMediaKind(file.type) === 'audio') {
       setError(!validation.valid && file.size > 50 * 1024 * 1024
         ? t('fileTooLargeWithLimit', { size: 50 })
         : t('fileTypeError'))
-      return
+      return false
     }
 
     setSelectedFile(file)
     setError(null)
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(URL.createObjectURL(file))
+    return true
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleSelectedFile(file)
   }
 
   const removeFile = () => {
@@ -255,10 +258,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            setSelectedFile(file)
-            if (previewUrl) URL.revokeObjectURL(previewUrl)
-            setPreviewUrl(URL.createObjectURL(file))
-            setShowCamera(false)
+            if (handleSelectedFile(file)) setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
         />

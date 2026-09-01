@@ -88,12 +88,28 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       if (payload.birthdayPerson) formData.set('birthdayPerson', payload.birthdayPerson)
       formData.set('media', selectedFile, selectedFile.name)
       try {
-        const response = await fetch('/api/community', { method: 'POST', body: formData })
-        if (!response.ok) {
-          const errorBody = await response.json().catch(() => null) as { error?: string } | null
-          setError(errorBody?.error ?? t('sendMessageFailed'))
+        const response = await new Promise<XMLHttpRequest>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open('POST', '/api/community')
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100))
+          }
+          xhr.onload = () => resolve(xhr)
+          xhr.onerror = () => reject(new Error('community submission request failed'))
+          xhr.onabort = () => reject(new Error('community submission request aborted'))
+          xhr.send(formData)
+        })
+        if (response.status < 200 || response.status >= 300) {
+          let errorMessage: string | undefined
+          try {
+            errorMessage = (JSON.parse(response.responseText) as { error?: string }).error
+          } catch {
+            errorMessage = undefined
+          }
+          setError(errorMessage ?? t('sendMessageFailed'))
           return false
         }
+        setUploadProgress(100)
         return true
       } catch {
         setError(t('genericError'))

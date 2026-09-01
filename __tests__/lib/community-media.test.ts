@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const upload = vi.fn().mockResolvedValue({ error: null })
 const remove = vi.fn().mockResolvedValue({ error: null })
@@ -16,6 +16,12 @@ vi.mock('@/lib/supabase/client', () => ({
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 
 describe('uploadCommunityMedia', () => {
+  beforeEach(() => {
+    upload.mockClear()
+    remove.mockClear()
+    insert.mockClear()
+  })
+
   it('uploads an allowed file and records its object path', async () => {
     const file = new File(['image'], 'cake.png', { type: 'image/png' })
 
@@ -40,6 +46,8 @@ describe('uploadCommunityMedia', () => {
 
     await expect(uploadCommunityMedia({ file: new File(['image'], 'cake.png', { type: 'image/png' }), sender: '花子' }))
       .rejects.toBe(insertError)
-    expect(remove).toHaveBeenCalledWith(expect.arrayContaining([expect.stringMatching(/^images\//)]))
+    const uploadedPath = upload.mock.calls[0]?.[0]
+    expect(uploadedPath).toEqual(expect.stringMatching(/^images\//))
+    expect(remove).toHaveBeenCalledWith([uploadedPath])
   })
 })

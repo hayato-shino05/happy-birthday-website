@@ -22,7 +22,7 @@ declare
   v_message public.messages;
   v_post public.bulletin_posts;
 begin
-  if p_kind not in ('message', 'post') then
+  if p_kind is null or p_kind not in ('message', 'post') then
     raise exception using errcode = '22023', message = 'invalid community submission kind';
   end if;
   if p_sender is null or char_length(btrim(p_sender)) not between 1 and 100 then
@@ -43,7 +43,7 @@ begin
       raise exception using errcode = '22023', message = 'incomplete media metadata';
     end if;
   else
-    if p_media_kind not in ('image', 'video', 'audio')
+    if p_media_kind is null or p_media_kind not in ('image', 'video', 'audio')
       or p_mime_type is null or char_length(p_mime_type) not between 1 and 255
       or p_original_name is null or char_length(btrim(p_original_name)) not between 1 and 255
       or p_size_bytes is null or p_size_bytes <= 0 or p_size_bytes > 52428800
