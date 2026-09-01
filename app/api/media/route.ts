@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase/client'
 
+const MAX_MEDIA_LIMIT = 100
+const MAX_MEDIA_OFFSET = 1_000_000
+
+function parseBoundedInteger(value: string | null, min: number, max: number): number | undefined {
+  if (value === null || !/^\d+$/.test(value)) return undefined
+  const parsed = Number(value)
+  return Number.isSafeInteger(parsed) && parsed >= min && parsed <= max ? parsed : undefined
+}
+
+function escapePostgrestSearch(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabase()
@@ -25,15 +38,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query = query.or(`original_name.ilike.%${search}%,description.ilike.%${search}%`)
+      const escapedSearch = escapePostgrestSearch(search)
+      query = query.or(`original_name.ilike."%${escapedSearch}%",description.ilike."%${escapedSearch}%"`)
     }
 
-    if (limit) {
-      query = query.limit(parseInt(limit))
+    const validLimit = parseBoundedInteger(limit, 1, MAX_MEDIA_LIMIT)
+    const validOffset = parseBoundedInteger(offset, 0, MAX_MEDIA_OFFSET)
+
+    if (validLimit !== undefined) {
+      query = query.limit(validLimit)
     }
 
-    if (offset) {
-      query = query.range(parseInt(offset), parseInt(offset) + parseInt(limit || '20') - 1)
+    if (validOffset !== undefined) {
+      query = query.range(validOffset, validOffset + (validLimit ?? 20) - 1)
     }
 
     const { data, error, count } = await query
