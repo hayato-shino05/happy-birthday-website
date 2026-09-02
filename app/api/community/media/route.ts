@@ -18,6 +18,15 @@ function parseOptionalText(formData: FormData, key: string, maxLength: number): 
   return normalized.length <= maxLength ? normalized : undefined
 }
 
+function isUsableMediaRow(value: unknown): value is { id: number; object_path: string } {
+  return typeof value === 'object'
+    && value !== null
+    && 'id' in value
+    && typeof value.id === 'number'
+    && 'object_path' in value
+    && typeof value.object_path === 'string'
+}
+
 function parseFile(formData: FormData): File | null {
   const value = formData.get('file')
   if (!value || typeof value !== 'object' || typeof (value as Blob).size !== 'number' || typeof (value as File).name !== 'string') return null
@@ -73,11 +82,7 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    const hasUsableMediaRow = data !== null
-      && typeof data === 'object'
-      && typeof data.id === 'number'
-      && typeof data.object_path === 'string'
-    if (insertError || !hasUsableMediaRow) {
+    if (insertError || !isUsableMediaRow(data)) {
       const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
       if (cleanupError) {
         console.error('Community media cleanup failed', cleanupError.message)
