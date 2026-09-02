@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useId } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MessageForm } from '@/components/community/MessageForm'
 import PostForm from '@/components/community/PostForm'
@@ -17,16 +18,20 @@ vi.mock('@/lib/hooks/useMessages', () => ({
 }))
 
 vi.mock('@/components/community/CameraCapture', () => ({
-  CameraCapture: ({ onCapture }: { onCapture: (file: File) => void }) => (
-    <>
-      <button type="button" onClick={() => onCapture(new File(['image'], 'capture.png', { type: 'image/png' }))}>
-        mockValidCapture
-      </button>
-      <button type="button" onClick={() => onCapture(new File(['audio'], 'capture.mp3', { type: 'audio/mpeg' }))}>
-        mockInvalidCapture
-      </button>
-    </>
-  ),
+  CameraCapture: ({ onCapture }: { onCapture: (file: File) => void }) => {
+    const instance = useId()
+    return (
+      <>
+        <span data-testid="camera-instance">{instance}</span>
+        <button type="button" onClick={() => onCapture(new File(['image'], 'capture.png', { type: 'image/png' }))}>
+          mockValidCapture
+        </button>
+        <button type="button" onClick={() => onCapture(new File(['audio'], 'capture.mp3', { type: 'audio/mpeg' }))}>
+          mockInvalidCapture
+        </button>
+      </>
+    )
+  },
 }))
 
 vi.mock('@/components/ui/Icon', () => ({
@@ -125,24 +130,37 @@ describe('Contributor prompts', () => {
     expect(screen.queryByRole('button', { name: 'mockValidCapture' })).not.toBeInTheDocument()
   })
 
-  it('keeps the PostForm camera open when captured media is rejected', () => {
+  it('remounts the PostForm camera when captured media is rejected', () => {
     render(<PostForm onSubmit={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    const previousInstance = screen.getByTestId('camera-instance').textContent
     fireEvent.click(screen.getByRole('button', { name: 'mockInvalidCapture' }))
 
     expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
+    expect(screen.getByTestId('camera-instance').textContent).not.toBe(previousInstance)
     expect(screen.getByText('fileTypeError')).toBeInTheDocument()
   })
 
-  it('keeps the MessageForm camera open when captured media is rejected', () => {
+  it('remounts the MessageForm camera when captured media is rejected', () => {
     render(<MessageForm />)
 
     fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    const previousInstance = screen.getByTestId('camera-instance').textContent
     fireEvent.click(screen.getByRole('button', { name: 'mockInvalidCapture' }))
 
     expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
+    expect(screen.getByTestId('camera-instance').textContent).not.toBe(previousInstance)
     expect(screen.getByText('fileTypeError')).toBeInTheDocument()
+  })
+
+  it('closes the MessageForm camera after media validation succeeds', () => {
+    render(<MessageForm />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    fireEvent.click(screen.getByRole('button', { name: 'mockValidCapture' }))
+
+    expect(screen.queryByRole('button', { name: 'mockValidCapture' })).not.toBeInTheDocument()
   })
 
   it('shows an error when text-only message sending returns false', async () => {
@@ -156,31 +174,34 @@ describe('Contributor prompts', () => {
     await waitFor(() => expect(screen.getByText('sendMessageFailed')).toBeInTheDocument())
   })
 
-  it('shows a generic error when saving the sender name fails', async () => {
+  it('keeps the MessageForm success path when saving the sender name fails', async () => {
     sendMessage.mockResolvedValue(true)
     const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
       throw new Error('storage quota exceeded')
     })
-    render(<MessageForm />)
+    const onSuccess = vi.fn()
+    render(<MessageForm onSuccess={onSuccess} />)
 
     fireEvent.change(screen.getByRole('textbox', { name: 'yourName' }), { target: { value: '花子' } })
     fireEvent.change(screen.getByRole('textbox', { name: 'messagePlaceholder' }), { target: { value: 'おめでとう！' } })
     fireEvent.click(screen.getByRole('button', { name: 'sendWish' }))
 
-    await waitFor(() => expect(screen.getByText('genericError')).toBeInTheDocument())
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled())
+    expect(screen.getByRole('textbox', { name: 'messagePlaceholder' })).toHaveValue('')
+    expect(screen.queryByText('genericError')).not.toBeInTheDocument()
     setItemSpy.mockRestore()
   })
 
-  it('preserves a specific PostForm submission error', async () => {
-    const onSubmit = vi.fn().mockRejectedValue(new Error('投稿内容が無効です'))
+  it('shows a safe localized error when PostForm submission throws', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new Error('database details'))
     render(<PostForm onSubmit={onSubmit} />)
 
     fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
     fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: 'おめでとう！' } })
     fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
 
-    await waitFor(() => expect(screen.getByText('投稿内容が無効です')).toBeInTheDocument())
-    expect(screen.queryByText('genericError')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('genericError')).toBeInTheDocument())
+    expect(screen.queryByText('database details')).not.toBeInTheDocument()
   })
 
   it('rejects unsupported post media before upload', () => {

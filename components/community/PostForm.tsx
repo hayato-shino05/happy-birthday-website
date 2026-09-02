@@ -32,6 +32,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showCamera, setShowCamera] = useState(false)
+  const [cameraInstance, setCameraInstance] = useState(0)
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -103,15 +104,19 @@ export default function PostForm({ onSubmit }: PostFormProps) {
 
       if (success) {
         // 名前を共有ストレージに保存する（他のフォームと共用）
-        localStorage.setItem('birthday_user_name', author.trim())
+        try {
+          localStorage.setItem('birthday_user_name', author.trim())
+        } catch {
+          console.warn('Failed to save author name')
+        }
         // 投稿者名は保持し、本文のみクリアする
         setContent('')
         removeFile()
       } else {
         setError(t('postFailed'))
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('genericError'))
+    } catch {
+      setError(t('genericError'))
     } finally {
       setSubmitting(false)
       setUploadProgress(0)
@@ -257,9 +262,14 @@ export default function PostForm({ onSubmit }: PostFormProps) {
 
       {showCamera && (
         <CameraCapture
+          key={cameraInstance}
           mode={cameraMode}
           onCapture={(file) => {
-            if (handleSelectedFile(file)) setShowCamera(false)
+            if (handleSelectedFile(file)) {
+              setShowCamera(false)
+            } else {
+              setCameraInstance((current) => current + 1)
+            }
           }}
           onClose={() => setShowCamera(false)}
         />

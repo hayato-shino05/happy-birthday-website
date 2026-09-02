@@ -35,6 +35,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showCamera, setShowCamera] = useState(false)
+  const [cameraInstance, setCameraInstance] = useState(0)
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -140,8 +141,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         try {
           localStorage.setItem('birthday_user_name', sender.trim())
         } catch {
-          setError(t('genericError'))
-          return
+          console.warn('Failed to save sender name')
         }
         // 送信者名は保持し、メッセージのみクリアする
         setMessage('')
@@ -440,9 +440,14 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       {/* カメラキャプチャ用モーダル */}
       {showCamera && (
         <CameraCapture
+          key={cameraInstance}
           mode={cameraMode}
           onCapture={(file) => {
-            if (handleSelectedFile(file)) setShowCamera(false)
+            if (handleSelectedFile(file)) {
+              setShowCamera(false)
+            } else {
+              setCameraInstance((current) => current + 1)
+            }
           }}
           onClose={() => setShowCamera(false)}
         />
