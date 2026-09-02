@@ -1,4 +1,5 @@
 export const MAX_COMMUNITY_MEDIA_SIZE = 50 * 1024 * 1024
+export const MAX_MULTIPART_UPLOAD_SIZE = 4 * 1024 * 1024
 
 const COMMUNITY_MEDIA_TYPES = new Set([
   'image/jpeg',

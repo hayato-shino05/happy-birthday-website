@@ -1,7 +1,10 @@
 import { getSupabase } from '@/lib/supabase/client'
-import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
-
-const MAX_MULTIPART_UPLOAD_SIZE = 4 * 1024 * 1024
+import {
+  getMediaKind,
+  MAX_MULTIPART_UPLOAD_SIZE,
+  normalizeMediaFile,
+  validateCommunityMediaFile,
+} from '@/lib/validations/upload'
 
 interface CommunityMediaUploadInput {
   file: File

@@ -6,7 +6,7 @@ import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
-import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
+import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { Icon } from '@/components/ui/Icon'
 
 interface MessageFormProps {
@@ -37,12 +37,6 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   const [showCamera, setShowCamera] = useState(false)
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const normalizeMediaFile = (file: File): File => {
-    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
-    if (baseMimeType === file.type) return file
-    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
-  }
 
   const handleSelectedFile = (file: File): boolean => {
     const normalizedFile = normalizeMediaFile(file)

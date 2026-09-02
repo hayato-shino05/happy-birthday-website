@@ -76,7 +76,7 @@ describe('signed community media routes', () => {
   })
 
   it('cleans up after definite finalize insert failure', async () => {
-    const { remove } = client(null, null)
+    const { remove } = client(null, null, undefined, undefined, { code: 'P0001', message: 'insert failed' })
     const token = createCommunityMediaUploadToken(JSON.stringify(payload), Date.now() + 60_000)
     const response = await finalize(request({ ...payload, uploadToken: token }))
     expect(response.status).toBe(500)

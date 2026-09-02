@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/time-capsule/server'
-import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
+import {
+  getMediaKind,
+  MAX_MULTIPART_UPLOAD_SIZE,
+  normalizeMediaFile,
+  validateCommunityMediaFile,
+} from '@/lib/validations/upload'
 
 function parseText(formData: FormData, key: string, maxLength: number): string | null {
   const value = formData.get(key)
@@ -57,6 +62,9 @@ export async function POST(request: NextRequest) {
   const mediaKind = getMediaKind(file.type)
   if (!validation.valid || !mediaKind) {
     return NextResponse.json({ error: validation.valid ? 'サポートされていないファイル形式です' : validation.error }, { status: 400 })
+  }
+  if (file.size > MAX_MULTIPART_UPLOAD_SIZE) {
+    return NextResponse.json({ error: 'ファイルサイズは4MB以下にしてください' }, { status: 400 })
   }
 
   const objectPath = `${mediaKind}s/${crypto.randomUUID()}.${file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'}`
