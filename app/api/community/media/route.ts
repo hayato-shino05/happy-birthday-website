@@ -18,6 +18,15 @@ function parseOptionalText(formData: FormData, key: string, maxLength: number): 
   return normalized.length <= maxLength ? normalized : undefined
 }
 
+function isUsableMediaRow(value: unknown): value is { id: number; object_path: string } {
+  return typeof value === 'object'
+    && value !== null
+    && 'id' in value
+    && typeof value.id === 'number'
+    && 'object_path' in value
+    && typeof value.object_path === 'string'
+}
+
 function parseFile(formData: FormData): File | null {
   const value = formData.get('file')
   if (!value || typeof value !== 'object' || typeof (value as Blob).size !== 'number' || typeof (value as File).name !== 'string') return null
@@ -73,13 +82,13 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    if (insertError) {
-      try {
-        await supabase.storage.from('community-media').remove([objectPath])
-      } catch (cleanupError) {
-        console.error('Community media cleanup failed', cleanupError instanceof Error ? cleanupError.message : 'unknown error')
+    if (insertError || !isUsableMediaRow(data)) {
+      const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
+      if (cleanupError) {
+        console.error('Community media cleanup failed', cleanupError.message)
       }
-      throw insertError
+      if (insertError) throw insertError
+      throw new Error('invalid media metadata')
     }
 
     const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)
