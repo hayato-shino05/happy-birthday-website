@@ -105,7 +105,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         // 投稿者名は保持し、本文のみクリアする
         setContent('')
         removeFile()
-      } else {
+      } else if (!selectedFile) {
         setError(t('postFailed'))
       }
     } catch {

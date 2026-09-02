@@ -166,7 +166,7 @@ describe('Contributor prompts', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
 
-    await waitFor(() => expect(screen.getByText('postFailed')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('投稿を送信できません')).toBeInTheDocument())
     expect(onSubmit).not.toHaveBeenCalled()
     expect(uploadCommunityMedia).not.toHaveBeenCalled()
   })
