@@ -1,0 +1,65 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { NextRequest } from 'next/server'
+
+const server = vi.hoisted(() => ({ createServiceClient: vi.fn() }))
+vi.mock('@/lib/time-capsule/server', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/time-capsule/server')>('@/lib/time-capsule/server')
+  return { ...actual, createServiceClient: server.createServiceClient }
+})
+
+import { POST as sign } from '@/app/api/community/media/sign/route'
+import { POST as finalize } from '@/app/api/community/media/finalize/route'
+import { createCommunityMediaUploadToken } from '@/lib/time-capsule/server'
+
+const payload = { path: 'images/12345678-1234-1234-1234-123456789012.png', filename: 'cake.png', mimeType: 'image/png', sizeBytes: 5, sender: '花子', birthdayPerson: null, description: null }
+const request = (body: unknown) => ({ json: async () => body } as unknown as NextRequest)
+
+function client(existing: unknown = null, insert: unknown = { id: 1 }, info: unknown = { size: 5, contentType: 'image/png' }) {
+  const remove = vi.fn().mockResolvedValue({ error: null })
+  const table = { select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: existing, error: null }) })) })), insert: vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: insert, error: null }) })) })) }
+  const storage = { info: vi.fn().mockResolvedValue({ data: info, error: null }), remove, getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://example.com/media' } })) }
+  server.createServiceClient.mockReturnValue({ storage: { from: vi.fn(() => storage) }, from: vi.fn(() => table) })
+  return { remove, storage, table }
+}
+
+beforeEach(() => { vi.resetAllMocks(); process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key' })
+
+describe('signed community media routes', () => {
+  it('rejects missing or invalid finalize tokens', async () => {
+    client()
+    const response = await finalize(request({ ...payload, uploadToken: 'invalid' }))
+    expect(response.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
+  it('rejects metadata or path mismatches', async () => {
+    client()
+    const token = createCommunityMediaUploadToken(JSON.stringify(payload), Date.now() + 60_000)
+    const response = await finalize(request({ ...payload, path: payload.path.replace('images', 'videos'), uploadToken: token }))
+    expect(response.status).toBe(400)
+  })
+
+  it('issues signed upload authorization for validated metadata', async () => {
+    const storage = { createSignedUploadUrl: vi.fn().mockResolvedValue({ data: { token: 'storage-token' }, error: null }) }
+    server.createServiceClient.mockReturnValue({ storage: { from: vi.fn(() => storage) } })
+    const response = await sign(request({ filename: 'cake.png', mimeType: 'image/png', sizeBytes: 5, sender: '花子' }))
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({ data: expect.objectContaining({ token: 'storage-token', uploadToken: expect.any(String) }) })
+  })
+
+  it('returns an existing row without deleting on duplicate finalize', async () => {
+    const { remove } = client({ id: 1, object_path: payload.path, media_kind: 'image' })
+    const token = createCommunityMediaUploadToken(JSON.stringify(payload), Date.now() + 60_000)
+    const response = await finalize(request({ ...payload, uploadToken: token }))
+    expect(response.status).toBe(200)
+    expect(remove).not.toHaveBeenCalled()
+  })
+
+  it('cleans up after definite finalize insert failure', async () => {
+    const { remove } = client(null, null)
+    const token = createCommunityMediaUploadToken(JSON.stringify(payload), Date.now() + 60_000)
+    const response = await finalize(request({ ...payload, uploadToken: token }))
+    expect(response.status).toBe(500)
+    expect(remove).toHaveBeenCalledWith([payload.path])
+  })
+})
