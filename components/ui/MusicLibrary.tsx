@@ -22,7 +22,6 @@ interface MusicLibraryProps {
   onSelectTrack: (trackId: string) => void
   onToggle: () => void
   onVolumeChange: (volume: number) => void
-  onUpload?: () => void
 }
 
 export default function MusicLibrary({
@@ -33,7 +32,6 @@ export default function MusicLibrary({
   onSelectTrack,
   onToggle,
   onVolumeChange,
-  onUpload,
 }: MusicLibraryProps) {
   const { t } = useLanguage()
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -55,16 +53,6 @@ export default function MusicLibrary({
           <Icon name="Music" size={24} />
           {t('musicLibrary')}
         </h3>
-
-        {onUpload && (
-          <button
-            onClick={onUpload}
-            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <Icon name="Upload" size={16} />
-            {t('upload')}
-          </button>
-        )}
       </div>
 
       {/* 再生中のトラック表示 */}
