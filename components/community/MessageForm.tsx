@@ -146,6 +146,8 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         setMessage('')
         removeFile()
         onSuccess?.()
+      } else {
+        setError(t('sendMessageFailed'))
       }
     } catch {
       setError(t('genericError'))
@@ -441,7 +443,8 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            if (handleSelectedFile(file)) setShowCamera(false)
+            handleSelectedFile(file)
+            setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
         />

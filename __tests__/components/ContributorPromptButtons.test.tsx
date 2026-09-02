@@ -17,7 +17,11 @@ vi.mock('@/lib/hooks/useMessages', () => ({
 }))
 
 vi.mock('@/components/community/CameraCapture', () => ({
-  CameraCapture: () => null,
+  CameraCapture: ({ onCapture }: { onCapture: (file: File) => void }) => (
+    <button type="button" onClick={() => onCapture(new File(['audio'], 'capture.mp3', { type: 'audio/mpeg' }))}>
+      mockCapture
+    </button>
+  ),
 }))
 
 vi.mock('@/components/ui/Icon', () => ({
@@ -89,6 +93,44 @@ describe('Contributor prompts', () => {
 
     await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalledWith({ file, sender: '花子' }))
     expect(onSubmit).toHaveBeenCalledWith('花子', 'おめでとう！', undefined, 'images/post.png')
+  })
+
+  it('normalizes codec-qualified post media MIME types before upload', async () => {
+    uploadCommunityMedia.mockResolvedValue({ object_path: 'videos/post.webm' })
+    const onSubmit = vi.fn().mockResolvedValue(true)
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: '動画です' } })
+    const file = new File(['video'], 'post.webm', { type: 'video/webm;codecs=vp9' })
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalled())
+    const uploadedFile = uploadCommunityMedia.mock.calls[0][0].file as File
+    expect(uploadedFile.type).toBe('video/webm')
+  })
+
+  it('closes the camera when captured media is rejected', () => {
+    render(<PostForm onSubmit={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    expect(screen.getByRole('button', { name: 'mockCapture' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'mockCapture' }))
+
+    expect(screen.queryByRole('button', { name: 'mockCapture' })).not.toBeInTheDocument()
+    expect(screen.getByText('fileTypeError')).toBeInTheDocument()
+  })
+
+  it('shows an error when text-only message sending returns false', async () => {
+    sendMessage.mockResolvedValue(false)
+    render(<MessageForm />)
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'yourName' }), { target: { value: '花子' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'messagePlaceholder' }), { target: { value: 'おめでとう！' } })
+    fireEvent.click(screen.getByRole('button', { name: 'sendWish' }))
+
+    await waitFor(() => expect(screen.getByText('sendMessageFailed')).toBeInTheDocument())
   })
 
   it('rejects unsupported post media before upload', () => {

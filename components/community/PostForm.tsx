@@ -35,19 +35,26 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const normalizeMediaFile = (file: File): File => {
+    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
+    if (baseMimeType === file.type) return file
+    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
+  }
+
   const handleSelectedFile = (file: File): boolean => {
-    const validation = validateCommunityMediaFile(file)
-    if (!validation.valid || getMediaKind(file.type) === 'audio') {
+    const normalizedFile = normalizeMediaFile(file)
+    const validation = validateCommunityMediaFile(normalizedFile)
+    if (!validation.valid || getMediaKind(normalizedFile.type) === 'audio') {
       setError(!validation.valid && file.size > 50 * 1024 * 1024
         ? t('fileTooLargeWithLimit', { size: 50 })
         : t('fileTypeError'))
       return false
     }
 
-    setSelectedFile(file)
+    setSelectedFile(normalizedFile)
     setError(null)
     if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(URL.createObjectURL(file))
+    setPreviewUrl(URL.createObjectURL(normalizedFile))
     return true
   }
 
@@ -258,7 +265,8 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            if (handleSelectedFile(file)) setShowCamera(false)
+            handleSelectedFile(file)
+            setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
         />
