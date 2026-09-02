@@ -21,12 +21,19 @@ describe('uploadCommunityMedia', () => {
   })
 
   it('normalizes MIME parameters before transport', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ data: { object_path: 'videos/id.mp4', media_url: 'https://example.com/video' } }), { status: 201 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ data: { id: 1, object_path: 'videos/id.mp4', media_url: 'https://example.com/video' } }), { status: 201 }))
 
     await uploadCommunityMedia({ file: new File(['video'], 'clip.mp4', { type: 'video/mp4; codecs=avc1' }), sender: '花子' })
 
     const body = vi.mocked(fetch).mock.calls[0]?.[1]?.body as FormData
     expect((body.get('file') as File).type).toBe('video/mp4')
+  })
+
+  it('rejects responses missing required media fields', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ data: { object_path: 'images/id.png' } }), { status: 201 }))
+
+    await expect(uploadCommunityMedia({ file: new File(['image'], 'cake.png', { type: 'image/png' }), sender: '花子' }))
+      .rejects.toThrow('メディア応答が無効です')
   })
 
   it('maps endpoint errors without exposing transport details', async () => {

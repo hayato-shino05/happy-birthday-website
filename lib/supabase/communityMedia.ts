@@ -75,7 +75,10 @@ export async function uploadCommunityMedia({
   }
 
   const data = payload && typeof payload === 'object' && 'data' in payload ? payload.data : null
-  if (!data || typeof data !== 'object' || !('object_path' in data) || typeof data.object_path !== 'string') {
+  if (!data || typeof data !== 'object'
+    || !('id' in data) || typeof data.id !== 'number'
+    || !('object_path' in data) || typeof data.object_path !== 'string'
+    || !('media_url' in data) || typeof data.media_url !== 'string') {
     throw new Error('メディア応答が無効です')
   }
   return data as CommunityMediaSubmission

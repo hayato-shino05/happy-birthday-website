@@ -73,13 +73,17 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    if (insertError) {
-      try {
-        await supabase.storage.from('community-media').remove([objectPath])
-      } catch (cleanupError) {
-        console.error('Community media cleanup failed', cleanupError instanceof Error ? cleanupError.message : 'unknown error')
+    const hasUsableMediaRow = data !== null
+      && typeof data === 'object'
+      && typeof data.id === 'number'
+      && typeof data.object_path === 'string'
+    if (insertError || !hasUsableMediaRow) {
+      const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
+      if (cleanupError) {
+        console.error('Community media cleanup failed', cleanupError.message)
       }
-      throw insertError
+      if (insertError) throw insertError
+      throw new Error('invalid media metadata')
     }
 
     const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)

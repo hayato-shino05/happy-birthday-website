@@ -55,6 +55,25 @@ describe('POST /api/community/media', () => {
     expect(remove).toHaveBeenCalledWith([upload.mock.calls[0][0]])
   })
 
+  it('logs a cleanup error returned by storage', async () => {
+    const cleanupError = new Error('remove failed')
+    const { remove } = makeClient({ data: null, error: new Error('insert failed') })
+    remove.mockResolvedValueOnce({ error: cleanupError })
+    const logSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    await POST(request({ sender: '花子' }, new File(['image'], 'cake.png', { type: 'image/png' })))
+
+    expect(logSpy).toHaveBeenCalledWith('Community media cleanup failed', 'remove failed')
+  })
+
+  it('cleans up when metadata data is null without an insert error', async () => {
+    const { upload, remove } = makeClient({ data: null, error: null })
+    const response = await POST(request({ sender: '花子' }, new File(['image'], 'cake.png', { type: 'image/png' })))
+
+    expect(response.status).toBe(500)
+    expect(remove).toHaveBeenCalledWith([upload.mock.calls[0][0]])
+  })
+
   it('does not clean up when metadata transport rejects', async () => {
     const { client, remove } = makeClient()
     client.from.mockImplementation(() => ({ insert: vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockRejectedValue(new Error('transport')) })) })) }))
