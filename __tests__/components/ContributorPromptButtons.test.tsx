@@ -18,9 +18,14 @@ vi.mock('@/lib/hooks/useMessages', () => ({
 
 vi.mock('@/components/community/CameraCapture', () => ({
   CameraCapture: ({ onCapture }: { onCapture: (file: File) => void }) => (
-    <button type="button" onClick={() => onCapture(new File(['audio'], 'capture.mp3', { type: 'audio/mpeg' }))}>
-      mockCapture
-    </button>
+    <>
+      <button type="button" onClick={() => onCapture(new File(['image'], 'capture.png', { type: 'image/png' }))}>
+        mockValidCapture
+      </button>
+      <button type="button" onClick={() => onCapture(new File(['audio'], 'capture.mp3', { type: 'audio/mpeg' }))}>
+        mockInvalidCapture
+      </button>
+    </>
   ),
 }))
 
@@ -111,14 +116,32 @@ describe('Contributor prompts', () => {
     expect(uploadedFile.type).toBe('video/webm')
   })
 
-  it('closes the camera when captured media is rejected', () => {
+  it('closes the PostForm camera only after media validation succeeds', () => {
     render(<PostForm onSubmit={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
-    expect(screen.getByRole('button', { name: 'mockCapture' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'mockCapture' }))
+    fireEvent.click(screen.getByRole('button', { name: 'mockValidCapture' }))
 
-    expect(screen.queryByRole('button', { name: 'mockCapture' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'mockValidCapture' })).not.toBeInTheDocument()
+  })
+
+  it('keeps the PostForm camera open when captured media is rejected', () => {
+    render(<PostForm onSubmit={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    fireEvent.click(screen.getByRole('button', { name: 'mockInvalidCapture' }))
+
+    expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
+    expect(screen.getByText('fileTypeError')).toBeInTheDocument()
+  })
+
+  it('keeps the MessageForm camera open when captured media is rejected', () => {
+    render(<MessageForm />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    fireEvent.click(screen.getByRole('button', { name: 'mockInvalidCapture' }))
+
+    expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
     expect(screen.getByText('fileTypeError')).toBeInTheDocument()
   })
 
@@ -131,6 +154,18 @@ describe('Contributor prompts', () => {
     fireEvent.click(screen.getByRole('button', { name: 'sendWish' }))
 
     await waitFor(() => expect(screen.getByText('sendMessageFailed')).toBeInTheDocument())
+  })
+
+  it('preserves a specific PostForm submission error', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new Error('投稿内容が無効です'))
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: 'おめでとう！' } })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(screen.getByText('投稿内容が無効です')).toBeInTheDocument())
+    expect(screen.queryByText('genericError')).not.toBeInTheDocument()
   })
 
   it('rejects unsupported post media before upload', () => {

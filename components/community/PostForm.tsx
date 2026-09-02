@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
-import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
+import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { Icon } from '@/components/ui/Icon'
@@ -34,12 +34,6 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const [showCamera, setShowCamera] = useState(false)
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const normalizeMediaFile = (file: File): File => {
-    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
-    if (baseMimeType === file.type) return file
-    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
-  }
 
   const handleSelectedFile = (file: File): boolean => {
     const normalizedFile = normalizeMediaFile(file)
@@ -116,8 +110,8 @@ export default function PostForm({ onSubmit }: PostFormProps) {
       } else {
         setError(t('postFailed'))
       }
-    } catch {
-      setError(t('genericError'))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('genericError'))
     } finally {
       setSubmitting(false)
       setUploadProgress(0)
@@ -265,8 +259,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            handleSelectedFile(file)
-            setShowCamera(false)
+            if (handleSelectedFile(file)) setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
         />
