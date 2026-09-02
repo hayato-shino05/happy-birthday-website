@@ -147,8 +147,8 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         removeFile()
         onSuccess?.()
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('genericError'))
+    } catch {
+      setError(t('genericError'))
     } finally {
       setIsSubmitting(false)
       setUploadProgress(0)

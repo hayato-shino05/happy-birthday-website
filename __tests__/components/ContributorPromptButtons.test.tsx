@@ -204,6 +204,18 @@ describe('Contributor prompts', () => {
     expect(screen.queryByText('database details')).not.toBeInTheDocument()
   })
 
+  it('shows a safe localized error when MessageForm submission throws', async () => {
+    sendMessage.mockRejectedValue(new Error('database details'))
+    render(<MessageForm />)
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'yourName' }), { target: { value: '花子' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'messagePlaceholder' }), { target: { value: 'おめでとう！' } })
+    fireEvent.click(screen.getByRole('button', { name: 'sendWish' }))
+
+    await waitFor(() => expect(screen.getByText('genericError')).toBeInTheDocument())
+    expect(screen.queryByText('database details')).not.toBeInTheDocument()
+  })
+
   it('rejects unsupported post media before upload', () => {
     render(<PostForm onSubmit={vi.fn()} />)
     const file = new File(['audio'], 'post.mp3', { type: 'audio/mpeg' })
