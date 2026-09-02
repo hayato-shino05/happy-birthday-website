@@ -5,6 +5,7 @@ const server = vi.hoisted(() => ({ createServiceClient: vi.fn() }))
 vi.mock('@/lib/time-capsule/server', () => server)
 
 import { POST } from '@/app/api/community/media/route'
+import { MAX_MULTIPART_UPLOAD_SIZE } from '@/lib/validations/upload'
 
 function makeClient(insertResult: { data: Record<string, unknown> | null; error: Error | null } = { data: { id: 1, object_path: 'images/id.png' }, error: null }) {
   const remove = vi.fn().mockResolvedValue({ error: null })
@@ -44,6 +45,16 @@ describe('POST /api/community/media', () => {
     expect(upload).toHaveBeenCalledWith(expect.stringMatching(/^images\//), expect.any(File), { contentType: 'image/png', upsert: false })
     expect(client.from).toHaveBeenCalledWith('media_submissions')
     await expect(response.json()).resolves.toEqual({ data: expect.objectContaining({ id: 1, media_url: 'https://example.com/media' }) })
+  })
+
+  it('rejects files above the multipart threshold before creating a service client', async () => {
+    makeClient()
+    const file = new File([new Uint8Array(MAX_MULTIPART_UPLOAD_SIZE + 1)], 'large.png', { type: 'image/png' })
+
+    const response = await POST(request({ sender: '花子' }, file))
+
+    expect(response.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
   })
 
   it('returns a safe error when storage upload fails without cleanup', async () => {
