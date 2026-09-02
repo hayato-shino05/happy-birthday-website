@@ -1,5 +1,4 @@
-import { getSupabase } from '@/lib/supabase/client'
-import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
+import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 
 interface CommunityMediaUploadInput {
   file: File
@@ -8,14 +7,27 @@ interface CommunityMediaUploadInput {
   description?: string
 }
 
+export interface CommunityMediaSubmission {
+  id: number
+  sender: string
+  object_path: string
+  media_kind: 'image' | 'video' | 'audio'
+  original_name: string
+  size_bytes: number
+  description: string | null
+  created_at: string
+  media_url: string
+}
+
 export async function uploadCommunityMedia({
   file,
   sender,
   birthdayPerson,
   description,
-}: CommunityMediaUploadInput) {
-  const validation = validateCommunityMediaFile(file)
-  const mediaKind = getMediaKind(file.type)
+}: CommunityMediaUploadInput): Promise<CommunityMediaSubmission> {
+  const normalizedFile = normalizeMediaFile(file)
+  const validation = validateCommunityMediaFile(normalizedFile)
+  const mediaKind = getMediaKind(normalizedFile.type)
 
   if (!validation.valid || !mediaKind) {
     throw new Error(validation.valid ? 'サポートされていないファイル形式です' : validation.error)
@@ -36,45 +48,35 @@ export async function uploadCommunityMedia({
     throw new Error('説明が長すぎます')
   }
 
-  const normalizedOriginalName = file.name.trim()
-  if (!normalizedOriginalName || normalizedOriginalName.length > 255) {
+  const normalizedOriginalName = normalizedFile.name.trim()
+  if (!normalizedOriginalName || normalizedOriginalName.length > 255 || /[\\/\p{Cc}]/u.test(normalizedOriginalName)) {
     throw new Error('ファイル名が無効です')
   }
 
-  const extension = normalizedOriginalName.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
-  const objectPath = `${mediaKind}s/${crypto.randomUUID()}.${extension}`
-  const supabase = getSupabase()
-  const { error: uploadError } = await supabase.storage
-    .from('community-media')
-    .upload(objectPath, file, { contentType: file.type, upsert: false })
+  const formData = new FormData()
+  formData.set('file', normalizedFile, normalizedOriginalName)
+  formData.set('sender', normalizedSender)
+  if (normalizedBirthdayPerson) formData.set('birthdayPerson', normalizedBirthdayPerson)
+  if (normalizedDescription) formData.set('description', normalizedDescription)
 
-  if (uploadError) throw uploadError
-
-  const { data, error: insertError } = await supabase
-    .from('media_submissions')
-    .insert({
-      sender: normalizedSender,
-      object_path: objectPath,
-      media_kind: mediaKind,
-      mime_type: file.type,
-      original_name: normalizedOriginalName,
-      size_bytes: file.size,
-      birthday_person: normalizedBirthdayPerson,
-      description: normalizedDescription,
-    })
-    .select()
-    .single()
-
-  if (insertError) {
-    try {
-      const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
-      if (cleanupError) console.error('Failed to clean up uploaded community media:', cleanupError)
-    } catch (cleanupError) {
-      console.error('Failed to clean up uploaded community media:', cleanupError)
-    }
-    throw insertError
+  const response = await fetch('/api/community/media', { method: 'POST', body: formData })
+  let payload: unknown
+  try {
+    payload = await response.json()
+  } catch {
+    throw new Error('メディアをアップロードできません')
   }
 
-  const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)
-  return { ...data, media_url: urlData.publicUrl }
+  if (!response.ok) {
+    const error = payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
+      ? payload.error
+      : 'メディアをアップロードできません'
+    throw new Error(error)
+  }
+
+  const data = payload && typeof payload === 'object' && 'data' in payload ? payload.data : null
+  if (!data || typeof data !== 'object' || !('object_path' in data) || typeof data.object_path !== 'string') {
+    throw new Error('メディア応答が無効です')
+  }
+  return data as CommunityMediaSubmission
 }
