@@ -6,7 +6,6 @@ import {
   findByInviteToken,
   parseId,
   parseInviteToken,
-  recordFirstOpen,
   requireUser,
   serializeCapsule,
   createServiceClient,
@@ -23,15 +22,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (inviteToken) {
       const { client, row } = await findByInviteToken(parseInviteToken(inviteToken), id)
       const data = await serializeCapsule(client, row)
-      if (data.isUnlocked === true) {
-        try {
-          await recordFirstOpen(client, row)
-        } catch (error) {
-          console.warn('[TimeCapsule] first-open tracking failed', {
-            error: error instanceof Error ? error.name : 'unknown_error',
-          })
-        }
-      }
       return Response.json(
         { data },
         { headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } }

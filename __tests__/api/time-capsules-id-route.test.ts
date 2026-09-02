@@ -43,7 +43,7 @@ beforeEach(() => {
 })
 
 describe('GET /api/time-capsules/[id]', () => {
-  it('records the first open for an unlocked invite access', async () => {
+  it('does not record an unlocked invite GET', async () => {
     const data = { id: 1, isUnlocked: true, message: '本文' }
     server.serializeCapsule.mockResolvedValue(data)
 
@@ -52,7 +52,7 @@ describe('GET /api/time-capsules/[id]', () => {
     })
 
     expect(response.status).toBe(200)
-    expect(server.recordFirstOpen).toHaveBeenCalledWith({}, row)
+    expect(server.recordFirstOpen).not.toHaveBeenCalled()
     expect(await response.json()).toEqual({ data })
   })
 
