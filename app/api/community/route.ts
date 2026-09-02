@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createCommunitySubmission, type CommunitySubmissionInput } from '@/lib/community/server'
 import { validateCommunityMediaFile } from '@/lib/validations/upload'
 
-const COMMUNITY_MEDIA_MIME_TYPES = new Set([
-  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
-  'video/mp4', 'video/webm',
-  'audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg',
-])
-
 function normalizeMimeType(value: string): string {
   return value.split(';', 1)[0].trim().toLowerCase()
 }
@@ -46,9 +40,8 @@ function parseInput(formData: FormData): CommunitySubmissionInput | null {
   if (!file && description !== null) return null
   if (file) {
     const fileName = file.name.trim()
-    if (!fileName || fileName.length > 255) return null
+    if (!fileName || fileName.length > 255 || /[\\/\p{Cc}]/u.test(fileName)) return null
     const mimeType = normalizeMimeType(file.type)
-    if (!COMMUNITY_MEDIA_MIME_TYPES.has(mimeType)) return null
     file = new File([file], file.name, { type: mimeType, lastModified: file.lastModified })
     if (!validateCommunityMediaFile(file).valid) return null
   }
@@ -57,8 +50,15 @@ function parseInput(formData: FormData): CommunitySubmissionInput | null {
 }
 
 export async function POST(request: NextRequest) {
+  let formData: FormData
   try {
-    const input = parseInput(await request.formData())
+    formData = await request.formData()
+  } catch {
+    return NextResponse.json({ error: '投稿内容が無効です' }, { status: 400 })
+  }
+
+  try {
+    const input = parseInput(formData)
     if (!input) return NextResponse.json({ error: '投稿内容が無効です' }, { status: 400 })
 
     const data = await createCommunitySubmission(input)

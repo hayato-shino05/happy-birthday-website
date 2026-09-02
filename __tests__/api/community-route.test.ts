@@ -24,6 +24,10 @@ function request(fields: Record<string, string>, file?: File) {
   return { formData: async () => body } as unknown as NextRequest
 }
 
+function malformedRequest() {
+  return { formData: async () => { throw new TypeError('malformed form data') } } as unknown as NextRequest
+}
+
 beforeEach(() => vi.resetAllMocks())
 
 describe('POST /api/community', () => {
@@ -104,5 +108,22 @@ describe('POST /api/community', () => {
 
     expect(response.status).toBe(400)
     expect(upload).not.toHaveBeenCalled()
+  })
+
+  it.each(['path/file.png', 'path\\file.png', 'file\u0000.png'])('rejects unsafe filename %j before uploading media', async (filename) => {
+    const { upload } = makeClient()
+    const response = await POST(request({ kind: 'message', sender: '花子', content: '本文' }, new File(['image'], filename, { type: 'image/png' })))
+
+    expect(response.status).toBe(400)
+    expect(upload).not.toHaveBeenCalled()
+  })
+
+  it('maps malformed form data to a bad request', async () => {
+    makeClient()
+    const response = await POST(malformedRequest())
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: '投稿内容が無効です' })
+    expect(server.createServiceClient).not.toHaveBeenCalled()
   })
 })
