@@ -46,6 +46,16 @@ describe('POST /api/community/media', () => {
     await expect(response.json()).resolves.toEqual({ data: expect.objectContaining({ id: 1, media_url: 'https://example.com/media' }) })
   })
 
+  it('returns a safe error when storage upload fails without cleanup', async () => {
+    const { upload, remove } = makeClient()
+    upload.mockResolvedValueOnce({ error: new Error('upload failed') })
+
+    const response = await POST(request({ sender: '花子' }, new File(['image'], 'cake.png', { type: 'image/png' })))
+
+    expect(response.status).toBe(500)
+    expect(remove).not.toHaveBeenCalled()
+  })
+
   it('cleans up after a definite metadata insert failure', async () => {
     const insertError = new Error('insert failed')
     const { upload, remove } = makeClient({ data: null, error: insertError })

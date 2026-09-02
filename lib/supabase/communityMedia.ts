@@ -1,4 +1,7 @@
+import { getSupabase } from '@/lib/supabase/client'
 import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
+
+const MAX_MULTIPART_UPLOAD_SIZE = 4 * 1024 * 1024
 
 interface CommunityMediaUploadInput {
   file: File
@@ -53,6 +56,55 @@ export async function uploadCommunityMedia({
     throw new Error('ファイル名が無効です')
   }
 
+  if (normalizedFile.size > MAX_MULTIPART_UPLOAD_SIZE) {
+    const signResponse = await fetch('/api/community/media/sign', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        filename: normalizedOriginalName,
+        mimeType: normalizedFile.type,
+        sizeBytes: normalizedFile.size,
+        sender: normalizedSender,
+        birthdayPerson: normalizedBirthdayPerson,
+        description: normalizedDescription,
+      }),
+    })
+    const signPayload = await signResponse.json() as unknown
+    if (!signResponse.ok || !signPayload || typeof signPayload !== 'object' || !('data' in signPayload)
+      || !signPayload.data || typeof signPayload.data !== 'object' || !('path' in signPayload.data)
+      || !('token' in signPayload.data) || typeof signPayload.data.path !== 'string' || typeof signPayload.data.token !== 'string') {
+      throw new Error('メディアをアップロードできません')
+    }
+    const { path, token } = signPayload.data
+    const { error: uploadError } = await getSupabase().storage.from('community-media').uploadToSignedUrl(path, token, normalizedFile)
+    if (uploadError) throw new Error('メディアをアップロードできません')
+
+    const finalizeResponse = await fetch('/api/community/media/finalize', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        path,
+        filename: normalizedOriginalName,
+        mimeType: normalizedFile.type,
+        sizeBytes: normalizedFile.size,
+        sender: normalizedSender,
+        birthdayPerson: normalizedBirthdayPerson,
+        description: normalizedDescription,
+      }),
+    })
+    const finalizePayload = await finalizeResponse.json() as unknown
+    if (!finalizeResponse.ok || !finalizePayload || typeof finalizePayload !== 'object' || !('data' in finalizePayload)) {
+      throw new Error('メディアを確定できません')
+    }
+    const data = finalizePayload.data
+    if (!data || typeof data !== 'object' || !('id' in data) || typeof data.id !== 'number'
+      || !('object_path' in data) || typeof data.object_path !== 'string'
+      || !('media_url' in data) || typeof data.media_url !== 'string') {
+      throw new Error('メディア応答が無効です')
+    }
+    return data as CommunityMediaSubmission
+  }
+
   const formData = new FormData()
   formData.set('file', normalizedFile, normalizedOriginalName)
   formData.set('sender', normalizedSender)
@@ -60,22 +112,17 @@ export async function uploadCommunityMedia({
   if (normalizedDescription) formData.set('description', normalizedDescription)
 
   const response = await fetch('/api/community/media', { method: 'POST', body: formData })
-  let payload: unknown
-  try {
-    payload = await response.json()
-  } catch {
-    throw new Error('メディアをアップロードできません')
-  }
-
+  const payload = await response.json() as unknown
   if (!response.ok) {
     const error = payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
       ? payload.error
       : 'メディアをアップロードできません'
     throw new Error(error)
   }
-
   const data = payload && typeof payload === 'object' && 'data' in payload ? payload.data : null
-  if (!data || typeof data !== 'object' || !('object_path' in data) || typeof data.object_path !== 'string') {
+  if (!data || typeof data !== 'object' || !('id' in data) || typeof data.id !== 'number'
+    || !('object_path' in data) || typeof data.object_path !== 'string'
+    || !('media_url' in data) || typeof data.media_url !== 'string') {
     throw new Error('メディア応答が無効です')
   }
   return data as CommunityMediaSubmission

@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
         mime_type: file.type,
         original_name: file.name.trim(),
         size_bytes: file.size,
-        birthday_person: birthdayPerson,
-        description,
+        birthday_person: birthdayPerson ?? null,
+        description: description ?? null,
       })
       .select()
       .single()
