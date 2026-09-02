@@ -60,6 +60,17 @@ describe('POST /api/time-capsules/access', () => {
     expect(await response.json()).toEqual({ data: { id: 1, isUnlocked: false } })
   })
 
+  it('records the first open for an unlocked access-code access', async () => {
+    const data = { id: 1, isUnlocked: true, message: '本文' }
+    server.serializeCapsule.mockResolvedValue(data)
+
+    const response = await POST(request({ accessCode: '123456' }))
+
+    expect(response.status).toBe(200)
+    expect(server.recordFirstOpen).toHaveBeenCalledWith({}, { id: 1 })
+    expect(await response.json()).toEqual({ data })
+  })
+
   it('rejects a request without an access code', async () => {
     const response = await POST(request({}))
 
