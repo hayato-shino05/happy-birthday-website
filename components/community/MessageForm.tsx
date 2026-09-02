@@ -6,7 +6,7 @@ import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
-import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
+import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { Icon } from '@/components/ui/Icon'
 
 interface MessageFormProps {
@@ -37,12 +37,6 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   const [showCamera, setShowCamera] = useState(false)
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const normalizeMediaFile = (file: File): File => {
-    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
-    if (baseMimeType === file.type) return file
-    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
-  }
 
   const handleSelectedFile = (file: File): boolean => {
     const normalizedFile = normalizeMediaFile(file)
@@ -116,7 +110,9 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         return false
       }
     }
-    return sendMessage(payload.sender, payload.message, payload.birthdayPerson, payload.mediaObjectPath)
+    const success = await sendMessage(payload.sender, payload.message, payload.birthdayPerson, payload.mediaObjectPath)
+    if (!success) setError(t('sendMessageFailed'))
+    return success
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,13 +137,15 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
 
       if (success) {
         // 名前を共有ストレージに保存する（他のフォームと共用）
-        localStorage.setItem('birthday_user_name', sender.trim())
+        try {
+          localStorage.setItem('birthday_user_name', sender.trim())
+        } catch {
+          console.warn('Failed to save sender name')
+        }
         // 送信者名は保持し、メッセージのみクリアする
         setMessage('')
         removeFile()
         onSuccess?.()
-      } else {
-        setError(t('sendMessageFailed'))
       }
     } catch {
       setError(t('genericError'))
