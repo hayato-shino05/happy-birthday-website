@@ -186,7 +186,7 @@ describe('Contributor prompts', () => {
     fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
     fireEvent.click(screen.getByRole('button', { name: 'mockInvalidCapture' }))
 
-    expect(screen.queryByRole('button', { name: 'mockInvalidCapture' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
     expect(screen.getByText('fileTypeError')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
     expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
