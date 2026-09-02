@@ -43,6 +43,7 @@ function parseInput(formData: FormData): CommunitySubmissionInput | null {
 
   let file = fileValue as File | null
   if (file && file.size === 0 && !file.name) file = null
+  if (!file && description !== null) return null
   if (file) {
     const fileName = file.name.trim()
     if (!fileName || fileName.length > 255) return null

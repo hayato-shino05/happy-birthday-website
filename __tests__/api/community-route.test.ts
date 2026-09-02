@@ -83,6 +83,19 @@ describe('POST /api/community', () => {
     expect(server.createServiceClient).not.toHaveBeenCalled()
   })
 
+  it('rejects descriptions when no media exists instead of dropping them', async () => {
+    makeClient()
+    const response = await POST(request({
+      kind: 'post',
+      sender: '花子',
+      content: '本文',
+      description: '画像の説明',
+    }))
+
+    expect(response.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
   it('rejects overlong filenames before uploading media', async () => {
     const { upload } = makeClient()
     const longName = new File(['image'], `${'a'.repeat(252)}.png`, { type: 'image/png' })

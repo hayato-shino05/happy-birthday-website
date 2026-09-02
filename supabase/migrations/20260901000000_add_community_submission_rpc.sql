@@ -39,7 +39,8 @@ begin
   end if;
 
   if p_object_path is null then
-    if p_media_kind is not null or p_mime_type is not null or p_original_name is not null or p_size_bytes is not null then
+    if p_description is not null
+      or p_media_kind is not null or p_mime_type is not null or p_original_name is not null or p_size_bytes is not null then
       raise exception using errcode = '22023', message = 'incomplete media metadata';
     end if;
   else
@@ -52,8 +53,6 @@ begin
       or (p_media_kind = 'image' and (p_mime_type not like 'image/%' or p_object_path !~ '^images/'))
       or (p_media_kind = 'video' and (p_mime_type not like 'video/%' or p_object_path !~ '^videos/'))
       or (p_media_kind = 'audio' and (p_mime_type not like 'audio/%' or p_object_path !~ '^audios/'))
-      or (p_media_kind = 'video' and p_object_path !~ '^videos/')
-      or (p_media_kind = 'audio' and p_object_path !~ '^audios/')
       or p_object_path !~ '^(images|videos|audios)/[0-9a-f-]+\.[a-z0-9]+$' then
       raise exception using errcode = '22023', message = 'invalid media metadata';
     end if;
