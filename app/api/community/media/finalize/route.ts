@@ -19,6 +19,11 @@ function isSafeObjectPath(value: string): boolean {
   return /^(images|videos|audios)\/[0-9a-f-]{36}\.[a-z0-9]+$/i.test(value)
 }
 
+function isMediaRow(value: unknown): value is { id: number; object_path: string } {
+  return typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'number'
+    && 'object_path' in value && typeof value.object_path === 'string'
+}
+
 export async function POST(request: NextRequest) {
   let body: unknown
   try {
@@ -73,10 +78,24 @@ export async function POST(request: NextRequest) {
       birthday_person: birthdayPerson ?? null,
       description: description ?? null,
     }).select().single()
-    if (insertError || !data || typeof data !== 'object' || !('id' in data) || typeof data.id !== 'number') {
+    if (insertError) {
+      if (insertError.code === '23505') {
+        const { data: winner, error: winnerError } = await supabase.from('media_submissions')
+          .select('*').eq('object_path', objectPath).maybeSingle()
+        if (winnerError) throw winnerError
+        if (isMediaRow(winner)) {
+          const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)
+          return NextResponse.json({ data: { ...winner, media_url: urlData.publicUrl } }, { status: 200 })
+        }
+      }
       const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
       if (cleanupError) console.error('Community media cleanup failed', cleanupError.message)
-      throw insertError ?? new Error('invalid media metadata')
+      throw insertError
+    }
+    if (!isMediaRow(data)) {
+      const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
+      if (cleanupError) console.error('Community media cleanup failed', cleanupError.message)
+      throw new Error('invalid media metadata')
     }
 
     const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)
