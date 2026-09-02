@@ -137,7 +137,12 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
 
       if (success) {
         // 名前を共有ストレージに保存する（他のフォームと共用）
-        localStorage.setItem('birthday_user_name', sender.trim())
+        try {
+          localStorage.setItem('birthday_user_name', sender.trim())
+        } catch {
+          setError(t('genericError'))
+          return
+        }
         // 送信者名は保持し、メッセージのみクリアする
         setMessage('')
         removeFile()

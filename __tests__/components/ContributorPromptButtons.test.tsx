@@ -156,6 +156,21 @@ describe('Contributor prompts', () => {
     await waitFor(() => expect(screen.getByText('sendMessageFailed')).toBeInTheDocument())
   })
 
+  it('shows a generic error when saving the sender name fails', async () => {
+    sendMessage.mockResolvedValue(true)
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('storage quota exceeded')
+    })
+    render(<MessageForm />)
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'yourName' }), { target: { value: '花子' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'messagePlaceholder' }), { target: { value: 'おめでとう！' } })
+    fireEvent.click(screen.getByRole('button', { name: 'sendWish' }))
+
+    await waitFor(() => expect(screen.getByText('genericError')).toBeInTheDocument())
+    setItemSpy.mockRestore()
+  })
+
   it('preserves a specific PostForm submission error', async () => {
     const onSubmit = vi.fn().mockRejectedValue(new Error('投稿内容が無効です'))
     render(<PostForm onSubmit={onSubmit} />)
