@@ -49,6 +49,7 @@ vi.mock('@/lib/supabase/client', () => ({
 beforeEach(() => {
   sendMessage.mockReset()
   uploadCommunityMedia.mockReset()
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: {} }), { status: 201 })))
   localStorage.clear()
 })
 
@@ -90,8 +91,33 @@ describe('Contributor prompts', () => {
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
-  it('uploads post media through the canonical community media helper', async () => {
-    uploadCommunityMedia.mockResolvedValue({ object_path: 'images/post.png' })
+  it('keeps text-only submission state when onSubmit returns false', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(false)
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: '失敗する投稿' } })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(screen.getByText('postFailed')).toBeInTheDocument())
+    expect(onSubmit).toHaveBeenCalledWith('花子', '失敗する投稿')
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
+  })
+
+  it('keeps text-only submission state when onSubmit rejects', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new Error('submit failed'))
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: '例外になる投稿' } })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(screen.getByText('genericError')).toBeInTheDocument())
+    expect(onSubmit).toHaveBeenCalledWith('花子', '例外になる投稿')
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
+  })
+
+  it('submits post media through the transactional community route', async () => {
     const onSubmit = vi.fn().mockResolvedValue(true)
     render(<PostForm onSubmit={onSubmit} />)
 
@@ -101,12 +127,17 @@ describe('Contributor prompts', () => {
     fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
     fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
 
-    await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalledWith({ file, sender: '花子' }))
-    expect(onSubmit).toHaveBeenCalledWith('花子', 'おめでとう！', undefined, 'images/post.png')
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/community', expect.objectContaining({ method: 'POST' })))
+    const request = vi.mocked(fetch).mock.calls[0][1]
+    expect((request?.body as FormData).get('kind')).toBe('post')
+    expect((request?.body as FormData).get('sender')).toBe('花子')
+    expect((request?.body as FormData).get('content')).toBe('おめでとう！')
+    expect((request?.body as FormData).get('media')).toMatchObject({ name: file.name, type: file.type })
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
   })
 
-  it('normalizes codec-qualified post media MIME types before upload', async () => {
-    uploadCommunityMedia.mockResolvedValue({ object_path: 'videos/post.webm' })
+  it('normalizes codec-qualified post media MIME types before the transactional route', async () => {
     const onSubmit = vi.fn().mockResolvedValue(true)
     render(<PostForm onSubmit={onSubmit} />)
 
@@ -116,9 +147,28 @@ describe('Contributor prompts', () => {
     fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
     fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
 
-    await waitFor(() => expect(uploadCommunityMedia).toHaveBeenCalled())
-    const uploadedFile = uploadCommunityMedia.mock.calls[0][0].file as File
-    expect(uploadedFile.type).toBe('video/webm')
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
+    const request = vi.mocked(fetch).mock.calls[0][1]
+    expect((request?.body as FormData).get('media')).toBeInstanceOf(File)
+    expect(((request?.body as FormData).get('media') as File).type).toBe('video/webm')
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('does not invoke the legacy callback when transactional media submission fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: '投稿を送信できません' }), { status: 500 })))
+    const onSubmit = vi.fn().mockRejectedValue(new Error('legacy callback must not run'))
+    render(<PostForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByPlaceholderText('yourName'), { target: { value: '花子' } })
+    fireEvent.change(screen.getByPlaceholderText('typeMessage'), { target: { value: '失敗する投稿' } })
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, {
+      target: { files: [new File(['image'], 'post.png', { type: 'image/png' })] },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'postMessage' }))
+
+    await waitFor(() => expect(screen.getByText('投稿を送信できません')).toBeInTheDocument())
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(uploadCommunityMedia).not.toHaveBeenCalled()
   })
 
   it('closes the PostForm camera only after media validation succeeds', () => {
