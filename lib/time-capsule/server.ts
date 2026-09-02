@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomInt } from 'node:crypto'
+import { createHash, createHmac, randomInt, timingSafeEqual } from 'node:crypto'
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js'
 
 export const TIME_CAPSULE_SELECT =
@@ -134,6 +134,21 @@ export function createInviteToken(ownerId: string, idempotencyKey: string): stri
   return createHmac('sha256', getServiceKey())
     .update(`time-capsule-invite:v1|${ownerId}|${idempotencyKey}`, 'utf8')
     .digest('base64url')
+}
+
+export function createCommunityMediaUploadToken(payload: string, expiresAt: number): string {
+  const message = `community-media-upload:v1|${expiresAt}|${payload}`
+  return `${expiresAt}.${createHmac('sha256', getServiceKey()).update(message, 'utf8').digest('base64url')}`
+}
+
+export function verifyCommunityMediaUploadToken(payload: string, token: string): boolean {
+  const [expiry, signature] = token.split('.', 2)
+  const expiresAt = Number(expiry)
+  if (!Number.isSafeInteger(expiresAt) || expiresAt < Date.now() || !signature) return false
+  const message = `community-media-upload:v1|${expiresAt}|${payload}`
+  const expected = Buffer.from(createHmac('sha256', getServiceKey()).update(message, 'utf8').digest('base64url'))
+  const actual = Buffer.from(signature)
+  return expected.length === actual.length && timingSafeEqual(expected, actual)
 }
 
 export function todayUtc(): string {
