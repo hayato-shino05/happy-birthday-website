@@ -130,28 +130,28 @@ describe('Contributor prompts', () => {
     expect(screen.queryByRole('button', { name: 'mockValidCapture' })).not.toBeInTheDocument()
   })
 
-  it('remounts the PostForm camera when captured media is rejected', () => {
+  it('closes the PostForm camera and shows the validation error when capture is rejected', () => {
     render(<PostForm onSubmit={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
-    const previousInstance = screen.getByTestId('camera-instance').textContent
     fireEvent.click(screen.getByRole('button', { name: 'mockInvalidCapture' }))
 
-    expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
-    expect(screen.getByTestId('camera-instance').textContent).not.toBe(previousInstance)
+    expect(screen.queryByRole('button', { name: 'mockInvalidCapture' })).not.toBeInTheDocument()
     expect(screen.getByText('fileTypeError')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
   })
 
-  it('remounts the MessageForm camera when captured media is rejected', () => {
+  it('closes the MessageForm camera and shows the validation error when capture is rejected', () => {
     render(<MessageForm />)
 
     fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
-    const previousInstance = screen.getByTestId('camera-instance').textContent
     fireEvent.click(screen.getByRole('button', { name: 'mockInvalidCapture' }))
 
-    expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
-    expect(screen.getByTestId('camera-instance').textContent).not.toBe(previousInstance)
+    expect(screen.queryByRole('button', { name: 'mockInvalidCapture' })).not.toBeInTheDocument()
     expect(screen.getByText('fileTypeError')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'takePhoto' }))
+    expect(screen.getByRole('button', { name: 'mockInvalidCapture' })).toBeInTheDocument()
   })
 
   it('closes the MessageForm camera after media validation succeeds', () => {
