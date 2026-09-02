@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/time-capsule/server'
+import { createCommunityMediaUploadToken, createServiceClient } from '@/lib/time-capsule/server'
 import { getMediaKind, isCommunityMediaMimeType, MAX_COMMUNITY_MEDIA_SIZE } from '@/lib/validations/upload'
 
 function parseText(value: unknown, maxLength: number): string | null {
@@ -47,7 +47,9 @@ export async function POST(request: NextRequest) {
   try {
     const { data, error } = await createServiceClient().storage.from('community-media').createSignedUploadUrl(objectPath, { upsert: false })
     if (error || !data?.token) throw error ?? new Error('signed upload authorization unavailable')
-    return NextResponse.json({ data: { path: objectPath, token: data.token } })
+    const tokenPayload = JSON.stringify({ path: objectPath, filename, mimeType, sizeBytes, sender, birthdayPerson, description })
+    const uploadToken = createCommunityMediaUploadToken(tokenPayload, Date.now() + 2 * 60 * 60 * 1000)
+    return NextResponse.json({ data: { path: objectPath, token: data.token, uploadToken } })
   } catch {
     return NextResponse.json({ error: 'メディアをアップロードできません' }, { status: 500 })
   }

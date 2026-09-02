@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/time-capsule/server'
+import { createServiceClient, verifyCommunityMediaUploadToken } from '@/lib/time-capsule/server'
 import { getMediaKind, isCommunityMediaMimeType, MAX_COMMUNITY_MEDIA_SIZE } from '@/lib/validations/upload'
 
 function parseText(value: unknown, maxLength: number): string | null {
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'メディア内容が無効です' }, { status: 400 })
   const input = body as Record<string, unknown>
   const objectPath = parseText(input.path, 255)
+  const uploadToken = parseText(input.uploadToken, 512)
   const sender = parseText(input.sender, 100)
   const originalName = parseText(input.filename, 255)
   const mimeType = parseText(input.mimeType, 100)?.split(';', 1)[0].trim().toLowerCase()
@@ -42,12 +43,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'メディア内容が無効です' }, { status: 400 })
   }
   const mediaKind = getMediaKind(mimeType)
-  if (!mediaKind || !objectPath.startsWith(`${mediaKind}s/`)) {
+  if (!mediaKind || !objectPath.startsWith(`${mediaKind}s/`)
+    || !uploadToken
+    || !verifyCommunityMediaUploadToken(JSON.stringify({ path: objectPath, filename: originalName, mimeType, sizeBytes, sender, birthdayPerson, description }), uploadToken)) {
     return NextResponse.json({ error: 'メディア内容が無効です' }, { status: 400 })
   }
 
   try {
     const supabase = createServiceClient()
+    const { data: existing, error: existingError } = await supabase.from('media_submissions')
+      .select('*').eq('object_path', objectPath).maybeSingle()
+    if (existingError) throw existingError
+    if (existing && typeof existing === 'object' && 'id' in existing && typeof existing.id === 'number') {
+      const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(objectPath)
+      return NextResponse.json({ data: { ...existing, media_url: urlData.publicUrl } }, { status: 200 })
+    }
     const { data: object, error: infoError } = await supabase.storage.from('community-media').info(objectPath)
     if (infoError || !object || object.size !== sizeBytes || object.contentType !== mimeType) {
       return NextResponse.json({ error: 'アップロード済みメディアを確認できません' }, { status: 400 })

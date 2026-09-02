@@ -26,7 +26,7 @@ describe('uploadCommunityMedia', () => {
 
   it('uses signed direct upload for files above the server body limit', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { path: 'videos/id.webm', token: 'token' } }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { path: 'videos/id.webm', token: 'token', uploadToken: 'app-token' } }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ data: { id: 1, object_path: 'videos/id.webm', media_url: 'https://example.com/video' } }), { status: 201 }))
     const file = new File([new Uint8Array(4 * 1024 * 1024 + 1)], 'clip.webm', { type: 'video/webm' })
 

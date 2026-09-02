@@ -72,10 +72,11 @@ export async function uploadCommunityMedia({
     const signPayload = await signResponse.json() as unknown
     if (!signResponse.ok || !signPayload || typeof signPayload !== 'object' || !('data' in signPayload)
       || !signPayload.data || typeof signPayload.data !== 'object' || !('path' in signPayload.data)
-      || !('token' in signPayload.data) || typeof signPayload.data.path !== 'string' || typeof signPayload.data.token !== 'string') {
+      || !('token' in signPayload.data) || !('uploadToken' in signPayload.data)
+      || typeof signPayload.data.path !== 'string' || typeof signPayload.data.token !== 'string' || typeof signPayload.data.uploadToken !== 'string') {
       throw new Error('メディアをアップロードできません')
     }
-    const { path, token } = signPayload.data
+    const { path, token, uploadToken } = signPayload.data
     const { error: uploadError } = await getSupabase().storage.from('community-media').uploadToSignedUrl(path, token, normalizedFile)
     if (uploadError) throw new Error('メディアをアップロードできません')
 
@@ -84,6 +85,7 @@ export async function uploadCommunityMedia({
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         path,
+        uploadToken,
         filename: normalizedOriginalName,
         mimeType: normalizedFile.type,
         sizeBytes: normalizedFile.size,
