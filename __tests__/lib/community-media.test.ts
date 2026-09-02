@@ -1,53 +1,38 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const upload = vi.fn().mockResolvedValue({ error: null })
-const remove = vi.fn().mockResolvedValue({ error: null })
-const insert = vi.fn().mockReturnValue({
-  select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 1 }, error: null }) }),
-})
-
-vi.mock('@/lib/supabase/client', () => ({
-  getSupabase: () => ({
-    storage: { from: () => ({ upload, remove, getPublicUrl: () => ({ data: { publicUrl: 'https://example.com/media' } }) }) },
-    from: () => ({ insert }),
-  }),
-}))
-
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 
 describe('uploadCommunityMedia', () => {
-  beforeEach(() => {
-    upload.mockClear()
-    remove.mockClear()
-    insert.mockClear()
-  })
+  beforeEach(() => vi.restoreAllMocks())
 
-  it('uploads an allowed file and records its object path', async () => {
+  it('uploads an allowed file through the media endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+      data: { id: 1, object_path: 'images/id.png', media_url: 'https://example.com/media' },
+    }), { status: 201, headers: { 'content-type': 'application/json' } }))
     const file = new File(['image'], 'cake.png', { type: 'image/png' })
 
-    await uploadCommunityMedia({ file, sender: '花子' })
+    const result = await uploadCommunityMedia({ file, sender: '花子' })
 
-    expect(upload).toHaveBeenCalledWith(expect.stringMatching(/^images\//), file, {
-      contentType: 'image/png',
-      upsert: false,
-    })
-    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
-      sender: '花子',
-      media_kind: 'image',
-      original_name: 'cake.png',
-    }))
+    expect(fetchMock).toHaveBeenCalledWith('/api/community/media', expect.objectContaining({ method: 'POST', body: expect.any(FormData) }))
+    const body = fetchMock.mock.calls[0][1]?.body as FormData
+    expect(body.get('sender')).toBe('花子')
+    expect(body.get('file')).toBeInstanceOf(File)
+    expect(result).toEqual(expect.objectContaining({ object_path: 'images/id.png' }))
   })
 
-  it('removes the object when metadata insert fails', async () => {
-    const insertError = new Error('insert failed')
-    insert.mockReturnValueOnce({
-      select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null, error: insertError }) }),
-    })
+  it('normalizes MIME parameters before transport', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ data: { object_path: 'videos/id.mp4', media_url: 'https://example.com/video' } }), { status: 201 }))
+
+    await uploadCommunityMedia({ file: new File(['video'], 'clip.mp4', { type: 'video/mp4; codecs=avc1' }), sender: '花子' })
+
+    const body = vi.mocked(fetch).mock.calls[0]?.[1]?.body as FormData
+    expect((body.get('file') as File).type).toBe('video/mp4')
+  })
+
+  it('maps endpoint errors without exposing transport details', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ error: 'メディア内容が無効です' }), { status: 400 }))
 
     await expect(uploadCommunityMedia({ file: new File(['image'], 'cake.png', { type: 'image/png' }), sender: '花子' }))
-      .rejects.toBe(insertError)
-    const uploadedPath = upload.mock.calls[0]?.[0]
-    expect(uploadedPath).toEqual(expect.stringMatching(/^images\//))
-    expect(remove).toHaveBeenCalledWith([uploadedPath])
+      .rejects.toThrow('メディア内容が無効です')
   })
 })
