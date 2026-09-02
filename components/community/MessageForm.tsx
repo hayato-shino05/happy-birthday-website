@@ -106,12 +106,12 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         setUploadProgress(100)
         return true
       } catch {
-        setError(t('genericError'))
+        setError((currentError) => currentError ?? t('genericError'))
         return false
       }
     }
     const success = await sendMessage(payload.sender, payload.message, payload.birthdayPerson, payload.mediaObjectPath)
-    if (!success) setError(t('sendMessageFailed'))
+    if (!success) setError((currentError) => currentError ?? t('sendMessageFailed'))
     return success
   }
 
