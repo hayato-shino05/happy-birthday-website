@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   }
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'メディア内容が無効です' }, { status: 400 })
   const input = body as Record<string, unknown>
-  const objectPath = parseText(input.path, 255)
+  const objectPath = parseText(input.path, 300)
   const uploadToken = parseText(input.uploadToken, 512)
   const sender = parseText(input.sender, 100)
   const originalName = parseText(input.filename, 255)

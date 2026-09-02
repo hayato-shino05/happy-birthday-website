@@ -42,6 +42,18 @@ describe('signed community media routes', () => {
     expect(response.status).toBe(400)
   })
 
+  it('accepts generated paths longer than 255 characters within the storage path limit', async () => {
+    const extension = 'a'.repeat(250)
+    const path = `images/12345678-1234-1234-1234-123456789012.${extension}`
+    const input = { ...payload, path, filename: `cake.${extension}` }
+    client(null, { id: 1, object_path: path, media_kind: 'image' }, { size: 5, contentType: 'image/png' })
+    const token = createCommunityMediaUploadToken(JSON.stringify(input), Date.now() + 60_000)
+
+    const response = await finalize(request({ ...input, uploadToken: token }))
+
+    expect(response.status).toBe(201)
+  })
+
   it('rejects Storage metadata mismatches without deleting the object', async () => {
     const { remove } = client(null, null, { size: 99, contentType: 'image/png' })
     const token = createCommunityMediaUploadToken(JSON.stringify(payload), Date.now() + 60_000)
