@@ -39,6 +39,14 @@ describe('signed community media routes', () => {
     expect(response.status).toBe(400)
   })
 
+  it('rejects Storage metadata mismatches without deleting the object', async () => {
+    const { remove } = client(null, null, { size: 99, contentType: 'image/png' })
+    const token = createCommunityMediaUploadToken(JSON.stringify(payload), Date.now() + 60_000)
+    const response = await finalize(request({ ...payload, uploadToken: token }))
+    expect(response.status).toBe(400)
+    expect(remove).not.toHaveBeenCalled()
+  })
+
   it('issues signed upload authorization for validated metadata', async () => {
     const storage = { createSignedUploadUrl: vi.fn().mockResolvedValue({ data: { token: 'storage-token' }, error: null }) }
     server.createServiceClient.mockReturnValue({ storage: { from: vi.fn(() => storage) } })
