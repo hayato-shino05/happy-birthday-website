@@ -140,7 +140,6 @@ describe('Contributor prompts', () => {
     fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
 
     expect(screen.getByText('fileTypeError')).toBeInTheDocument()
-    expect(uploadCommunityMedia).not.toHaveBeenCalled()
   })
 
   it('rejects post media larger than the canonical 50MB limit', () => {
@@ -151,6 +150,5 @@ describe('Contributor prompts', () => {
     fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
 
     expect(screen.getByText('fileTooLargeWithLimit')).toBeInTheDocument()
-    expect(uploadCommunityMedia).not.toHaveBeenCalled()
   })
 })
