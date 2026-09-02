@@ -82,4 +82,12 @@ describe('signed community media routes', () => {
     expect(response.status).toBe(500)
     expect(remove).toHaveBeenCalledWith([payload.path])
   })
+
+  it('does not clean up when the finalize response is unusable', async () => {
+    const { remove } = client(null, null, undefined, undefined, null)
+    const token = createCommunityMediaUploadToken(JSON.stringify(payload), Date.now() + 60_000)
+    const response = await finalize(request({ ...payload, uploadToken: token }))
+    expect(response.status).toBe(500)
+    expect(remove).not.toHaveBeenCalled()
+  })
 })

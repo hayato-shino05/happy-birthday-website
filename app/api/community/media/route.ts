@@ -90,12 +90,14 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    if (insertError || !isUsableMediaRow(data)) {
+    if (insertError) {
       const { error: cleanupError } = await supabase.storage.from('community-media').remove([objectPath])
       if (cleanupError) {
         console.error('Community media cleanup failed', cleanupError.message)
       }
-      if (insertError) throw insertError
+      throw insertError
+    }
+    if (!isUsableMediaRow(data)) {
       throw new Error('invalid media metadata')
     }
 

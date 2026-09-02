@@ -257,8 +257,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            handleSelectedFile(file)
-            setShowCamera(false)
+            if (handleSelectedFile(file)) setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
         />

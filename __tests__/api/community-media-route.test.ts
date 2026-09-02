@@ -84,4 +84,12 @@ describe('POST /api/community/media', () => {
     expect(response.status).toBe(500)
     expect(remove).not.toHaveBeenCalled()
   })
+
+  it('does not clean up when the metadata response is unusable', async () => {
+    const { remove } = makeClient({ data: null, error: null })
+    const response = await POST(request({ sender: '花子' }, new File(['image'], 'cake.png', { type: 'image/png' })))
+
+    expect(response.status).toBe(500)
+    expect(remove).not.toHaveBeenCalled()
+  })
 })
