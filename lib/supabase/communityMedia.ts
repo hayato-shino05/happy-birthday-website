@@ -17,7 +17,7 @@ export interface CommunityMediaSubmission {
   id: number
   sender: string
   object_path: string
-  media_kind: 'image' | 'video' | 'audio'
+  media_kind: 'image' | 'video'
   original_name: string
   size_bytes: number
   description: string | null

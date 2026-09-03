@@ -50,10 +50,19 @@ describe('validateCommunityMediaFile', () => {
     })
   })
 
-  it('classifies image, video, and audio media', () => {
+  it('classifies image and video media and rejects audio', () => {
     expect(getMediaKind('image/webp')).toBe('image')
     expect(getMediaKind('video/webm')).toBe('video')
-    expect(getMediaKind('audio/webm')).toBe('audio')
+    expect(getMediaKind('audio/webm')).toBeNull()
+  })
+
+  it('rejects audio files as unsupported community media', () => {
+    const file = new File(['audio'], 'clip.mp3', { type: 'audio/mpeg' })
+
+    expect(validateCommunityMediaFile(file)).toEqual({
+      valid: false,
+      error: 'サポートされていないファイル形式です',
+    })
   })
 
   it('rejects files over the 50MB limit', () => {

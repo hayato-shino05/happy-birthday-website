@@ -8,14 +8,9 @@ const COMMUNITY_MEDIA_TYPES = new Set([
   'image/gif',
   'video/mp4',
   'video/webm',
-  'audio/webm',
-  'audio/mpeg',
-  'audio/mp4',
-  'audio/wav',
-  'audio/ogg',
 ])
 
-export type CommunityMediaKind = 'image' | 'video' | 'audio'
+export type CommunityMediaKind = 'image' | 'video'
 
 export function normalizeMediaFile(file: File): File {
   const mimeType = file.type.split(';', 1)[0].trim().toLowerCase()
@@ -30,7 +25,6 @@ export function isCommunityMediaMimeType(mimeType: string): boolean {
 export function getMediaKind(mimeType: string): CommunityMediaKind | null {
   if (mimeType.startsWith('image/')) return 'image'
   if (mimeType.startsWith('video/')) return 'video'
-  if (mimeType.startsWith('audio/')) return 'audio'
   return null
 }
 

@@ -44,16 +44,15 @@ begin
       raise exception using errcode = '22023', message = 'incomplete media metadata';
     end if;
   else
-    if p_media_kind is null or p_media_kind not in ('image', 'video', 'audio')
+    if p_media_kind is null or p_media_kind not in ('image', 'video')
       or p_mime_type is null or char_length(p_mime_type) not between 1 and 255
       or p_original_name is null or char_length(btrim(p_original_name)) not between 1 and 255
       or p_size_bytes is null or p_size_bytes <= 0 or p_size_bytes > 52428800
       or char_length(p_object_path) not between 1 and 500
-      or p_mime_type not in ('image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg')
+      or p_mime_type not in ('image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm')
       or (p_media_kind = 'image' and (p_mime_type not like 'image/%' or p_object_path !~ '^images/'))
       or (p_media_kind = 'video' and (p_mime_type not like 'video/%' or p_object_path !~ '^videos/'))
-      or (p_media_kind = 'audio' and (p_mime_type not like 'audio/%' or p_object_path !~ '^audios/'))
-      or p_object_path !~ '^(images|videos|audios)/[0-9a-f-]+\.[a-z0-9]+$' then
+      or p_object_path !~ '^(images|videos)/[0-9a-f-]+\.[a-z0-9]+$' then
       raise exception using errcode = '22023', message = 'invalid media metadata';
     end if;
 

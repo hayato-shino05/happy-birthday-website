@@ -16,7 +16,7 @@ function parseOptionalText(value: unknown, maxLength: number): string | null | u
 }
 
 function isSafeObjectPath(value: string): boolean {
-  return /^(images|videos|audios)\/[0-9a-f-]{36}\.[a-z0-9]+$/i.test(value)
+  return /^(images|videos)\/[0-9a-f-]{36}\.[a-z0-9]+$/i.test(value)
 }
 
 function isMediaRow(value: unknown): value is { id: number; object_path: string } {

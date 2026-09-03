@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { getMediaKind, normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
+import { normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { Icon } from '@/components/ui/Icon'
@@ -37,7 +37,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const handleSelectedFile = (file: File): boolean => {
     const normalizedFile = normalizeMediaFile(file)
     const validation = validateCommunityMediaFile(normalizedFile)
-    if (!validation.valid || getMediaKind(normalizedFile.type) === 'audio') {
+    if (!validation.valid) {
       setError(!validation.valid && file.size > 50 * 1024 * 1024
         ? t('fileTooLargeWithLimit', { size: 50 })
         : t('fileTypeError'))
