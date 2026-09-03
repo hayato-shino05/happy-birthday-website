@@ -8,6 +8,8 @@ import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
 import { Icon } from '@/components/ui/Icon'
+import TrackSelector from '@/components/ui/TrackSelector'
+import { DEFAULT_MUSIC_TRACKS } from '@/config/music'
 
 interface MessageFormProps {
   birthdayPerson?: string
@@ -27,6 +29,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     }
   }, [])
   const [message, setMessage] = useState('')
+  const [musicTrackId, setMusicTrackId] = useState<string | undefined>()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -118,9 +121,10 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       // メディアURL付きでメッセージを送信
       const success = await sendMessage(
         sender.trim(), 
-        message.trim(), 
+        message.trim(),
         birthdayPerson,
-        mediaObjectPath || undefined
+        mediaObjectPath || undefined,
+        musicTrackId
       )
 
       if (success) {
@@ -189,6 +193,12 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       </div>
 
       <ContributorPromptButtons hasContent={message.trim().length > 0} onSelect={setMessage} />
+
+      <TrackSelector
+        tracks={DEFAULT_MUSIC_TRACKS}
+        currentTrackId={musicTrackId}
+        onSelect={setMusicTrackId}
+      />
 
       {/* ファイルアップロードエリア */}
       <div style={{ marginBottom: '15px' }}>
