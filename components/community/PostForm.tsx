@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
-import { getMediaKind, validateCommunityMediaFile } from '@/lib/validations/upload'
+import { normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { Icon } from '@/components/ui/Icon'
@@ -35,16 +34,10 @@ export default function PostForm({ onSubmit }: PostFormProps) {
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const normalizeMediaFile = (file: File): File => {
-    const baseMimeType = file.type.split(';', 1)[0].trim().toLowerCase()
-    if (baseMimeType === file.type) return file
-    return new File([file], file.name, { type: baseMimeType, lastModified: file.lastModified })
-  }
-
   const handleSelectedFile = (file: File): boolean => {
     const normalizedFile = normalizeMediaFile(file)
     const validation = validateCommunityMediaFile(normalizedFile)
-    if (!validation.valid || getMediaKind(normalizedFile.type) === 'audio') {
+    if (!validation.valid) {
       setError(!validation.valid && file.size > 50 * 1024 * 1024
         ? t('fileTooLargeWithLimit', { size: 50 })
         : t('fileTypeError'))
@@ -72,16 +65,21 @@ export default function PostForm({ onSubmit }: PostFormProps) {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    try {
-      setUploadProgress(10)
-      const data = await uploadCommunityMedia({ file: normalizeMediaFile(file), sender: author })
-      setUploadProgress(100)
-      return data.object_path
-    } catch (err) {
-      console.error('Upload error:', err)
-      return null
-    }
+  const submitPostWithMedia = async (file: File): Promise<boolean> => {
+    const formData = new FormData()
+    formData.set('kind', 'post')
+    formData.set('sender', author.trim())
+    formData.set('content', content.trim())
+    formData.set('media', file, file.name)
+
+    setUploadProgress(10)
+    const response = await fetch('/api/community', { method: 'POST', body: formData })
+    setUploadProgress(100)
+    if (response.ok) return true
+
+    const errorBody = await response.json().catch(() => null) as { error?: string } | null
+    setError(errorBody?.error ?? t('postFailed'))
+    return false
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,27 +91,21 @@ export default function PostForm({ onSubmit }: PostFormProps) {
     setUploadProgress(0)
 
     try {
-      let mediaUrl: string | undefined
-
-      if (selectedFile) {
-        const url = await uploadFile(selectedFile)
-        if (!url) {
-          setError(t('uploadFileFailed'))
-          setSubmitting(false)
-          return
-        }
-        mediaUrl = url
-      }
-
-      const success = await onSubmit(author.trim(), content.trim(), undefined, mediaUrl)
+      const success = selectedFile
+        ? await submitPostWithMedia(selectedFile)
+        : await onSubmit(author.trim(), content.trim())
 
       if (success) {
         // 名前を共有ストレージに保存する（他のフォームと共用）
-        localStorage.setItem('birthday_user_name', author.trim())
+        try {
+          localStorage.setItem('birthday_user_name', author.trim())
+        } catch {
+          console.warn('Failed to save author name')
+        }
         // 投稿者名は保持し、本文のみクリアする
         setContent('')
         removeFile()
-      } else {
+      } else if (!selectedFile) {
         setError(t('postFailed'))
       }
     } catch {
@@ -195,7 +187,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
           <ContributorPromptButtons hasContent={content.trim().length > 0} onSelect={setContent} />
 
           {/* メディアアップロード */}
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={handleFileSelect} style={{ display: 'none' }} />
+          <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} style={{ display: 'none' }} />
           
           {!selectedFile ? (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -265,8 +257,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            handleSelectedFile(file)
-            setShowCamera(false)
+            if (handleSelectedFile(file)) setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
         />

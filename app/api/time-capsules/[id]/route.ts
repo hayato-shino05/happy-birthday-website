@@ -21,9 +21,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const inviteToken = request.headers.get('x-time-capsule-invite-token')
     if (inviteToken) {
       const { client, row } = await findByInviteToken(parseInviteToken(inviteToken), id)
-      const data = await serializeCapsule(client, row)
       return Response.json(
-        { data },
+        { data: await serializeCapsule(client, row) },
         { headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } }
       )
     }

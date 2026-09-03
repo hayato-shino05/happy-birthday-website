@@ -6,7 +6,7 @@ import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
-import { uploadCommunityMedia } from '@/lib/supabase/communityMedia'
+import { normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { Icon } from '@/components/ui/Icon'
 
 interface MessageFormProps {
@@ -38,31 +38,26 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const handleSelectedFile = (file: File): boolean => {
+    const normalizedFile = normalizeMediaFile(file)
+    const validation = validateCommunityMediaFile(normalizedFile)
+    if (!validation.valid) {
+      setError(!validation.valid && file.size > 50 * 1024 * 1024
+        ? t('fileTooLargeWithLimit', { size: 50 })
+        : t('fileTypeError'))
+      return false
+    }
+
+    setSelectedFile(normalizedFile)
+    setError(null)
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(URL.createObjectURL(normalizedFile))
+    return true
+  }
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-
-    const isImage = file.type.startsWith('image/')
-    const isVideo = file.type.startsWith('video/')
-    
-    if (!isImage && !isVideo) {
-      setError(t('fileTypeError'))
-      return
-    }
-
-    // ファイルサイズを検証（画像は50MB、動画は100MBまで）
-    const maxSize = isVideo ? 100 * 1024 * 1024 : 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      setError(t('fileTooLargeWithLimit', { size: isVideo ? 100 : 50 }))
-      return
-    }
-
-    setSelectedFile(file)
-    setError(null)
-
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
+    if (file) handleSelectedFile(file)
   }
 
   const removeFile = () => {
@@ -76,20 +71,48 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     }
   }
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    setUploadProgress(10)
-
-    try {
-      const media = await uploadCommunityMedia({
-        file,
-        sender: sender.trim(),
-        birthdayPerson,
-      })
-      setUploadProgress(100)
-      return media.object_path
-    } catch {
-      return null
+  const submitMessage = async (
+    payload: { sender: string; message: string; birthdayPerson?: string; mediaObjectPath?: string }
+  ): Promise<boolean> => {
+    if (selectedFile) {
+      const formData = new FormData()
+      formData.set('kind', 'message')
+      formData.set('sender', payload.sender)
+      formData.set('content', payload.message)
+      if (payload.birthdayPerson) formData.set('birthdayPerson', payload.birthdayPerson)
+      formData.set('media', selectedFile, selectedFile.name)
+      try {
+        const response = await new Promise<XMLHttpRequest>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open('POST', '/api/community')
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100))
+          }
+          xhr.onload = () => resolve(xhr)
+          xhr.onerror = () => reject(new Error('community submission request failed'))
+          xhr.onabort = () => reject(new Error('community submission request aborted'))
+          xhr.send(formData)
+        })
+        if (response.status < 200 || response.status >= 300) {
+          let errorMessage: string | undefined
+          try {
+            errorMessage = (JSON.parse(response.responseText) as { error?: string }).error
+          } catch {
+            errorMessage = undefined
+          }
+          setError(errorMessage ?? t('sendMessageFailed'))
+          return false
+        }
+        setUploadProgress(100)
+        return true
+      } catch {
+        setError((currentError) => currentError ?? t('genericError'))
+        return false
+      }
     }
+    const success = await sendMessage(payload.sender, payload.message, payload.birthdayPerson, payload.mediaObjectPath)
+    if (!success) setError((currentError) => currentError ?? t('sendMessageFailed'))
+    return success
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,37 +127,28 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     setUploadProgress(0)
 
     try {
-      let mediaObjectPath: string | null = null
-
-      if (selectedFile) {
-        mediaObjectPath = await uploadFile(selectedFile)
-        if (!mediaObjectPath) {
-          setError(t('uploadFileFailed'))
-          setIsSubmitting(false)
-          return
-        }
-      }
-
-      // メディアURL付きでメッセージを送信
-      const success = await sendMessage(
-        sender.trim(), 
-        message.trim(), 
+      // メディア付き投稿は server-side の transaction 経路 /api/community に統一し、
+      // メディアアップロードと message 挿入の不整合による孤立 object を防ぐ。
+      const success = await submitMessage({
+        sender: sender.trim(),
+        message: message.trim(),
         birthdayPerson,
-        mediaObjectPath || undefined
-      )
+      })
 
       if (success) {
         // 名前を共有ストレージに保存する（他のフォームと共用）
-        localStorage.setItem('birthday_user_name', sender.trim())
+        try {
+          localStorage.setItem('birthday_user_name', sender.trim())
+        } catch {
+          console.warn('Failed to save sender name')
+        }
         // 送信者名は保持し、メッセージのみクリアする
         setMessage('')
         removeFile()
         onSuccess?.()
-      } else {
-        setError(t('sendMessageFailed'))
       }
     } catch {
-      setError(t('genericError'))
+      setError((currentError) => currentError ?? t('genericError'))
     } finally {
       setIsSubmitting(false)
       setUploadProgress(0)
@@ -427,10 +441,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         <CameraCapture
           mode={cameraMode}
           onCapture={(file) => {
-            setSelectedFile(file)
-            if (previewUrl) URL.revokeObjectURL(previewUrl)
-            const url = URL.createObjectURL(file)
-            setPreviewUrl(url)
+            handleSelectedFile(file)
             setShowCamera(false)
           }}
           onClose={() => setShowCamera(false)}
