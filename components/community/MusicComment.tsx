@@ -168,7 +168,6 @@ export function MusicComment({ trackReference }: MusicCommentProps) {
       ? t('pause')
       : t('play')
   const buttonStyle = isResolving ? disabledPlayButtonStyle : playButtonStyle
-  const showResolvedMeta = track !== null
 
   return (
     <section
@@ -194,7 +193,7 @@ export function MusicComment({ trackReference }: MusicCommentProps) {
             <Icon name="Music" size={12} />
             {t('music')}
           </span>
-          {showResolvedMeta ? (
+          {track !== null ? (
             <>
               <p style={titleStyle} title={track.name}>{track.name}</p>
               {track.artistName && (
