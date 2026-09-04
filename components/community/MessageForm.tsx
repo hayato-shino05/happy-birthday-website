@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
 import { normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { Icon } from '@/components/ui/Icon'
+import SongSearch from '@/components/ui/SongSearch'
 
 interface MessageFormProps {
   birthdayPerson?: string
@@ -15,7 +15,6 @@ interface MessageFormProps {
 }
 
 export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
-  const { sendMessage } = useMessages()
   const { t } = useLanguage()
   const [sender, setSender] = useState('')
   
@@ -27,6 +26,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
     }
   }, [])
   const [message, setMessage] = useState('')
+  const [musicTrackId, setMusicTrackId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -72,16 +72,18 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   }
 
   const submitMessage = async (
-    payload: { sender: string; message: string; birthdayPerson?: string; mediaObjectPath?: string }
+    payload: { sender: string; message: string; birthdayPerson?: string; musicTrackId?: string }
   ): Promise<boolean> => {
-    if (selectedFile) {
-      const formData = new FormData()
-      formData.set('kind', 'message')
-      formData.set('sender', payload.sender)
-      formData.set('content', payload.message)
-      if (payload.birthdayPerson) formData.set('birthdayPerson', payload.birthdayPerson)
-      formData.set('media', selectedFile, selectedFile.name)
-      try {
+    const formData = new FormData()
+    formData.set('kind', 'message')
+    formData.set('sender', payload.sender)
+    formData.set('content', payload.message)
+    if (payload.birthdayPerson) formData.set('birthdayPerson', payload.birthdayPerson)
+    if (payload.musicTrackId) formData.set('musicTrackId', payload.musicTrackId)
+    if (selectedFile) formData.set('media', selectedFile, selectedFile.name)
+
+    try {
+      if (selectedFile) {
         const response = await new Promise<XMLHttpRequest>((resolve, reject) => {
           const xhr = new XMLHttpRequest()
           xhr.open('POST', '/api/community')
@@ -105,14 +107,19 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         }
         setUploadProgress(100)
         return true
-      } catch {
-        setError((currentError) => currentError ?? t('genericError'))
+      }
+
+      const response = await fetch('/api/community', { method: 'POST', body: formData })
+      if (!response.ok) {
+        const responsePayload = (await response.json().catch(() => null)) as { error?: string } | null
+        setError(responsePayload?.error ?? t('sendMessageFailed'))
         return false
       }
+      return true
+    } catch {
+      setError((currentError) => currentError ?? t('genericError'))
+      return false
     }
-    const success = await sendMessage(payload.sender, payload.message, payload.birthdayPerson, payload.mediaObjectPath)
-    if (!success) setError((currentError) => currentError ?? t('sendMessageFailed'))
-    return success
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,6 +140,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
         sender: sender.trim(),
         message: message.trim(),
         birthdayPerson,
+        musicTrackId: musicTrackId || undefined,
       })
 
       if (success) {
@@ -203,6 +211,8 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
       </div>
 
       <ContributorPromptButtons hasContent={message.trim().length > 0} onSelect={setMessage} />
+
+      <SongSearch value={musicTrackId} onChange={setMusicTrackId} />
 
       {/* ファイルアップロードエリア */}
       <div style={{ marginBottom: '15px' }}>
