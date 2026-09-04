@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { parseMusicTrackReference } from './reference'
+import { JAPAN_PRESET_TRACKS, getJamendoStreamUrl } from './presets'
 import type { MusicAccess, MusicTrackReference, ResolvedTrack, SearchTrack } from './types'
 
 const ALLOWED_LICENSE_PATTERNS = [
@@ -160,6 +161,29 @@ export async function searchMusicTracks(query: string, limit: number): Promise<S
   return jamendoResults(jamendoPayload).map(asJamendoTrack).map((track) => track && mapJamendoTrack(track)).filter((track): track is SearchTrack => track !== null).slice(0, limit)
 }
 
+function findPresetJamendoTrack(trackId: string) {
+  return JAPAN_PRESET_TRACKS.find((track) => track.trackId === trackId) ?? null
+}
+
+function presetToResolved(preset: (typeof JAPAN_PRESET_TRACKS)[number]): ResolvedTrack | null {
+  const streamUrl = preset.audioUrl ?? getJamendoStreamUrl(preset.trackId)
+  if (!streamUrl || !streamUrl.startsWith('https://')) return null
+  return {
+    provider: 'jamendo',
+    trackId: preset.trackId,
+    reference: `jamendo:${preset.trackId}`,
+    access: 'playable',
+    name: preset.name,
+    artistName: preset.artistName,
+    albumName: preset.albumName,
+    duration: preset.duration,
+    licenseUrl: preset.licenseUrl,
+    sourceUrl: preset.sourceUrl,
+    albumImage: preset.albumImage,
+    streamUrl,
+  }
+}
+
 export async function resolveMusicTrack(value: string): Promise<ResolvedTrack | null> {
   const reference = parseMusicTrackReference(value)
   if (!reference) return null
@@ -171,6 +195,9 @@ export async function resolveMusicTrack(value: string): Promise<ResolvedTrack | 
     if (!mapped || typeof track.stream_url !== 'string' || !track.stream_url.startsWith('https://')) return null
     return { ...mapped, streamUrl: track.stream_url }
   }
+
+  const preset = findPresetJamendoTrack(reference.trackId)
+  if (preset) return presetToResolved(preset)
 
   const payload = await jamendoRequest({ id: reference.trackId, limit: '1' })
   const track = asJamendoTrack(jamendoResults(payload)[0])
