@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { CustomMessage } from '@/types'
+import { MusicComment } from './MusicComment'
 
 interface MessageListProps {
   limit?: number
@@ -81,6 +82,7 @@ function MessageCard({ message, index }: { message: CustomMessage; index: number
         </span>
       </div>
       <p style={{ color: '#2C1810', margin: 0, lineHeight: 1.6 }}>{message.message}</p>
+      {message.music_track_id && <MusicComment trackReference={message.music_track_id} />}
     </motion.div>
   )
 }
