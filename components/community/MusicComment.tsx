@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 import type { ResolvedTrack } from '@/lib/music/types'
@@ -106,6 +106,21 @@ const sourceLinkStyle: React.CSSProperties = {
   textDecoration: 'underline',
 }
 
+const retryButtonStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '4px',
+  marginTop: '6px',
+  padding: '4px 10px',
+  border: '1px solid #a52a2a',
+  borderRadius: '4px',
+  background: 'transparent',
+  color: '#a52a2a',
+  fontSize: '0.72rem',
+  cursor: 'pointer',
+  fontFamily: 'var(--font-body)',
+}
+
 function isResolvedTrack(value: unknown): value is ResolvedTrack {
   if (!value || typeof value !== 'object') return false
   const track = value as Record<string, unknown>
@@ -119,72 +134,77 @@ function formatDuration(seconds: number): string {
   return `${minutes}:${String(remainder).padStart(2, '0')}`
 }
 
+type SoundCardState =
+  | { kind: 'idle'; track: null }
+  | { kind: 'resolving'; track: null }
+  | { kind: 'ready'; track: ResolvedTrack; isPlaying: boolean }
+  | { kind: 'error'; track: null }
+
 export function MusicComment({ trackReference }: MusicCommentProps) {
   const { t } = useLanguage()
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [track, setTrack] = useState<ResolvedTrack | null>(null)
-  const [isResolving, setIsResolving] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<SoundCardState>({ kind: 'idle', track: null })
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    if (isPlaying) {
-      audio.play().catch(() => setIsPlaying(false))
+    if (state.kind === 'ready' && state.isPlaying) {
+      audio.play().catch(() => setState({ kind: 'ready', track: state.track, isPlaying: false }))
     } else {
       audio.pause()
     }
-  }, [isPlaying])
+  }, [state])
 
   useEffect(() => () => {
     audioRef.current?.pause()
   }, [])
 
-  const handleToggle = async () => {
-    if (isResolving) return
-    if (track && audioRef.current) {
-      setIsPlaying((current) => !current)
-      return
-    }
-    setIsResolving(true)
-    setError(null)
+  const resolve = useCallback(async () => {
+    setState({ kind: 'resolving', track: null })
     try {
       const response = await fetch(`/api/music/resolve?ref=${encodeURIComponent(trackReference)}`)
       const payload = (await response.json().catch(() => null)) as { data?: unknown } | null
       if (!response.ok || !isResolvedTrack(payload?.data)) throw new Error('music resolution failed')
-      setTrack(payload.data)
-      setIsPlaying(true)
+      setState({ kind: 'ready', track: payload.data, isPlaying: true })
     } catch {
-      setError(t('songSearchFailed'))
-    } finally {
-      setIsResolving(false)
+      setState({ kind: 'error', track: null })
     }
-  }
+  }, [trackReference])
 
-  const buttonLabel = isResolving
-    ? t('loading')
-    : isPlaying
-      ? t('pause')
-      : t('play')
-  const buttonStyle = isResolving ? disabledPlayButtonStyle : playButtonStyle
+  const handleToggle = useCallback(() => {
+    if (state.kind === 'resolving') return
+    if (state.kind === 'ready') {
+      setState({ kind: 'ready', track: state.track, isPlaying: !state.isPlaying })
+      return
+    }
+    void resolve()
+  }, [state, resolve])
+
+  const handleRetry = useCallback(() => {
+    void resolve()
+  }, [resolve])
+
+  const buttonLabel =
+    state.kind === 'resolving' ? t('loading')
+    : state.kind === 'ready' && state.isPlaying ? t('pause')
+    : t('play')
+  const isBusy = state.kind === 'resolving'
+  const buttonStyle = isBusy ? disabledPlayButtonStyle : playButtonStyle
 
   return (
-    <section
-      aria-label={t('music')}
-      style={sectionStyle}
-    >
+    <section aria-label={t('music')} style={sectionStyle}>
       <div style={rowStyle}>
         <button
           type="button"
           onClick={() => void handleToggle()}
-          disabled={isResolving}
+          disabled={isBusy}
+          aria-busy={isBusy}
           aria-label={buttonLabel}
-          aria-pressed={isPlaying}
+          aria-pressed={state.kind === 'ready' ? state.isPlaying : undefined}
           style={buttonStyle}
         >
           <Icon
-            name={isResolving ? 'Volume' : isPlaying ? 'Pause' : 'Play'}
+            name={isBusy ? 'Volume' : state.kind === 'ready' && state.isPlaying ? 'Pause' : 'Play'}
             size={18}
           />
         </button>
@@ -193,18 +213,18 @@ export function MusicComment({ trackReference }: MusicCommentProps) {
             <Icon name="Music" size={12} />
             {t('music')}
           </span>
-          {track !== null ? (
+          {state.kind === 'ready' ? (
             <>
-              <p style={titleStyle} title={track.name}>{track.name}</p>
-              {track.artistName && (
-                <p style={artistStyle} title={track.artistName}>
-                  {track.artistName}
-                  {track.duration ? ` · ${formatDuration(track.duration)}` : ''}
+              <p style={titleStyle} title={state.track.name}>{state.track.name}</p>
+              {state.track.artistName && (
+                <p style={artistStyle} title={state.track.artistName}>
+                  {state.track.artistName}
+                  {state.track.duration ? ` · ${formatDuration(state.track.duration)}` : ''}
                 </p>
               )}
-              {track.sourceUrl && (
+              {state.track.sourceUrl && (
                 <a
-                  href={track.sourceUrl}
+                  href={state.track.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={sourceLinkStyle}
@@ -220,24 +240,32 @@ export function MusicComment({ trackReference }: MusicCommentProps) {
           )}
         </div>
       </div>
-      {track && (
+      {state.kind === 'ready' && (
         <audio
           ref={audioRef}
           preload="none"
-          src={track.streamUrl}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
-          onError={() => {
-            setIsPlaying(false)
-            setError(t('songSearchFailed'))
-          }}
+          src={state.track.streamUrl}
+          onPlay={() => setState((current) => current.kind === 'ready' ? { ...current, isPlaying: true } : current)}
+          onPause={() => setState((current) => current.kind === 'ready' ? { ...current, isPlaying: false } : current)}
+          onEnded={() => setState((current) => current.kind === 'ready' ? { ...current, isPlaying: false } : current)}
+          onError={() => setState({ kind: 'error', track: null })}
         >
           <track kind="captions" />
         </audio>
       )}
-      {error && (
-        <p role="status" style={errorStyle}>{error}</p>
+      {state.kind === 'error' && (
+        <div role="alert" aria-live="assertive" style={errorStyle}>
+          <p style={{ margin: 0 }}>{t('songSearchFailed')}</p>
+          <button type="button" onClick={handleRetry} style={retryButtonStyle}>
+            <Icon name="Volume" size={12} />
+            {t('retry')}
+          </button>
+        </div>
+      )}
+      {state.kind === 'resolving' && (
+        <p role="status" aria-live="polite" style={{ margin: '8px 0 0', color: '#854D27', fontSize: '0.72rem' }}>
+          {t('loading')}
+        </p>
       )}
     </section>
   )

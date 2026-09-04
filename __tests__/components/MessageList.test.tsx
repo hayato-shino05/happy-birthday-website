@@ -43,4 +43,26 @@ describe('MessageList music playback', () => {
     expect(await screen.findByText('Birthday Song')).toBeInTheDocument()
     expect(document.querySelector('audio')).toHaveAttribute('src', 'https://resolver.example/stream')
   })
+
+  it('exposes a retry button and aria-live alert after a failed resolve', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: '楽曲を再生できません' }), { status: 502 }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<MessageList />)
+    fireEvent.click(screen.getByRole('button', { name: 'play' }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('songSearchFailed')
+
+    const retry = screen.getByRole('button', { name: 'retry' })
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      data: { streamUrl: 'https://resolver.example/stream', name: 'Birthday Song', artistName: 'Artist' },
+    }), { status: 200 }))
+    fireEvent.click(retry)
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText('Birthday Song')).toBeInTheDocument()
+  })
 })
