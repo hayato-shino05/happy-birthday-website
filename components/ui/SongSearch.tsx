@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { Icon } from '@/components/ui/Icon'
 import { JAPAN_PRESET_TRACKS } from '@/lib/music/presets'
@@ -19,7 +19,9 @@ export default function SongSearch({ value, onChange }: SongSearchProps) {
   const [error, setError] = useState<string | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const listboxId = useId()
 
   const stopPreview = useCallback(() => {
     audioRef.current?.pause()
@@ -66,6 +68,7 @@ export default function SongSearch({ value, onChange }: SongSearchProps) {
     setIsLoading(true)
     setError(null)
     setResults(null)
+    setActiveIndex(-1)
     stopPreview()
     try {
       const response = await fetch(`/api/music/search?q=${encodeURIComponent(trimmedQuery)}&limit=20`)
@@ -83,6 +86,51 @@ export default function SongSearch({ value, onChange }: SongSearchProps) {
   const formatDuration = (seconds: number) => {
     if (!seconds) return '--:--'
     return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
+  }
+
+  const optionId = (reference: string) => `${listboxId}-option-${reference.replace(/[^a-zA-Z0-9_-]/g, '_')}`
+  const activeOptionId = activeIndex >= 0 && tracks[activeIndex] ? optionId(tracks[activeIndex].reference) : undefined
+
+  const moveActive = useCallback((delta: number) => {
+    setActiveIndex((current) => {
+      if (tracks.length === 0) return -1
+      if (current < 0) return delta > 0 ? 0 : tracks.length - 1
+      const next = (current + delta + tracks.length) % tracks.length
+      return next
+    })
+  }, [tracks.length])
+
+  const handleListboxKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (tracks.length === 0) return
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault()
+        moveActive(1)
+        return
+      case 'ArrowUp':
+        event.preventDefault()
+        moveActive(-1)
+        return
+      case 'Home':
+        event.preventDefault()
+        setActiveIndex(0)
+        return
+      case 'End':
+        event.preventDefault()
+        setActiveIndex(tracks.length - 1)
+        return
+      case 'Enter':
+      case ' ': {
+        const target = activeIndex >= 0 ? tracks[activeIndex] : tracks[0]
+        if (target) {
+          event.preventDefault()
+          onChange(target.reference)
+        }
+        return
+      }
+      default:
+        return
+    }
   }
 
   return (
@@ -112,12 +160,40 @@ export default function SongSearch({ value, onChange }: SongSearchProps) {
       {!isLoading && results !== null && <p style={{ fontSize: '0.75rem', color: '#854D27', marginBottom: '6px' }}>{results.length ? t('searchResultsTitle') : t('songNotFound')}</p>}
       {!results && <p style={{ fontSize: '0.7rem', color: '#8a6a4d', margin: '0 0 6px' }}>{t('presetSongsHint')}</p>}
 
-      <div style={{ maxHeight: '280px', overflowY: 'auto', border: '2px solid rgba(212, 176, 140, 0.4)' }}>
-        {tracks.map((track) => {
+      <div
+        id={listboxId}
+        role="listbox"
+        aria-label={t('selectSong')}
+        aria-activedescendant={activeOptionId}
+        tabIndex={0}
+        onKeyDown={handleListboxKeyDown}
+        style={{ maxHeight: '280px', overflowY: 'auto', border: '2px solid rgba(212, 176, 140, 0.4)' }}
+      >
+        {tracks.map((track, index) => {
           const selected = track.reference === value
           const previewing = track.reference === previewId
+          const isActive = index === activeIndex
           return (
-            <div key={track.reference} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderBottom: '1px solid rgba(212, 176, 140, 0.25)', background: selected ? 'rgba(212, 176, 140, 0.18)' : 'transparent' }}>
+            <div
+              key={track.reference}
+              id={optionId(track.reference)}
+              role="option"
+              aria-selected={selected}
+              onMouseEnter={() => setActiveIndex(index)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '8px 10px',
+                borderBottom: '1px solid rgba(212, 176, 140, 0.25)',
+                background: isActive
+                  ? 'rgba(133, 77, 39, 0.12)'
+                  : selected
+                    ? 'rgba(212, 176, 140, 0.18)'
+                    : 'transparent',
+                outline: 'none',
+              }}
+            >
               {track.albumImage && <span aria-hidden="true" style={{ width: 40, height: 40, flexShrink: 0, backgroundImage: `url(${track.albumImage})`, backgroundPosition: 'center', backgroundSize: 'cover' }} />}
               <button type="button" onClick={() => togglePreview(track)} aria-label={previewing && isPlaying ? t('pause') : t('play')} style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '50%', border: '2px solid #D4B08C', background: '#854D27', color: '#FFF9F3', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name={previewing && isPlaying ? 'Pause' : 'Play'} size={16} />
