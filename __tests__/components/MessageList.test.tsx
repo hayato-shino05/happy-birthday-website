@@ -20,10 +20,16 @@ vi.mock('@/lib/i18n/LanguageContext', () => ({
   useLanguage: () => ({ locale: 'ja-JP', t: (key: string) => key }),
 }))
 
-vi.mock('framer-motion', () => ({
-  motion: { div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div> },
-  useReducedMotion: () => false,
-}))
+vi.mock('framer-motion', () => {
+  const passthrough = ({ children, ...props }: React.HTMLAttributes<HTMLElement> & { as?: keyof JSX.IntrinsicElements }) => {
+    const Tag = (props.as ?? 'div') as keyof JSX.IntrinsicElements
+    return <Tag {...props}>{children}</Tag>
+  }
+  return {
+    motion: new Proxy({}, { get: (_target, prop: string) => passthrough }),
+    useReducedMotion: () => false,
+  }
+})
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
