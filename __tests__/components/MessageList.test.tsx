@@ -21,12 +21,13 @@ vi.mock('@/lib/i18n/LanguageContext', () => ({
 }))
 
 vi.mock('framer-motion', () => {
-  const passthrough = ({ children, ...props }: React.HTMLAttributes<HTMLElement> & { as?: keyof JSX.IntrinsicElements }) => {
-    const Tag = (props.as ?? 'div') as keyof JSX.IntrinsicElements
+  const passthrough = ({ children, ...props }: Record<string, unknown> & { as?: React.ElementType }) => {
+    const Tag = (props.as ?? 'div') as React.ElementType
     return <Tag {...props}>{children}</Tag>
   }
   return {
-    motion: new Proxy({}, { get: (_target, prop: string) => passthrough }),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    motion: new Proxy({}, { get: (_target, _prop: string) => passthrough }),
     useReducedMotion: () => false,
   }
 })

@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { parseMusicTrackReference } from '@/lib/music/reference'
+import type { TranslationKey } from '@/lib/i18n/types'
 import type { CustomMessage } from '@/types'
 import { MusicComment } from './MusicComment'
 
@@ -109,7 +110,7 @@ function monogramFor(name: string): string {
   return first.toUpperCase()
 }
 
-function providerLabel(provider: string, t: (key: any) => string): string {
+function providerLabel(provider: string, t: (key: TranslationKey) => string): string {
   if (provider === 'jamendo') return t('provider_jamendo')
   if (provider === 'soundcloud') return t('provider_soundcloud')
   return provider
