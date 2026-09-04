@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { CustomMessage } from '@/types'
@@ -51,6 +51,7 @@ export function MessageList({ limit }: MessageListProps) {
 
 function MessageCard({ message, index }: { message: CustomMessage; index: number }) {
   const { locale } = useLanguage()
+  const prefersReducedMotion = useReducedMotion()
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString(locale, {
@@ -64,9 +65,9 @@ function MessageCard({ message, index }: { message: CustomMessage; index: number
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+      animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? undefined : { delay: index * 0.1 }}
       style={{
         padding: '15px',
         background: '#FFF9F3',

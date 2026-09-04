@@ -201,6 +201,7 @@ export function MusicComment({ trackReference }: MusicCommentProps) {
           aria-busy={isBusy}
           aria-label={buttonLabel}
           aria-pressed={state.kind === 'ready' ? state.isPlaying : undefined}
+          className="focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFF9F3]"
           style={buttonStyle}
         >
           <Icon

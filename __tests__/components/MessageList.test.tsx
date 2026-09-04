@@ -22,6 +22,7 @@ vi.mock('@/lib/i18n/LanguageContext', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: { div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div> },
+  useReducedMotion: () => false,
 }))
 
 beforeEach(() => {
