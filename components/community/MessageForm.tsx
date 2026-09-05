@@ -5,9 +5,10 @@ import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CameraCapture } from './CameraCapture'
 import { ContributorPromptButtons } from './ContributorPromptButtons'
+import { SelectedMusicTrackRow } from './SelectedMusicTrackRow'
+import SongPickerModal from './SongPickerModal'
 import { normalizeMediaFile, validateCommunityMediaFile } from '@/lib/validations/upload'
 import { Icon } from '@/components/ui/Icon'
-import SongSearch from '@/components/ui/SongSearch'
 
 interface MessageFormProps {
   birthdayPerson?: string
@@ -27,6 +28,7 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
   }, [])
   const [message, setMessage] = useState('')
   const [musicTrackId, setMusicTrackId] = useState('')
+  const [isMusicPickerOpen, setIsMusicPickerOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -212,7 +214,11 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
 
       <ContributorPromptButtons hasContent={message.trim().length > 0} onSelect={setMessage} />
 
-      <SongSearch value={musicTrackId} onChange={setMusicTrackId} />
+      <SelectedMusicTrackRow
+        value={musicTrackId}
+        onChange={setMusicTrackId}
+        onOpenPicker={() => setIsMusicPickerOpen(true)}
+      />
 
       {/* ファイルアップロードエリア */}
       <div style={{ marginBottom: '15px' }}>
@@ -457,6 +463,16 @@ export function MessageForm({ birthdayPerson, onSuccess }: MessageFormProps) {
           onClose={() => setShowCamera(false)}
         />
       )}
+
+      <SongPickerModal
+        isOpen={isMusicPickerOpen}
+        onClose={() => setIsMusicPickerOpen(false)}
+        onConfirm={(reference) => {
+          setMusicTrackId(reference)
+          setIsMusicPickerOpen(false)
+        }}
+        initialValue={musicTrackId}
+      />
     </form>
   )
 }

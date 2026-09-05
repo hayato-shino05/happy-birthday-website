@@ -35,7 +35,7 @@ describe('community submission RPC migration', () => {
     expect(musicMigration).toContain('music_track_id)')
     expect(musicMigration).toContain('p_object_path, p_music_track_id')
     expect(musicMigration).toContain('drop function if exists public.create_community_submission(')
-    expect(musicMigration).toContain('text, text, text, text, text, text, text, text, text, bigint\n);')
+    expect(musicMigration).toContain('text, text, text, text, text, text, text, text, text, bigint\r\n);')
     expect(musicMigration).not.toContain('v_message_id')
   })
 })

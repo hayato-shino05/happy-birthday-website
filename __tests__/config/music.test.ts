@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { JAPAN_PRESET_TRACKS } from '@/lib/music/presets'
 import {
   DEFAULT_MUSIC_TRACKS,
   getCuratedMusicTrack,
@@ -6,15 +7,11 @@ import {
 } from '@/config/music'
 
 describe('curated music catalog', () => {
-  it('contains only the bundled track that is available for playback', () => {
-    expect(DEFAULT_MUSIC_TRACKS).toEqual([
-      {
-        id: 'happy-birthday-classic',
-        name: 'Happy Birthday (Classic)',
-        url: '/audio/happy-birthday.mp3',
-        category: 'Birthday',
-      },
-    ])
+  it('exposes the curated Jamendo presets as the bundled catalog', () => {
+    expect(DEFAULT_MUSIC_TRACKS).toHaveLength(JAPAN_PRESET_TRACKS.length)
+    expect(DEFAULT_MUSIC_TRACKS.map((track) => track.id)).toEqual(
+      JAPAN_PRESET_TRACKS.map((track) => track.id),
+    )
   })
 
   it('does not expose a custom upload category', () => {
@@ -22,7 +19,8 @@ describe('curated music catalog', () => {
   })
 
   it('resolves only catalog track IDs', () => {
-    expect(getCuratedMusicTrack('happy-birthday-classic')?.url).toBe('/audio/happy-birthday.mp3')
+    const firstPreset = JAPAN_PRESET_TRACKS[0]
+    expect(getCuratedMusicTrack(firstPreset.id)?.url).toBe(firstPreset.audioUrl)
     expect(getCuratedMusicTrack('user-upload')).toBeNull()
   })
 })
