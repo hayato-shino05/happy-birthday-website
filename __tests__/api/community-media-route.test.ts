@@ -19,7 +19,26 @@ function makeClient(insertResult: { data: Record<string, unknown> | null; error:
   return { client, upload, remove, single }
 }
 
-const PNG_BYTES = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+// 本物の PNG 構造（シグネチャ + IHDR + IEND）を持つ実内容
+const PNG_BYTES = Uint8Array.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // signature
+  0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, // length + 'IHDR'
+  0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 0, 0, 0, 0, 0, // IHDR data + CRC
+  0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82, // length + 'IEND' + CRC
+])
+
+// PNG シグネチャだけを持ち、IHDR / IEND を持たない偽装内容
+const FAKE_PNG_BYTES = Uint8Array.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0xff, 0xff, 0xff,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+])
+
+// 実内容 video/mp4（ftyp + mdat）
+const MP4_BYTES = Uint8Array.from([
+  0, 0, 0, 32, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0x6d, 0x64, 0x61, 0x74, // 'mdat'
+])
 
 function request(fields: Record<string, string>, file?: File) {
   const body = new FormData()
@@ -67,8 +86,7 @@ describe('POST /api/community/media', () => {
   it('uses the inspected content type for path, upload, and metadata when declaration differs', async () => {
     const { client, upload } = makeClient()
     // PNG と宣言して video/mp4 の実内容を送るケース
-    const mp4Bytes = new Uint8Array([0, 0, 0, 32, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    const file = new File([mp4Bytes], 'cake.png', { type: 'image/png' })
+    const file = new File([MP4_BYTES], 'cake.png', { type: 'image/png' })
 
     const response = await POST(request({ sender: '花子' }, file))
 
@@ -81,8 +99,30 @@ describe('POST /api/community/media', () => {
   it('rejects files whose declared type is allowlisted but content is not inspected media', async () => {
     makeClient()
     // 拡張子 .png・宣言 image/png だが実内容は実行形式バイナリ
-    const fakeBytes = Uint8Array.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00])
-    const file = new File([fakeBytes], 'evil.png', { type: 'image/png' })
+    const file = new File([Uint8Array.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00])], 'evil.png', { type: 'image/png' })
+
+    const response = await POST(request({ sender: '花子' }, file))
+
+    expect(response.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
+  it('rejects content that only carries the declared signature without a valid container', async () => {
+    makeClient()
+    // PNG シグネチャだけを持ち、IHDR / IEND を持たない偽装内容は不正として扱う
+    const file = new File([FAKE_PNG_BYTES], 'fake.png', { type: 'image/png' })
+
+    const response = await POST(request({ sender: '花子' }, file))
+
+    expect(response.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
+  it('rejects truncated video content that only carries the ftyp signature', async () => {
+    makeClient()
+    // ftyp だけを持ち mdat / moov を持たない内容は不正として扱う
+    const truncated = MP4_BYTES.slice(0, 32)
+    const file = new File([truncated], 'clip.mp4', { type: 'video/mp4' })
 
     const response = await POST(request({ sender: '花子' }, file))
 

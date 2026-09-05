@@ -14,11 +14,20 @@ import { createCommunityMediaUploadToken } from '@/lib/time-capsule/server'
 const payload = { path: 'images/12345678-1234-1234-1234-123456789012.png', filename: 'cake.png', mimeType: 'image/png', sizeBytes: 5, sender: '花子', birthdayPerson: null, description: null }
 const request = (body: unknown) => ({ json: async () => body } as unknown as NextRequest)
 
-// finalize の内容検証を通すための PNG マジックナンバー
-const PNG_BYTES = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+// finalize の内容検証を通すための実 PNG（シグネチャ + IHDR + IEND）
+const PNG_BYTES = Uint8Array.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // signature
+  0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, // length + 'IHDR'
+  0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 0, 0, 0, 0, 0, // IHDR data + CRC
+  0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82, // length + 'IEND' + CRC
+])
 
-// 宣言 image/png と実内容が一致しない video/mp4 のマジックナンバー
-const MP4_BYTES = Uint8Array.from([0, 0, 0, 32, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+// 宣言 image/png と実内容が一致しない video/mp4（ftyp + mdat）
+const MP4_BYTES = Uint8Array.from([
+  0, 0, 0, 32, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0x6d, 0x64, 0x61, 0x74, // 'mdat'
+])
 
 function client(existing: unknown = null, insert: unknown = { id: 1 }, info: unknown = { size: 5, contentType: 'image/png' }, winner: unknown = null, insertError: unknown = null, contentBytes: Uint8Array<ArrayBuffer> = PNG_BYTES as Uint8Array<ArrayBuffer>) {
   const remove = vi.fn().mockResolvedValue({ error: null })
