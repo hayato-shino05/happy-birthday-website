@@ -20,21 +20,10 @@ $$;
 
 -- 匿名の音楽付きメッセージは sender と birthday_person の組で 1 件に制限する。
 -- 同一入力の再送・二重クリック・同時実行を DB レベルで重複させない。
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conrelid = 'public.messages'::regclass
-      and conname = 'messages_music_track_sender_birthday_unique'
-  ) then
-    alter table public.messages
-      add constraint messages_music_track_sender_birthday_unique
-      unique (sender, birthday_person)
-      where music_track_id is not null;
-  end if;
-end;
-$$;
+-- 部分ユニーク制約は CREATE UNIQUE INDEX でなければ書けない（ADD CONSTRAINT ... UNIQUE ... WHERE は構文エラー）。
+create unique index if not exists messages_music_track_sender_birthday_unique
+  on public.messages (sender, birthday_person)
+  where music_track_id is not null;
 
 drop function if exists public.create_community_submission(
   text, text, text, text, text, text, text, text, text, bigint
