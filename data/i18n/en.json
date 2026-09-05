@@ -377,6 +377,8 @@
     "yearOverview": "Year overview",
     "yearlyOverview": "Yearly Birthday Overview",
     "yearsAgoToday": "{count} year(s) ago today",
-    "yourName": "Your name"
+    "yourName": "Your name",
+    "birthdayThreadsTitle": "Birthdays today",
+    "birthdayThreadBadge": "Birthday thread"
   }
 }

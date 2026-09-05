@@ -20,6 +20,8 @@ export const translationKeys = [
   "birthdayCalendar",
   "birthdayQuiz",
   "birthdaySong",
+  "birthdayThreadBadge",
+  "birthdayThreadsTitle",
   "birthdayWish",
   "birthdaysInMonthCount",
   "blowCandles",
@@ -767,7 +769,9 @@ export const localePacks = [
       "yearOverview": "Year overview",
       "yearlyOverview": "Yearly Birthday Overview",
       "yearsAgoToday": "{count} year(s) ago today",
-      "yourName": "Your name"
+      "yourName": "Your name",
+      "birthdayThreadsTitle": "Birthdays today",
+      "birthdayThreadBadge": "Birthday thread"
     }
   },
   {
@@ -1149,7 +1153,9 @@ export const localePacks = [
       "yearOverview": "年間一覧",
       "yearlyOverview": "1年の誕生日一覧",
       "yearsAgoToday": "{count}年前の今日",
-      "yourName": "あなたの名前"
+      "yourName": "あなたの名前",
+      "birthdayThreadsTitle": "今日のお誕生日",
+      "birthdayThreadBadge": "お誕生日スレッド"
     }
   }
 ] as const satisfies readonly GeneratedLocalePack[]
