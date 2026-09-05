@@ -27,52 +27,43 @@ export function SelectedMusicTrackRow({
   onOpenPicker,
 }: SelectedMusicTrackRowProps) {
   const { t } = useLanguage()
-  const [track, setTrack] = useState<LegacySearchTrack | SearchTrack | null>(null)
-  const [loading, setLoading] = useState(false)
+  const preset = value ? findTrack(value) : undefined
+  const [fetchedById, setFetchedById] = useState<Record<string, SearchTrack | null>>({})
+  const fetched = value ? fetchedById[value] : undefined
+  const loading = !!value && !preset && !(value in fetchedById)
 
   useEffect(() => {
-    if (!value) {
-      setTrack(null)
-      return
-    }
-    const local = findTrack(value)
-    if (local) {
-      setTrack(local)
-      return
-    }
+    if (!value || preset || value in fetchedById) return
     let cancelled = false
-    setLoading(true)
     fetch(`/api/music/resolve?ref=${encodeURIComponent(value)}`)
       .then((response) => response.json() as Promise<{ data?: { name: string; artistName: string; duration: number; albumImage?: string; licenseUrl?: string } | null }>)
       .then((payload) => {
         if (cancelled) return
         const data = payload.data
-        if (!data) {
-          setTrack(null)
-          return
-        }
-        setTrack({
-          reference: value,
-          provider: 'jamendo',
-          trackId: value.split(':')[1] ?? value,
-          access: 'playable',
-          name: data.name,
-          artistName: data.artistName,
-          duration: data.duration,
-          albumImage: data.albumImage,
-          licenseUrl: data.licenseUrl,
-        })
+        setFetchedById((prev) => ({
+          ...prev,
+          [value]: data
+            ? {
+                reference: value,
+                provider: 'jamendo',
+                trackId: value.split(':')[1] ?? value,
+                access: 'playable',
+                name: data.name,
+                artistName: data.artistName,
+                duration: data.duration,
+                albumImage: data.albumImage,
+                licenseUrl: data.licenseUrl,
+              }
+            : null,
+        }))
       })
       .catch(() => {
-        if (!cancelled) setTrack(null)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setFetchedById((prev) => ({ ...prev, [value]: null }))
       })
     return () => {
       cancelled = true
     }
-  }, [value])
+  }, [value, preset, fetchedById])
 
   if (!value) {
     return (
@@ -115,6 +106,8 @@ export function SelectedMusicTrackRow({
       </div>
     )
   }
+
+  const track = preset ?? fetched
 
   if (loading) {
     return (
