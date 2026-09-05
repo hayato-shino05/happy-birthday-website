@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/time-capsule/server'
 import {
   getMediaKind,
+  inspectMediaFile,
   MAX_MULTIPART_UPLOAD_SIZE,
   normalizeMediaFile,
   validateCommunityMediaFile,
@@ -67,12 +68,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'ファイルサイズは4MB以下にしてください' }, { status: 400 })
   }
 
-  const objectPath = `${mediaKind}s/${crypto.randomUUID()}.${file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'}`
+  // 宣言された MIME ではなく先頭バイトの実内容で種別を確定する
+  const inspected = await inspectMediaFile(file)
+  if (!inspected) {
+    return NextResponse.json({ error: 'サポートされていないファイル形式です' }, { status: 400 })
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
+  const objectPath = `${mediaKind}s/${crypto.randomUUID()}.${extension}`
   try {
     const supabase = createServiceClient()
     const { error: uploadError } = await supabase.storage
       .from('community-media')
-      .upload(objectPath, file, { contentType: file.type, upsert: false })
+      .upload(objectPath, file, { contentType: inspected, upsert: false })
     if (uploadError) throw uploadError
 
     const { data, error: insertError } = await supabase

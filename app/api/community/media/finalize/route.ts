@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient, verifyCommunityMediaUploadToken } from '@/lib/time-capsule/server'
-import { getMediaKind, isCommunityMediaMimeType, MAX_COMMUNITY_MEDIA_SIZE } from '@/lib/validations/upload'
+import { getMediaKind, inspectMediaBlob, isCommunityMediaMimeType, MAX_COMMUNITY_MEDIA_SIZE } from '@/lib/validations/upload'
 
 function parseText(value: unknown, maxLength: number): string | null {
   if (typeof value !== 'string') return null
@@ -65,6 +65,15 @@ export async function POST(request: NextRequest) {
     }
     const { data: object, error: infoError } = await supabase.storage.from('community-media').info(objectPath)
     if (infoError || !object || object.size !== sizeBytes || object.contentType !== mimeType) {
+      return NextResponse.json({ error: 'アップロード済みメディアを確認できません' }, { status: 400 })
+    }
+
+    // 署名付きアップロード済みオブジェクトの先頭バイトを取得し、実内容を検証する
+    const firstBytes = await supabase.storage.from('community-media').download(objectPath, { transform: { width: 1, height: 1 } }).catch(() => null)
+    const contentType = firstBytes?.data
+      ? await inspectMediaBlob(firstBytes.data)
+      : null
+    if (!contentType || !contentType.startsWith(mediaKind)) {
       return NextResponse.json({ error: 'アップロード済みメディアを確認できません' }, { status: 400 })
     }
 

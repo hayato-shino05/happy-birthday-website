@@ -14,15 +14,19 @@ import { createCommunityMediaUploadToken } from '@/lib/time-capsule/server'
 const payload = { path: 'images/12345678-1234-1234-1234-123456789012.png', filename: 'cake.png', mimeType: 'image/png', sizeBytes: 5, sender: '花子', birthdayPerson: null, description: null }
 const request = (body: unknown) => ({ json: async () => body } as unknown as NextRequest)
 
-function client(existing: unknown = null, insert: unknown = { id: 1 }, info: unknown = { size: 5, contentType: 'image/png' }, winner: unknown = null, insertError: unknown = null) {
+// finalize の内容検証を通すための PNG マジックナンバー
+const PNG_BYTES = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+function client(existing: unknown = null, insert: unknown = { id: 1 }, info: unknown = { size: 5, contentType: 'image/png' }, winner: unknown = null, insertError: unknown = null, contentBytes: Uint8Array<ArrayBuffer> = PNG_BYTES as Uint8Array<ArrayBuffer>) {
   const remove = vi.fn().mockResolvedValue({ error: null })
   const maybeSingle = vi.fn()
     .mockResolvedValueOnce({ data: existing, error: null })
     .mockResolvedValue({ data: winner, error: null })
   const table = { select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })), insert: vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: insert, error: insertError }) })) })) }
-  const storage = { info: vi.fn().mockResolvedValue({ data: info, error: null }), remove, getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://example.com/media' } })) }
+  const download = vi.fn().mockResolvedValue({ data: new Blob([contentBytes as BlobPart]) })
+  const storage = { info: vi.fn().mockResolvedValue({ data: info, error: null }), download, remove, getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://example.com/media' } })) }
   server.createServiceClient.mockReturnValue({ storage: { from: vi.fn(() => storage) }, from: vi.fn(() => table) })
-  return { remove, storage, table }
+  return { remove, storage, table, download }
 }
 
 beforeEach(() => { vi.resetAllMocks(); process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key' })

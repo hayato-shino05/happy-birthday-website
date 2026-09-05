@@ -18,6 +18,24 @@ begin
 end;
 $$;
 
+-- 匿名の音楽付きメッセージは sender と birthday_person の組で 1 件に制限する。
+-- 同一入力の再送・二重クリック・同時実行を DB レベルで重複させない。
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.messages'::regclass
+      and conname = 'messages_music_track_sender_birthday_unique'
+  ) then
+    alter table public.messages
+      add constraint messages_music_track_sender_birthday_unique
+      unique (sender, birthday_person)
+      where music_track_id is not null;
+  end if;
+end;
+$$;
+
 drop function if exists public.create_community_submission(
   text, text, text, text, text, text, text, text, text, bigint
 );
@@ -99,6 +117,9 @@ begin
     values (
       btrim(p_sender), btrim(p_content), nullif(btrim(p_birthday_person), ''), p_object_path, p_music_track_id
     )
+    on conflict (sender, birthday_person)
+      where music_track_id is not null
+    do update set music_track_id = excluded.music_track_id
     returning * into v_message;
     return jsonb_build_object('message', to_jsonb(v_message), 'media_submission', to_jsonb(v_media));
   end if;
