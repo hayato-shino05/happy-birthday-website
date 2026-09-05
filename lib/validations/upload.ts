@@ -1,6 +1,14 @@
 export const MAX_COMMUNITY_MEDIA_SIZE = 50 * 1024 * 1024
 export const MAX_MULTIPART_UPLOAD_SIZE = 4 * 1024 * 1024
 
+export type CommunityMediaMime =
+  | 'image/jpeg'
+  | 'image/png'
+  | 'image/webp'
+  | 'image/gif'
+  | 'video/mp4'
+  | 'video/webm'
+
 const COMMUNITY_MEDIA_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -9,6 +17,16 @@ const COMMUNITY_MEDIA_TYPES = new Set([
   'video/mp4',
   'video/webm',
 ])
+
+// 実内容の種別から拡張子を決める。宣言された MIME やファイル名は信頼しない
+export const MEDIA_EXTENSIONS: Record<CommunityMediaMime, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+}
 
 export type CommunityMediaKind = 'image' | 'video'
 
@@ -54,7 +72,7 @@ function isWebm(bytes: Uint8Array): boolean {
 }
 
 // ファイル先頭のマジックナンバーで実内容を検証する（拡張子・宣言 MIME は信頼しない）
-export function inspectMediaContent(bytes: Uint8Array): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' | 'video/mp4' | 'video/webm' | null {
+export function inspectMediaContent(bytes: Uint8Array): CommunityMediaMime | null {
   if (matchesSignature(bytes, PNG_SIGNATURE)) return 'image/png'
   if (matchesSignature(bytes, JPEG_SIGNATURE)) return 'image/jpeg'
   if (isWebp(bytes)) return 'image/webp'
@@ -65,16 +83,17 @@ export function inspectMediaContent(bytes: Uint8Array): 'image/jpeg' | 'image/pn
 }
 
 // jsdom の File は arrayBuffer() を持たないため、slice した Blob を FileReader で読み取って先頭バイトを確認する
-export async function inspectMediaFile(file: File): Promise<'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' | 'video/mp4' | 'video/webm' | null> {
+export async function inspectMediaFile(file: File): Promise<CommunityMediaMime | null> {
   return inspectMediaBlob(file.slice(0, 32))
 }
 
 // Blob の先頭バイトを FileReader で読み取って実内容を検証する（node/jsdom 両対応）
-export async function inspectMediaBlob(blob: Blob): Promise<'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' | 'video/mp4' | 'video/webm' | null> {
+export async function inspectMediaBlob(blob: Blob): Promise<CommunityMediaMime | null> {
   const text = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
     reader.onerror = () => reject(new Error('media read failed'))
+    // jsdom の File は arrayBuffer() を持たないため readAsBinaryString で先頭バイトを読む
     reader.readAsBinaryString(blob)
   })
   const bytes = new Uint8Array(text.length)

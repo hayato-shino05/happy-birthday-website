@@ -70,10 +70,10 @@ export async function POST(request: NextRequest) {
 
     // 署名付きアップロード済みオブジェクトの先頭バイトを取得し、実内容を検証する
     const firstBytes = await supabase.storage.from('community-media').download(objectPath, { transform: { width: 1, height: 1 } }).catch(() => null)
-    const contentType = firstBytes?.data
+    const inspected = firstBytes?.data
       ? await inspectMediaBlob(firstBytes.data)
       : null
-    if (!contentType || !contentType.startsWith(mediaKind)) {
+    if (!inspected || inspected !== mimeType) {
       return NextResponse.json({ error: 'アップロード済みメディアを確認できません' }, { status: 400 })
     }
 

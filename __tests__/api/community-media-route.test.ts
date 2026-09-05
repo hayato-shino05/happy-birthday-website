@@ -64,6 +64,32 @@ describe('POST /api/community/media', () => {
     expect(server.createServiceClient).not.toHaveBeenCalled()
   })
 
+  it('uses the inspected content type for path, upload, and metadata when declaration differs', async () => {
+    const { client, upload } = makeClient()
+    // PNG と宣言して video/mp4 の実内容を送るケース
+    const mp4Bytes = new Uint8Array([0, 0, 0, 32, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    const file = new File([mp4Bytes], 'cake.png', { type: 'image/png' })
+
+    const response = await POST(request({ sender: '花子' }, file))
+
+    expect(response.status).toBe(201)
+    expect(upload).toHaveBeenCalledWith(expect.stringMatching(/^videos\/.+\.mp4$/), expect.any(File), { contentType: 'video/mp4', upsert: false })
+    expect(client.from).toHaveBeenCalledWith('media_submissions')
+    await expect(response.json()).resolves.toEqual({ data: expect.objectContaining({ id: 1, media_url: 'https://example.com/media' }) })
+  })
+
+  it('rejects files whose declared type is allowlisted but content is not inspected media', async () => {
+    makeClient()
+    // 拡張子 .png・宣言 image/png だが実内容は実行形式バイナリ
+    const fakeBytes = Uint8Array.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00])
+    const file = new File([fakeBytes], 'evil.png', { type: 'image/png' })
+
+    const response = await POST(request({ sender: '花子' }, file))
+
+    expect(response.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
   it('returns a safe error when storage upload fails without cleanup', async () => {
     const { upload, remove } = makeClient()
     upload.mockResolvedValueOnce({ error: new Error('upload failed') })
