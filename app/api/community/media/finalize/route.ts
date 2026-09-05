@@ -68,10 +68,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'アップロード済みメディアを確認できません' }, { status: 400 })
     }
 
-    // 署名付きアップロード済みオブジェクトの先頭バイトを取得し、実内容を検証する
-    const firstBytes = await supabase.storage.from('community-media').download(objectPath, { transform: { width: 1, height: 1 } }).catch(() => null)
-    const inspected = firstBytes?.data
-      ? await inspectMediaBlob(firstBytes.data)
+    // 署名付きアップロード済みオブジェクトの実体を取得し、ファイル全体を検証する
+    // transform で取得した派生画像ではなく、公開 URL に載るオブジェクトそのものを検査する
+    const objectBytes = await supabase.storage.from('community-media').download(objectPath).catch(() => null)
+    const inspected = objectBytes?.data
+      ? await inspectMediaBlob(objectBytes.data)
       : null
     if (!inspected || inspected !== mimeType) {
       return NextResponse.json({ error: 'アップロード済みメディアを確認できません' }, { status: 400 })

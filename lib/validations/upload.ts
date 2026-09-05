@@ -92,16 +92,31 @@ function isGif(bytes: Uint8Array): boolean {
     && bytes.length >= 14 && bytes[bytes.length - 1] === 0x3b
 }
 
-function isMp4(bytes: Uint8Array): boolean {
-  // 'ftyp' ボックスに加え、メディア本体（moov または mdat）の存在を確認する
-  if (bytes.length < 32) return false
-  let ftyp = -1
-  for (let offset = 4; offset <= 8; offset++) {
-    if (matchesSignature(bytes, [0x66, 0x74, 0x79, 0x70], offset)) { ftyp = offset; break }
+// ISO BMFF のトップレベルボックスを順に走査し、サイズ整合と ftyp / moov / mdat の存在を確認する
+function isIsoBmff(bytes: Uint8Array): boolean {
+  let offset = 0
+  let ftypSeen = false
+  let mediaSeen = false
+  while (offset + 8 <= bytes.length) {
+    const size = (bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3]
+    const type = String.fromCharCode(bytes[offset + 4], bytes[offset + 5], bytes[offset + 6], bytes[offset + 7])
+    if (size === 0) {
+      // 末尾まで続く最終ボックス（末尾 mdat 等）
+      offset = bytes.length
+      break
+    }
+    // 50MB 上限内では 64bit extended size は現れないため不正として扱う
+    if (size === 1 || size < 8 || offset + size > bytes.length) return false
+    if (type === 'ftyp') ftypSeen = true
+    else if (type === 'moov' || type === 'mdat') mediaSeen = true
+    offset += size
   }
-  if (ftyp === -1) return false
-  return indexOfSequence(bytes, [0x6d, 0x6f, 0x6f, 0x76]) !== -1 // 'moov'
-    || indexOfSequence(bytes, [0x6d, 0x64, 0x61, 0x74]) !== -1 // 'mdat'
+  return offset === bytes.length && ftypSeen && mediaSeen
+}
+
+function isMp4(bytes: Uint8Array): boolean {
+  // マーカーだけではなく、トップレベルボックスのサイズ整合も検証する
+  return isIsoBmff(bytes)
 }
 
 function isWebm(bytes: Uint8Array): boolean {

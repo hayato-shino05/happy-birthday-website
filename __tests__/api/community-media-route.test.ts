@@ -33,11 +33,11 @@ const FAKE_PNG_BYTES = Uint8Array.from([
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ])
 
-// 実内容 video/mp4（ftyp + mdat）
+// 実内容 video/mp4（サイズ整合するトップレベルボックス: ftyp + mdat）
 const MP4_BYTES = Uint8Array.from([
-  0, 0, 0, 32, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0x6d, 0x64, 0x61, 0x74, // 'mdat'
+  0, 0, 0, 32, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0, // size=32, 'ftyp', brand 'isom'
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // ftyp payload 16 bytes
+  0, 0, 0, 8, 0x6d, 0x64, 0x61, 0x74, // size=8, 'mdat' (payload 0)
 ])
 
 function request(fields: Record<string, string>, file?: File) {
@@ -123,6 +123,22 @@ describe('POST /api/community/media', () => {
     // ftyp だけを持ち mdat / moov を持たない内容は不正として扱う
     const truncated = MP4_BYTES.slice(0, 32)
     const file = new File([truncated], 'clip.mp4', { type: 'video/mp4' })
+
+    const response = await POST(request({ sender: '花子' }, file))
+
+    expect(response.status).toBe(400)
+    expect(server.createServiceClient).not.toHaveBeenCalled()
+  })
+
+  it('rejects content whose box sizes are inconsistent with the payload length', async () => {
+    makeClient()
+    // ftyp + mdat を含むが、ボックスの size が実際のバイト列と整合しない内容は不正として扱う
+    const malformed = Uint8Array.from([
+      0, 0, 0, 99, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0, // size=99 は実長と不一致
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 8, 0x6d, 0x64, 0x61, 0x74,
+    ])
+    const file = new File([malformed], 'clip.mp4', { type: 'video/mp4' })
 
     const response = await POST(request({ sender: '花子' }, file))
 
