@@ -2,8 +2,11 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-const migration = readFileSync(join(process.cwd(), 'supabase', 'migrations', '20260901000000_add_community_submission_rpc.sql'), 'utf8')
-const musicMigration = readFileSync(join(process.cwd(), 'supabase', 'migrations', '20260904000000_add_music_track_to_community_submission_rpc.sql'), 'utf8')
+// CI (Linux) と Windows で checkout 時の改行が異なるため、読み込み後に正規化して比較する
+const readSql = (path: string): string => readFileSync(join(process.cwd(), 'supabase', 'migrations', path), 'utf8').replace(/\r\n/g, '\n')
+
+const migration = readSql('20260901000000_add_community_submission_rpc.sql')
+const musicMigration = readSql('20260904000000_add_music_track_to_community_submission_rpc.sql')
 
 describe('community submission RPC migration', () => {
   it('keeps the transaction RPC fixed, constrained, and service-only', () => {
@@ -35,7 +38,7 @@ describe('community submission RPC migration', () => {
     expect(musicMigration).toContain('music_track_id)')
     expect(musicMigration).toContain('p_object_path, p_music_track_id')
     expect(musicMigration).toContain('drop function if exists public.create_community_submission(')
-    expect(musicMigration).toContain('text, text, text, text, text, text, text, text, text, bigint\r\n);')
+    expect(musicMigration).toContain('text, text, text, text, text, text, text, text, text, bigint\n);')
     expect(musicMigration).not.toContain('v_message_id')
   })
 })
