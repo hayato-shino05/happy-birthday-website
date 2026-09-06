@@ -47,8 +47,9 @@ jobs:
           curl --silent --show-error --fail --connect-timeout 5 --max-time 15 \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            "$SUPABASE_URL/rest/v1/" \
-            >/dev/null
+            "$SUPABASE_URL/rest/v1/birthdays?select=id&limit=1" \
+            --output /dev/null \
+            --write-out '%{http_code}\n'
 
       - name: Attest read-only PostgreSQL access
         id: readonly_postgres
