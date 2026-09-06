@@ -19,8 +19,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const correlationId = randomUUID()
+  const now = new Date()
   try {
-    const threads = await listTodaysBirthdayThreads(createServiceClient())
+    const threads = await listTodaysBirthdayThreads(createServiceClient(), now)
     return NextResponse.json({ data: { processed: threads.length } }, { status: 200 })
   } catch {
     console.error(JSON.stringify({ event: 'birthday_scheduler_failed', correlationId }))

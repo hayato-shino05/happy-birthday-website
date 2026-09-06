@@ -43,7 +43,7 @@ describe('POST /api/internal/birthday-scheduler', () => {
     expect(await response.json()).toEqual({ data: { processed: 2 } })
     expect(server.createServiceClient).toHaveBeenCalledOnce()
     expect(birthday.listTodaysBirthdayThreads).toHaveBeenCalledOnce()
-    expect(birthday.listTodaysBirthdayThreads).toHaveBeenCalledWith({})
+    expect(birthday.listTodaysBirthdayThreads).toHaveBeenCalledWith({}, expect.any(Date))
   })
 
   it('maps service failures to a safe 500 response', async () => {
@@ -63,5 +63,9 @@ describe('POST /api/internal/birthday-scheduler', () => {
     await POST(request(secret))
 
     expect(birthday.listTodaysBirthdayThreads).toHaveBeenCalledTimes(2)
+    expect(birthday.listTodaysBirthdayThreads.mock.calls).toEqual([
+      [{}, expect.any(Date)],
+      [{}, expect.any(Date)],
+    ])
   })
 })
