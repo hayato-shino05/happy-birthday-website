@@ -11,6 +11,7 @@ const ALLOWED_LICENSE_PATTERNS = [
 ]
 const REQUEST_TIMEOUT_MS = 8_000
 const SOUNDCLOUD_TOKEN_SKEW_MS = 60_000
+const ALLOWED_SOUNDCLOUD_STREAM_HOSTS = new Set(['api.soundcloud.com', 'cf-media.sndcdn.com'])
 
 interface SoundCloudTrack {
   id?: string | number
@@ -21,6 +22,9 @@ interface SoundCloudTrack {
   artwork_url?: string
   permalink_url?: string
   access?: MusicAccess
+  license?: string
+  source?: string
+  attribution?: string
   stream_url?: string
 }
 
@@ -37,6 +41,7 @@ interface JamendoTrack {
 }
 
 let soundCloudToken: { value: string; expiresAt: number } | null = null
+let soundCloudTokenRequest: Promise<string | null> | null = null
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -44,6 +49,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isLicenseAllowed(licenseUrl: string): boolean {
   return ALLOWED_LICENSE_PATTERNS.some((pattern) => pattern.test(licenseUrl))
+}
+
+function isAllowedSoundCloudStreamUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' && ALLOWED_SOUNDCLOUD_STREAM_HOSTS.has(url.hostname)
+  } catch {
+    return false
+  }
 }
 
 function toReference({ provider, trackId }: MusicTrackReference): string {
@@ -62,14 +76,24 @@ function asJamendoTrack(value: unknown): JamendoTrack | null {
 
 function mapSoundCloudTrack(track: SoundCloudTrack): SearchTrack | null {
   const reference = parseMusicTrackReference(`soundcloud:${track.id}`)
-  if (!reference || !track.title || track.access !== 'playable') return null
+  if (!reference || !track.title) return null
+  const access = track.access === 'playable' && typeof track.stream_url === 'string' && isAllowedSoundCloudStreamUrl(track.stream_url)
+    ? 'playable'
+    : track.access === 'preview'
+      ? 'preview'
+      : track.access === 'blocked'
+        ? 'blocked'
+        : 'unavailable'
   return {
     ...reference,
     reference: toReference(reference),
-    access: 'playable',
+    access,
     name: track.title,
     artistName: track.metadata_artist || track.user?.username || 'Unknown artist',
     duration: typeof track.duration === 'number' && track.duration >= 0 ? Math.floor(track.duration / 1000) : 0,
+    license: track.license,
+    source: track.source,
+    attribution: track.attribution,
     sourceUrl: track.permalink_url || track.user?.permalink_url,
     albumImage: track.artwork_url,
   }
@@ -93,30 +117,55 @@ function mapJamendoTrack(track: JamendoTrack): SearchTrack | null {
   }
 }
 
+function isRetryableError(error: unknown): boolean {
+  return error instanceof DOMException && (error.name === 'TimeoutError' || error.name === 'AbortError')
+}
+
+async function fetchSoundCloud(input: RequestInfo | URL, init: RequestInit): Promise<Response | null> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(input, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+      if ((response.status === 429 || response.status === 503) && attempt < 2) continue
+      return response
+    } catch (error) {
+      if (!isRetryableError(error) || attempt === 2) return null
+    }
+  }
+  return null
+}
+
 async function getSoundCloudToken(): Promise<string | null> {
   if (soundCloudToken && soundCloudToken.expiresAt > Date.now()) return soundCloudToken.value
-  const clientId = process.env.SOUNDCLOUD_CLIENT_ID
-  const clientSecret = process.env.SOUNDCLOUD_CLIENT_SECRET
-  if (!clientId || !clientSecret) return null
+  if (soundCloudTokenRequest) return soundCloudTokenRequest
+  soundCloudTokenRequest = (async () => {
+    const clientId = process.env.SOUNDCLOUD_CLIENT_ID
+    const clientSecret = process.env.SOUNDCLOUD_CLIENT_SECRET
+    if (!clientId || !clientSecret) return null
 
-  const response = await fetch('https://secure.soundcloud.com/oauth/token', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
-    },
-    body: 'grant_type=client_credentials',
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  })
-  if (!response.ok) return null
-  const payload: unknown = await response.json()
-  if (!isRecord(payload) || typeof payload.access_token !== 'string' || typeof payload.expires_in !== 'number') return null
-  soundCloudToken = {
-    value: payload.access_token,
-    expiresAt: Date.now() + Math.max(0, payload.expires_in * 1000 - SOUNDCLOUD_TOKEN_SKEW_MS),
+    const response = await fetchSoundCloud('https://secure.soundcloud.com/oauth/token', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+      },
+      body: 'grant_type=client_credentials',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    })
+    if (!response?.ok) return null
+    const payload: unknown = await response.json()
+    if (!isRecord(payload) || typeof payload.access_token !== 'string' || typeof payload.expires_in !== 'number') return null
+    soundCloudToken = {
+      value: payload.access_token,
+      expiresAt: Date.now() + Math.max(0, payload.expires_in * 1000 - SOUNDCLOUD_TOKEN_SKEW_MS),
+    }
+    return soundCloudToken.value
+  })()
+  try {
+    return await soundCloudTokenRequest
+  } finally {
+    soundCloudTokenRequest = null
   }
-  return soundCloudToken.value
 }
 
 async function soundCloudRequest(path: string, query?: Record<string, string>): Promise<unknown | null> {
@@ -124,11 +173,11 @@ async function soundCloudRequest(path: string, query?: Record<string, string>): 
   if (!token) return null
   const url = new URL(path, 'https://api.soundcloud.com')
   for (const [key, value] of Object.entries(query ?? {})) url.searchParams.set(key, value)
-  const response = await fetch(url, {
+  const response = await fetchSoundCloud(url, {
     headers: { Accept: 'application/json', Authorization: `OAuth ${token}` },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
-  if (!response.ok) return null
+  if (!response?.ok) return null
   return response.json()
 }
 
@@ -153,7 +202,7 @@ function jamendoResults(payload: unknown): unknown[] {
 }
 
 export async function searchMusicTracks(query: string, limit: number): Promise<SearchTrack[]> {
-  const soundCloudPayload = await soundCloudRequest('/tracks', { q: query, access: 'playable', limit: String(limit) })
+  const soundCloudPayload = await soundCloudRequest('/tracks', { q: query, limit: String(limit) })
   const soundCloudTracks = searchResults(soundCloudPayload).map(asSoundCloudTrack).map((track) => track && mapSoundCloudTrack(track)).filter((track): track is SearchTrack => track !== null)
   if (soundCloudTracks.length > 0) return soundCloudTracks.slice(0, limit)
 
@@ -192,7 +241,7 @@ export async function resolveMusicTrack(value: string): Promise<ResolvedTrack | 
     const payload = await soundCloudRequest(`/tracks/${reference.trackId}`)
     const track = asSoundCloudTrack(payload)
     const mapped = track && mapSoundCloudTrack(track)
-    if (!mapped || typeof track.stream_url !== 'string' || !track.stream_url.startsWith('https://')) return null
+    if (!mapped || mapped.access !== 'playable' || typeof track.stream_url !== 'string' || !isAllowedSoundCloudStreamUrl(track.stream_url)) return null
     return { ...mapped, streamUrl: track.stream_url }
   }
 
